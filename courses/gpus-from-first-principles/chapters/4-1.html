@@ -1,0 +1,49 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Matrix multiplication, $C = A \times B$, is the kernel modern computing runs on. Every layer of a neural network, every attention head, most of scientific computing reduces to it. GPU vendors quote peak FLOP/s, and GEMM is the one workload that can actually reach that peak. A naive GEMM reaches only a small fraction of it, so the gap between naive and tuned is where performance engineers earn their keep. This Part closes that gap step by step, through Project C.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p>For $A$ of size $M \times K$ and $B$ of size $K \times N$, each output is a dot product:</p>
+<div class="eq">$$C_{ij} = \sum_{k=0}^{K-1} A_{ik} B_{kj}$$</div>
+<p>That's $M \cdot N \cdot K$ multiply-adds, or $2MNK$ FLOPs. Each multiply-add is one <strong>fused multiply-add</strong> instruction (FMA: $a \cdot b + c$ with a single rounding). From this Part on, kernels write it explicitly as <code>fma(a, b, c)</code>, which lets the simulator count compute:</p>
+<pre><code>function naive(A, B, C, n) {
+  const col = blockIdx.x * blockDim.x + threadIdx.x, row = blockIdx.y * blockDim.y + threadIdx.y;
+  if (row &lt; n &amp;&amp; col &lt; n) {
+    let s = 0;
+    for (let k = 0; k &lt; n; k++) s = fma(A[row * n + k], B[k * n + col], s);
+    C[row * n + col] = s;
+  }
+}</code></pre>
+<p>Launches now also report <code>fmaInstructions</code>, <code>flops</code>, <code>achievedGflops</code> and <code>percentOfPeakFp32</code>. The GW-1's FP32 peak is 1,536 GFLOP/s: each SM issues one warp-wide FMA per cycle.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: GEMM's intensity is high, but naive code wastes it</h2>
+<p>For square $n \times n$ matrices, GEMM does $2n^3$ FLOPs on $3n^2$ numbers. The <em>minimum</em> DRAM traffic is reading $A$ and $B$ once and writing $C$ once, $12n^2$ bytes, so the best-case intensity is</p>
+<div class="eq">$$I_{\max} = \frac{2n^3}{12 n^2} = \frac{n}{6}\ \text{FLOP/byte}$$</div>
+<p>For $n = 256$ that's about 43, far right of the GW-1's ridge at 3. GEMM <em>can</em> be compute-bound. But the naive kernel doesn't reuse anything on purpose: every FMA issues two loads, so it moves 8 bytes per 2 FLOPs, an intensity of 0.25. Whether those loads hit in cache is luck.</p>
+<p>Count instructions too. Per FMA the naive kernel issues two loads, the FMA itself and a loop branch: four instructions, one of them useful math. Even if every load hit in cache, it could reach at most about 25% of peak. <strong>Fast GEMM is about raising the fraction of issued instructions that are FMAs, and that means reusing data.</strong></p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>Every byte of $A$ and $B$ is used $n$ times across the whole computation: row $i$ of $A$ by every column of $B$. The game is to load each value into fast storage once and use it many times. The memory hierarchy offers three levels:</p>
+<table>
+<tr><th>Level</th><th>Reuse technique</th><th>Chapter</th></tr>
+<tr><td>shared memory (per block)</td><td>tiles of A and B shared by all threads in a block</td><td>4.2</td></tr>
+<tr><td>registers (per thread)</td><td>each thread computes several outputs, reusing loaded values</td><td>4.3</td></tr>
+<tr><td>instruction stream</td><td>vector loads, fewer and fatter instructions, overlapping loads with math</td><td>4.4</td></tr>
+</table>
+<p>Then 4.5 swaps the FMA units for <strong>tensor cores</strong>, which multiply whole small matrices in one instruction.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>About the simulator in this Part.</strong> Simulating a 4096×4096 GEMM in JavaScript would take hours, so the milestones use 128×128 and 256×256 matrices. Two consequences. First, small matrices make <em>filling the GPU</em> hard: 64×64 tiles on a 256×256 matrix give only 16 blocks for 16 SMs, which is real (small GEMMs are hard to make fast) and is part of the lesson. Second, the simulator runs warps one after another, which makes cache reuse look better than on hardware, where warps interleave. So in this Part, trust the <strong>instruction-mix</strong> numbers (FMAs as a share of issued instructions, loads per FMA) more than the cache hit rates.</li>
+<li><strong>Libraries.</strong> cuBLAS and CUTLASS reach 80–95% of peak on large GEMMs. You'll build the same ladder they climb.</li>
+</ul>
+<div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 4</strong> (GPU and vector execution of dense loops) and <strong>Chapter 7</strong> (Domain-Specific Architectures), which starts from exactly this observation: matrix multiply dominates ML, so it deserves its own hardware.</div>
+</section>

@@ -1,0 +1,14 @@
+<div class="paper-ref">
+<div class="k">Project C · GEMM · Milestone 2 of 5</div>
+Register tiling: break through the one-in-three ceiling.
+</div>
+
+<h2>Build: a register-tiled SGEMM</h2>
+<p>Write <code>gemmReg(A, B, C, n)</code> and <code>runReg(A, B, C, n)</code>, which launches it and returns the stats. Each thread computes a tile of outputs (4×4 or larger) as an outer product from register-held values, loading slices of the shared tiles with <code>ldg4</code>. <code>n</code> is a multiple of 64. Pick block and thread tile sizes that give the 256×256 case enough blocks to use all 16 SMs.</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li>Correct on 64×64 and 256×256.</li>
+<li><strong>≥ 40% of FP32 peak</strong> (<code>percentOfPeakFp32</code>) on 256×256. The tiled kernel from C1 manages under 30%.</li>
+</ul>
+<p>When you're stuck, compare <code>fmaInstructions</code> with everything else the stats report. Where are the non-FMA instructions coming from?</p>

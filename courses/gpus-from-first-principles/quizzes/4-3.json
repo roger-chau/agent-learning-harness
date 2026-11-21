@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric", "prompt": "A thread computes a 4×8 tile of C. Shared loads per FMA (one load per value)?", "unit": "", "answer": 0.375, "tolerance": 0,
+     "explanation": "(4 + 8) / 32 = 0.375."},
+    {"id": "q2", "type": "single", "prompt": "Why must A's tile be stored transposed in shared memory for <code>ldg4(sA, k * BM + tr)</code> to work?",
+     "options": ["To avoid bank conflicts only", "So a thread's 4 values from column k of A are contiguous, readable as one 16-byte load", "Because A is column-major", "It doesn't need to be"], "answer": 1,
+     "explanation": "Vector loads need consecutive addresses."},
+    {"id": "q3", "type": "single", "prompt": "What is the main cost of an 8×8 thread tile?",
+     "options": ["More global memory", "Many registers per thread, so fewer resident warps (and bigger block tiles, so fewer blocks)", "Bank conflicts", "More divergence"], "answer": 1,
+     "explanation": "Registers and parallelism pay for the reuse."},
+    {"id": "q4", "type": "single", "prompt": "Why is lower occupancy acceptable for a register-tiled GEMM?",
+     "options": ["GEMM has no memory latency", "Each warp has many independent FMAs (ILP), so fewer warps still keep units busy", "Occupancy never matters", "The compiler hides it"], "answer": 1,
+     "explanation": "Volkov's argument from Part 2."},
+    {"id": "q5", "type": "multi", "prompt": "Which levels make up the GEMM tiling hierarchy?",
+     "options": ["Block tile in shared memory", "Warp tile", "Thread tile in registers", "Grid tile in L1"], "answer": [0, 1, 2],
+     "explanation": "Block, warp and thread tiles; the grid is just how blocks cover C."}
+  ]
+}

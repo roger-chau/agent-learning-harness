@@ -28,6 +28,7 @@ const STAT_ROWS = [
   ["atomics", "atomic instructions (warp)"], ["globalAtomics", "  of which global"], ["atomicSerialization", "atomic serialisation"], ["warpOps", "warp shuffles/votes"],
   ["sharedLoads", "shared loads (warp)"], ["sharedStores", "shared stores (warp)"], ["bankConflicts", "bank conflicts"], ["barriers", "barriers (warp)"],
   ["occupancy", "occupancy"], ["occupancyLimiter", "occupancy limited by"],
+  ["fmaInstructions", "FMA instructions (warp)"], ["tensorOps", "tensor-core MMAs (warp)"], ["achievedGflops", "achieved GFLOP/s"], ["percentOfPeakFp32", "% of FP32 peak"],
   ["cycles", "estimated cycles"], ["timeUs", "estimated time (µs)"],
   ["achievedBandwidthGBs", "achieved bandwidth (GB/s)"], ["percentOfPeakBandwidth", "% of peak bandwidth"], ["limitedBy", "limited by"],
 ];
@@ -40,6 +41,8 @@ function table(obj) {
       if ((k.startsWith("shared") || k === "bankConflicts" || k === "barriers") && !obj.sharedLoads && !obj.sharedStores) return null;
       if ((k.toLowerCase().includes("atomic")) && !obj.atomics) return null;
       if (k === "warpOps" && !obj.warpOps) return null;
+      if ((k === "fmaInstructions" || k === "achievedGflops" || k === "percentOfPeakFp32") && !obj.flops) return null;
+      if (k === "tensorOps" && !obj.tensorOps) return null;
       return `  ${label.padEnd(28)} ${fmt(v)}`;
     }).filter(Boolean);
     out(lines.join("\n"), "table");

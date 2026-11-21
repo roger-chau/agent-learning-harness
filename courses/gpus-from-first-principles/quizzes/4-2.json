@@ -1,0 +1,18 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric", "prompt": "With 16×16 tiles, global loads per FMA drop from 2 to what?", "unit": "", "answer": 0.125, "tolerance": 0,
+     "explanation": "2 / 16 = 0.125: each loaded element is used 16 times."},
+    {"id": "q2", "type": "single", "prompt": "Why are two __syncthreads() calls needed per k-step?",
+     "options": ["One after loading (so tiles are complete before use), one after computing (so nobody overwrites tiles still being read)", "One for A and one for B", "To flush L2", "Only one is needed"], "answer": 0,
+     "explanation": "A read-after-write barrier and a write-after-read barrier."},
+    {"id": "q3", "type": "numeric", "prompt": "In the shared-memory tiled kernel, about how many instructions are issued per FMA in the inner loop (two shared loads + the FMA)? What's the resulting ceiling as a % of peak?", "unit": "%", "answer": 33.3, "tolerance": 0.5,
+     "explanation": "1 FMA in 3 instructions: about 33%."},
+    {"id": "q4", "type": "single", "prompt": "Why does writing <code>for (k = 0; k &lt; 16; k++)</code> rather than <code>k &lt; T</code> matter in the simulator (and often on GPUs)?",
+     "options": ["It doesn't", "With a literal trip count the loop is fully unrolled, so no branch is issued per iteration", "16 is faster than T", "T can't be const"], "answer": 1,
+     "explanation": "Compilers unroll loops whose trip count they can see."},
+    {"id": "q5", "type": "single", "prompt": "On a 128×128 GEMM with 16 SMs, why might 64×64 tiles be worse than 32×32?",
+     "options": ["64×64 doesn't fit in registers", "Only 4 blocks for 16 SMs: most of the GPU idles", "Bank conflicts", "They're always better"], "answer": 1,
+     "explanation": "Reuse is useless if the machine isn't full."}
+  ]
+}

@@ -1,0 +1,39 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>In the naive kernel, the 16 threads that compute one row of a 16×16 output tile all read the same row of $A$, and the 16 threads in a column all read the same column of $B$. Each value is fetched from the memory system again and again by neighbouring threads. If a block loaded those values once into shared memory, every thread could reuse them.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Split the $k$ loop into tiles.</strong> A block computing a $T \times T$ tile of $C$ walks along $k$ in steps of $T$. At each step it loads a $T \times T$ tile of $A$ and one of $B$ into shared memory, coalesced, one element per thread. After a barrier, every thread does $T$ FMAs from shared memory, then another barrier, and on to the next step.</p>
+<pre><code>for (let k0 = 0; k0 &lt; n; k0 += T) {
+  sA[ty * T + tx] = A[row * n + k0 + tx];        // one element each
+  sB[ty * T + tx] = B[(k0 + ty) * n + col];
+  __syncthreads();
+  for (let k = 0; k &lt; 16; k++) s = fma(sA[ty * T + k], sB[k * T + tx], s);
+  __syncthreads();                                // before overwriting the tiles
+}</code></pre>
+<p>Each element loaded from global memory is now used $T$ times, so global traffic per FMA drops by a factor of $T$. With $T = 16$, global loads go from 2 per FMA to $2/16 = 0.125$.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: what tiling buys, and what it doesn't</h2>
+<p>Count instructions per FMA in the inner loop: two shared loads (<code>sA[…]</code> is the same for the whole row of threads, so it's a broadcast; <code>sB[…]</code> is conflict-free), one FMA. The global loads are amortised away. That's three instructions per FMA, so the ceiling rises from 25% to about 33% of peak.</p>
+<p>That's an improvement, but notice what tiling <em>didn't</em> change: every FMA still needs two operands brought from somewhere. Shared memory is fast, but each shared load is still an instruction issue. To break past a third of peak, operands must come from <strong>registers</strong>, which is the next chapter.</p>
+<p><strong>Choosing $T$.</strong> Bigger tiles mean more reuse but more shared memory per block ($2T^2 \times 4$ bytes) and fewer blocks. $T = 16$ uses 2 KB; $T = 32$ uses 8 KB with 1,024-thread blocks. On a small matrix, big tiles also mean too few blocks to fill the SMs.</p>
+<p><strong>A note on loop bounds.</strong> The inner loop above is written with a literal bound (<code>k &lt; 16</code>). Like a real compiler, the simulator fully unrolls short loops with literal bounds (≤ 64 iterations), so they cost no branch instructions. Write <code>k &lt; T</code> instead and you pay a branch per iteration, just as on a GPU when the compiler can't see the trip count.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>Tiling applies at every level. Blocks tile $C$; shared memory tiles $A$ and $B$ along $k$; and, in real libraries, the <em>order</em> in which blocks are launched is arranged so that blocks running at the same time share $A$ rows and $B$ columns in L2 (block "swizzling" or rasterisation). Every level has the same structure: bring a tile close, use it many times, move on. Milestone C1 asks you to build the shared-memory level and measure how much global traffic per FMA it removes.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Real kernels use rectangular tiles (e.g. 128×128 blocks with $K$-steps of 32) and load tiles with vector instructions.</li>
+<li>Bank conflicts matter when loading $A$ transposed into shared memory: padding or swizzling (Chapter 2.5) applies.</li>
+<li>Ampere and later GPUs can copy tiles straight into shared memory asynchronously (<code>cp.async</code>, and TMA on Hopper), which Chapter 4.4 discusses.</li>
+</ul>
+</section>

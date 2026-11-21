@@ -244,3 +244,38 @@ test("shuffled block order and warp-op deadlock detection", () => {
   const { bad } = g.compile(`function bad(out) { if (threadIdx.x < 16) { out[threadIdx.x] = __shfl_sync(0xffff, threadIdx.x, 0); } else { __syncthreads(); } }`);
   assert.throws(() => g.launch(bad, { grid: 1, block: 32 }, g.alloc(32)), /deadlock|different/);
 });
+
+const { f16round } = require("../learnharness/static/sim/gpusim.js");
+
+test("fma counting, vector loads, f16 rounding and tensor-core mma", () => {
+  const g = new Device();
+  const { dot } = g.compile(`function dot(a, b, out, n) {
+    const i = blockIdx.x * blockDim.x + threadIdx.x;
+    let s = 0;
+    for (let k = 0; k < 8; k++) s = fma(a[i * 8 + k], b[k], s);
+    out[i] = s;
+  }`);
+  const a = g.from(Array.from({ length: 64 * 8 }, (_, i) => i % 3)), b = g.from([1, 2, 3, 4, 5, 6, 7, 8]), out = g.alloc(64);
+  const s = g.launch(dot, { grid: 1, block: 64 }, a, b, out, 64);
+  assert.equal(s.fmaInstructions, 2 * 8);
+  assert.equal(s.flops, 64 * 8 * 2);
+  const { v4 } = g.compile(`function v4(a, b) { const i = (blockIdx.x * blockDim.x + threadIdx.x) * 4; const q = ldg4(a, i); stg4(b, i, [q[3], q[2], q[1], q[0]]); }`);
+  const x = g.from(Array.from({ length: 128 }, (_, i) => i)), y = g.alloc(128);
+  const sv = g.launch(v4, { grid: 1, block: 32 }, x, y);
+  assert.deepEqual(y.toArray().slice(0, 4), [3, 2, 1, 0]);
+  assert.equal(sv.memInstructions, 2); assert.equal(sv.transactions, 32); assert.equal(sv.coalescing, 1);
+  assert.throws(() => g.launch(v4, { grid: 1, block: 33 }, x, y), /out-of-bounds|multiple/);
+  assert.equal(f16round(1 + 2 ** -11), 1); assert.equal(f16round(1 + 3 * 2 ** -11), 1 + 2 ** -9); assert.equal(f16round(70000), Infinity);
+  const { mm } = g.compile(`function mm(A, B, C) {
+    const lane = threadIdx.x;
+    let acc = [0, 0, 0, 0, 0, 0, 0, 0];
+    acc = __mma_sync(A, 0, 16, B, 0, 16, acc);
+    for (let j = 0; j < 8; j++) C[(lane >> 1) * 16 + (lane & 1) * 8 + j] = acc[j];
+  }`);
+  const A = g.from(Array.from({ length: 256 }, (_, i) => (i % 7) / 4)), B = g.from(Array.from({ length: 256 }, (_, i) => (i % 5) - 2)), C = g.alloc(256);
+  const sm = g.launch(mm, { grid: 1, block: 32 }, A, B, C);
+  let ok = true;
+  for (let r = 0; r < 16; r++) for (let c = 0; c < 16; c++) { let w = 0; for (let k = 0; k < 16; k++) w += A.data[r * 16 + k] * B.data[k * 16 + c]; if (Math.abs(C.data[r * 16 + c] - w) > 1e-3) ok = false; }
+  assert.ok(ok);
+  assert.equal(sm.tensorOps, 1);
+});

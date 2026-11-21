@@ -1,0 +1,15 @@
+<div class="paper-ref">
+<div class="k">Project C · GEMM, naive to tensor cores · Milestone 1 of 5</div>
+Project C takes one kernel, $C = A \times B$ for square FP32 matrices, from naive to tensor cores, then (in Part 6) down to hand-scheduled assembly. Keep every version: the optimisation log in C3 compares them.
+</div>
+
+<h2>Build: a shared-memory tiled SGEMM</h2>
+<p>Write <code>gemmTiled(A, B, C, n)</code> using 16×16 shared-memory tiles as in Chapter 4.2, plus <code>runTiled(A, B, C, n)</code> with 16×16 blocks. Also keep a naive version, <code>gemmNaive</code> with <code>runNaive(A, B, C, n)</code>, for comparison; your 4.1 kernel works. <code>n</code> is a multiple of 16.</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li>Correct on 32×32 and 128×128.</li>
+<li>Uses shared memory, all FMAs via <code>fma()</code>.</li>
+<li><strong>Global traffic per FMA</strong> (L2 bytes moved ÷ FMAs) at least <strong>4× lower</strong> than your naive kernel's on 128×128.</li>
+<li><strong>FMA share</strong> of issued instructions at least 27%. The naive kernel manages about 24%; a tiled kernel whose inner loop the compiler can't unroll drops to about 22%.</li>
+</ul>

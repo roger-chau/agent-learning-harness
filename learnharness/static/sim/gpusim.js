@@ -43,10 +43,29 @@
     sharedPerSM: 65536,
     maxSharedPerBlock: 49152,
     sharedAllocUnit: 256,
+    tensorFmaPerSmPerCycle: 256, // tensor cores: 8x the FP32 lanes (peak 12,288 GFLOP/s)
   });
 
   const MAX_BRANCH_EVALS = 20_000_000;
   const TARGET = Symbol("gw.target");
+
+  /** Round a number to the nearest IEEE half-precision value (round half to even). */
+  function f16round(x) {
+    if (!Number.isFinite(x) || x === 0) return x;
+    const sgn = x < 0 ? -1 : 1, a = Math.abs(x);
+    if (a >= 65520) return sgn * Infinity;
+    let step;
+    if (a < 6.103515625e-5) step = 5.960464477539063e-8; // subnormal spacing 2^-24
+    else {
+      let e = Math.floor(Math.log2(a));
+      if (2 ** e > a) e--;
+      if (2 ** (e + 1) <= a) e++;
+      step = 2 ** (e - 10);
+    }
+    const q = a / step, f = Math.floor(q), d = q - f;
+    const r = d > 0.5 || (d === 0.5 && f % 2 === 1) ? f + 1 : f;
+    return sgn * r * step;
+  }
 
   // ---------------------------------------------------------------------------
   // Source instrumentation: wrap `if`, `while`, `do..while` and `for` conditions so
@@ -171,7 +190,14 @@
             const line = baseLine + lineOf(s, i);
             if (kw === "for") {
               const parts = splitTopLevel(inner, ";");
-              if (parts.length === 3 && parts[1].trim()) {
+              // Like a compiler, fully "unroll" short loops with literal bounds: no branch is recorded.
+              const lit = /^\s*(?:let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(-?\d+)\s*$/.exec(parts[0] || "");
+              const cond = lit && /^\s*([A-Za-z_$][\w$]*)\s*(<=?)\s*(-?\d+)\s*$/.exec(parts[1] || "");
+              const step = cond && new RegExp(`^\\s*(?:${lit[1]}\\+\\+|\\+\\+${lit[1]}|${lit[1]}\\s*\\+=\\s*1)\\s*$`).test(parts[2] || "");
+              const trips = cond ? (+cond[3] + (cond[2] === "<=" ? 1 : 0)) - +lit[2] : Infinity;
+              if (step && cond[1] === lit[1] && trips <= 64) {
+                out += `for (${inner})`;
+              } else if (parts.length === 3 && parts[1].trim()) {
                 out += `for (${transform(parts[0], baseLine)};${wrap(parts[1], "for", line)};${transform(parts[2], baseLine)})`;
               } else {
                 out += `for (${transform(inner, baseLine)})`;
@@ -263,7 +289,7 @@
     return s.length - 1;
   }
 
-  const WARP_OPS = ["__shfl_sync", "__shfl_down_sync", "__shfl_up_sync", "__shfl_xor_sync", "__ballot_sync", "__any_sync", "__all_sync", "__syncwarp"];
+  const WARP_OPS = ["__shfl_sync", "__shfl_down_sync", "__shfl_up_sync", "__shfl_xor_sync", "__ballot_sync", "__any_sync", "__all_sync", "__syncwarp", "__mma_sync"];
   const SYNC_RE = new RegExp(`\\b(__syncthreads|${WARP_OPS.join("|")})\\s*\\(`, "g");
 
   // Rewrite each synchronising call `name(args)` into `(yield ["name", args])`.
@@ -380,7 +406,9 @@
       const { code, sites } = instrument(barriersToYields(src));
       const names = topLevelFunctionNames(src);
       const rt = { br: (id, v) => v, seg: () => {}, shared: () => { throw new Error("shared() can only be used inside a kernel launch"); },
-        atomic: () => { throw new Error("atomics can only be used inside a kernel launch"); } };
+        atomic: () => { throw new Error("atomics can only be used inside a kernel launch"); },
+        fma: (a, b, c) => a * b + c, f16: f16round,
+        vec: () => { throw new Error("ldg4/stg4 can only be used inside a kernel launch"); } };
       const gNames = Object.keys(globals).filter((k) => /^[A-Za-z_$][\w$]*$/.test(k));
       const factory = new Function(
         "__rt", ...gNames,
@@ -401,6 +429,10 @@ const atomicExch = (a, i, v) => __rt.atomic("exch", a, i, v);
 const atomicOr = (a, i, v) => __rt.atomic("or", a, i, v);
 const atomicAnd = (a, i, v) => __rt.atomic("and", a, i, v);
 const atomicCAS = (a, i, cmp, v) => __rt.atomic("cas", a, i, v, cmp);
+const fma = (a, b, c) => __rt.fma(a, b, c);
+const ldg4 = (a, i) => __rt.vec(a, i, null);
+const stg4 = (a, i, v) => __rt.vec(a, i, v);
+const f16 = (x) => __rt.f16(x);
 const __set = (e) => { threadIdx = e.threadIdx; blockIdx = e.blockIdx; blockDim = e.blockDim; gridDim = e.gridDim; warpSize = e.warpSize; };
 ${code}
 ;return { __set, fns: { ${names.map((n) => `${n}: typeof ${n} === "undefined" ? undefined : ${n}`).join(", ")} } };`
@@ -447,6 +479,7 @@ ${code}
         bytesRequested: 0, bytesMoved: 0, dramBytes: 0, l2Hits: 0, l2Misses: 0,
         sharedLoads: 0, sharedStores: 0, sharedWavefronts: 0, bankConflicts: 0, barriers: 0,
         atomics: 0, globalAtomics: 0, atomicSerialization: 0, warpOps: 0,
+        fmaInstructions: 0, flops: 0, tensorOps: 0,
         branches: 0, divergentBranches: 0,
         divergentSites: {}, sites, registers, sharedPerBlock: 0,
       };
@@ -566,10 +599,66 @@ ${code}
         return old;
       };
 
+      const prevFma = rt.fma, prevVec = rt.vec;
+      rt.fma = (a, b, c) => { lane.fma++; return a * b + c; };
+      // 16-byte vector access: one instruction moves 4 consecutive elements (index must be a multiple of 4).
+      rt.vec = (arr, i, v) => {
+        const tg = arr && arr[TARGET];
+        if (!tg) throw new TypeError("ldg4/stg4 need a device buffer or a shared() array");
+        if (!Number.isInteger(i) || i % 4 !== 0) throw new RangeError(`vector access index ${i} must be a multiple of 4 (16-byte aligned)`);
+        const store = v !== null && v !== undefined;
+        if (tg.kind === "global") {
+          const d = tg.buf.data;
+          if (i < 0 || i + 3 >= d.length) throw new RangeError(`out-of-bounds vector ${store ? "write" : "read"} at ${i} (length ${d.length})`);
+          lane.mem.push(tg.buf.id, i * tg.buf.bytesPerElement, 4 * tg.buf.bytesPerElement, store ? 1 : 0, lane.seg * 1e4 + lane.pos++);
+          if (store) { for (let q = 0; q < 4; q++) d[i + q] = v[q]; return undefined; }
+          return [d[i], d[i + 1], d[i + 2], d[i + 3]];
+        }
+        if (i < 0 || i + 3 >= tg.n) throw new RangeError(`out-of-bounds shared vector access at ${i} in shared("${tg.name}")`);
+        // Shared memory serves 16-byte accesses in phases; account them as four word accesses.
+        for (let q = 0; q < 4; q++) lane.smem.push(tg.base + (i + q) * tg.bpe, store ? 1 : 0, lane.seg * 1e4 + lane.pos++);
+        if (store) { for (let q = 0; q < 4; q++) tg.data[i + q] = v[q]; return undefined; }
+        return [tg.data[i], tg.data[i + 1], tg.data[i + 2], tg.data[i + 3]];
+      };
+
+      // Tensor-core MMA for one warp: C(16x16) += A(16x16) x B(16x16), FP16 inputs, FP32 accumulate.
+      // Lane l holds accumulator row l>>1, columns (l&1)*8 .. +7 (8 values).
+      const mma = (lanes) => {
+        const [, sA, aOff, lda, sB, bOff, ldb] = lanes[0].wait;
+        const A = sA && sA[TARGET], B = sB && sB[TARGET];
+        if (!A || !B) throw new TypeError("__mma_sync needs shared() arrays or device buffers for A and B");
+        const da = A.kind === "global" ? A.buf.data : A.data, db = B.kind === "global" ? B.buf.data : B.data;
+        const a = new Float64Array(256), b = new Float64Array(256);
+        for (let r = 0; r < 16; r++) for (let k = 0; k < 16; k++) {
+          const ia = aOff + r * lda + k, ib = bOff + r * ldb + k;
+          if (ia < 0 || ia >= da.length || ib < 0 || ib >= db.length) throw new RangeError("__mma_sync tile reads out of bounds");
+          a[r * 16 + k] = f16round(da[ia]); b[r * 16 + k] = f16round(db[ib]);
+        }
+        stats.tensorOps++;
+        if (A.kind === "shared" || B.kind === "shared") { stats.sharedLoads += 2; stats.sharedWavefronts += 16; }
+        return lanes.map((t) => {
+          const acc = t.wait[7];
+          if (!Array.isArray(acc) || acc.length !== 8) throw new TypeError("__mma_sync's accumulator must be an array of 8 numbers per lane");
+          const row = t.laneId >> 1, c0 = (t.laneId & 1) * 8, out = new Array(8);
+          for (let j = 0; j < 8; j++) {
+            let sum = acc[j];
+            for (let k = 0; k < 16; k++) sum += a[row * 16 + k] * b[k * 16 + c0 + j];
+            out[j] = Math.fround(sum);
+          }
+          return out;
+        });
+      };
+
       // Warp-level operations: all active lanes of a warp meet, then each gets its result.
       const resolveWarpOp = (lanes) => {
         const op = lanes[0].wait[0];
         for (const t of lanes) if (t.wait[0] !== op) throw new Error(`warp lanes reached different warp operations (${op} vs ${t.wait[0]}): is one inside a divergent branch?`);
+        if (op === "__mma_sync") {
+          if (lanes.length !== W) throw new Error("__mma_sync needs all 32 lanes of the warp");
+          const res = mma(lanes);
+          lanes.forEach((t, k) => { t.resume = res[k]; t.wait = null; });
+          return;
+        }
         stats.warpOps++;
         const byLane = new Map(lanes.map((t) => [t.laneId, t]));
         const val = (l, fallback) => (byLane.has(l) ? byLane.get(l).wait[2] : fallback);
@@ -615,7 +704,7 @@ ${code}
               y: Math.floor(tid / block.x) % block.y,
               z: Math.floor(tid / (block.x * block.y)),
             });
-            threads.push({ threadIdx, laneId: tid % W, warp: Math.floor(tid / W), lane: { mem: [], smem: [], atom: [], branches: [], branchCount: {}, segCount: {}, seg: 0, pos: 0 }, it: null, done: false, wait: null, resume: undefined });
+            threads.push({ threadIdx, laneId: tid % W, warp: Math.floor(tid / W), lane: { mem: [], smem: [], atom: [], branches: [], branchCount: {}, segCount: {}, seg: 0, pos: 0, fma: 0 }, it: null, done: false, wait: null, resume: undefined });
           }
           const ctx = (t) => { lane = t.lane; set({ threadIdx: t.threadIdx, blockIdx, blockDim: block, gridDim: grid, warpSize: W }); };
           const where = (t) => `block (${bx},${by},${bz}) thread (${t.threadIdx.x},${t.threadIdx.y},${t.threadIdx.z})`;
@@ -685,6 +774,8 @@ ${code}
         rt.seg = prevSeg;
         rt.shared = prevShared;
         rt.atomic = prevAtomic;
+        rt.fma = prevFma;
+        rt.vec = prevVec;
       }
 
       // Occupancy and the time model.
@@ -704,12 +795,21 @@ ${code}
       const dramRate = Math.max(1e-9, Math.min(dramPeak, inFlight / spec.dramLatencyCycles));
       const dramCycles = stats.dramBytes / dramRate;
       const l2Cycles = stats.bytesMoved / (spec.l2BandwidthGBs / spec.clockGHz);
-      const warpInstr = stats.memInstructions + stats.branches + stats.sharedWavefronts + stats.barriers + stats.warpOps + (stats.atomicSerialization - stats.atomics);
-      const issueCycles = warpInstr / (spec.sms * spec.issuePerSmPerCycle);
-      const cycles = Math.max(dramCycles, l2Cycles, issueCycles) + (stats.memInstructions ? spec.dramLatencyCycles : 0);
-      stats.limitedBy = cycles === 0 ? "nothing" : dramCycles >= l2Cycles && dramCycles >= issueCycles
-        ? (dramRate < dramPeak ? "DRAM latency (too few requests in flight)" : "DRAM bandwidth")
-        : l2Cycles >= issueCycles ? "L2 bandwidth" : "instruction issue";
+      const warpInstr = stats.memInstructions + stats.branches + stats.sharedWavefronts + stats.barriers + stats.warpOps + (stats.atomicSerialization - stats.atomics) + stats.fmaInstructions;
+      // Blocks are spread over the SMs in rounds: an SM that gets ceil(blocks / sms) blocks does
+      // that many blocks' worth of work. Too few blocks leaves SMs idle; a partial last round
+      // is the tail effect.
+      const smRounds = Math.ceil(stats.blocks / spec.sms);
+      const issueCycles = (smRounds * (warpInstr / stats.blocks)) / spec.issuePerSmPerCycle;
+      const tensorCycles = (smRounds * (stats.tensorOps / stats.blocks) * 4096) / spec.tensorFmaPerSmPerCycle;
+      const cycles = Math.max(dramCycles, l2Cycles, issueCycles, tensorCycles) + (stats.memInstructions ? spec.dramLatencyCycles : 0);
+      const top = Math.max(dramCycles, l2Cycles, issueCycles, tensorCycles);
+      stats.limitedBy = cycles === 0 ? "nothing"
+        : top === dramCycles ? (dramRate < dramPeak ? "DRAM latency (too few requests in flight)" : "DRAM bandwidth")
+        : top === l2Cycles ? "L2 bandwidth"
+        : top === tensorCycles ? "tensor cores"
+        : stats.fmaInstructions >= 0.5 * warpInstr ? "FP32 compute" : "instruction issue";
+      stats.flops += stats.tensorOps * 2 * 4096;
       stats.cycles = Math.round(cycles);
       stats.timeUs = +(cycles / (spec.clockGHz * 1000)).toFixed(3);
       stats.coalescing = stats.bytesMoved ? +(stats.bytesRequested / stats.bytesMoved).toFixed(4) : 1;
@@ -717,6 +817,8 @@ ${code}
       stats.achievedBandwidthGBs = cycles ? +((stats.dramBytes / (cycles / spec.clockGHz))).toFixed(1) : 0;
       stats.percentOfPeakBandwidth = +((100 * stats.achievedBandwidthGBs) / spec.dramBandwidthGBs).toFixed(1);
       stats.divergence = stats.branches ? +(stats.divergentBranches / stats.branches).toFixed(4) : 0;
+      stats.achievedGflops = cycles ? +((stats.flops / (cycles / spec.clockGHz))).toFixed(1) : 0;
+      stats.percentOfPeakFp32 = +((100 * stats.achievedGflops) / (spec.sms * spec.lanesPerSM * 2 * spec.clockGHz)).toFixed(1);
       return stats;
     }
   }
@@ -767,6 +869,10 @@ ${code}
   /** Line up lanes' memory ops, shared-memory ops and branches by order and account them per warp. */
   function accountWarp(lanes, stats, sector, l2) {
     if (!lanes.length) return;
+    // FMAs: lanes issue together, so the warp issues as many FMA instructions as its busiest lane.
+    let fmaMax = 0;
+    for (const L of lanes) { fmaMax = Math.max(fmaMax, L.fma); stats.flops += 2 * L.fma; }
+    stats.fmaInstructions += fmaMax;
     // Global memory: operations with the same program-location key execute together.
     const memGroups = new Map(); // key -> Map(buf*2+store -> group)
     for (const L of lanes) {
@@ -853,5 +959,5 @@ ${code}
     }
   }
 
-  return { Device, Buffer, DEFAULT_SPEC, instrument, topLevelFunctionNames, testImage, toRGBA, occupancy, barriersToYields, WARP_OPS };
+  return { Device, Buffer, DEFAULT_SPEC, instrument, topLevelFunctionNames, testImage, toRGBA, occupancy, barriersToYields, WARP_OPS, f16round };
 });

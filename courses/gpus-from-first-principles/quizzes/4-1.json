@@ -1,0 +1,18 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric", "prompt": "How many FLOPs does multiplying two 512×512 matrices take? (in millions)", "unit": "MFLOP", "answer": 268.435456, "tolerance": "0.1%",
+     "explanation": "2 × 512³ = 268,435,456."},
+    {"id": "q2", "type": "numeric", "prompt": "Best-case arithmetic intensity of an n×n FP32 GEMM with n = 1,200, in FLOP/byte?", "unit": "FLOP/B", "answer": 200, "tolerance": 0,
+     "explanation": "n/6 = 200: deep in compute-bound territory."},
+    {"id": "q3", "type": "single", "prompt": "Why is the naive GEMM kernel slow even if every load hits in cache?",
+     "options": ["FMAs are slow", "Each FMA comes with two loads and a branch, so only ~1 in 4 issued instructions does math", "Matrices are too big", "Divergence"], "answer": 1,
+     "explanation": "Instruction mix caps it at about 25% of peak."},
+    {"id": "q4", "type": "single", "prompt": "What is an FMA?",
+     "options": ["Fast memory access", "a·b + c computed as one instruction with one rounding", "A floating-point move", "Two separate instructions"], "answer": 1,
+     "explanation": "Fused multiply-add: one instruction, one rounding, two FLOPs."},
+    {"id": "q5", "type": "multi", "prompt": "Which techniques raise the share of FMAs among issued instructions?",
+     "options": ["Tiling A and B in shared memory", "Computing several outputs per thread from values in registers", "Fewer, wider (vector) loads", "Adding more __syncthreads()"], "answer": [0, 1, 2],
+     "explanation": "Barriers are overhead, not math."}
+  ]
+}

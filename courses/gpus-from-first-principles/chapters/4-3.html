@@ -1,0 +1,51 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>The tiled kernel still issues two shared-memory loads for every FMA. Shared memory is fast, but each load is still an instruction, and instructions are the bottleneck: one FMA in three issued is a ceiling of about 33% of peak. To go further, the operands must come from <strong>registers</strong>, the only storage an FMA can read for free.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Have each thread compute a small block of outputs, an outer product, from values held in registers.</strong> If a thread owns a $4 \times 4$ patch of $C$, then for each $k$ it loads 4 values of $A$ (a column slice) and 4 values of $B$ (a row slice) and does all $4 \times 4 = 16$ FMAs between them:</p>
+<div class="eq">$$C_{ij} \mathrel{+}= a_i \cdot b_j \quad \text{for } i, j \in \{0..3\}: \quad 8 \text{ loads} \to 16 \text{ FMAs}$$</div>
+<p>In general, an $r \times c$ thread tile costs $r + c$ loads per $r \cdot c$ FMAs. Loads per FMA fall from 2 (one output per thread) to $(r+c)/(rc)$: 0.5 for 4×4, 0.25 for 8×8.</p>
+<pre><code>const acc = new Array(16).fill(0);              // 16 accumulators in registers
+for (let k = 0; k &lt; 16; k++) {
+  const a = ldg4(sA, k * BM + tr);              // 4 values of A's column k
+  const b = ldg4(sB, k * BM + tc);              // 4 values of B's row k
+  for (let i = 0; i &lt; 4; i++)
+    for (let j = 0; j &lt; 4; j++) acc[i * 4 + j] = fma(a[i], b[j], acc[i * 4 + j]);
+}</code></pre>
+<p><code>ldg4</code> reads 4 consecutive values in <em>one</em> instruction (a 16-byte vector load, Chapter 4.4). For it to work, A's tile is stored <strong>transposed</strong> in shared memory, so a thread's 4 values of column $k$ sit next to each other.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: the costs of a bigger thread tile</h2>
+<table>
+<tr><th>Thread tile</th><th>Accumulator registers</th><th>Shared loads per FMA</th><th>Outputs per 64-thread block</th></tr>
+<tr><td>1×1</td><td>1</td><td>2</td><td>8×8</td></tr>
+<tr><td>4×4</td><td>16</td><td>0.5</td><td>32×32</td></tr>
+<tr><td>8×8</td><td>64</td><td>0.25</td><td>64×64</td></tr>
+</table>
+<p>Bigger thread tiles cut instructions but cost <strong>registers</strong>: 64 accumulators, plus the loaded values, plus addresses, is easily 100+ registers per thread. That means fewer resident warps (Chapter 2.6), and Volkov's point (Part 2's paper) applies: that's fine, as long as each warp has plenty of independent work. A thread with 64 independent FMAs per $k$ step has ILP to spare.</p>
+<p>They also cost <strong>parallelism</strong>: bigger block tiles mean fewer blocks. On a 256×256 matrix, 64×64 tiles give 16 blocks, exactly one per GW-1 SM. On anything smaller, part of the GPU idles. Real libraries pick tile shapes per problem size for this reason.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: the GEMM hierarchy</h2>
+<p>A high-performance GEMM is three nested tilings:</p>
+<ol>
+<li><strong>Block tile</strong> (e.g. 64×64 of C): loaded through shared memory, reused by all threads of the block.</li>
+<li><strong>Warp tile</strong>: the slice of the block tile one warp computes. In real kernels it's arranged so the warp's shared-memory reads are conflict-free or broadcast.</li>
+<li><strong>Thread tile</strong> (e.g. 4×4 or 8×8): held in registers, the outer product.</li>
+</ol>
+<p>CUTLASS's documentation draws exactly this hierarchy. Each level exists to raise reuse at the level above it.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Real kernels run 128 or 256 threads per block with block tiles like 128×128 and thread tiles of 8×8. Our 256×256 test matrices are too small for that, so the milestone uses smaller tiles.</li>
+<li>Register pressure is decided by the compiler. Spills (Chapter 2.6) can silently ruin a register-tiled kernel, and Part 6 shows how to spot them in the generated code.</li>
+<li>In JavaScript, <code>acc</code> is an array. On a GPU, a fully unrolled kernel keeps those 16 or 64 values in individual registers; that only works because the loops over <code>i</code> and <code>j</code> have constant trip counts.</li>
+</ul>
+</section>
