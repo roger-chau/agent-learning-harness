@@ -1,62 +1,73 @@
 # Groundwork
 
-A tutor that runs on your machine. It finds what you don't know and teaches it from first principles.
+Deep, hands-on courses that rebuild a subject from first principles. They run on your machine.
 
-Name a topic and the tutor maps it into small concepts linked by their prerequisites. It asks probe questions to find where your understanding stops, then walks down to the lowest missing idea and builds back up, one block at a time. Each concept you're assessed on is scheduled for spaced review.
+Every chapter follows the same five steps: the real problem, the smallest idea, add one block, the whole machine, then reality. Chapters include diagrams, animations you can step through, and simulations you drive. An in-page terminal runs your code, and you only move on once you've passed the exercises and the quiz. Long-running projects grow across a course in milestones and end in a capstone. An **Ask** panel answers questions about the chapter you're reading. It gives hints, never solutions.
 
-It's a small agent harness around the Claude Messages API (`claude-opus-5-5`, adaptive thinking, streaming). The agent loop, the tools and the learner model are all plain Python you can read and change.
+The first course is **GPUs from First Principles** (`courses/gpus-from-first-principles/`), aimed at future GPU performance and compiler engineers. The course format is described in [`docs/course-format.md`](docs/course-format.md).
 
 ## Run it
 
-You need Python 3.10+ and an Anthropic API key.
+You need Python 3.10+. The Ask panel also needs an Anthropic API key. Everything else works without one.
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -e .
-export ANTHROPIC_API_KEY=sk-ant-...
+export ANTHROPIC_API_KEY=sk-ant-...   # only for the Ask panel
 groundwork
 ```
 
 Then open http://127.0.0.1:8000.
 
-Options: `groundwork --port 9000`, `groundwork --host 0.0.0.0`.
-
 | Environment variable | Default | Meaning |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | none | API key. An `ant auth login` profile also works. |
-| `GROUNDWORK_MODEL` | `claude-opus-5-5` | Model for the tutor. |
-| `GROUNDWORK_EFFORT` | `medium` | Thinking effort: `low`, `medium`, `high`, `xhigh`, `max`. Higher is slower and more thorough. |
-| `GROUNDWORK_DATA` | `data/learner.json` | Where your learner model is stored. |
+| `ANTHROPIC_API_KEY` | none | Key for the Ask panel. An `ant auth login` profile also works. |
+| `GROUNDWORK_MODEL` | `claude-opus-5-5` | Model for the Ask panel. |
+| `GROUNDWORK_EFFORT` | `medium` | Thinking effort for the Ask panel. |
+| `GROUNDWORK_DATA` | `data/progress.json` | Where your progress is stored. |
+| `GROUNDWORK_UNLOCK` | unset | Set to `1` to unlock every written chapter (for authoring). |
 
-## How it works
+## How it's built
 
 ```
-browser ──SSE──▶ server.py ──▶ agent.run_turn ──stream──▶ Claude
-                                   │   ▲
-                         tool_use  ▼   │ tool_result
-                                tools.py ──▶ store.py (learner.json)
+courses/                       static course content
+  catalog.json                 all courses, available and planned
+  <slug>/course.json           parts → chapters, milestones, checkpoints
+  <slug>/chapters/<id>.html    chapter text, SVG diagrams, <div data-gw="…"> components
+  <slug>/exercises/<id>.js     exercise prompt, starter code, checks (run in the browser)
+  <slug>/quizzes/<id>.json     quiz with answers (graded server-side, never sent to the browser)
+learnharness/
+  server.py                    FastAPI: content, gating, quiz grading, Ask panel (SSE)
+  progress.py                  completion and hard gating
+  content.py                   course loading and quiz grading
+  agent.py, prompts.py         the Ask panel: Claude Messages API with web search
+  static/sim/gpusim.js         the GPU simulator (browser, Web Worker and Node)
+  static/sim/worker.js         runs learner code off the main thread, with a timeout
+  static/terminal.js           code editor and console
+  static/components.js         animations and simulations used by chapters
 ```
 
-- **`learnharness/agent.py`**: the agent loop. It streams each step, runs the custom tools, feeds results back, and resumes `pause_turn`. Refusals and truncated tool calls are handled without corrupting history. Server-side fallbacks (`fallbacks: "default"`) re-run a classifier-declined request on Anthropic's recommended fallback model.
-- **`learnharness/tools.py`**: the tutor's tools. All inputs are validated before they run.
-  - `get_learner_state` reads the goal, every concept with its mastery, misconceptions and focus.
-  - `map_concepts` adds concepts and prerequisite edges. Edges that would create a cycle are dropped.
-  - `record_assessment` records evidence (`gap` / `shaky` / `solid` / `mastered`) and reschedules review.
-  - `set_focus` marks the block being taught.
-  - `get_prerequisite_chain` lists everything under a concept, foundations first.
-  - `get_due_reviews` lists concepts that are due.
-  - Anthropic's server-side `web_search` provides cited sources.
-- **`learnharness/prompts.py`**: the teaching method. Diagnose before teaching, find the lowest missing block, teach one idea per turn with worked examples, make the learner do the thinking, and change mastery only on evidence.
-- **`learnharness/scheduler.py`**: an SM-2-style spaced-review scheduler.
-- **`learnharness/store.py`**: the learner model. It's one human-readable JSON file holding topics, the concept graph, the conversation and sources.
-- **`learnharness/static/`**: the web UI in plain HTML, CSS and JS with no build step. It renders Markdown and KaTeX math (vendored, so it works offline) and draws a live SVG knowledge map with foundations at the bottom. Dark theme by default; a light theme is available.
+**The GPU simulator.** Kernels are JavaScript with CUDA-style built-ins (`threadIdx`, `blockIdx`, `blockDim`, `gridDim`). The simulator runs every thread, groups threads into warps of 32, and reports:
+- memory transactions (32-byte sectors) and coalescing efficiency;
+- warp-level branches and divergence, including loop trip-count divergence;
+- out-of-bounds accesses;
+- an estimated time from a simple bandwidth/issue model.
+
+It runs the threads of a warp one after another and lines up their memory operations and branches by order of execution. For code without divergence, that matches lockstep hardware exactly.
+
+**Gating.** A chapter is complete when its exercises pass and its quiz scores at least 80%. Each item unlocks when everything before it is complete. Planned (unwritten) chapters show as "coming soon".
 
 ## Development
 
 ```bash
 pip install -e ".[dev]"
-pytest
+pytest                          # server, gating, quiz grading
+node --test tests/*.test.mjs    # simulator, and every exercise's starter code fails its checks
 ```
 
-The tests replace Claude with a scripted fake streaming client, so they run without an API key.
+`tests/exercise_harness.cjs` runs an exercise's checks against any solution file, exactly as the browser worker does:
+
+```bash
+node tests/exercise_harness.cjs courses/<slug>/exercises/<id>.js my_solution.js
+```

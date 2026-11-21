@@ -1,0 +1,66 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "numeric",
+      "prompt": "Each thread does C = 4 cycles of compute per load, and memory latency is L = 36 cycles. How many threads does one execution unit need to stay fully busy?",
+      "unit": "threads",
+      "answer": 10,
+      "tolerance": 0,
+      "explanation": "⌈(C + L) / C⌉ = ⌈40 / 4⌉ = 10."
+    },
+    {
+      "id": "q2",
+      "type": "numeric",
+      "prompt": "Same C = 4, L = 36, but with only 6 threads. What utilization does the unit reach? Answer as a percentage.",
+      "unit": "%",
+      "answer": 60,
+      "tolerance": 0.5,
+      "explanation": "N·C / (C+L) = 24 / 40 = 60%."
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Why can a GPU switch between threads every cycle at essentially no cost?",
+      "options": [
+        "It saves registers to memory very quickly",
+        "All resident threads keep their registers on-chip simultaneously, so switching is just choosing which one issues",
+        "Its threads never use registers",
+        "The operating system schedules them"
+      ],
+      "answer": 1,
+      "explanation": "Switching is a selection decision, not a save and restore. That's why the register file is so large and why it limits how many threads fit."
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Latency hiding with many threads does what to the latency of each individual load?",
+      "options": ["Reduces it", "Leaves it unchanged; other work fills the wait", "Eliminates it", "Doubles it"],
+      "answer": 1,
+      "explanation": "Each load takes just as long. The unit simply has other ready work while it waits."
+    },
+    {
+      "id": "q5",
+      "type": "numeric",
+      "prompt": "An SM has 65,536 32-bit registers. If a kernel uses 80 registers per thread, how many threads can be resident (ignoring all other limits and allocation granularity)?",
+      "unit": "threads",
+      "answer": 819,
+      "tolerance": 1,
+      "explanation": "65,536 / 80 = 819.2, so 819 threads. Real hardware allocates registers per warp in chunks and schedules whole blocks, so the true number is lower and depends on block size (for example 768 with 256-thread blocks). Part 2 covers this."
+    },
+    {
+      "id": "q6",
+      "type": "multi",
+      "prompt": "Which changes reduce the number of threads needed to keep an execution unit busy?",
+      "options": [
+        "More arithmetic per load",
+        "Lower memory latency",
+        "Issuing several independent loads per thread before using any of them",
+        "Using more registers per thread"
+      ],
+      "answer": [0, 1, 2],
+      "explanation": "More work per load and lower latency shrink (C+L)/C. Independent loads (ILP) give each thread several things in flight. More registers per thread doesn't change the requirement; it reduces how many threads fit."
+    }
+  ]
+}

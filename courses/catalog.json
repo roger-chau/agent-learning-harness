@@ -1,0 +1,51 @@
+[
+ {
+  "slug": "gpus-from-first-principles",
+  "status": "available",
+  "track": "GPU & compilers",
+  "title": "GPUs from First Principles",
+  "summary": "How a GPU really works and how to make code fast on it, from why throughput machines exist to a fused attention kernel you design, tune, profile and explain."
+ },
+ {
+  "slug": "build-a-tiny-gpu-kernel-compiler",
+  "status": "planned",
+  "track": "GPU & compilers",
+  "title": "Build a Tiny GPU Kernel Compiler",
+  "summary": "A mini Triton-like tile language compiled to a simulated GPU, one hardware concept at a time."
+ },
+ {
+  "slug": "gpu-compilers",
+  "status": "planned",
+  "track": "GPU & compilers",
+  "title": "GPU Compilers from First Principles",
+  "summary": "IR, SSA, passes, register allocation, scheduling, NVPTX/AMDGPU lowering, MLIR and Triton internals."
+ },
+ {
+  "slug": "quantitative-architecture",
+  "status": "planned",
+  "track": "Companion",
+  "title": "Quantitative Computer Architecture",
+  "summary": "Companion to Hennessy & Patterson (7th ed.): performance equations, ILP, memory hierarchy, data-level parallelism."
+ },
+ {
+  "slug": "dsa-for-interviews",
+  "status": "planned",
+  "track": "Side track",
+  "title": "DSA for Interviews",
+  "summary": "Interview patterns drilled with timed problems and a mock-interviewer mode, ordered for GPU and compiler roles."
+ },
+ {
+  "slug": "embedded-linux-yocto",
+  "status": "planned",
+  "track": "Work track",
+  "title": "Embedded Linux & Yocto",
+  "summary": "The boot chain, cross toolchains, and BitBake from first principles: recipes, layers, sstate, images, devicetree."
+ },
+ {
+  "slug": "embedded-gpus",
+  "status": "planned",
+  "track": "Bridge",
+  "title": "Embedded GPUs & Accelerators",
+  "summary": "Jetson/Mali-class SoCs, unified memory, power limits, GPU drivers and Mesa in Yocto images."
+ }
+]

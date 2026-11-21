@@ -1,0 +1,59 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "numeric",
+      "prompt": "L1: 4 cycles, 80% hit rate. L2: 20 cycles, 50% hit rate (of L1 misses). DRAM: 200 cycles. What's the AMAT in cycles?",
+      "unit": "cycles",
+      "answer": 28,
+      "tolerance": 0.05,
+      "explanation": "4 + 0.2 × (20 + 0.5 × 200) = 4 + 0.2 × 120 = 28 cycles."
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "In the chapter's example, DRAM is reached only 4% of the time but contributes most of the AMAT. Why?",
+      "options": [
+        "DRAM is accessed in parallel with L1",
+        "Its latency is so large that even a small fraction of accesses dominates the average",
+        "Cache lines are 64 bytes",
+        "The L2 hit rate is measured over all accesses"
+      ],
+      "answer": 1,
+      "explanation": "0.04 × 300 = 12 cycles out of 17.4. Rare-but-huge costs dominate averages."
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "A program walks a linked list whose nodes are scattered randomly across 4 GB of memory. Which describes it best?",
+      "options": ["Bandwidth-bound", "Latency-bound", "Compute-bound", "Cache-resident"],
+      "answer": 1,
+      "explanation": "Each load's address depends on the previous load, so only one request can be in flight. Latency, not bandwidth, sets the speed."
+    },
+    {
+      "id": "q4",
+      "type": "multi",
+      "prompt": "Which CPU mechanisms aim to reduce or hide the latency seen by a <em>single</em> thread?",
+      "options": ["Caches", "Out-of-order execution", "Hardware prefetching", "Adding more DRAM channels"],
+      "answer": [0, 1, 2],
+      "explanation": "Caches, out-of-order execution and prefetching all target one thread's waiting time. More DRAM channels add bandwidth; they don't make any single access faster."
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Why do caches fetch a whole 64-byte line on a miss instead of just the 4 bytes requested?",
+      "options": ["Temporal locality", "Spatial locality", "To reduce DRAM latency", "Because registers are 64 bytes"],
+      "answer": 1,
+      "explanation": "Spatial locality: nearby addresses are likely to be used soon, so the rest of the line is probably useful."
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "You stream once through a 2 GB array, adding pairs of numbers. Larger caches would…",
+      "options": ["help a lot, because the data is reused", "help little, because each byte is used once and the data doesn't fit", "make it latency-bound", "make it compute-bound"],
+      "answer": 1,
+      "explanation": "No reuse and no fit: everything comes from DRAM, so the limit is bandwidth (and enough requests in flight)."
+    }
+  ]
+}

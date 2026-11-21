@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "groundwork"
 version = "0.1.0"
-description = "A local tutor agent that finds what you don't know and teaches it from first principles."
+description = "Deep, hands-on courses that rebuild a subject from first principles, with a GPU simulator, in-page terminal and gated practice."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -24,4 +24,4 @@ groundwork = "learnharness.server:main"
 include = ["learnharness*"]
 
 [tool.setuptools.package-data]
-learnharness = ["static/*", "static/vendor/*", "static/vendor/katex/*", "static/vendor/katex/fonts/*"]
+learnharness = ["static/*", "static/sim/*", "static/vendor/*", "static/vendor/katex/*", "static/vendor/katex/fonts/*"]

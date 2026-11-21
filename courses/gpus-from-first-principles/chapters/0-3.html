@@ -1,0 +1,75 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Take a simple processing loop: load a value, do a few cycles of arithmetic on it, load the next. With a cache miss to DRAM costing hundreds of cycles, the execution unit sits idle for most of every iteration. Caches and out-of-order execution shrink that idle time for <em>one</em> thread, at great cost in transistors and power, and for streaming data they barely help at all.</p>
+<p>The idle unit is the waste. Is there another way to fill it?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>When one thread is waiting, run a different one.</strong> If the machine holds many threads, each with its own independent work, then whenever one stalls on memory, another is usually ready to issue an instruction. The latency of each individual load doesn't change at all. It's simply <em>hidden</em> behind other threads' work.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 640 150" role="img" aria-label="One thread alternates between short compute bursts and long waits; four threads interleave to keep the unit busy">
+  <text class="d-mono" x="8" y="30">1 thread</text>
+  <rect class="d-box teal" x="90" y="16" width="30" height="22" rx="4"/><rect class="d-box rose" x="120" y="16" width="150" height="22" rx="4"/>
+  <rect class="d-box teal" x="270" y="16" width="30" height="22" rx="4"/><rect class="d-box rose" x="300" y="16" width="150" height="22" rx="4"/>
+  <rect class="d-box teal" x="450" y="16" width="30" height="22" rx="4"/><rect class="d-box rose" x="480" y="16" width="150" height="22" rx="4"/>
+  <text class="d-mono" x="8" y="80">unit</text>
+  <rect class="d-box teal" x="90" y="66" width="30" height="22" rx="4"/><rect class="d-box teal" x="270" y="66" width="30" height="22" rx="4"/><rect class="d-box teal" x="450" y="66" width="30" height="22" rx="4"/>
+  <text class="d-mono" x="125" y="82">idle…</text><text class="d-mono" x="305" y="82">idle…</text><text class="d-mono" x="485" y="82">idle…</text>
+  <text class="d-mono" x="8" y="128">6 threads</text>
+  <g>
+    <rect class="d-box teal" x="90" y="114" width="30" height="22" rx="4"/><rect class="d-box indigo" x="120" y="114" width="30" height="22" rx="4"/>
+    <rect class="d-box saffron" x="150" y="114" width="30" height="22" rx="4"/><rect class="d-box mint" x="180" y="114" width="30" height="22" rx="4"/>
+    <rect class="d-box rose" x="210" y="114" width="30" height="22" rx="4"/><rect class="d-box teal" x="240" y="114" width="30" height="22" rx="4" style="opacity:.7"/>
+    <rect class="d-box teal" x="270" y="114" width="30" height="22" rx="4"/><rect class="d-box indigo" x="300" y="114" width="30" height="22" rx="4"/>
+    <rect class="d-box saffron" x="330" y="114" width="30" height="22" rx="4"/><rect class="d-box mint" x="360" y="114" width="30" height="22" rx="4"/>
+    <rect class="d-box rose" x="390" y="114" width="30" height="22" rx="4"/><rect class="d-box teal" x="420" y="114" width="30" height="22" rx="4" style="opacity:.7"/>
+    <rect class="d-box teal" x="450" y="114" width="30" height="22" rx="4"/><rect class="d-box indigo" x="480" y="114" width="30" height="22" rx="4"/>
+    <rect class="d-box saffron" x="510" y="114" width="30" height="22" rx="4"/><rect class="d-box mint" x="540" y="114" width="30" height="22" rx="4"/>
+    <rect class="d-box rose" x="570" y="114" width="30" height="22" rx="4"/><rect class="d-box teal" x="600" y="114" width="30" height="22" rx="4" style="opacity:.7"/>
+  </g>
+</svg>
+<figcaption>Top: one thread computes briefly (teal) then waits on memory (rose); the unit is idle most of the time. Bottom: with enough threads, the unit issues from a different thread every slot and is never idle. Each thread is still just as slow as before.</figcaption>
+</figure>
+
+<p>For this to pay off, switching must be essentially <em>free</em>. If changing threads meant saving and restoring registers through memory, as an operating-system context switch does, the switch would cost more than the wait. So the hardware keeps <strong>every resident thread's registers on-chip at the same time</strong>, and choosing which thread issues next is just a multiplexer decision made each cycle.</p>
+<p>CPUs do a mild version of this: simultaneous multithreading (Intel calls it Hyper-Threading) keeps two threads per core. A GPU does it at enormous scale, with dozens of groups of threads resident on each core.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: how many threads?</h2>
+<p>Model it precisely. One execution unit issues one instruction per cycle. Each thread repeatedly does $C$ cycles of computation, then issues a load and waits $L$ cycles for it. A thread therefore needs the unit for $C$ cycles out of every $C + L$.</p>
+<p>Assume a <strong>greedy</strong> scheduler: it keeps issuing from the same thread until that thread stalls on its load, then switches to the next ready one. Real warp schedulers use policies in this spirit, such as "greedy-then-oldest". With $N$ threads, the demand on the unit per period is $N \cdot C$ cycles out of $C+L$. The unit can't be more than fully busy, so</p>
+<div class="eq">$$\text{utilization} = \min\!\left(1,\ \frac{N\cdot C}{C+L}\right) \qquad N_{\text{saturate}} = \left\lceil \frac{C+L}{C} \right\rceil$$</div>
+<p><strong>Worked example:</strong> $C = 2$ cycles of compute per load and $L = 16$ cycles of latency. One thread keeps the unit $2/18 \approx 11\%$ busy. Four threads: $8/18 \approx 44\%$. You need $\lceil 18/2 \rceil = 9$ threads to saturate it.</p>
+<p>Now use realistic GPU numbers. Memory latency is about 400 cycles, and a streaming kernel might do only about 4 cycles of work per load. That gives $\lceil 404/4 \rceil = 101$ threads' worth of work in flight <em>per execution unit</em>. That's the scale of concurrency we're designing for.</p>
+
+<div data-gw="latency-hiding"></div>
+
+<p>Press play with 4 threads, then drag the thread count up until the bottom "unit" row is solid. Then raise the memory latency and watch gaps reappear: <strong>more latency needs more threads</strong>. Raise compute per load instead and fewer threads suffice: <strong>more work per load needs fewer threads</strong>.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>This is Little's law again, seen from the execution unit. To keep a resource busy you need enough independent work in flight to cover its latency: $N \cdot C \geq C + L$ is "concurrency × work per item ≥ latency × throughput" with a throughput of one instruction per cycle.</p>
+<p>There are two ways to get that concurrency, and GPU performance engineers use both:</p>
+<ul>
+<li><strong>Thread-level parallelism (TLP)</strong>: more threads, each with one thing in flight. That's what the animation shows.</li>
+<li><strong>Instruction-level parallelism (ILP)</strong>: each thread issues several <em>independent</em> loads before it needs any of them, so one thread has several things in flight. Four independent loads per thread can stand in for four times as many threads.</li>
+</ul>
+<p>Hold on to that second option; it becomes important in Part 2 when threads get expensive, and again in Part 6 when the compiler schedules instructions for you.</p>
+
+<div class="callout key"><b>The key idea</b>A GPU doesn't make memory faster. It holds so many threads that some always have work ready, so the execution units stay busy while each individual thread waits.</div>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<p>Threads aren't free. Every resident thread's registers must stay on-chip, and the register file has a fixed size. On many recent NVIDIA GPUs each SM (streaming multiprocessor, the GPU's equivalent of a core) has 65,536 32-bit registers and can host at most 2,048 threads.</p>
+<ul>
+<li>If each thread needs 32 registers: $65{,}536 / 32 = 2{,}048$ threads fit, the maximum.</li>
+<li>If each thread needs 64 registers: only $1{,}024$ fit, half the latency-hiding capacity.</li>
+<li>If each thread needs 128 registers: only $512$ fit.</li>
+</ul>
+<p>So there is a trade-off at the heart of GPU tuning. Using more registers per thread can make each thread faster, through more ILP and more data kept close, but it leaves fewer threads to hide latency. The fraction of the maximum threads that are actually resident is called <strong>occupancy</strong>, and Part 2 builds an occupancy calculator from first principles. Part 6 shows that the compiler's register allocator is quietly deciding this trade-off for you.</p>
+</section>

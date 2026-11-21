@@ -1,0 +1,93 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {
+      "id": "c1",
+      "type": "numeric",
+      "prompt": "A GPU has 2 TB/s (2,000 GB/s) of memory bandwidth and 600 ns of loaded latency. How many kilobytes must be in flight to saturate it?",
+      "unit": "KB",
+      "answer": 1200,
+      "tolerance": "2%",
+      "explanation": "2000 × 600 = 1,200,000 bytes ≈ 1,200 KB (1.2 MB)."
+    },
+    {
+      "id": "c2",
+      "type": "single",
+      "prompt": "Which statement best captures the difference between how CPUs and GPUs deal with memory latency?",
+      "options": [
+        "CPUs have higher bandwidth, GPUs lower latency",
+        "CPUs spend transistors reducing and hiding latency for few threads; GPUs keep enough threads in flight that waiting doesn't idle the hardware",
+        "GPUs have no caches",
+        "CPUs use warps and GPUs use out-of-order execution"
+      ],
+      "answer": 1,
+      "explanation": "That's the central design bet of Part 0."
+    },
+    {
+      "id": "c3",
+      "type": "numeric",
+      "prompt": "L1: 5 cycles, 95% hit. L2: 25 cycles, 80% hit (of L1 misses). DRAM: 400 cycles. AMAT in cycles?",
+      "unit": "cycles",
+      "answer": 10.25,
+      "tolerance": 0.05,
+      "explanation": "5 + 0.05 × (25 + 0.2 × 400) = 5 + 0.05 × 105 = 10.25."
+    },
+    {
+      "id": "c4",
+      "type": "numeric",
+      "prompt": "C = 8 cycles of compute per load, L = 400 cycles latency. Threads needed to saturate one issue slot?",
+      "unit": "threads",
+      "answer": 51,
+      "tolerance": 0,
+      "explanation": "⌈408 / 8⌉ = 51."
+    },
+    {
+      "id": "c5",
+      "type": "single",
+      "prompt": "A kernel's threads each use more registers after a code change. What's the most direct risk?",
+      "options": [
+        "Memory latency increases",
+        "Fewer threads fit on each SM, so there's less parallelism to hide latency",
+        "Warps become wider than 32",
+        "Coalescing breaks"
+      ],
+      "answer": 1,
+      "explanation": "The register file is fixed, so more registers per thread means fewer resident threads (lower occupancy)."
+    },
+    {
+      "id": "c6",
+      "type": "multi",
+      "prompt": "Which of these are ways to get more memory requests in flight?",
+      "options": [
+        "More resident threads",
+        "More independent loads per thread before using their results",
+        "A higher clock frequency",
+        "Larger L1 caches"
+      ],
+      "answer": [0, 1],
+      "explanation": "Thread-level and instruction-level parallelism both add concurrency. Clock speed and cache size don't add outstanding requests."
+    },
+    {
+      "id": "c7",
+      "type": "numeric",
+      "prompt": "A grid of 300 blocks runs on 16 SMs, each holding 4 blocks at once. What fraction of the slots does the last wave use? Answer as a percentage.",
+      "unit": "%",
+      "answer": 68.75,
+      "tolerance": 0.5,
+      "explanation": "64 slots; ⌈300/64⌉ = 5 waves; the last has 300 − 256 = 44 blocks; 44/64 = 68.75%."
+    },
+    {
+      "id": "c8",
+      "type": "single",
+      "prompt": "A program chases pointers through a large random graph, one dependent load after another, in a single thread. Moving it to a GPU's single thread would…",
+      "options": [
+        "be much faster thanks to GPU bandwidth",
+        "likely be slower: it's latency-bound with one request in flight, and a GPU thread isn't built for low latency",
+        "be exactly as fast",
+        "become bandwidth-bound"
+      ],
+      "answer": 1,
+      "explanation": "Throughput machines need concurrency. A single dependent chain has none, and GPU threads trade single-thread speed for count."
+    }
+  ]
+}

@@ -13,6 +13,8 @@ How a GPU really works and how to make code fast on it. The course starts from w
 
 Three long-running projects grow across the course in milestones, then a capstone reuses them. Chapter exercises stay small; the projects are where the real building happens.
 
+Every chapter ends with a graded quiz, and every Part ends with a cumulative checkpoint quiz. Both are required to move on.
+
 | Project | Runs through | What you end up with |
 |---|---|---|
 | **A. Imaging kernels** | Parts 1–2 | A small image-processing library: grayscale, separable blur, Sobel and transpose. It goes from correct to bandwidth-bound-optimal. |

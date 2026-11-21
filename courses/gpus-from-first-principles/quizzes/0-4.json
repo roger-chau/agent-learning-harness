@@ -1,0 +1,70 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Why do GPUs group 32 threads into a warp that issues one instruction at a time?",
+      "options": [
+        "To make each thread faster",
+        "To pay for instruction fetch, decode and scheduling once per 32 threads",
+        "Because DRAM returns 32 bytes at a time",
+        "To reduce memory latency"
+      ],
+      "answer": 1,
+      "explanation": "Sharing one instruction stream across 32 lanes amortises the control logic, leaving more area for arithmetic and registers."
+    },
+    {
+      "id": "q2",
+      "type": "numeric",
+      "prompt": "You launch a kernel over n = 5,000 elements with blocks of 128 threads, one element per thread. How many blocks do you need?",
+      "unit": "blocks",
+      "answer": 40,
+      "tolerance": 0,
+      "explanation": "⌈5000 / 128⌉ = ⌈39.06⌉ = 40 blocks (5,120 threads; the last 120 do nothing because of the guard)."
+    },
+    {
+      "id": "q3",
+      "type": "numeric",
+      "prompt": "A GPU has 10 SMs and each SM can hold 3 of your blocks at once. Your grid has 70 blocks. How many waves does it take (assuming all blocks take equal time)?",
+      "unit": "waves",
+      "answer": 3,
+      "tolerance": 0,
+      "explanation": "30 blocks run at once; ⌈70 / 30⌉ = 3 waves, and the last wave only uses 10 of the 30 slots."
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "In <code>c[i] = a[i] + b[i]</code> with <code>i = blockIdx.x * blockDim.x + threadIdx.x</code>, what is thread 5 of block 3 responsible for when blocks have 256 threads?",
+      "options": ["Element 5", "Element 261", "Element 773", "Element 1,280"],
+      "answer": 2,
+      "explanation": "3 × 256 + 5 = 773."
+    },
+    {
+      "id": "q5",
+      "type": "multi",
+      "prompt": "Which are true about blocks?",
+      "options": [
+        "All threads of a block run on the same SM",
+        "Blocks of a grid may run in any order",
+        "A block can be split across two SMs if it's large",
+        "Threads in the same block can cooperate through shared memory"
+      ],
+      "answer": [0, 1, 3],
+      "explanation": "A block is the unit placed on one SM. It can use that SM's shared memory, and blocks are independent and unordered."
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Why does the vector-add kernel need <code>if (i &lt; n)</code>?",
+      "options": [
+        "To avoid divergence",
+        "Because the grid is rounded up to whole blocks, so some threads have no element",
+        "To make the memory accesses coalesced",
+        "It doesn't; it's only for readability"
+      ],
+      "answer": 1,
+      "explanation": "Blocks have a fixed size, so the grid covers ⌈n/block⌉ × block threads and the extras must not touch memory."
+    }
+  ]
+}

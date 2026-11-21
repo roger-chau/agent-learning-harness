@@ -1,0 +1,116 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>We now have three requirements for a machine that runs throughput workloads well:</p>
+<ol>
+<li>From Little's law (0.1): to use hundreds of GB/s across hundreds of nanoseconds of latency, it must keep <strong>hundreds of thousands of bytes in flight</strong>.</li>
+<li>From the memory wall (0.2): caches and clever single-thread tricks don't save streaming workloads, so the transistors are better spent elsewhere.</li>
+<li>From latency hiding (0.3): that concurrency comes from <strong>very many threads</strong>, each with its registers on-chip, switched for free.</li>
+</ol>
+<p>Let's design that machine. The result will be a GPU.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Spend the chip on many simple execution lanes and huge register files, not on making one thread fast.</strong> Strip out most of what makes a CPU core big: large out-of-order windows, aggressive branch prediction, deep speculation. Put the area into arithmetic units and the storage to hold thousands of threads.</p>
+<p>One more saving makes this practical. Throughput workloads usually run the <em>same</em> code on different data: every pixel, every element, every row. So group threads into bundles of 32 that share a single instruction fetch and decode, each lane working on its own data. NVIDIA calls such a bundle a <strong>warp</strong>. One instruction issued to a warp does 32 lanes' worth of work, so the control logic is paid once per 32 threads. Part 1 is entirely about what that means for your code.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: the hierarchy of the machine</h2>
+<figure class="diagram">
+<svg viewBox="0 0 640 330" role="img" aria-label="A GPU: many SMs, each with warp schedulers, a register file, execution lanes and shared memory, all connected to a shared L2 and DRAM">
+  <rect class="d-box" x="10" y="10" width="620" height="310" rx="16"/>
+  <text class="d-label" x="26" y="34">GPU</text>
+  <!-- SM detailed -->
+  <rect class="d-box indigo" x="26" y="46" width="300" height="190" rx="12"/>
+  <text class="d-label" x="40" y="68">SM (streaming multiprocessor)</text>
+  <g>
+    <rect class="d-box teal" x="40" y="80" width="64" height="58" rx="6"/><text class="d-mono" x="72" y="100" text-anchor="middle">sched</text><text class="d-mono" x="72" y="116" text-anchor="middle">warps</text><text class="d-mono" x="72" y="130" text-anchor="middle">lanes</text>
+    <rect class="d-box teal" x="110" y="80" width="64" height="58" rx="6"/><text class="d-mono" x="142" y="100" text-anchor="middle">sched</text><text class="d-mono" x="142" y="116" text-anchor="middle">warps</text><text class="d-mono" x="142" y="130" text-anchor="middle">lanes</text>
+    <rect class="d-box teal" x="180" y="80" width="64" height="58" rx="6"/><text class="d-mono" x="212" y="100" text-anchor="middle">sched</text><text class="d-mono" x="212" y="116" text-anchor="middle">warps</text><text class="d-mono" x="212" y="130" text-anchor="middle">lanes</text>
+    <rect class="d-box teal" x="250" y="80" width="64" height="58" rx="6"/><text class="d-mono" x="282" y="100" text-anchor="middle">sched</text><text class="d-mono" x="282" y="116" text-anchor="middle">warps</text><text class="d-mono" x="282" y="130" text-anchor="middle">lanes</text>
+  </g>
+  <rect class="d-box mint" x="40" y="146" width="274" height="34" rx="6"/><text class="d-text" x="177" y="168" text-anchor="middle">Register file (e.g. 65,536 × 32-bit)</text>
+  <rect class="d-box saffron" x="40" y="188" width="274" height="34" rx="6"/><text class="d-text" x="177" y="210" text-anchor="middle">Shared memory / L1 cache</text>
+  <!-- more SMs -->
+  <g>
+    <rect class="d-box indigo" x="340" y="46" width="66" height="56" rx="10"/><text class="d-mono" x="373" y="78" text-anchor="middle">SM</text>
+    <rect class="d-box indigo" x="414" y="46" width="66" height="56" rx="10"/><text class="d-mono" x="447" y="78" text-anchor="middle">SM</text>
+    <rect class="d-box indigo" x="488" y="46" width="66" height="56" rx="10"/><text class="d-mono" x="521" y="78" text-anchor="middle">SM</text>
+    <rect class="d-box indigo" x="562" y="46" width="56" height="56" rx="10"/><text class="d-mono" x="590" y="78" text-anchor="middle">…</text>
+    <rect class="d-box indigo" x="340" y="110" width="66" height="56" rx="10"/><text class="d-mono" x="373" y="142" text-anchor="middle">SM</text>
+    <rect class="d-box indigo" x="414" y="110" width="66" height="56" rx="10"/><text class="d-mono" x="447" y="142" text-anchor="middle">SM</text>
+    <rect class="d-box indigo" x="488" y="110" width="66" height="56" rx="10"/><text class="d-mono" x="521" y="142" text-anchor="middle">SM</text>
+    <rect class="d-box indigo" x="562" y="110" width="56" height="56" rx="10"/><text class="d-mono" x="590" y="142" text-anchor="middle">…</text>
+  </g>
+  <text class="d-mono" x="340" y="190">tens to 100+ SMs per GPU</text>
+  <rect class="d-box indigo" x="26" y="246" width="592" height="26" rx="6"/><text class="d-text" x="322" y="264" text-anchor="middle">L2 cache (shared by all SMs, tens of MB on large GPUs)</text>
+  <rect class="d-box rose" x="26" y="280" width="592" height="30" rx="6"/><text class="d-text" x="322" y="300" text-anchor="middle">DRAM / HBM ("global memory"): GBs, hundreds of GB/s to several TB/s</text>
+</svg>
+<figcaption>The GPU is a hierarchy of replicated parts. Each SM is a self-contained throughput core. Its warp schedulers each pick a ready warp to issue every cycle.</figcaption>
+</figure>
+
+<p>Reading the picture from the inside out:</p>
+<ul>
+<li><strong>Thread</strong>: your code, running on one lane with its own registers.</li>
+<li><strong>Warp</strong>: 32 threads that issue together, one instruction at a time.</li>
+<li><strong>Warp scheduler</strong>: each cycle it picks one ready warp from its pool and issues its next instruction. Recent NVIDIA SMs have four of them. This is the latency-hiding loop from the last chapter, built into hardware.</li>
+<li><strong>SM</strong>: holds up to dozens of warps resident at once (64 on many recent NVIDIA GPUs, i.e. 2,048 threads), along with their registers and a fast on-chip scratchpad called <strong>shared memory</strong>.</li>
+<li><strong>GPU</strong>: many SMs sharing an L2 cache and the off-chip DRAM, which CUDA calls <strong>global memory</strong>.</li>
+</ul>
+<p>Count the concurrency. A GPU with 100 SMs and 2,048 resident threads per SM holds about <strong>200,000 threads</strong>. Each one with a 4-byte load in flight gives 800 KB in flight. That's the same order of magnitude Little's law demanded. The design follows from the constraints.</p>
+<div class="callout companion"><b>Companion</b>If you've built the GPU in <em>It Thinks! Build your own GPU</em>, map its parts onto this picture: where is your warp, your register file, your scheduler? The game shows the gates; this course shows why they're arranged this way.</div>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: grids, blocks and waves</h2>
+<p>How does work get onto this machine? You write a function called a <strong>kernel</strong> from the point of view of <em>one thread</em>, and launch it over a <strong>grid</strong> of <strong>blocks</strong>:</p>
+<ul>
+<li>A <strong>block</strong> is a group of threads (up to 1,024) that always runs on a single SM. Its threads can cooperate through shared memory.</li>
+<li>The <strong>grid</strong> is all the blocks of one launch. They're independent and can run in any order.</li>
+<li>Each thread finds its piece of the work from built-in indices: <code>blockIdx</code> (which block am I in), <code>blockDim</code> (how big is a block), and <code>threadIdx</code> (which thread am I within the block).</li>
+</ul>
+<p>The hardware hands blocks to SMs until every SM is full, then hands out more as blocks finish. With more blocks than fit at once, the grid runs in <strong>waves</strong>.</p>
+
+<div data-gw="gpu-waves"></div>
+
+<p>Try 40 blocks on 8 SMs with 2 resident per SM: 16 run at once, so three waves, and the last wave only fills half the machine. That idle half in the last wave is called the <strong>tail effect</strong>; Part 5 measures it. Now try 48 blocks: same number of waves, no waste.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality: your first kernel</h2>
+<p>Here's the classic first kernel, vector addition, written for this course's simulator. Every thread computes one element:</p>
+<pre><code>function add(a, b, c, n) {
+  const i = blockIdx.x * blockDim.x + threadIdx.x;   // my global index
+  if (i &lt; n) c[i] = a[i] + b[i];                     // guard: the last block may overhang
+}</code></pre>
+<p>The guard matters. Blocks have a fixed size, so for $n = 1000$ and blocks of 256 you launch $\lceil 1000/256 \rceil = 4$ blocks, 1,024 threads. The last 24 must do nothing, or they'd read and write past the end of the arrays.</p>
+<p>Run it below. Besides the result, the simulator prints what the hardware did: warps launched, memory transactions, how efficiently each warp's accesses were combined (<strong>coalescing</strong>, Part 2), and whether any warp's threads took different paths at a branch (<strong>divergence</strong>, Part 1). Try changing the block size, or <code>n</code>, and see which numbers move.</p>
+
+<div data-gw="playground" data-title="vector_add.js" data-key="0-4-vadd"><script type="text/plain">
+// The simulated GPU in this course is the GW-1:
+// 16 SMs, warps of 32, 1.5 GHz, 512 GB/s DRAM, ~400 cycles latency.
+
+function add(a, b, c, n) {
+  const i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i < n) c[i] = a[i] + b[i];
+}
+
+function main() {
+  const n = 10000;
+  const a = gpu.from(Array.from({ length: n }, (_, i) => i));
+  const b = gpu.from(Array.from({ length: n }, (_, i) => 2 * i));
+  const c = gpu.alloc(n);
+
+  const block = 256;
+  const grid = Math.ceil(n / block);
+  const stats = gpu.launch(add, { grid, block }, a, b, c, n);
+
+  print("c[0..4] =", c.toArray().slice(0, 5));
+  print("launched", grid, "blocks of", block);
+  table(stats);
+}
+</script></div>
+
+<p>Real GPUs are far bigger than the GW-1: a data-center part might have over a hundred SMs and several TB/s of bandwidth. The principles are the same, and the simulator's small numbers keep the arithmetic easy to follow. One caveat to carry forward: the simulator runs the threads of a warp one after another and lines up their memory accesses afterwards. For code without divergence that matches lockstep hardware exactly; Part 1 shows where the difference matters.</p>
+</section>

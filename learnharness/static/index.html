@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Groundwork</title>
-  <meta name="description" content="A local tutor that finds what you don't know and teaches it from first principles.">
+  <meta name="description" content="Deep, hands-on courses that rebuild a subject from first principles, with simulations, an in-page terminal, and gated practice.">
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,8 +31,7 @@
         <span>Groundwork</span>
       </a>
       <nav class="nav" aria-label="Primary">
-        <a href="#/" data-nav="home">Topics</a>
-        <a href="#/review" data-nav="review">Review <span class="nav-count" id="nav-due" hidden></span></a>
+        <a href="#/" data-nav="courses">Courses</a>
         <a href="#/about" data-nav="about">How it works</a>
       </nav>
       <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle light and dark theme">
@@ -47,7 +46,7 @@
   <footer class="site-footer">
     <div class="container footer-inner">
       <span class="brand small">Groundwork</span>
-      <span class="muted">Runs on your machine. Your learner model lives in <code>data/learner.json</code>.</span>
+      <span class="muted">Runs on your machine. Progress lives in <code>data/progress.json</code>.</span>
       <span class="mono muted" id="model-tag"></span>
     </div>
   </footer>
@@ -56,6 +55,8 @@
   <script src="/static/vendor/purify.min.js"></script>
   <script src="/static/vendor/katex/katex.min.js"></script>
   <script src="/static/vendor/katex/auto-render.min.js"></script>
+  <script src="/static/terminal.js"></script>
+  <script src="/static/components.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,60 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "A memory system's bandwidth doubles while its latency stays the same. To keep it fully busy, the bytes you need in flight…",
+      "options": ["halve", "stay the same", "double", "quadruple"],
+      "answer": 2,
+      "explanation": "In flight = bandwidth × latency. Doubling one factor doubles the product. Faster memory is <em>harder</em> to keep busy."
+    },
+    {
+      "id": "q2",
+      "type": "numeric",
+      "prompt": "Latency is 400 ns and bandwidth is 1000 GB/s. How many bytes must be in flight to sustain full bandwidth?",
+      "unit": "bytes",
+      "answer": 400000,
+      "tolerance": "1%",
+      "explanation": "1000 GB/s × 400 ns = 1000 × 400 = 400,000 bytes, about 400 KB."
+    },
+    {
+      "id": "q3",
+      "type": "numeric",
+      "prompt": "Each thread keeps exactly one 4-byte load outstanding. Latency is 500 ns, bandwidth 256 GB/s. How many threads do you need to saturate the memory?",
+      "unit": "threads",
+      "answer": 32000,
+      "tolerance": "1%",
+      "explanation": "Bytes in flight = 256 × 500 = 128,000. At 4 bytes per thread that's 32,000 threads."
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "A CPU core can track 10 outstanding cache misses of 64 bytes each, and DRAM latency is 100 ns. What's the most bandwidth this core can draw from DRAM?",
+      "options": ["0.64 GB/s", "6.4 GB/s", "64 GB/s", "It depends only on the DRAM's rated bandwidth"],
+      "answer": 1,
+      "explanation": "Throughput = in flight / latency = 640 bytes / 100 ns = 6.4 bytes/ns = 6.4 GB/s, regardless of how fast the DRAM is rated."
+    },
+    {
+      "id": "q5",
+      "type": "multi",
+      "prompt": "Which of these raise <em>throughput</em> without reducing the latency of an individual request?",
+      "options": [
+        "Adding lanes to a highway",
+        "Driving each car faster",
+        "Letting each thread issue several independent loads before waiting",
+        "Running more threads that each issue loads"
+      ],
+      "answer": [0, 2, 3],
+      "explanation": "More lanes, more outstanding loads per thread, and more threads all increase concurrency, so more completes per unit time. A faster car reduces latency instead."
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "A loop that loads one float, waits for it, then loads the next, on the GW-1 (≈270 ns latency, 512 GB/s). Roughly what bandwidth does it achieve?",
+      "options": ["About 512 GB/s", "About 50 GB/s", "About 15 MB/s", "About 1 KB/s"],
+      "answer": 2,
+      "explanation": "One 4-byte request in flight: 4 bytes / 270 ns ≈ 0.015 GB/s ≈ 15 MB/s."
+    }
+  ]
+}

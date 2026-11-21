@@ -1,0 +1,78 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Arithmetic is cheap. A modern CPU core can start several floating-point operations every cycle, and with vector units dozens. At 4 GHz a cycle is a quarter of a nanosecond.</p>
+<p>Fetching a number from main memory, by contrast, takes on the order of <strong>80–100 ns</strong>. At 4 GHz that's <strong>320–400 cycles</strong>: hundreds of cycles of doing nothing for one load. Over decades, processor speed grew much faster than DRAM latency improved. This widening gap is called the <strong>memory wall</strong>, and it's why "how fast is the ALU" is almost never the right question.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>What a load costs depends on where the data is.</strong> Close to the core, memory is small, fast and expensive. Far away, it's huge, slow and cheap. So machines build a hierarchy and try to keep the data you're about to use near the top.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 640 250" role="img" aria-label="Memory hierarchy: registers, L1, L2, L3, DRAM with sizes and latencies">
+  <rect class="d-box teal" x="250" y="14" width="140" height="34" rx="8"/>
+  <text class="d-label" x="320" y="36" text-anchor="middle">Registers</text>
+  <rect class="d-box mint" x="205" y="56" width="230" height="34" rx="8"/>
+  <text class="d-label" x="320" y="78" text-anchor="middle">L1 cache</text>
+  <rect class="d-box indigo" x="160" y="98" width="320" height="34" rx="8"/>
+  <text class="d-label" x="320" y="120" text-anchor="middle">L2 cache</text>
+  <rect class="d-box indigo" x="115" y="140" width="410" height="34" rx="8"/>
+  <text class="d-label" x="320" y="162" text-anchor="middle">L3 cache (shared by cores)</text>
+  <rect class="d-box rose" x="70" y="182" width="500" height="34" rx="8"/>
+  <text class="d-label" x="320" y="204" text-anchor="middle">DRAM (main memory)</text>
+  <g class="d-mono">
+    <text x="400" y="36">~0 cycles · &lt;1 KB</text>
+    <text x="445" y="78">~4–5 cycles · tens of KB</text>
+    <text x="490" y="120">~12–16 cycles</text>
+    <text x="535" y="162">~40–70</text>
+    <text x="580" y="204">300+</text>
+    <text x="20" y="244">Typical orders of magnitude for a desktop/server CPU; exact numbers vary by design.</text>
+  </g>
+</svg>
+<figcaption>Each level is roughly an order of magnitude bigger and slower than the one above. The art is keeping the working set near the top.</figcaption>
+</figure>
+
+<p>Caches work because programs have <strong>locality</strong>. <em>Temporal</em> locality: data you used recently, you'll probably use again. <em>Spatial</em> locality: if you used address $a$, you'll probably use $a+4$ soon. That's why caches fetch whole <strong>lines</strong> (64 bytes on most CPUs), not single words.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: average memory access time</h2>
+<p>With a hierarchy, there's no single "latency". There's an <em>expected</em> latency, which depends on how often you hit each level. For one level of cache:</p>
+<div class="eq">$$\text{AMAT} = \text{hit time} + \text{miss rate} \times \text{miss penalty}$$</div>
+<p>The miss penalty is itself the AMAT of the next level down, so the formula nests. With an L1, an L2 and DRAM:</p>
+<div class="eq">$$\text{AMAT} = t_{L1} + (1-h_{1})\big(t_{L2} + (1-h_{2})\, t_{\text{DRAM}}\big)$$</div>
+<p>Here $h_2$ is the L2 hit rate <em>among the accesses that missed L1</em>.</p>
+
+<h3>A worked example</h3>
+<p>Take $t_{L1} = 4$, $h_1 = 0.90$, $t_{L2} = 14$, $h_2 = 0.60$, $t_{\text{DRAM}} = 300$ cycles.</p>
+<div class="eq">$$\text{AMAT} = 4 + 0.10\,(14 + 0.40 \times 300) = 4 + 0.10 \times 134 = 17.4\ \text{cycles}$$</div>
+<p>Notice where the time goes. The 4-cycle L1 hit is paid every time. The DRAM term is paid only $0.1 \times 0.4 = 4\%$ of the time, yet it contributes $0.04 \times 300 = 12$ of the 17.4 cycles. <strong>Rare misses dominate.</strong> Moving the L1 hit rate from 90% to 95% cuts AMAT to 10.7 cycles, almost a 40% improvement from five percentage points.</p>
+
+<div data-gw="memory-hierarchy"></div>
+
+<p>Set the work per load to 4 cycles and drag the L1 hit rate down to 70%. The core now spends most of each iteration waiting. Then drag it to 100% and watch the waiting almost vanish. That's the whole game a CPU plays: <em>reduce the average latency of one thread</em>.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>CPUs attack the memory wall with three big mechanisms, all aimed at making <em>one thread</em> wait less:</p>
+<ol>
+<li><strong>Caches</strong> reduce how often you go far away, by exploiting locality.</li>
+<li><strong>Out-of-order execution</strong> keeps working on later, independent instructions while a load is outstanding, so some of the latency overlaps with useful work. It can only look ahead as far as its reorder buffer, a few hundred instructions, and 300 cycles of latency easily outruns that.</li>
+<li><strong>Prefetching</strong> guesses which lines you'll need next and requests them early, turning a latency problem into a bandwidth problem. It works beautifully on regular access patterns and not at all on random ones.</li>
+</ol>
+<p>All three spend a large share of a CPU core's transistors and power on <em>predicting</em> and <em>hiding</em> latency for a single stream of instructions. Keep that in mind; the GPU makes the opposite bet.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<p>Caches only help when data is reused, or at least arrives in predictable order. Consider streaming once through a 1 GB array, as in vector addition. No cache can hold it, and every byte is used once. Every line comes from DRAM. The best you can do is keep enough requests in flight to run at full bandwidth, which is exactly the Little's law problem from the last chapter.</p>
+<p>So there are two different regimes:</p>
+<ul>
+<li><strong>Latency-bound</strong>: you're waiting on individual accesses (pointer chasing, dependent loads). Lower latency helps; more bandwidth doesn't.</li>
+<li><strong>Bandwidth-bound</strong>: you have plenty of independent accesses (streaming, most array code). More concurrency helps until you hit the bandwidth ceiling.</li>
+</ul>
+<p>Throughput workloads like graphics, simulation and machine learning live mostly in the second regime. For them, spending transistors on lowering one thread's latency is the wrong trade. The next chapter shows the alternative: don't make the wait shorter, <em>fill it with other work</em>.</p>
+
+<div class="callout companion"><b>Companion reading</b>The memory hierarchy chapter of Hennessy &amp; Patterson (7th ed.) covers cache organisation, AMAT and the classic cache optimisations in depth. Its quantitative style is exactly how this course will reason about GPUs.</div>
+</section>
