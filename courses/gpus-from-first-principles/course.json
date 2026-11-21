@@ -2099,15 +2099,28 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-flash-a"
+     ]
     },
     {
      "type": "milestone",
      "id": "capstone",
      "title": "Capstone: Fused attention",
-     "summary": "Correctness, a roofline target, a profiling report, a compiler-view analysis and a write-up.",
+     "summary": "A fused, IO-aware attention kernel, causal and not: exact, no N×N traffic, ≥ 3× naive, with a profiling and compiler-view report.",
      "project": "Capstone",
-     "status": "planned"
+     "exercises": [
+      "capstone-a"
+     ],
+     "writeup": {
+      "min_words": 400,
+      "prompts": [
+       "Design: tile sizes, thread mapping, what lives in registers and shared memory, and why.",
+       "Profiling: speed of light per unit, the limiter, bank conflicts and SM balance, before and after your main optimisations.",
+       "Compiler view: your inner loop's instruction mix, what a compiler would do with it, and what you'd hand-schedule.",
+       "Against the state of the art: what FlashAttention-2 and -3 do that you didn't, and what the simulator could or couldn't show."
+      ]
+     }
     }
    ],
    "hp": "Ch 4 · Ch 7"
@@ -2122,29 +2135,156 @@
      "type": "chapter",
      "id": "9-1",
      "title": "Numerics and reproducibility",
-     "summary": "",
-     "status": "planned"
+     "summary": "Non-associative floating point, nondeterministic atomics, ULPs, deterministic reductions and compensated sums.",
+     "blocks": [
+      [
+       "The real problem",
+       "different answers, same code"
+      ],
+      [
+       "The smallest idea",
+       "order changes the answer"
+      ],
+      [
+       "Add one block",
+       "making it reproducible, and more accurate"
+      ],
+      [
+       "The whole machine",
+       "where numerics bite on GPUs"
+      ],
+      [
+       "Reality",
+       "what vendors promise"
+      ]
+     ],
+     "exercises": [
+      "9-1-a"
+     ]
     },
     {
      "type": "chapter",
      "id": "9-2",
      "title": "Portability",
-     "summary": "",
-     "status": "planned"
+     "summary": "Warps, wavefronts and sub-groups; the hard-coded 32; performance portability.",
+     "blocks": [
+      [
+       "The real problem",
+       "one model, many machines"
+      ],
+      [
+       "The smallest idea",
+       "same model, different constants"
+      ],
+      [
+       "Add one block",
+       "writing portable kernels"
+      ],
+      [
+       "The whole machine",
+       "performance portability"
+      ],
+      [
+       "Reality",
+       "embedded GPUs and testing"
+      ]
+     ],
+     "exercises": [
+      "9-2-a"
+     ]
     },
     {
      "type": "chapter",
      "id": "9-3",
      "title": "Power, clocks and thermals",
-     "summary": "",
-     "status": "planned"
+     "summary": "P ≈ CV²f, DVFS, energy per operation, and choosing clocks for compute- and memory-bound work.",
+     "blocks": [
+      [
+       "The real problem",
+       "peak numbers assume a clock"
+      ],
+      [
+       "The smallest idea",
+       "power is capacitance, voltage squared, frequency"
+      ],
+      [
+       "Add one block",
+       "moving data costs more than math"
+      ],
+      [
+       "The whole machine",
+       "clocks in practice"
+      ],
+      [
+       "Reality",
+       "measuring and attributing energy"
+      ]
+     ],
+     "exercises": [
+      "9-3-a"
+     ]
     },
     {
      "type": "chapter",
      "id": "9-4",
      "title": "What's next",
-     "summary": "",
-     "status": "planned"
+     "summary": "Two career paths, real hardware, and how to keep up.",
+     "blocks": [
+      [
+       "Where you are",
+       "what you can do now"
+      ],
+      [
+       "Two paths from here",
+       "performance and compilers"
+      ],
+      [
+       "Real hardware",
+       "the next step"
+      ],
+      [
+       "Keeping up",
+       "what to read"
+      ],
+      [
+       "Your plan",
+       "the next 90 days"
+      ]
+     ],
+     "exercises": [],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "Which path (performance, compilers, or both) and why, given your work with embedded systems?",
+       "Three concrete projects for the next 90 days, each with a measurable outcome.",
+       "Which parts of this course you'd redo on real hardware first, and what you expect to differ.",
+       "How you'll keep DSA interview practice and this work going side by side."
+      ]
+     }
+    },
+    {
+     "type": "scenario",
+     "id": "scenario-9",
+     "title": "Scenario: the metric that wouldn't match",
+     "summary": "A metric doubles on a new GPU and drifts between runs: make it exact, bit-for-bit reproducible across GPUs and block orders, and no slower.",
+     "exercises": [
+      "scenario-9-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "What were the two root causes, and how does each show up in the numbers?",
+       "Why is your summation order independent of warp size and block order?",
+       "How did you keep it as fast as the shipped version? Show the limiter before and after.",
+       "What test, run where, would have caught this before release?"
+      ]
+     }
+    },
+    {
+     "type": "checkpoint",
+     "id": "p9-checkpoint",
+     "title": "Final checkpoint",
+     "summary": "Cumulative quiz across the whole course."
     }
    ],
    "hp": "App J"

@@ -325,3 +325,15 @@ test("streams: in-order per stream, engines overlap across streams", () => {
   assert.throws(() => s1.memcpy(10, "sideways"), /direction/);
   assert.ok(serial > 4);
 });
+
+test("64-lane wavefronts: ballot returns a 64-bit mask, __popc counts it", () => {
+  const g = new Device({ warpSize: 64 });
+  const { k } = g.compile(`function k(out) { const m = __ballot_sync(0xffffffff, threadIdx.x % 3 === 0); if (threadIdx.x === 0) { out[0] = __popc(m); out[1] = typeof m === "bigint" ? 1 : 0; } }`);
+  const out = g.alloc(2);
+  g.launch(k, { grid: 1, block: 64 }, out);
+  assert.equal(out.data[0], 22);   // lanes 0, 3, ..., 63
+  assert.equal(out.data[1], 1);
+  const g32 = new Device();
+  g32.launch(g32.compile(`function k(out) { const m = __ballot_sync(0xffffffff, threadIdx.x % 3 === 0); if (threadIdx.x === 0) out[0] = __popc(m); }`).k, { grid: 1, block: 32 }, out);
+  assert.equal(out.data[0], 11);
+});

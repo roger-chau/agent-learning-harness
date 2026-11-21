@@ -1,0 +1,35 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>A GPU's peak numbers assume a clock it can't always hold. Run a heavy tensor-core workload and the board hits its power limit, the clock drops, and your measured speed falls. In a datacenter, the electricity bill and the cooling are the constraint; on a battery-powered robot or a Jetson-class board, the power budget is the spec. Performance per watt is the number that decides hardware purchases and embedded designs.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: power is capacitance, voltage squared, frequency</h2>
+<div class="eq">$$P_{\text{dynamic}} \approx C\, V^2 f$$</div>
+<p>To run at a higher frequency, a chip needs a higher voltage, so dynamic power grows roughly with the <em>cube</em> of the clock. Add <strong>static</strong> (leakage) power, paid whenever the chip is on. <strong>DVFS</strong> (dynamic voltage and frequency scaling) moves the clock and voltage together, many times a second, to stay within power and temperature limits: that's the "boost clock" and its opposite, throttling (H&amp;P Chapter 1).</p>
+<p>The consequence for kernels: a <strong>memory-bound</strong> kernel gains almost nothing from a faster core clock (DRAM sets the time) but pays the power, so running it at a lower clock saves energy for free. A <strong>compute-bound</strong> kernel trades time against power, and its energy-optimal clock is where static and dynamic costs balance.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: moving data costs more than math</h2>
+<p>Energy per operation, in a widely cited estimate for a 45 nm process (Horowitz, ISSCC 2014): a 32-bit floating-point multiply about 3.7 pJ, an add about 0.9 pJ, a 32-bit read from a small on-chip SRAM about 5 pJ, and a 32-bit read from off-chip DRAM about 640 pJ. Newer processes shrink the logic numbers faster than the DRAM one.</p>
+<p>So reading an operand from DRAM costs over a hundred times more energy than computing with it. Every technique in this course that cut DRAM traffic (coalescing, tiling, fusion, FlashAttention) saved energy as well as time, often more energy than time. Hardware designers made the same argument for matrix units and systolic arrays (the TPU paper).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: clocks in practice</h2>
+<ul>
+<li>Datacenter GPUs expose <strong>power limits</strong> and application clocks (<code>nvidia-smi</code>). Many sites cap power below the maximum because performance per watt improves.</li>
+<li>Embedded boards offer <strong>power modes</strong> (e.g. Jetson's nvpmodel) that fix clocks and active units for a power budget, and thermal limits can throttle further when the enclosure heats up.</li>
+<li>Benchmarks: profilers often lock clocks to base frequency for repeatable numbers (Chapter 5.1); users run at boost. A "20% speedup" measured at locked clocks may shrink, or grow, in the field.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Power is measured per board, coarsely. Attribute energy to kernels with a model (counts × energy per event), like the one in the exercise.</li>
+<li>Thermal behaviour has time constants of seconds: a 50 ms benchmark may never throttle, while the same kernel in a 10-minute job will.</li>
+<li>For embedded vision pipelines, frames per joule is often a better target than frames per second.</li>
+</ul>
+</section>

@@ -1,0 +1,36 @@
+<section class="blk" data-n="01">
+<h2>Where you are</h2>
+<p>You can explain why GPUs exist and how a warp executes; predict a kernel's limit from its bytes, FLOPs and parallelism; write reductions, scans, sorts, GEMMs and attention that approach the hardware's limits; measure honestly and diagnose from evidence; read and reason about generated code like a compiler; and build systems around kernels: streams, serving, paged memory, numerics, portability and power. That's the working core of both jobs you're aiming at.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>Two paths from here</h2>
+<table>
+<tr><th></th><th>GPU performance engineer</th><th>GPU compiler engineer</th></tr>
+<tr><td>Daily work</td><td>Kernels, profiling, libraries, model-level optimisation</td><td>Code generation, IR passes, scheduling, backends</td></tr>
+<tr><td>Codebases to read</td><td>CUTLASS/CuTe, FlashAttention, vLLM or SGLang, cuBLAS-style libraries' public samples</td><td>LLVM's NVPTX and AMDGPU backends, MLIR, Triton's compiler, XLA or TVM</td></tr>
+<tr><td>Next in this platform</td><td>Tiny Kernel Compiler (to understand your tools), then real-hardware practice</td><td>Tiny Kernel Compiler, then GPU Compilers</td></tr>
+<tr><td>Interview focus</td><td>Roofline reasoning, a kernel you optimised and can defend with numbers</td><td>IR design, dataflow analysis, register allocation and scheduling, a pass you wrote</td></tr>
+</table>
+<p>Both reward the same habits: measure before changing, explain with numbers, and read what the machine actually runs.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Real hardware</h2>
+<p>Everything here ran on a simulator built to be honest about first-order effects. The next step is real GPUs: rewrite the capstone in CUDA or Triton, profile it with Nsight Compute, and find what the simulator didn't model (instruction-level stalls, the real cache hierarchy, clocks). A cloud instance or a Jetson-class board is enough. The gaps you find are worth writing up: that's how engineers show they understand a machine.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Keeping up</h2>
+<ul>
+<li><strong>Conferences</strong>: ISCA, MICRO, HPCA (architecture); PPoPP, SC (parallel computing); CGO, PLDI, ASPLOS (compilers and systems); MLSys and OSDI/SOSP (ML systems). Hot Chips for what vendors are building.</li>
+<li><strong>Vendor documentation</strong>: each new architecture's tuning guide and ISA notes, and microbenchmark studies when they appear (Part 5).</li>
+<li><strong>Code</strong>: release notes and pull requests of the projects above. That's where new techniques land first.</li>
+<li><strong>H&amp;P</strong>: you've now covered the GPU-relevant chapters. Chapters 2 (memory hierarchy), 5 (multiprocessors) and 7 (domain-specific architectures) reward a second read now.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Your plan</h2>
+<p>The write-up below is your next-90-days plan, and it's for you, not the grader. A plan you wrote yourself, with checkpoints, beats one handed to you. If you want feedback on it, the "Ask" panel is there.</p>
+</section>

@@ -1,0 +1,42 @@
+<div class="paper-ref">
+<div class="k">The work</div>
+<b>T. Dao, D. Y. Fu, S. Ermon, A. Rudra, C. Ré. "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness."</b> NeurIPS 2022.
+<br><b>T. Dao. "FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning."</b> 2023 (ICLR 2024).
+<br><b>J. Shah, G. Bikshandi, Y. Zhang, V. Thakkar, P. Ramani, T. Dao. "FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision."</b> 2024 (NeurIPS 2024).
+<br><a href="https://scholar.google.com/scholar?q=FlashAttention+Fast+and+Memory-Efficient+Exact+Attention+with+IO-Awareness" target="_blank" rel="noopener noreferrer">Find them on Google Scholar</a> · Read FlashAttention-1 closely, the other two for what changed and why.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>Attention's cost grows with the square of the sequence length, and at the time, most work on long sequences tried to cut its FLOPs with approximations (sparse or low-rank attention). They often didn't run faster in practice. The paper's diagnosis is the one from Chapter 7.2: standard attention is bound by memory traffic, writing and reading the N × N matrices, not by FLOPs. Counting FLOPs was the wrong model of the machine.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Make attention IO-aware: tile it so the N × N matrices never leave on-chip memory, and pay for that with a little recomputation.</strong></p>
+<ul>
+<li><strong>Tiling with online softmax</strong> (Chapter 7.2): load blocks of K and V into SRAM, compute a block of scores, update a running max, sum and output per query row. Exact, not approximate.</li>
+<li><strong>IO complexity</strong>: with on-chip memory of size M, standard attention moves Θ(Nd + N²) elements to and from HBM; FlashAttention moves Θ(N²d²/M). For typical d and M, that's many times fewer.</li>
+<li><strong>Recomputation in the backward pass</strong>: instead of storing the N × N probabilities for the gradient, store only the per-row statistics (max and sum) and recompute the scores block by block. More FLOPs, far less memory traffic, and a net speedup.</li>
+</ul>
+<p>Block sizes follow from the on-chip memory: in the paper's Algorithm 1, B<sub>c</sub> = ⌈M / 4d⌉ and B<sub>r</sub> = min(⌈M / 4d⌉, d).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ul>
+<li><strong>FlashAttention-1, Section 3 and Algorithm 1</strong>: the forward pass; check each step against your Chapter 7.2 code. Then the IO-complexity theorem and its lower bound.</li>
+<li><strong>FlashAttention-2</strong>: three changes, all things you've met in this course. Fewer non-matmul FLOPs (rescale the output once at the end, not every block); parallelism over the sequence length as well as batch and heads (Part 5's tails: one head of a long sequence must still fill the GPU); and work partitioning across warps that splits Q rather than K, so warps don't have to exchange partial results through shared memory. The result was roughly twice FA-1's speed.</li>
+<li><strong>FlashAttention-3</strong> (Hopper): asynchrony. A producer warp feeds tiles with TMA (Chapter 4.4) while consumer warpgroups run <code>wgmma</code>; "ping-pong" scheduling overlaps one warpgroup's softmax with another's GEMMs, since exp throughput is far below tensor-core throughput; and FP8 support with techniques to keep the error down.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>Do the IO arithmetic: block sizes from on-chip memory, and the HBM traffic of standard and Flash attention for real sizes. The capstone then builds the forward pass on the simulator.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>FlashAttention became the default attention implementation in the major training and inference stacks, and its IO-aware approach became a template: count bytes, not FLOPs; tile so the big intermediate stays on-chip; recompute when that's cheaper than storing. Variants cover decoding (split-KV, "flash-decoding"), paged KV caches (Part 7), and other GPUs and accelerators. For a GPU performance or compiler engineer, it's the canonical case study of everything this course covers in one kernel.</p>
+</section>

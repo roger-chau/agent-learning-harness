@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "Why does dynamic power grow roughly with the cube of clock frequency?",
+     "options": ["P = C V² f, and a higher f needs a higher V", "Static power", "Memory gets slower", "It doesn't"], "answer": 0,
+     "explanation": "Voltage scales with frequency, and enters squared."},
+    {"id": "q2", "type": "single", "prompt": "A memory-bound kernel runs at a lower core clock. What happens?",
+     "options": ["Much slower, same energy", "About the same time, less energy", "Faster", "It fails"], "answer": 1,
+     "explanation": "DRAM sets the time; the core clock only sets the power."},
+    {"id": "q3", "type": "numeric", "prompt": "With the Horowitz 45 nm figures (32-bit DRAM read ≈ 640 pJ, FP32 multiply ≈ 3.7 pJ), roughly how many multiplies cost the same energy as one DRAM read?", "unit": "", "answer": 173, "tolerance": 3,
+     "explanation": "640 / 3.7 ≈ 173."},
+    {"id": "q4", "type": "single", "prompt": "Why can a 50 ms benchmark overstate a kernel's speed in a long job?",
+     "options": ["Caches", "Thermal and power limits take seconds to bite: long runs may throttle", "Launch overhead", "Compilers"], "answer": 1,
+     "explanation": "Time constants matter."},
+    {"id": "q5", "type": "single", "prompt": "Which optimisations in this course also save energy?",
+     "options": ["Only tensor cores", "Anything that cuts DRAM traffic (coalescing, tiling, fusion, FlashAttention), and finishing sooner", "None", "Only lower precision"], "answer": 1,
+     "explanation": "Data movement dominates the energy bill."}
+  ]
+}

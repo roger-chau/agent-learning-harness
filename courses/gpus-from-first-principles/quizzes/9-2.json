@@ -1,0 +1,20 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "A CUDA kernel elects one leader per warp with <code>(threadIdx.x &amp; 31) == 0</code>. On a 64-wide wavefront, what happens?",
+     "options": ["It crashes", "Two leaders per wavefront: anything the leader does per warp is done twice", "It works", "The compiler fixes it"], "answer": 1,
+     "explanation": "Silent double counting: use warpSize."},
+    {"id": "q2", "type": "single", "prompt": "Why did Volta break code that relied on implicit warp-synchronous execution?",
+     "options": ["It changed warp size", "Independent thread scheduling: lanes of a warp may no longer move in lockstep without explicit _sync operations", "It removed shared memory", "It added tensor cores"], "answer": 1,
+     "explanation": "That's why the _sync intrinsics take a mask."},
+    {"id": "q3", "type": "single", "prompt": "What does hipify do, and what doesn't it do?",
+     "options": ["It optimises kernels for AMD", "It translates CUDA API names to HIP mechanically, but doesn't fix hard-coded warp-size assumptions or retune performance", "It runs CUDA binaries on AMD", "Nothing"], "answer": 1,
+     "explanation": "Compiling is the easy part."},
+    {"id": "q4", "type": "multi", "prompt": "Which usually need retuning when moving a fast kernel to another vendor's GPU?",
+     "options": ["Tile sizes", "Matrix-instruction shapes", "Occupancy choices", "The mathematical definition of the operation"], "answer": [0, 1, 2],
+     "explanation": "The math stays; the mapping changes."},
+    {"id": "q5", "type": "single", "prompt": "Why is \"many targets, one programming model\" good news for GPU compiler engineers?",
+     "options": ["It isn't", "Someone has to build and tune the backends and the tile-level compilers that map one model onto many machines", "Compilers become unnecessary", "It reduces the need for testing"], "answer": 1,
+     "explanation": "Portability is a compiler problem."}
+  ]
+}

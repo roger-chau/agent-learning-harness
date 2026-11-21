@@ -508,6 +508,7 @@
       const rt = { br: (id, v) => v, seg: () => {}, shared: () => { throw new Error("shared() can only be used inside a kernel launch"); },
         atomic: () => { throw new Error("atomics can only be used inside a kernel launch"); },
         fma: (a, b, c) => a * b + c, f16: f16round,
+        popc: (x) => { if (typeof x === "bigint") { let n = 0; while (x) { n += Number(x & 1n); x >>= 1n; } return n; } x = x >>> 0; let n = 0; while (x) { n += x & 1; x >>>= 1; } return n; },
         vec: () => { throw new Error("ldg4/stg4 can only be used inside a kernel launch"); } };
       const gNames = Object.keys(globals).filter((k) => /^[A-Za-z_$][\w$]*$/.test(k));
       const factory = new Function(
@@ -533,6 +534,7 @@ const fma = (a, b, c) => __rt.fma(a, b, c);
 const ldg4 = (a, i) => __rt.vec(a, i, null);
 const stg4 = (a, i, v) => __rt.vec(a, i, v);
 const f16 = (x) => __rt.f16(x);
+const __popc = (x) => __rt.popc(x);
 const __set = (e) => { threadIdx = e.threadIdx; blockIdx = e.blockIdx; blockDim = e.blockDim; gridDim = e.gridDim; warpSize = e.warpSize; };
 ${code}
 ;return { __set, fns: { ${names.map((n) => `${n}: typeof ${n} === "undefined" ? undefined : ${n}`).join(", ")} } };`
@@ -770,7 +772,7 @@ ${code}
             case "__shfl_down_sync": r = t.laneId + x < W ? val(t.laneId + x, v) : v; break;
             case "__shfl_up_sync": r = t.laneId - x >= 0 ? val(t.laneId - x, v) : v; break;
             case "__shfl_xor_sync": r = val(t.laneId ^ x, v); break;
-            case "__ballot_sync": r = lanes.reduce((m, u) => (u.wait[2] ? m | (1 << u.laneId) : m), 0) >>> 0; break;
+            case "__ballot_sync": r = W > 32 ? lanes.reduce((m, u) => (u.wait[2] ? m | (1n << BigInt(u.laneId)) : m), 0n) : lanes.reduce((m, u) => (u.wait[2] ? m | (1 << u.laneId) : m), 0) >>> 0; break;
             case "__any_sync": r = lanes.some((u) => u.wait[2]); break;
             case "__all_sync": r = lanes.every((u) => u.wait[2]); break;
             default: r = undefined;

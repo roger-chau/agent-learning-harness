@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "Why does a float sum with atomicAdd give different bits from run to run?",
+     "options": ["Atomics are broken", "Blocks arrive in different orders, and float addition isn't associative", "Memory errors", "Clock changes"], "answer": 1,
+     "explanation": "Order changes rounding."},
+    {"id": "q2", "type": "single", "prompt": "How do you make a GPU reduction bitwise reproducible for a fixed launch shape?",
+     "options": ["Use more atomics", "Per-block partials to an array, then a fixed-order final reduction", "Use FP16", "Run it twice"], "answer": 1,
+     "explanation": "Fix the order of every addition."},
+    {"id": "q3", "type": "numeric", "prompt": "How many FP32 values lie strictly between 1.0 and 2.0, plus one (i.e. the ULP distance from 1 to 2)?", "unit": "", "answer": 8388608, "tolerance": 0,
+     "explanation": "2²³: the mantissa has 23 bits."},
+    {"id": "q4", "type": "single", "prompt": "What does Kahan summation buy?",
+     "options": ["Determinism", "An error that stays small instead of growing with the number of terms", "Speed", "Lower memory"], "answer": 1,
+     "explanation": "Compensation, not determinism: it's still order-dependent in principle."},
+    {"id": "q5", "type": "single", "prompt": "A GEMM gives different bits at sizes 4096 and 4100 for the same leading 4096 rows. Most likely?",
+     "options": ["A bug", "The library picked a different decomposition (e.g. split-K), changing the summation order", "Memory corruption", "Thermal throttling"], "answer": 1,
+     "explanation": "Different shapes, different kernels, different orders."}
+  ]
+}

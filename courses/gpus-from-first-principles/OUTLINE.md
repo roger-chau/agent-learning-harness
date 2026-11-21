@@ -161,22 +161,16 @@ Papers: *Mixed Precision Training* (numerics exercises); *PagedAttention* → **
 Scenario: *serving an LLM*: a continuous-batching scheduler under a paged KV-cache budget.
 
 ## Part 8: Capstone: a fused attention kernel
-Design, implement, tune and explain a FlashAttention-style fused attention forward pass, reusing your GEMM tiles (Project C) and reductions (Project B):
+Paper: *FlashAttention 1–3* (IO-aware arithmetic: block sizes, HBM traffic, backward-pass memory).
 
-- Correctness against a reference across shapes, including causal masking.
-- A performance target on the simulator's roofline.
-- A profiling report: the bottleneck at each stage, and what you changed and why.
-- A compiler-view section: register pressure, occupancy, and the instruction mix in the generated code.
-- A short write-up suitable for a portfolio.
-
-Optional: run it on a real NVIDIA GPU in real-CUDA mode and compare against the simulator's prediction.
+→ **Capstone**: a fused attention forward pass, causal and not: exact, no N×N traffic, at least 3× faster than the naive three-kernel version, causal at most 0.8× of full (load balance), plus a report covering design, profiling, the compiler view and the state of the art.
 
 ## Part 9: Reality: where it breaks
-9.1 **Numerics.** Floating-point non-associativity, reproducibility, low-precision pitfalls.
-9.2 **Portability.** CUDA vs HIP/AMD (wavefront of 64, LDS) vs Apple/mobile GPUs.
-9.3 **Power, clocks and thermals.** Why measured performance moves.
-9.4 **What's next.** Into *GPU Compilers from First Principles* and *Build a Tiny GPU Kernel Compiler*.
+9.1 **Numerics and reproducibility.** Non-associativity, atomics, ULPs, deterministic reductions, Kahan. *Exercise: a reproducible GPU sum.*
+9.2 **Portability.** Warps, wavefronts, sub-groups; the hard-coded 32; performance portability. *Exercise: port a ballot kernel to 64-wide wavefronts.*
+9.3 **Power, clocks and thermals.** P ≈ CV²f, DVFS, energy per operation. *Exercise: an energy model and energy-optimal clocks.*
+9.4 **What's next.** Career paths, real hardware, keeping up. *Write-up: your 90-day plan.*
 
----
+Scenario: *the metric that wouldn't match*: exact, bit-for-bit reproducible across 32- and 64-lane GPUs and block orders, and no slower.
 
-**Size:** 10 parts, 41 chapters, 13 paper chapters, 3 long-term projects (13 milestones), 4 paper projects plus a Stream-K extension, and 1 capstone.
+→ **Final checkpoint**

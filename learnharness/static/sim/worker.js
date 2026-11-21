@@ -68,7 +68,7 @@ self.onmessage = async (e) => {
   };
   try {
     if (exerciseUrl) importScripts(exerciseUrl);
-    const fns = gpu.compile(code, { print, gpu, table, show, GWX, console: { log: print } });
+    const fns = gpu.compile(code, { print, gpu, table, show, GWX, GPUSim, console: { log: print } });
 
     if (mode === "run") {
       if (typeof fns.main === "function") {

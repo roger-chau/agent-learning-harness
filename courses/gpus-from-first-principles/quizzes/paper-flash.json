@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "Why did many FLOP-reducing approximate attention methods fail to run faster?",
+     "options": ["They were wrong", "Attention was bound by memory traffic, not FLOPs, and they didn't reduce the traffic", "GPUs can't do sparse math", "They needed more memory"], "answer": 1,
+     "explanation": "The wrong model of the machine: count bytes, not FLOPs."},
+    {"id": "q2", "type": "single", "prompt": "What does FlashAttention store for the backward pass instead of the N×N probabilities?",
+     "options": ["Nothing", "Per-row softmax statistics (max and sum), recomputing scores block by block", "A compressed P", "Only V"], "answer": 1,
+     "explanation": "Recomputation trades FLOPs for memory traffic and wins."},
+    {"id": "q3", "type": "single", "prompt": "Which FlashAttention-2 change targets the tail effect from Chapter 5.4?",
+     "options": ["FP8", "Parallelising over sequence length, so one long sequence with few heads still fills the GPU", "TMA", "Recomputation"], "answer": 1,
+     "explanation": "More, smaller work units when batch × heads is small."},
+    {"id": "q4", "type": "single", "prompt": "Why does FlashAttention-3 overlap softmax of one warpgroup with GEMMs of another?",
+     "options": ["To save registers", "Exponentials run on far slower units than tensor cores, so serialising them would leave tensor cores idle", "For accuracy", "Because of bank conflicts"], "answer": 1,
+     "explanation": "Hide the slow non-matmul work behind the fast matmuls."},
+    {"id": "q5", "type": "numeric", "prompt": "Algorithm 1 block size B_c for M = 16,384 on-chip elements and d = 64?", "unit": "", "answer": 64, "tolerance": 0,
+     "explanation": "⌈16384 / (4 × 64)⌉ = 64."}
+  ]
+}

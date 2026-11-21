@@ -1,0 +1,14 @@
+<div class="scenario-brief">
+<div class="k">Scenario · The metric that wouldn't match</div>
+<b>After moving a monitoring pipeline to a new GPU, a dashboard metric doubled. On the old GPU it was steady, but its last digits changed from run to run. Fix it, for good.</b>
+<dl>
+<dt>The metric</dt><dd>For an array of sensor readings and a threshold, the <strong>count</strong> of readings above the threshold and their <strong>sum</strong>. Both are computed by <code>runShipped</code> in the starter, a fast kernel using ballots, shuffles and atomics.</dd>
+<dt>The machines</dt><dd>The old GPU has 32-lane warps; the new one has 64-lane wavefronts (<code>new GPUSim.Device({ warpSize: 64 })</code>). Block scheduling order varies from run to run (the tests pass <code>launchOpts</code> with a shuffled block order: spread it into every launch).</dd>
+<dt>Goal</dt><dd><code>runMetric(dev, x, n, th, launchOpts)</code> returning <code>{ count, sum, stats }</code>: the count exact; the sum within 10⁻⁶ relative of the exact sum <strong>and bit-for-bit identical on both GPUs and for every block order</strong>; and <strong>no slower</strong> (total cycles) than the shipped version on the old GPU.</dd>
+</dl>
+</div>
+
+<h2>Two bugs, one root</h2>
+<p>There are two separate problems here, one from Chapter 9.1 and one from 9.2, and a fix for one can easily break the other. A reduction that's reproducible on one GPU can still differ between a 32-lane and a 64-lane one if its order depends on the warp size. Find an order that depends on nothing but the data's indices.</p>
+<p>"No slower" rules out the lazy fix of one thread summing everything. Chapter 3's reductions and Chapter 5's diagnosis are what get you there.</p>
+<p>The write-up is the incident report: root causes, why each fix works, the measurements, and what test would have caught this before release.</p>

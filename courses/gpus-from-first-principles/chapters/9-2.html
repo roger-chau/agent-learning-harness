@@ -1,0 +1,49 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Everything in this course used NVIDIA's model, because that's where most GPU software lives. But AMD GPUs run the largest supercomputers and serve large models, Intel and Apple ship GPUs in huge numbers, and phones and embedded devices have their own. Code that assumes one vendor's details breaks, sometimes loudly, often silently, on another. Compiler engineers in particular work across targets: half the job is the parts that differ.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: same model, different constants</h2>
+<p><strong>The SIMT model you've learned is shared by all modern GPUs. The constants differ, and code that hard-codes them is the main source of bugs.</strong></p>
+<table>
+<tr><th></th><th>NVIDIA (CUDA)</th><th>AMD (HIP / ROCm)</th><th>Intel (SYCL / oneAPI)</th></tr>
+<tr><td>Lockstep group</td><td>warp: 32</td><td>wavefront: 64 on datacenter (CDNA) GPUs; 32 or 64 on RDNA</td><td>sub-group: 8–32, chosen per kernel</td></tr>
+<tr><td>Ballot mask</td><td>32-bit</td><td>64-bit on 64-wide wavefronts</td><td>per sub-group</td></tr>
+<tr><td>On-chip scratch</td><td>shared memory</td><td>LDS (local data share)</td><td>shared local memory</td></tr>
+<tr><td>Matrix units</td><td>tensor cores (<code>mma</code>, <code>wgmma</code>)</td><td>matrix cores (MFMA)</td><td>XMX</td></tr>
+</table>
+<p>HIP is deliberately close to CUDA (and <code>hipify</code> translates mechanically), so the code compiles. The bug is a literal 32 hiding in the logic: <code>threadIdx.x &amp; 31</code> as the lane id, 32-bit masks, warps-per-block computed as <code>blockDim.x / 32</code>.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: writing portable kernels</h2>
+<ul>
+<li>Use the built-in <code>warpSize</code> (a compile-time constant in HIP for a given target), never 32.</li>
+<li>Treat ballot results as wide enough for the wavefront, and count bits with an intrinsic (<code>__popc</code>, <code>__popcll</code>) of the matching width.</li>
+<li>Prefer block-level primitives (from CUB, hipCUB, or your own Part 3 code parameterised by warp size) over hand-rolled warp tricks.</li>
+<li>Don't rely on implicit warp-synchronous execution: Volta already broke that assumption on NVIDIA (independent thread scheduling), which is why the <code>_sync</code> intrinsics exist.</li>
+</ul>
+<p>The simulator can build a device with 64-lane wavefronts: <code>new GPUSim.Device({ warpSize: 64 })</code>. Its <code>__ballot_sync</code> then returns a 64-bit <code>BigInt</code>, and <code>__popc</code> counts either.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: performance portability</h2>
+<p>Correct isn't the same as fast. Tile sizes, occupancy, memory-system behaviour and matrix-instruction shapes differ, so a kernel tuned for one GPU is rarely best on another. The approaches, roughly from least to most portable:</p>
+<ol>
+<li>Separate hand-tuned kernels per vendor (most libraries' fastest paths);</li>
+<li>Templates with per-target parameters plus autotuning (Part 6's tile compiler);</li>
+<li>Tile-level languages and ML compilers (Triton, MLIR-based stacks) with backends per vendor;</li>
+<li>Portable standards (SYCL, OpenCL, Vulkan compute, Kokkos), trading peak speed for one codebase.</li>
+</ol>
+<p>That spread, one model with many targets, is why GPU compiler engineering is a growing field.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Embedded and mobile GPUs (Mali, Adreno, PowerVR, the integrated GPUs in Jetson-class SoCs) often expose compute through OpenCL or Vulkan rather than CUDA, with smaller caches, shared DRAM and tight power budgets (next chapter).</li>
+<li>Test on every target in CI. Portability bugs are usually silent wrong answers, not crashes.</li>
+<li>Read each vendor's ISA documentation once (AMD publishes full ISA manuals); the differences teach you what the common model abstracts away.</li>
+</ul>
+</section>

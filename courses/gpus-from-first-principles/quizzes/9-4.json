@@ -1,0 +1,17 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "Which codebase is most directly about GPU code generation for ML (compiler work)?",
+     "options": ["vLLM", "Triton's compiler", "A web server", "cuDNN's public headers"], "answer": 1,
+     "explanation": "Triton lowers tile programs to GPU code through MLIR."},
+    {"id": "q2", "type": "single", "prompt": "In a performance-engineering interview, what's the strongest evidence of skill?",
+     "options": ["A list of tools", "A kernel you optimised, with the limiter at each step and numbers before and after", "Certificates", "Peak FLOP figures"], "answer": 1,
+     "explanation": "Defensible, measured work."},
+    {"id": "q3", "type": "single", "prompt": "What's the most valuable next step after a simulator-based course?",
+     "options": ["Another simulator", "Re-implementing a project on real hardware and explaining the differences you measure", "Reading only", "Nothing"], "answer": 1,
+     "explanation": "The gaps between model and machine are where the learning is."},
+    {"id": "q4", "type": "multi", "prompt": "Which habits does this course hope you keep?",
+     "options": ["Measure before changing anything", "Explain results with numbers (bytes, FLOPs, cycles)", "Read what the machine actually runs", "Trust peak numbers on spec sheets"], "answer": [0, 1, 2],
+     "explanation": "Peak numbers are where reasoning starts, not ends."}
+  ]
+}

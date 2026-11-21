@@ -1,0 +1,25 @@
+<div class="paper-ref">
+<div class="k">Capstone · Fused attention</div>
+Everything in one kernel: tiling (Part 4), reductions and shuffles (Part 3), online softmax (Part 7), load balance (Part 5), and the compiler's view of the result (Part 6).
+</div>
+
+<h2>Build</h2>
+<p>Write <code>runAttention(Q, K, V, O, N, d, causal)</code>: the attention forward pass, <code>O = softmax(QKᵀ / √d) V</code>, for N × d row-major FP32 matrices with <strong>d = 32</strong>, returning the array of stats for every launch it makes. With <code>causal</code> true, query <em>i</em> attends only to keys <em>j ≤ i</em>.</p>
+<p>The starter contains the naive version: three kernels (scores to memory, row softmax, then P·V). Yours must never write the N × N matrix to DRAM.</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li><strong>Exact</strong>: within 10⁻⁵ of a reference, at N = 128 and 256, causal and not.</li>
+<li><strong>IO-aware</strong>: DRAM traffic at N = 256 at most 1.5 × the bytes of Q, K, V and O.</li>
+<li><strong>Fast</strong>: at N = 256, at least <strong>3×</strong> faster than the naive three-kernel version (76,752 cycles).</li>
+<li><strong>Causal pays off</strong>: causal at most <strong>0.8×</strong> your own non-causal time. Skipping masked blocks isn't enough on its own: think about which SM gets which work (Chapter 5.4). Stretch: 0.65×.</li>
+</ul>
+
+<h2>The report (the write-up)</h2>
+<p>This is the part an interviewer or a team lead would read. Cover:</p>
+<ol>
+<li><strong>Design</strong>: tile sizes, thread mapping, what lives in registers and shared memory, and why.</li>
+<li><strong>Profiling</strong>: the speed of light per unit, the limiter, bank conflicts and balance, before and after your main optimisations (Part 5's procedure).</li>
+<li><strong>Compiler view</strong>: the instruction mix of your inner loop (FMAs vs everything else), what a compiler would do with it, and what you'd hand-schedule if you could (Part 6).</li>
+<li><strong>Against the state of the art</strong>: what FlashAttention-2 and -3 do that you didn't, and which of those the simulator could or couldn't show.</li>
+</ol>

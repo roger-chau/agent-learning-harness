@@ -1,0 +1,43 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Run the same training job twice on the same GPU and get different losses. Move it to a new GPU and a test fails in the fifth decimal place. Neither is necessarily a bug, and either can be. Floating-point addition isn't associative, parallel hardware adds things in different orders, and a performance engineer has to know when a difference is rounding and when it's wrong.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: order changes the answer</h2>
+<p><strong>(a + b) + c and a + (b + c) round differently.</strong> In FP32, $10^8 + 1 - 10^8$ gives 0 one way and 1 the other. Any parallel sum (a tree in shared memory, warp shuffles, atomics from many blocks) picks an order, and:</p>
+<ul>
+<li>a <strong>fixed tree</strong> gives the same bits every run (on the same hardware and launch shape);</li>
+<li><strong>atomics</strong> add in whatever order blocks happen to arrive, so the bits change from run to run;</li>
+<li>changing the launch shape, the GPU, or the library version changes the tree, and the bits.</li>
+</ul>
+<p>Measure differences in <strong>ULPs</strong> (units in the last place: how many representable numbers lie between two results), or as relative error against a higher-precision reference, never with <code>===</code> or a fixed absolute tolerance.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: making it reproducible, and more accurate</h2>
+<ul>
+<li><strong>Deterministic reductions</strong>: write per-block partial results to an array, then reduce the array in a fixed order (a second kernel or a last-block pass). A little more work and traffic, bitwise identical for a given launch shape.</li>
+<li><strong>Compensated (Kahan) summation</strong>: carry the rounding error of each addition in a second variable and feed it back. Error stops growing with n.</li>
+<li><strong>Wider accumulators</strong>: FP32 accumulation for FP16 data (Part 4), FP64 for sensitive FP32 sums.</li>
+</ul>
+<p>Frameworks expose "deterministic" modes that choose such algorithms, at some cost in speed. Know what you're buying: same bits run to run, not the exact answer.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: where numerics bite on GPUs</h2>
+<ul>
+<li>FMA contraction (Chapter 6.1) and fast-math flags (approximate <code>exp</code>, flush denormals to zero) change results between compilers and settings.</li>
+<li>Low precision (FP16, BF16, FP8) and their scaling (Part 7) move the error budget by orders of magnitude; tensor cores may accumulate internally in ways the documentation only loosely specifies.</li>
+<li>Split-K, Stream-K and other decompositions (Part 5) change the summation order with the problem shape: the same GEMM can give different bits at different sizes.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Bitwise reproducibility across different GPUs is generally not promised by vendor libraries. Within one GPU and configuration, many operations can be made deterministic.</li>
+<li>When a test fails after an optimisation, first compare against a high-precision reference: did the error grow, or just move?</li>
+<li>Nondeterministic atomics are fine for many uses (histograms of integers are exact). The problem is floating-point atomics.</li>
+</ul>
+</section>
