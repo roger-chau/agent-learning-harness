@@ -4,10 +4,40 @@
 
 How a GPU really works and how to make code fast on it. The course starts from why throughput machines exist at all. It ends with a fused attention kernel you design, tune, profile and explain.
 
-- **Practice environment:** a browser GPU simulator. You write CUDA-style kernels in the in-page terminal. The simulator runs them warp by warp and reports correctness, cycles, memory transactions, coalescing efficiency, divergence, bank conflicts and occupancy. An optional real-CUDA mode runs the same exercises with `nvcc` when your machine has an NVIDIA GPU.
+- **Practice environment:** a browser GPU simulator. You write CUDA-style kernels in the in-page terminal. The simulator runs them warp by warp and reports correctness, cycles, memory transactions, coalescing efficiency, divergence, bank conflicts and occupancy. An optional real-CUDA mode runs the same work with `nvcc` when your machine has an NVIDIA GPU.
 - **Companions:**
   - *Computer Architecture: A Quantitative Approach*, 7th edition (Hennessy & Patterson). Chapter references will be added once the table of contents is confirmed.
   - *It Thinks! Build your own GPU*, for the gate-level view.
+
+## The projects
+
+Three long-running projects grow across the course in milestones, then a capstone reuses them. Chapter exercises stay small; the projects are where the real building happens.
+
+| Project | Runs through | What you end up with |
+|---|---|---|
+| **A. Imaging kernels** | Parts 1–2 | A small image-processing library: grayscale, separable blur, Sobel and transpose. It goes from correct to bandwidth-bound-optimal. |
+| **B. Parallel primitives** | Parts 3 and 5 | Your own reduce / scan / histogram / compaction / radix-sort library, profiled and tuned. |
+| **C. GEMM, naive to tensor cores** | Parts 4–6 | A matrix multiply you take from naive to near-roofline, then inspect and hand-tune at the assembly level. |
+| **Capstone. Fused attention** | Part 8 | A FlashAttention-style kernel built on your GEMM tiles (C) and your reductions (B). |
+
+### Project A: Imaging kernels
+- **A1** (after Part 1): grayscale, 5×5 separable blur and Sobel on a real image. Borders must be correct, with zero divergence in interior tiles.
+- **A2** (after 2.3): restructure the data layout so every global access is fully coalesced. Gate: coalescing efficiency of at least 95%.
+- **A3** (after Part 2): shared-memory tiled blur plus a conflict-free transpose. Gate: at least 80% of simulated peak bandwidth, zero bank conflicts, and a short metrics write-up.
+
+### Project B: Parallel primitives
+- **B1** (after 3.1): reduction using warp shuffles and multiple elements per thread. Gate: a bandwidth target.
+- **B2** (after 3.2): single-pass scan with decoupled look-back.
+- **B3** (after 3.3): histogram with privatisation; it must hold up under a skewed, high-contention input.
+- **B4** (after Part 3): LSD radix sort for 32-bit keys, built only from your B1–B3, tested on hidden adversarial inputs.
+- **B5** (after Part 5): profile your whole library, write up the bottleneck of each primitive with evidence, and fix the worst two.
+
+### Project C: GEMM, naive to tensor cores
+- **C1** (after 4.2): shared-memory tiled SGEMM.
+- **C2** (after 4.3): register tiling and thread coarsening. Gate: at least 50% of the simulated roofline.
+- **C3** (after 4.4): vectorised loads and double buffering. Gate: at least 70% of the simulated roofline, with an optimisation log recording each change, the metric it moved, and why.
+- **C4** (after Part 4): a tensor-core path in FP16/BF16 with FP32 accumulation, and a numerical error budget.
+- **C5** (after Part 6): read the generated code for your inner loop, hand-schedule it in the simulator's PTX-like ISA, and beat the baseline compiler in cycles. Explain each transformation as a compiler concept.
 
 ---
 
@@ -17,8 +47,6 @@ How a GPU really works and how to make code fast on it. The course starts from w
 0.3 **Hiding latency with many threads.** Cheap context switches; how many threads you need to keep a unit busy.
 0.4 **The GPU in one picture.** SMs, warps, schedulers, register file, shared memory, L2, DRAM. *Companion: It Thinks!*
 
-**Project 0: Throughput core model.** Build a cycle-level model of one latency-hiding core in the terminal. Given memory latency, issue rate and thread count, predict utilisation, then verify it against the simulator across a sweep. Gate: your predictions are within 5% on hidden configurations.
-
 ## Part 1: SIMT: one instruction, many threads
 1.1 **SIMD vs SIMT.** Same hardware idea, different programming model.
 1.2 **Grids, blocks, threads.** Indexing in 1D, 2D and 3D, plus bounds guards.
@@ -26,43 +54,43 @@ How a GPU really works and how to make code fast on it. The course starts from w
 1.4 **Divergence and reconvergence.** Active masks, the reconvergence point, independent thread scheduling.
 1.5 **Predication and branch-free code.** When the compiler removes the branch for you.
 
-**Project 1: Image pipeline.** Kernels for grayscale, a separable 5×5 blur, and a Sobel edge detector on a real image, with correct border handling. Gate: correct output and zero divergence in the interior tiles.
+→ **Milestone A1**
 
 ## Part 2: Memory is the whole game
 2.1 **Arithmetic intensity and the roofline.** Is this kernel memory-bound or compute-bound? *Companion: H&P.*
 2.2 **DRAM, transactions and sectors.** What one load instruction from a warp actually costs.
-2.3 **Coalescing.** Access patterns, strides, structure-of-arrays vs array-of-structures.
+2.3 **Coalescing.** Access patterns, strides, structure-of-arrays vs array-of-structures. → **Milestone A2**
 2.4 **GPU caches.** L1/L2 behaviour, the read-only path, cache-line reuse.
 2.5 **Shared memory and bank conflicts.** Banks, broadcast, padding and swizzling.
 2.6 **Registers, spilling and occupancy.** The occupancy calculator from first principles, and why more occupancy isn't always better.
 
-**Project 2: Matrix transpose, three ways.** Naive, then a shared-memory tiled version, then a conflict-free padded or swizzled version. Gate: at least 80% of simulated peak bandwidth, zero bank conflicts, and a short write-up of each step's metrics.
+→ **Milestone A3**: Project A complete
 
 ## Part 3: Parallel building blocks
-3.1 **Reduction.** Tree reduction, warp shuffles, multiple elements per thread.
-3.2 **Scan.** Hillis–Steele, Blelloch, and single-pass decoupled look-back.
-3.3 **Atomics and histograms.** Contention, privatisation, hierarchical atomics.
+3.1 **Reduction.** Tree reduction, warp shuffles, multiple elements per thread. → **Milestone B1**
+3.2 **Scan.** Hillis–Steele, Blelloch, single-pass decoupled look-back. → **Milestone B2**
+3.3 **Atomics and histograms.** Contention, privatisation, hierarchical atomics. → **Milestone B3**
 3.4 **Synchronisation and the memory model.** Barriers, fences, visibility, cooperative groups.
 3.5 **Compaction and sorting.** Stream compaction; radix sort from scan and histogram.
 
-**Project 3: GPU radix sort.** Build a full LSD radix sort for 32-bit keys from your own scan and histogram kernels. Gate: correct on hidden inputs (including adversarial distributions), plus a throughput target.
+→ **Milestone B4**
 
 ## Part 4: Matrix multiply, the kernel everything depends on
 4.1 **Naive GEMM and why it's slow.** Arithmetic intensity on the roofline.
-4.2 **Tiling into shared memory.** Reuse, tile sizes, the occupancy trade-off.
-4.3 **Register tiling and thread coarsening.** Outer products in registers.
-4.4 **Vectorised loads, double buffering, async copies.** Overlapping memory with compute.
+4.2 **Tiling into shared memory.** Reuse, tile sizes, the occupancy trade-off. → **Milestone C1**
+4.3 **Register tiling and thread coarsening.** Outer products in registers. → **Milestone C2**
+4.4 **Vectorised loads, double buffering, async copies.** Overlapping memory with compute. → **Milestone C3**
 4.5 **Tensor cores and mixed precision.** MMA fragments, FP16/BF16/FP8, accumulation precision.
 
-**Project 4: Tuned SGEMM.** Take GEMM from naive to at least 70% of the simulated roofline, keeping an optimisation log that records each change, the metric it moved, and why. Gate: the performance target, plus a correct log.
+→ **Milestone C4**
 
 ## Part 5: Measuring like a performance engineer
 5.1 **Timing correctly.** Warm-up, synchronisation, variance, what not to measure.
 5.2 **Profiler metrics.** Throughput, achieved occupancy, stall reasons, memory charts (Nsight Compute concepts).
-5.3 **From stall reasons to bottleneck.** Latency-bound vs bandwidth-bound vs compute-bound vs launch-bound.
+5.3 **From stall reasons to bottleneck.** Latency-bound vs bandwidth-bound vs compute-bound vs launch-bound. *Exercises: diagnose mystery kernels.*
 5.4 **Tail effects and load balance.** Waves, partial waves, grid sizing.
 
-**Project 5: Perf detective.** Six mystery kernels, each with a hidden bottleneck (uncoalesced access, bank conflicts, register spilling, divergence, low occupancy, tail effect). Profile each, name the cause with evidence, and fix it. Gate: every diagnosis correct and every fix meets its target.
+→ **Milestone B5**: Project B complete
 
 ## Part 6: The compiler's view
 6.1 **From CUDA C to PTX to SASS.** The compilation pipeline and what each stage decides.
@@ -71,7 +99,7 @@ How a GPU really works and how to make code fast on it. The course starts from w
 6.4 **Instruction scheduling.** Instruction-level parallelism, dependency latencies, dual issue.
 6.5 **Loop transforms and fusion.** Unrolling, software pipelining, vectorisation, kernel fusion.
 
-**Project 6: Beat the compiler.** Hand-write and schedule a kernel in the simulator's PTX-like ISA (a reduction plus a small stencil), then beat the simulator's baseline compiler output in cycles. Explain every transformation in terms of the compiler concept behind it.
+→ **Milestone C5**: Project C complete
 
 ## Part 7: Real workloads
 7.1 **Memory-bound fused ops.** Softmax, layernorm, online normalisation.
@@ -79,11 +107,11 @@ How a GPU really works and how to make code fast on it. The course starts from w
 7.3 **Streams and overlap.** Concurrency, copy/compute overlap, multi-GPU basics.
 
 ## Part 8: Capstone: a fused attention kernel
-Design, implement, tune and explain a FlashAttention-style fused attention forward pass, end to end:
+Design, implement, tune and explain a FlashAttention-style fused attention forward pass, reusing your GEMM tiles (Project C) and reductions (Project B):
 
 - Correctness against a reference across shapes, including causal masking.
 - A performance target on the simulator's roofline.
-- A profiling report: bottleneck at each stage, and what you changed and why.
+- A profiling report: the bottleneck at each stage, and what you changed and why.
 - A compiler-view section: register pressure, occupancy, and the instruction mix in the generated code.
 - A short write-up suitable for a portfolio.
 
@@ -97,4 +125,4 @@ Optional: run it on a real NVIDIA GPU in real-CUDA mode and compare against the 
 
 ---
 
-**Size:** 10 parts, 41 chapters, 7 part projects plus 1 capstone.
+**Size:** 10 parts, 41 chapters, 3 long-term projects (13 milestones) plus 1 capstone.

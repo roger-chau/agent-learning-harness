@@ -5,8 +5,9 @@ Every Groundwork course follows the same shape.
 ## Structure
 
 - **Course** → **Parts** → **Chapters**.
-- **Every Part ends in a non-trivial project.** A project is a build that combines everything in the Part. Each one has hidden correctness tests and, where it applies, a performance target.
-- **Every course closes with one capstone project** near the end, followed only by a short "reality" Part. The capstone is portfolio-grade: you build it, measure it, and write it up.
+- **A few long-term projects, not one per chapter or Part.** Each course has two to four non-trivial projects. Each project runs across several Parts as a sequence of **milestones**, so the same codebase grows as new ideas arrive. A milestone has hidden correctness tests and, where it applies, a performance target.
+- **Every course closes with one capstone project** near the end, followed only by a short "reality" Part. The capstone reuses the earlier projects' code where it can, and is portfolio-grade: you build it, measure it, and write it up.
+- **Chapters gate on exercises; projects gate on milestones.** Small exercises unlock the next chapter. A project milestone unlocks the Part that depends on it.
 
 ## Chapter template
 
