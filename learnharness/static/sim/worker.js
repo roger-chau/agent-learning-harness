@@ -1,6 +1,6 @@
 /* Runs learner code off the main thread. Messages in: {mode: "run"|"test", code, exerciseUrl, exerciseId}. */
-/* global importScripts, GPUSim */
-importScripts("/static/sim/gpusim.js");
+/* global importScripts, GPUSim, GWX */
+importScripts("/static/sim/gpusim.js", "/static/sim/gwx.js");
 
 self.GW = { exercises: {}, exercise(def) { this.exercises[def.id] = def; } };
 
@@ -68,7 +68,7 @@ self.onmessage = async (e) => {
   };
   try {
     if (exerciseUrl) importScripts(exerciseUrl);
-    const fns = gpu.compile(code, { print, gpu, table, show, console: { log: print } });
+    const fns = gpu.compile(code, { print, gpu, table, show, GWX, console: { log: print } });
 
     if (mode === "run") {
       if (typeof fns.main === "function") {
@@ -86,6 +86,7 @@ self.onmessage = async (e) => {
     const t = {
       gpu,
       GPUSim,
+      GWX,
       print,
       table,
       show,

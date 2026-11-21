@@ -1,0 +1,22 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "multi", "prompt": "What does unrolling a loop by 4 with separate accumulators buy?",
+     "options": ["Loop overhead paid once per 4 bodies", "A bigger block for the scheduler", "Independent math chains (ILP)", "Fewer registers"], "answer": [0, 1, 2],
+     "explanation": "It costs registers, not saves them."},
+    {"id": "q2", "type": "single", "prompt": "Why won't a compiler split a float sum into 4 accumulators on its own?",
+     "options": ["It can't count", "Float addition isn't associative: it changes the result, so it needs permission (fast-math)", "It's slower", "Accumulators can't be registers"], "answer": 1,
+     "explanation": "Reassociation changes rounding."},
+    {"id": "q3", "type": "numeric", "prompt": "Three memory-bound elementwise kernels each read and write an n-element array. Fused into one, what fraction of the DRAM traffic remains?", "unit": "", "answer": 0.3333, "tolerance": 0.01,
+     "explanation": "One read and one write instead of three of each."},
+    {"id": "q4", "type": "single", "prompt": "Which transform turns <code>A[i * stride]</code> computed every iteration into a pointer bumped by <code>stride</code>?",
+     "options": ["Fusion", "Strength reduction", "Interchange", "Tiling"], "answer": 1,
+     "explanation": "A multiply becomes an add."},
+    {"id": "q5", "type": "single", "prompt": "A fused kernel is slower than the separate ones. First suspect?",
+     "options": ["The launch overhead", "Register pressure from more live values, lowering occupancy or causing spills", "Bank conflicts", "Divergence"], "answer": 1,
+     "explanation": "Check registers and spills before anything else."},
+    {"id": "q6", "type": "single", "prompt": "What does <code>__restrict__</code> tell the compiler?",
+     "options": ["The pointer is read-only", "This pointer doesn't alias any other, so accesses through it can be reordered", "Use shared memory", "Don't unroll"], "answer": 1,
+     "explanation": "No-alias promises unlock reordering and other transforms."}
+  ]
+}

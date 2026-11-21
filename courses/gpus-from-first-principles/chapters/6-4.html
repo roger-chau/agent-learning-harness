@@ -1,0 +1,48 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>A GPU issues instructions in order. If the next instruction needs a value that isn't ready, that warp stalls, and only other warps can fill the gap. Part 0's answer was "more warps". The compiler's answer is <strong>put independent work between a producer and its consumer</strong>, so even a single warp keeps issuing. With few warps (big register tiles, low occupancy), that ordering is most of the performance.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: dependences and latency</h2>
+<p><strong>An instruction may move anywhere, as long as every dependence still points forward.</strong> Three kinds of register dependence, plus memory:</p>
+<table>
+<tr><th>Kind</th><th>Example</th><th>Must wait</th></tr>
+<tr><td>Read after write (true)</td><td><code>ld %x</code> … <code>add %s, %s, %x</code></td><td>The producer's full latency</td></tr>
+<tr><td>Write after read (anti)</td><td><code>add %s, %a, 1</code> … <code>mov %a, 0</code></td><td>Just stay after it</td></tr>
+<tr><td>Write after write (output)</td><td>two writes to <code>%a</code></td><td>Just stay after it</td></tr>
+<tr><td>Memory</td><td>a store and a load or store to the same buffer</td><td>Stay in order (unless addresses provably differ)</td></tr>
+</table>
+<p>Anti and output dependences only exist because names are reused. Renaming (or SSA form) removes them, at the cost of registers: the scheduling–allocation tension in one sentence.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: list scheduling</h2>
+<p>The standard algorithm for a basic block:</p>
+<ol>
+<li>Build the dependence graph, with latencies on the true-dependence edges.</li>
+<li>Give each instruction a <strong>priority</strong>: the longest latency path from it to the end of the block (its critical path).</li>
+<li>Simulate cycles. Each cycle, among instructions whose predecessors have all <em>completed</em>, issue the one with the highest priority.</li>
+</ol>
+<p>It isn't optimal (that problem is NP-hard), but with critical-path priorities it's close for real code, and it's what production compilers build on. The effect: long-latency loads float to the top, their consumers sink, and independent work fills the gap.</p>
+<div data-gw="gwx-timeline"></div>
+<p>Try it: with one warp, the loop as written spends almost all its time waiting on each load. Hoisting the loads lets one warp overlap them; adding warps lets the scheduler overlap warps instead. Both fill the same idle slots.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: beyond one block</h2>
+<ul>
+<li><strong>Loops</strong> are where time goes, but a loop body is short. Unrolling (next chapter) makes a bigger block to schedule; <strong>software pipelining</strong> overlaps iterations, issuing iteration <em>k+1</em>'s loads during iteration <em>k</em>'s math. You did this by hand as double buffering in Part 4.</li>
+<li>On NVIDIA GPUs, ptxas also encodes the schedule into each instruction's control bits: how many cycles to stall before the next instruction, and which dependency barrier to wait on for variable-latency loads.</li>
+<li>Scheduling for fewer stalls usually lengthens live ranges (more registers), which can cost occupancy. Real schedulers track register pressure as they go.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>You can't reorder SASS by hand in normal toolchains; you influence it through source: unrolling, explicit prefetch into registers, splitting loads from uses.</li>
+<li>Read the stall reasons per instruction in a profiler's source view: a stall pinned on the instruction right after a load means the schedule had nothing to put in between.</li>
+<li>C5 asks you to do the compiler's job by hand in GWX: allocate, schedule, unroll and pipeline a GEMM inner loop.</li>
+</ul>
+</section>

@@ -1,0 +1,33 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "c1", "type": "single", "prompt": "PTX vs SASS: which statement is right?",
+     "options": ["SASS is portable across GPU generations", "PTX is a virtual ISA with unlimited registers; SASS is the real, architecture-specific machine code", "They're the same", "PTX is only for debugging"], "answer": 1,
+     "explanation": "ptxas turns PTX into SASS for one architecture."},
+    {"id": "c2", "type": "numeric", "prompt": "Straight-line code where at most 9 values are ever live at once. How many registers does an optimal allocator need (no spills)?", "unit": "", "answer": 9, "tolerance": 0,
+     "explanation": "Maximum live is the lower bound, and linear scan achieves it on straight-line code."},
+    {"id": "c3", "type": "numeric", "prompt": "A thread uses 40 registers on an SM with a 16,384-register file. How many warps fit?", "unit": "warps", "answer": 12, "tolerance": 0,
+     "explanation": "⌊16384 / (32 × 40)⌋ = 12."},
+    {"id": "c4", "type": "single", "prompt": "Which dependence must keep the consumer at least the producer's latency after it?",
+     "options": ["Read after write", "Write after read", "Write after write", "None"], "answer": 0,
+     "explanation": "Only true dependences carry latency."},
+    {"id": "c5", "type": "single", "prompt": "A loop body is <code>ld.shared %x; fma %s, %x, %x, %s; (index, compare, branch)</code>, with one warp per SM. Best single transform?",
+     "options": ["Fuse it with another kernel", "Unroll with several independent accumulators, so loads and FMAs overlap and overhead is amortised", "Increase BK", "Add a barrier"], "answer": 1,
+     "explanation": "One warp can't hide the 24-cycle latency without independent work."},
+    {"id": "c6", "type": "single", "prompt": "Why is <code>ld.shared.v4</code> an instruction-selection win in a register-tiled GEMM?",
+     "options": ["It's more accurate", "One instruction loads four values, cutting load instructions per FMA by 4×", "It avoids barriers", "It uses fewer registers"], "answer": 1,
+     "explanation": "Fewer non-FMA instructions per FMA."},
+    {"id": "c7", "type": "single", "prompt": "What does software pipelining a GEMM inner loop cost?",
+     "options": ["Nothing", "Registers: the next step's operands are live alongside the current step's", "Correctness", "Shared memory banks"], "answer": 1,
+     "explanation": "Overlap needs storage for both stages."},
+    {"id": "c8", "type": "single", "prompt": "In Triton, who decides how a tile's work maps onto threads and shared memory?",
+     "options": ["The programmer", "The compiler", "The driver at run time", "Nobody: it's fixed"], "answer": 1,
+     "explanation": "The programmer chooses tiles; the compiler implements them."},
+    {"id": "c9", "type": "single", "prompt": "On a register-starved SM, a kernel stalls on global loads at the maximum warps that fit. Which fixes can both help?",
+     "options": ["Only adding warps", "Fewer registers (more warps) and hoisting independent loads (more ILP): measure which wins, since ILP costs registers", "Only fusion", "Bank-conflict removal"], "answer": 1,
+     "explanation": "Occupancy and ILP trade against each other through the register file."},
+    {"id": "c10", "type": "single", "prompt": "Why does an autotuner measure rather than predict?",
+     "options": ["Prediction is illegal", "The best tile configuration depends on interacting effects (occupancy, tails, reuse, registers) that simple models get wrong", "Measuring is free", "To warm the cache"], "answer": 1,
+     "explanation": "Models guide the search; measurement decides."}
+  ]
+}

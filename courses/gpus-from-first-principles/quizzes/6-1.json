@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "Which stage allocates physical registers?",
+     "options": ["The C++ front end", "NVVM", "ptxas (PTX to SASS)", "The driver's PTX parser only"], "answer": 2,
+     "explanation": "PTX has unlimited virtual registers; ptxas maps them to the real register file."},
+    {"id": "q2", "type": "single", "prompt": "Why ship PTX in a binary as well as SASS?",
+     "options": ["PTX runs faster", "The driver can JIT-compile it for GPUs that didn't exist when the binary was built", "SASS can't be debugged", "PTX is smaller"], "answer": 1,
+     "explanation": "PTX is the portable, forward-compatible contract."},
+    {"id": "q3", "type": "numeric", "prompt": "How many instructions does a code generator with fma selection need for x*y + z*w (x, y, z, w in registers, result into a fresh register)?", "unit": "", "answer": 2, "tolerance": 0,
+     "explanation": "mul t, z, w; fma out, x, y, t."},
+    {"id": "q4", "type": "single", "prompt": "Why can a GPU result differ from a CPU result in the last bits for the same source?",
+     "options": ["GPUs have broken floating point", "FMA contraction rounds once where separate multiply and add round twice", "GPUs use 16-bit math", "Random scheduling"], "answer": 1,
+     "explanation": "Fusing changes rounding; nvcc fuses by default."},
+    {"id": "q5", "type": "multi", "prompt": "Which tools show you what the GPU actually executes?",
+     "options": ["cuobjdump -sass", "nvcc -ptx (virtual ISA)", "Nsight Compute source view", "-Xptxas -v (register and spill counts)"], "answer": [0, 2, 3],
+     "explanation": "PTX is still virtual; SASS is what runs."}
+  ]
+}

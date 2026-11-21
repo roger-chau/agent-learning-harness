@@ -1009,6 +1009,55 @@
     draw();
   };
 
+  // GWX issue timeline: which warp issues what, cycle by cycle.
+  C["gwx-timeline"] = (el) => {
+    const s = shell(el, {
+      title: "Issue timeline: latency, warps and scheduling",
+      controls: [
+        { key: "warps", label: "Warps", min: 1, max: 4, value: 1 },
+        { key: "sched", label: "Loads hoisted (0 = as written)", min: 0, max: 1, value: 0 },
+      ],
+      readouts: [
+        { key: "cyc", label: "Cycles" },
+        { key: "ipc", label: "Issue slots used" },
+        { key: "stall", label: "Stalled on dependences" },
+      ],
+    });
+    const AS_WRITTEN = `mov %i, 0\nmov %s, 0\nl:\nmul %a, %i, 128\nadd %a, %a, %tid\nld.global %x, X[%a]\nfma %s, %x, %x, %s\nadd %i, %i, 1\nsetp.lt %p, %i, 4\n@%p bra l\nst.global Y[%tid], %s`;
+    const HOISTED = `ld.global %x0, X[%tid]\nld.global %x1, X[%tid + 128]\nld.global %x2, X[%tid + 256]\nld.global %x3, X[%tid + 384]\nmul %s, %x0, %x0\nfma %s, %x1, %x1, %s\nfma %s, %x2, %x2, %s\nfma %s, %x3, %x3, %s\nst.global Y[%tid], %s`;
+    const color = { "ld.global": "--saffron", fma: "--indigo", alu: "--mint-ink", branch: "--muted", "st.global": "--rose-ink" };
+    function draw() {
+      if (typeof GWX === "undefined") { el.querySelector(".sim-stage").textContent = "GWX not loaded"; return; }
+      const warps = s.vals.warps, prog = s.vals.sched ? HOISTED : AS_WRITTEN;
+      const r = GWX.run(prog, { warps, trace: 10000, buffers: { X: new Array(512).fill(1), Y: new Array(128).fill(0) } });
+      const { ctx, w, h } = s.size(70 + warps * 34);
+      ctx.clearRect(0, 0, w, h);
+      const x0 = 56, span = Math.max(r.cycles, 1700), sx = (w - x0 - 10) / span, rowH = 26;
+      ctx.font = `11px ${css("--font-mono")}`;
+      for (let k = 0; k < warps; k++) {
+        const y = 14 + k * (rowH + 8);
+        ctx.fillStyle = css("--surface-3"); ctx.fillRect(x0, y, r.cycles * sx, rowH);
+        ctx.fillStyle = css("--muted"); ctx.fillText(`warp ${k}`, 4, y + rowH / 2 + 4);
+      }
+      for (const [cyc, wp, , cls] of r.trace) {
+        ctx.fillStyle = css(color[cls] || "--ink-2");
+        ctx.fillRect(x0 + cyc * sx, 14 + wp * (rowH + 8), Math.max(2, sx), rowH);
+      }
+      const ly = 14 + warps * (rowH + 8) + 14;
+      let lx = x0;
+      ctx.font = `11px ${css("--font-ui")}`;
+      for (const [cls, v] of [["global load", "--saffron"], ["FMA", "--indigo"], ["integer/compare", "--mint-ink"], ["branch", "--muted"], ["store", "--rose-ink"]]) {
+        ctx.fillStyle = css(v); ctx.fillRect(lx, ly - 8, 10, 10); ctx.fillStyle = css("--ink-2"); ctx.fillText(cls, lx + 14, ly + 1); lx += ctx.measureText(cls).width + 32;
+      }
+      s.setReadout("cyc", r.cycles.toLocaleString());
+      s.setReadout("ipc", `${(100 * r.ipc).toFixed(1)}%`);
+      s.setReadout("stall", `${Math.round((100 * r.stalls.dependency) / r.cycles)}%`);
+    }
+    onInput(el, s, draw);
+    window.addEventListener("resize", draw);
+    draw();
+  };
+
   function mount(root) {
     root.querySelectorAll("[data-gw]").forEach((el) => {
       const fn = C[el.dataset.gw];

@@ -1,0 +1,13 @@
+<div class="scenario-brief">
+<div class="k">Scenario · Occupancy or ILP, on a small GPU</div>
+<b>A fused normalisation kernel runs 4× slower than expected on an embedded GPU. The team suspects the compiler. You have its output and the profiler.</b>
+<dl>
+<dt>Context</dt><dd>A sensor pipeline normalises each 8-value group a lane owns: subtract the group's mean, divide by its standard deviation (<code>y = (x − mean) · rsqrt(var + 1e-5)</code>, var = mean of squared deviations). Warp-row <code>r</code> holds 256 values at <code>X[r·256 + 32·j + lane]</code>, j = 0..7; there are <code>$rows</code> warp-rows. Warps loop over rows: <code>row = %warp, %warp + %nwarps, …</code>.</dd>
+<dt>The hardware</dt><dd>An embedded GPU's SM, modelled in GWX with a <strong>16,384-register file</strong> (a quarter of the GW-1's). How many warps fit depends on how many registers your code names.</dd>
+<dt>Goal</dt><dd>Rewrite the kernel (<code>NORM</code>) and pick a warp count (<code>WARPS</code>): same results, <strong>≤ 12,000 cycles</strong> for 128 rows (the compiler's output, at the most warps that fit, takes about 32,000). Stretch: ≤ 8,500.</dd>
+</dl>
+</div>
+
+<h2>Two levers, pulling against each other</h2>
+<p><strong>Occupancy</strong>: fewer registers per thread means more warps to hide the 400-cycle global loads. <strong>ILP</strong>: issuing all eight loads before using any of them hides latency within a warp, but each in-flight load needs its own register. The compiler's output gets neither right. Find out which one it gets wrong first, using the stall counts and the register count, before you change anything.</p>
+<p>The write-up asks for the measurements behind your choice, what a production compiler would have done here, and what you'd tell the team about the hardware.</p>

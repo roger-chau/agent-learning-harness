@@ -1,0 +1,24 @@
+<div class="paper-ref">
+<div class="k">Project C · GEMM · Milestone 5 of 5</div>
+Beat the compiler on your GEMM's inner loop, by hand, in assembly.
+</div>
+
+<h2>The setup</h2>
+<p>The starter contains <code>BASELINE</code>: GWX for a register-tiled GEMM micro-kernel of the kind a straightforward compiler emits. Two warps run it; each lane computes a 4 × 4 tile of C from shared-memory tiles over 32 k-steps:</p>
+<ul>
+<li><code>As[k*16 + row]</code>: 32 k-steps × 16 rows of A, stored transposed; <code>Bs[k*32 + col]</code>: 32 × 32 of B.</li>
+<li>Lane <code>l</code> owns rows <code>(l >> 3)·4 … +3</code> and columns <code>(l &amp; 7)·4 … +3</code>; warp <code>w</code> writes rows <code>16w …</code> of <code>C</code> (32 columns, row-major).</li>
+<li>The SM's register file is limited to <strong>48 registers per thread</strong> for 2 warps (<code>registerFile: 2 × 32 × 48</code>).</li>
+</ul>
+<p>The baseline takes about 3,000 cycles. Write <code>FAST</code>: the same results, in <strong>≤ 1,900 cycles</strong>. Stretch: ≤ 1,550.</p>
+
+<h2>Your toolbox (Chapters 6.3–6.5)</h2>
+<ul>
+<li><strong>Instruction selection</strong>: <code>ld.shared.v4 {%a, %b, %c, %d}, S[...]</code> loads 4 consecutive values (address a multiple of 4) in one instruction.</li>
+<li><strong>Strength reduction</strong>: the baseline recomputes addresses from <code>k</code> every iteration.</li>
+<li><strong>Unrolling</strong> and <strong>software pipelining</strong>: load step <em>k+1</em>'s operands before step <em>k</em>'s FMAs.</li>
+<li><strong>Register allocation</strong>: everything must fit in 48 names. You'll feel the pressure as soon as you pipeline.</li>
+</ul>
+
+<h2>How it's checked, and the write-up</h2>
+<p>Results must match the baseline exactly (same operations, same order of accumulation per element), within the register budget, under the cycle target. Then write up each transformation you applied, which compiler concept it is, what it did to instructions, stalls and registers, and which ones a real compiler would have done for you, and why it might not have.</p>

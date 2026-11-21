@@ -1,0 +1,44 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>The previous chapters optimised what's already inside a basic block. The biggest wins usually come from changing the loops themselves: how much work one iteration does, which order the iterations run in, and which loops (or kernels) run together. These are the transformations behind most of Part 4's speedups, viewed now as something a compiler can do mechanically, and must prove safe.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: unrolling</h2>
+<p><strong>Replicate the loop body <em>u</em> times and run 1/<em>u</em> of the iterations.</strong> Three separate benefits:</p>
+<ol>
+<li>The loop overhead (increment, compare, branch) is paid once per <em>u</em> bodies.</li>
+<li>The scheduler gets a block <em>u</em> times bigger to fill latencies with.</li>
+<li>With <strong>separate accumulators</strong>, the iterations' math becomes independent: instruction-level parallelism, Volkov's ILP from Part 2.</li>
+</ol>
+<p>The third needs care: <code>s0 + s1 + s2 + s3</code> sums in a different order than one running total, and floating-point addition isn't associative. Compilers won't <em>reassociate</em> a float reduction unless told it's allowed (fast-math flags), so for floats this one is often yours to do by hand. Costs of unrolling: more registers (each accumulator and loaded value), bigger code, and remainder handling when the trip count isn't a multiple of <em>u</em>. In CUDA: <code>#pragma unroll</code>.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: the classic loop transformations</h2>
+<table>
+<tr><th>Transform</th><th>What it does</th><th>Where you've seen it</th></tr>
+<tr><td>Loop-invariant code motion</td><td>Moves computations that don't change across iterations out of the loop</td><td>Base addresses computed once</td></tr>
+<tr><td>Strength reduction</td><td>Replaces <code>i * stride</code> each iteration with a pointer that is incremented</td><td>C5's address arithmetic</td></tr>
+<tr><td>Tiling (blocking)</td><td>Splits a loop into blocks that fit a faster memory</td><td>Shared-memory and register tiles, Part 4</td></tr>
+<tr><td>Interchange</td><td>Swaps nested loops to change the access order</td><td>Coalescing: making the innermost index the contiguous one</td></tr>
+<tr><td>Software pipelining</td><td>Overlaps iteration <em>k+1</em>'s loads with iteration <em>k</em>'s math</td><td>Double buffering, Part 4</td></tr>
+<tr><td>Fusion</td><td>Merges loops (or kernels) over the same data</td><td>This chapter's exercise, attention in Part 8</td></tr>
+</table>
+<p>Each is legal only if it preserves every dependence. Compilers prove that with dependence analysis on array subscripts; when they can't (pointers that might alias, unknown strides), they don't transform. <code>__restrict__</code> exists to tell them two pointers don't alias.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: fusion</h2>
+<p>Three elementwise kernels in a row (scale, ReLU, square) each read and write the whole array. Fused into one, the intermediate values stay in registers: a third of the DRAM traffic for a memory-bound chain, and two fewer launches. That's why ML compilers spend so much effort on fusion. XLA, TorchInductor and Triton-based stacks fuse elementwise operations into each other and into the <em>epilogue</em> of a GEMM, and FlashAttention (Part 8) is a fusion that changes the algorithm to make it possible.</p>
+<p>Fusion isn't free: a fused kernel holds more live values (registers), may need a different parallel decomposition than its parts, and can lose the reuse one of them had. When fusion makes things slower, register pressure is the first suspect.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>nvcc unrolls small constant-trip loops automatically; check the SASS to see what it did.</li>
+<li>Polyhedral compilers model loop nests mathematically and search transformations; tile-level languages like Triton (next) let the programmer state the tiling and leave the rest to the compiler.</li>
+<li>The PP-triton project builds a tiny compiler that generates fused, tiled kernels and autotunes their parameters.</li>
+</ul>
+</section>

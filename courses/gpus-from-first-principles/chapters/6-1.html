@@ -1,0 +1,50 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>You write <code>y[i] = a * x[i] + y[i]</code>; the GPU executes something quite different: address arithmetic, loads with particular widths and cache hints, a fused multiply-add, a store, all in registers the hardware actually has, in an order chosen to hide latency. Everything you measured in Parts 4 and 5 (instruction counts, FMA share, stalls) is a property of <em>that</em> code, not of your source. A GPU performance engineer reads it; a GPU compiler engineer writes the program that produces it.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: compilers lower in stages</h2>
+<p><strong>A compiler translates through a series of languages, each closer to the machine.</strong> NVIDIA's toolchain for CUDA C++:</p>
+<ol>
+<li><strong>Front end</strong> (Clang-based in modern toolchains): C++ to an LLVM-based IR called NVVM IR. Classic optimisations happen here: inlining, constant folding, loop unrolling, common subexpressions.</li>
+<li><strong>NVVM back end</strong>: IR to <strong>PTX</strong>, a <em>virtual</em> instruction set. PTX has unlimited typed virtual registers (<code>%r1</code>, <code>%f7</code>, ...), explicit memory spaces (<code>ld.global</code>, <code>ld.shared</code>), and is stable across GPU generations.</li>
+<li><strong>ptxas</strong>: PTX to <strong>SASS</strong>, the real machine code for one architecture. This is where registers are allocated to the physical register file, instructions are scheduled, and the hardware-specific encoding (including scheduling control bits) is produced.</li>
+</ol>
+<p>Binaries usually carry SASS for the GPUs they were built for plus PTX, which the driver can compile just in time for newer GPUs. That's why PTX exists: a portable contract between the compiler and the hardware.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: GWX, our PTX</h2>
+<p>For this Part, the simulator has an assembly language modelled on PTX, <strong>GWX</strong>, and a cycle-level model of one SM that runs it. Like PTX, it has unlimited virtual registers (<code>%anything</code>), one value per lane, and explicit memory spaces:</p>
+<pre><code>  mov     %i, 0
+loop:
+  ld.global %x, X[%i]        // memory operand: BUFFER[%reg + imm]
+  fma     %acc, %a, %x, %acc
+  add     %i, %i, 1
+  setp.lt %p, %i, $n         // $n: a launch parameter
+  @%p bra loop               // predicated branch
+  st.global Y[%tid], %acc</code></pre>
+<p>Run it with <code>GWX.run(text, { warps, buffers, params })</code>. You get the cycles, the instruction mix and the stall reasons. Latencies: 4 cycles for ALU and FMA, 24 for <code>ld.shared</code>, 400 for <code>ld.global</code>. One warp instruction issues per cycle, and an instruction waits until its source registers are ready (a <em>scoreboard</em>). <code>GWX.assemble(text)</code> parses a program into instructions, if you want to analyse one.</p>
+<p>The first job of a back end is <strong>code generation</strong>: walk the expression tree and emit three-address instructions, one temporary per intermediate value. The second is <strong>instruction selection</strong>: noticing patterns the machine does in one instruction. A multiply whose only use is an add becomes one <code>fma</code>: half the instructions, and one rounding instead of two.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: what each stage decides</h2>
+<table>
+<tr><th>Stage</th><th>Decides</th><th>You see it as</th></tr>
+<tr><td>Front end / NVVM</td><td>Inlining, unrolling, constant folding, which loads are invariant, vectorisation of loads</td><td>PTX instruction count and structure</td></tr>
+<tr><td>PTX → SASS (ptxas)</td><td>Register allocation, spilling, instruction order, dual-issue and stall hints</td><td>Registers per thread, local-memory spills, stall reasons</td></tr>
+<tr><td>Hardware</td><td>Which warp issues each cycle</td><td>Achieved occupancy, issue efficiency</td></tr>
+</table>
+<p>Tools: <code>nvcc -ptx</code> writes PTX, <code>cuobjdump -sass</code> and <code>nvdisasm</code> show SASS, <code>-Xptxas -v</code> prints registers and spills, and Nsight Compute's source view lines SASS up with your source and its stalls. Compiler Explorer (godbolt.org) shows PTX and SASS live as you type.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>SASS isn't officially documented beyond an instruction list. Engineers learn it by reading compiler output and from microbenchmark studies like the Volta paper in Part 5.</li>
+<li>Other GPU compilers follow the same shape: AMD's compiles through LLVM to its ISA, and ML compilers (Triton, XLA, MLIR-based stacks) add tile-level IRs above it (the Triton paper at the end of this Part).</li>
+<li>FMA contraction changes rounding. <code>nvcc</code> fuses by default (<code>--fmad=true</code>), which is why GPU and CPU results can differ in the last bits.</li>
+</ul>
+</section>

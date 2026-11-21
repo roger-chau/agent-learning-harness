@@ -1,0 +1,44 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>PTX has as many registers as the program wants; an SM has 65,536, shared by every resident thread. Each register a thread uses is one fewer warp the SM can hold (Chapter 2.6). The compiler has to map an unbounded number of values onto a small, fixed set of names, without changing what the program computes, and in doing so it decides your occupancy.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: a value only needs a register while it's live</h2>
+<p><strong>A value is <em>live</em> from where it's computed to its last use. Two values that are never live at the same time can share a register.</strong> In straight-line code each value's life is an interval:</p>
+<pre><code>0  ld.global %a, X[%tid]     %a: [0, 2)
+1  ld.global %b, Y[%tid]     %b: [1, 2)
+2  add       %c, %a, %b      %c: [2, 3)    %a and %b die here: %c can reuse one of their registers
+3  mul       %d, %c, %c      %d: [3, 4)
+4  st.global OUT[%tid], %d</code></pre>
+<p>The number of registers needed is the largest number of intervals that overlap at any point: <strong>maximum live</strong>, also called register pressure. Here it's 2, though the program names 4 values.</p>
+<p><strong>Linear scan</strong> allocation walks intervals in order of their start, hands each one a free register, and returns a register to the free pool when its interval ends. For straight-line code it achieves exactly the maximum-live count.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: when registers run out</h2>
+<p>If the pressure exceeds what the compiler may use (255 per thread, or less if you ask for more occupancy), it must <strong>spill</strong>: store a value to local memory and reload it later. Local memory is per-thread DRAM, cached in L1/L2: a spill in a hot loop can turn a compute-bound kernel into a memory-bound one. Alternatives the compiler tries first:</p>
+<ul>
+<li><strong>Rematerialisation</strong>: recompute a cheap value (an address, a constant) instead of keeping it alive.</li>
+<li><strong>Rescheduling</strong>: move a use earlier or a definition later to shorten an interval.</li>
+</ul>
+<p>And there's a knob in the other direction: <code>__launch_bounds__(maxThreads, minBlocks)</code> or <code>-maxrregcount</code> tell the compiler to use fewer registers to reach a target occupancy, accepting spills or worse code. Whether that's a good trade is Volkov's question from Part 2, and only measurement answers it.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: loops and real allocators</h2>
+<ul>
+<li>With branches and loops, liveness becomes a <strong>dataflow problem</strong>: a value used in the next iteration is live around the back edge. Compilers solve it iteratively over the control-flow graph, usually on <strong>SSA</strong> form, where each value is defined exactly once (as in this chapter's exercise).</li>
+<li>Production allocators use <strong>graph colouring</strong> (values are nodes, overlapping lives are edges, registers are colours) or refined linear scan. GPU allocators also respect register banks (the Volta paper's bank conflicts), vector-register alignment for 64- and 128-bit values, and per-warp allocation granularity (256 registers per warp on recent NVIDIA GPUs).</li>
+<li>Occupancy from registers: warps per SM = min(hardware limit, ⌊65536 / (32 × registers per thread)⌋), before allocation granularity.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><code>-Xptxas -v</code> prints each kernel's registers and spill bytes. Check it whenever performance surprises you.</li>
+<li>Register pressure is the main reason large unroll factors and big register tiles stop paying off (Part 4). C5 makes you live inside a register budget.</li>
+<li>Kernels that use 255 registers aren't wrong: GEMMs often do, deliberately, at low occupancy.</li>
+</ul>
+</section>

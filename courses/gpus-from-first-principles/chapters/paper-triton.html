@@ -1,0 +1,42 @@
+<div class="paper-ref">
+<div class="k">The work</div>
+<b>P. Tillet, H. T. Kung, D. Cox. "Triton: An Intermediate Language and Compiler for Tiled Neural Network Computations."</b> MAPL 2019 (ACM SIGPLAN Workshop on Machine Learning and Programming Languages).
+<br><a href="https://scholar.google.com/scholar?q=Triton+An+Intermediate+Language+and+Compiler+for+Tiled+Neural+Network+Computations" target="_blank" rel="noopener noreferrer">Find it on Google Scholar</a> · Short (a workshop paper). Read it alongside the official Triton matmul tutorial, which shows the same ideas in today's Python syntax.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>Every new neural network layer needed fast GPU kernels, and there were two bad options. Vendor libraries (cuBLAS, cuDNN) were fast but fixed: anything they didn't cover ran slowly. Writing CUDA by hand meant doing everything Part 4 taught you, per operation and per GPU: tiling, shared memory, synchronisation, coalescing. Existing compilers either worked on whole tensors with a fixed menu of schedules, or expected you to describe the schedule in detail.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Program at the level of tiles, and let the compiler handle everything below a tile.</strong> In Triton, a kernel is written for one <em>program instance</em> that computes one block of the output, with operations on whole tiles (load a BLOCK_M × BLOCK_K tile, <code>dot</code> two tiles, store a tile). The programmer chooses how work is split into tiles; the compiler decides how threads, warps, registers and shared memory implement each tile operation.</p>
+<p>The paper introduces Triton-C (a C-like front end with tile types), <strong>Triton-IR</strong> (an LLVM-based IR whose values are tiles), and a compiler whose passes include:</p>
+<ul>
+<li>machine-independent: tile-level peephole optimisations, prefetching (software pipelining, Part 4 and Chapter 6.4);</li>
+<li>machine-dependent: hierarchical tiling onto warps and threads, memory coalescing, shared-memory allocation and automatic insertion of barriers;</li>
+<li>and an <strong>auto-tuner</strong> that searches tile sizes and other parameters per problem.</li>
+</ul>
+<p>The result: matrix multiplication close to vendor libraries, and fused or unusual operations that the libraries didn't offer, from a few dozen lines of code.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ul>
+<li><strong>The overview and Triton-C examples</strong>: how a matmul looks when written per tile. Compare with your C3 kernel.</li>
+<li><strong>Triton-IR and its tile-level data-flow analysis</strong>: the point of putting tiles into the IR is that the compiler can reason about whole tiles (shapes, layouts) rather than individual threads.</li>
+<li><strong>The optimisation passes</strong>: map each to the chapter of this course where you did it by hand.</li>
+<li><strong>The evaluation</strong>: what it compares against, and on which shapes Triton wins or loses.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>One tile-level decision the compiler can't make for you: the <em>order</em> of program instances. Triton's matmul tutorial launches programs in groups of rows (<code>GROUP_SIZE_M</code>), so programs running at the same time reuse the same panels of A and B from L2. Implement that mapping, and measure the working set it saves.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>OpenAI released Triton 1.0 in 2021 with a Python front end, and it became the main way to write custom GPU kernels for deep learning. PyTorch 2's compiler (TorchInductor) generates Triton code for fused operations by default. The compiler was later rebuilt on MLIR, with tile layouts as first-class concepts, and gained backends for other vendors' GPUs. Tile-level programming spread further: CUTLASS's CuTe layouts, and other tile languages for GPUs and accelerators followed the same idea. For a GPU compiler engineer, Triton's internals are one of the most relevant codebases to know.</p>
+</section>

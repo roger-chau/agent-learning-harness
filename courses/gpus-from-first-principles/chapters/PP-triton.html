@@ -1,0 +1,20 @@
+<div class="paper-ref">
+<div class="k">Paper project · A mini tile compiler</div>
+Generate tiled, fused kernels from a description, then let a tuner pick the best one.
+</div>
+
+<h2>Build</h2>
+<p>Three functions:</p>
+<ul>
+<li><code>compileMatmul(cfg)</code> returns <strong>simulator kernel source</strong> (a string) for <code>matmul(A, B, C, bias, n)</code>, computing <code>C = epilogue(A · B)</code> for n × n row-major matrices. <code>cfg = { BM, BN, BK, TM, TN, epilogue }</code>: the block tile, the k-step, the per-thread tile, and an epilogue, one of <code>"none"</code>, <code>"relu"</code> (max(v, 0)) or <code>"bias-relu"</code> (max(v + bias[col], 0)), fused into the store.</li>
+<li><code>launchConfig(cfg, n)</code> returns the matching launch config, declaring registers honestly.</li>
+<li><code>autotune(n, configs, A, B, C, bias)</code> compiles each config with <code>gpu.compile</code>, measures it, and returns <code>{ best, results }</code>, where <code>results</code> lists <code>{ cfg, cycles }</code> per config.</li>
+</ul>
+<p>This is a compiler in miniature: a description in, code out, with the tile sizes as the knobs and measurement deciding. Generating source from templates is how many real kernel generators work. Triton itself goes further, building IR and running passes, which is the Tiny Kernel Compiler course after this one.</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li>Generated kernels are correct at n = 64 for several configurations (including 1 × 1 and 4 × 4 thread tiles) and every epilogue.</li>
+<li><code>autotune</code> at n = 128 over four candidates: its <code>best</code> has the lowest measured cycles in <code>results</code>, and re-running the best config reproduces its cycle count.</li>
+</ul>
+<p>Then compare the tuned winner with your hand-written C3 kernel. What does the generator not do that you did by hand?</p>

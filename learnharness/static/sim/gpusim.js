@@ -300,12 +300,31 @@
   const WARP_OPS = ["__shfl_sync", "__shfl_down_sync", "__shfl_up_sync", "__shfl_xor_sync", "__ballot_sync", "__any_sync", "__all_sync", "__syncwarp", "__mma_sync"];
   const SYNC_RE = new RegExp(`\\b(__syncthreads|${WARP_OPS.join("|")})\\s*\\(`, "g");
 
+  // The same text with the contents of strings, template literals and comments blanked out, so
+  // code that merely mentions __syncthreads (e.g. a code generator) isn't treated as calling it.
+  function maskStrings(s) {
+    const out = s.split("");
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      if (c === '"' || c === "'" || c === "`") {
+        let j = i + 1;
+        while (j < s.length && s[j] !== c) { if (s[j] === "\\") j++; j++; }
+        for (let k = i + 1; k < Math.min(j, s.length); k++) if (out[k] !== "\n") out[k] = " ";
+        i = j; continue;
+      }
+      if (c === "/" && s[i + 1] === "/") { let j = s.indexOf("\n", i); if (j < 0) j = s.length; for (let k = i; k < j; k++) out[k] = " "; i = j; continue; }
+      if (c === "/" && s[i + 1] === "*") { let j = s.indexOf("*/", i + 2); j = j < 0 ? s.length : j + 2; for (let k = i; k < j; k++) if (out[k] !== "\n") out[k] = " "; i = j - 1; continue; }
+    }
+    return out.join("");
+  }
+
   // Rewrite each synchronising call `name(args)` into `(yield ["name", args])`.
   function rewriteSyncCalls(body) {
     let out = "", i = 0;
     SYNC_RE.lastIndex = 0;
     let m;
-    while ((m = SYNC_RE.exec(body))) {
+    const masked = maskStrings(body);
+    while ((m = SYNC_RE.exec(masked))) {
       if (m.index > 0 && /[\w$.]/.test(body[m.index - 1])) continue;
       const open = m.index + m[0].length - 1;
       let depth = 0, j = open;
@@ -333,7 +352,7 @@
       const close = matchBraceSimple(src, open);
       const body = src.slice(open, close + 1);
       SYNC_RE.lastIndex = 0;
-      if (SYNC_RE.test(body)) {
+      if (SYNC_RE.test(maskStrings(body))) {
         out += src.slice(last, m.index) + `function* ${m[1]}(` + src.slice(re.lastIndex, open) + rewriteSyncCalls(body);
         last = close + 1;
         re.lastIndex = close + 1;

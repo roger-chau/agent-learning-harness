@@ -1,0 +1,75 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Profilers tell you <em>that</em> a kernel is issue-bound or waiting on memory. The generated code tells you <em>why</em>: which instructions are there, how many per loop iteration, and what the compiler did or didn't do with your source. Reading PTX and SASS fluently is the most common day-to-day skill in GPU performance work, and the entry ticket for compiler work.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: PTX, line by line</h2>
+<p><strong>Learn to read one kernel completely, then the rest is vocabulary.</strong> Here is PTX of the kind <code>nvcc -ptx</code> produces for <code>if (i &lt; n) y[i] = a * x[i] + y[i];</code>:</p>
+<pre><code>.visible .entry saxpy(.param .u32 n, .param .f32 a, .param .u64 x, .param .u64 y)
+{
+    .reg .pred %p&lt;2&gt;;  .reg .f32 %f&lt;5&gt;;  .reg .b32 %r&lt;6&gt;;  .reg .b64 %rd&lt;8&gt;;
+    ld.param.u32   %r2, [n];
+    ld.param.f32   %f1, [a];
+    ld.param.u64   %rd1, [x];
+    ld.param.u64   %rd2, [y];
+    mov.u32        %r3, %ctaid.x;           // blockIdx.x
+    mov.u32        %r4, %ntid.x;            // blockDim.x
+    mov.u32        %r5, %tid.x;             // threadIdx.x
+    mad.lo.s32     %r1, %r3, %r4, %r5;      // i
+    setp.ge.s32    %p1, %r1, %r2;           // i >= n ?
+    @%p1 bra       $L__BB0_2;
+    cvta.to.global.u64 %rd3, %rd1;
+    mul.wide.s32   %rd4, %r1, 4;            // byte offset, 64-bit
+    add.s64        %rd5, %rd3, %rd4;
+    ld.global.f32  %f2, [%rd5];
+    cvta.to.global.u64 %rd6, %rd2;
+    add.s64        %rd7, %rd6, %rd4;
+    ld.global.f32  %f3, [%rd7];
+    fma.rn.f32     %f4, %f1, %f2, %f3;      // a * x[i] + y[i], round to nearest
+    st.global.f32  [%rd7], %f4;
+$L__BB0_2:
+    ret;
+}</code></pre>
+<p>Things to notice: typed virtual registers declared in bulk; parameters loaded from a parameter space; special registers for the thread's coordinates; the <code>if</code> became a predicated branch around the body; addresses are 64-bit byte addresses computed explicitly; the multiply and add were contracted into one <code>fma</code>.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: SASS, what actually runs</h2>
+<p>The same kernel in SASS looks something like this (illustrative, in the style of recent architectures; exact output varies by compiler version and GPU):</p>
+<pre><code>S2R          R4, SR_CTAID.X
+S2R          R3, SR_TID.X
+IMAD         R4, R4, c[0x0][0x0], R3          // blockIdx * blockDim + tid
+ISETP.GE.AND P0, PT, R4, c[0x0][0x160], PT    // i >= n
+@P0 EXIT
+MOV          R5, 0x4
+IMAD.WIDE    R2, R4, R5, c[0x0][0x168]        // &amp;x[i]
+IMAD.WIDE    R4, R4, R5, c[0x0][0x170]        // &amp;y[i]
+LDG.E        R2, [R2.64]
+LDG.E        R7, [R4.64]
+FFMA         R7, R2, c[0x0][0x164], R7        // a read straight from the constant bank
+STG.E        [R4.64], R7
+EXIT</code></pre>
+<p>Differences from PTX are where the hardware shows through: real registers (R0–R254, predicates P0–P6), kernel parameters read directly from a <strong>constant bank</strong> (<code>c[0x0][...]</code>) as instruction operands, address arithmetic folded into <code>IMAD.WIDE</code>, the branch replaced by a predicated <code>EXIT</code>. Each instruction also carries <strong>control bits</strong> (stall cycles, yield hints, dependency barriers) that the compiler sets, which is how the hardware knows when a result is ready without a full scoreboard check.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: what to look for</h2>
+<p>For a hot loop, count per iteration:</p>
+<ul>
+<li><strong>Useful math</strong> (<code>FFMA</code>, <code>HMMA</code>) against everything else: this is the FMA share from Part 4, read straight off the code.</li>
+<li><strong>Loads</strong>: their width (<code>LDS.128</code> vs <code>LDS</code>), their space, and whether they were hoisted out of the loop.</li>
+<li><strong>Overhead</strong>: index arithmetic, compare, branch. Unrolling divides it by the unroll factor.</li>
+<li><strong>Local memory</strong> (<code>LDL</code>/<code>STL</code>): register spills. Usually a disaster in a hot loop.</li>
+<li><strong>Conversions and 64-bit math</strong> you didn't expect: an <code>int</code> index promoted to 64 bits, a <code>double</code> constant forcing FP64.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Learn PTX's grammar from NVIDIA's PTX ISA manual. SASS has only an instruction list, and is learned by reading lots of it (Compiler Explorer is ideal).</li>
+<li>Line up SASS with source using Nsight Compute's source page, which also shows where the stalls happen, per instruction.</li>
+<li>When a result surprises you, change one thing in the source and diff the generated code. It's the compiler-side twin of Part 5's one-change-at-a-time rule.</li>
+</ul>
+</section>

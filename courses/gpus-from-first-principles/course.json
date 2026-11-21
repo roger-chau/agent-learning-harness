@@ -1612,36 +1612,156 @@
      "type": "chapter",
      "id": "6-1",
      "title": "From CUDA C to PTX to SASS",
-     "summary": "",
-     "status": "planned"
+     "summary": "The compilation pipeline, PTX as a virtual ISA, and GWX: this Part's assembly language.",
+     "exercises": [
+      "6-1-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "what actually runs"
+      ],
+      [
+       "The smallest idea",
+       "compilers lower in stages"
+      ],
+      [
+       "Add one block",
+       "GWX, our PTX"
+      ],
+      [
+       "The whole machine",
+       "what each stage decides"
+      ],
+      [
+       "Reality",
+       "tools and contraction"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "6-2",
      "title": "Reading PTX and SASS",
-     "summary": "",
-     "status": "planned"
+     "summary": "One kernel line by line in PTX and SASS, and what to count in a hot loop.",
+     "exercises": [
+      "6-2-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "the why behind the metrics"
+      ],
+      [
+       "The smallest idea",
+       "PTX, line by line"
+      ],
+      [
+       "Add one block",
+       "SASS, what actually runs"
+      ],
+      [
+       "The whole machine",
+       "what to look for"
+      ],
+      [
+       "Reality",
+       "how engineers learn SASS"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "6-3",
      "title": "Register allocation vs occupancy",
-     "summary": "",
-     "status": "planned"
+     "summary": "Liveness, linear scan, spills, rematerialisation, and the occupancy trade.",
+     "exercises": [
+      "6-3-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "unbounded values, 65,536 registers"
+      ],
+      [
+       "The smallest idea",
+       "a value only needs a register while it's live"
+      ],
+      [
+       "Add one block",
+       "when registers run out"
+      ],
+      [
+       "The whole machine",
+       "loops and real allocators"
+      ],
+      [
+       "Reality",
+       "checking registers and spills"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "6-4",
      "title": "Instruction scheduling",
-     "summary": "",
-     "status": "planned"
+     "summary": "Dependences, latency, and critical-path list scheduling.",
+     "exercises": [
+      "6-4-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "in-order issue"
+      ],
+      [
+       "The smallest idea",
+       "dependences and latency"
+      ],
+      [
+       "Add one block",
+       "list scheduling"
+      ],
+      [
+       "The whole machine",
+       "beyond one block"
+      ],
+      [
+       "Reality",
+       "influencing the schedule from source"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "6-5",
      "title": "Loop transforms and fusion",
-     "summary": "",
-     "status": "planned"
+     "summary": "Unrolling with separate accumulators, the classic loop transforms, and kernel fusion.",
+     "exercises": [
+      "6-5-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "change the loops, not the block"
+      ],
+      [
+       "The smallest idea",
+       "unrolling"
+      ],
+      [
+       "Add one block",
+       "the classic loop transformations"
+      ],
+      [
+       "The whole machine",
+       "fusion"
+      ],
+      [
+       "Reality",
+       "pragmas, polyhedral, tile languages"
+      ]
+     ]
     },
     {
      "type": "paper",
@@ -1670,7 +1790,9 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-triton-a"
+     ]
     },
     {
      "type": "milestone",
@@ -1678,22 +1800,61 @@
      "title": "Paper project: a mini tile compiler",
      "summary": "Compile a tiny tile language to simulator kernels: the seed of the Tiny Kernel Compiler course.",
      "project": "Papers",
-     "status": "planned"
+     "exercises": [
+      "PP-triton-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "Which configuration won at n = 128, by how much, and why (in terms of what you learned in Parts 4 and 5)?",
+       "Compare the tuned winner with your hand-written C3 kernel: what does your generator not do that you did by hand?",
+       "What would it take to make your generator a real compiler (an IR, passes)? Name two passes you'd write first.",
+       "Where would autotuning mislead you, and how would you guard against it?"
+      ]
+     }
     },
     {
      "type": "milestone",
      "id": "C5",
      "title": "Milestone C5: Beat the compiler",
-     "summary": "Hand-schedule your GEMM inner loop in a PTX-like ISA.",
+     "summary": "Hand-optimise a GEMM micro-kernel in GWX assembly within a register budget, and explain each transformation as a compiler concept.",
      "project": "C",
-     "status": "planned"
+     "exercises": [
+      "C5-a"
+     ],
+     "writeup": {
+      "min_words": 200,
+      "prompts": [
+       "List each transformation you applied, in order, with cycles, instructions, registers and stalls after each.",
+       "Name the compiler concept behind each (instruction selection, strength reduction, unrolling, scheduling, software pipelining, register allocation).",
+       "Which of these would ptxas or NVVM have done for you, and which not? Why not?",
+       "Where did the 48-register budget force a choice, and what did you give up?"
+      ]
+     }
+    },
+    {
+     "type": "scenario",
+     "id": "scenario-6",
+     "title": "Scenario: occupancy or ILP",
+     "summary": "A fused kernel on a register-starved embedded GPU: rewrite the compiler's output and choose the trade between warps and in-flight loads.",
+     "exercises": [
+      "scenario-6-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "What did the stall counts and register count tell you about the compiler's output before you changed anything?",
+       "Which lever mattered more here, occupancy or ILP, and what measurements show it?",
+       "What would a production compiler have done with this code, and what would it have needed to know to do better?",
+       "What would you tell the team about running fused kernels on this embedded GPU?"
+      ]
+     }
     },
     {
      "type": "checkpoint",
      "id": "p6-checkpoint",
      "title": "Part 6 checkpoint",
-     "summary": "Cumulative quiz across the Part.",
-     "status": "planned"
+     "summary": "Cumulative quiz across the Part."
     }
    ],
    "hp": "Ch 3 · App C · App H · App A · App K"

@@ -41,7 +41,7 @@ Every Part also has a **real-world scenario**: an open-ended brief (e.g. "this p
 - **C2** (after 4.3): register tiling and thread coarsening. Gate: at least 40% of the simulated FP32 peak.
 - **C3** (after 4.4): bigger thread tiles and vectorised loads. Gate: at least 60% of the simulated FP32 peak, with an optimisation log recording each change, the metric it moved, and why.
 - **C4** (after 4.5): a tensor-core path with FP16 inputs and FP32 accumulation, double buffered. Gate: at least 2× the FP32 peak, within a numerical error budget.
-- **C5** (after Part 6): read the generated code for your inner loop, hand-schedule it in the simulator's PTX-like ISA, and beat the baseline compiler in cycles. Explain each transformation as a compiler concept.
+- **C5** (after Part 6): hand-optimise a register-tiled GEMM micro-kernel in GWX, the simulator's PTX-like ISA, within a 48-register budget, beating the compiler-style baseline by about 1.6×. Explain each transformation as a compiler concept.
 
 ## Companion: Hennessy & Patterson, 7th edition
 
@@ -137,13 +137,19 @@ Papers: *Dissecting Volta* → **PP-microbench** (measure a GW-1 with a hidden, 
 Scenario: *the regression*: build a trustworthy A/B comparison under a noisy clock, find a PR's root cause, fix it.
 
 ## Part 6: The compiler's view
-6.1 **From CUDA C to PTX to SASS.** The compilation pipeline and what each stage decides.
-6.2 **Reading PTX and SASS.** Registers, predicates, memory spaces, control flow.
-6.3 **Register allocation vs occupancy.** Live ranges, pressure, spills; `launch_bounds`.
-6.4 **Instruction scheduling.** Instruction-level parallelism, dependency latencies, dual issue.
-6.5 **Loop transforms and fusion.** Unrolling, software pipelining, vectorisation, kernel fusion.
+The simulator gains **GWX**, a PTX-like assembly language with a cycle-level model of one SM (scoreboard, latencies, warp interleaving, barriers, register-file limits, bank conflicts).
 
-→ **Milestone C5**: Project C complete
+6.1 **From CUDA C to PTX to SASS.** The pipeline, PTX as a virtual ISA, code generation and instruction selection. *Exercise: a code generator with FMA selection.*
+6.2 **Reading PTX and SASS.** A kernel line by line in both; what to count in a hot loop. *Exercise: profile an inner loop from its listing.*
+6.3 **Register allocation vs occupancy.** Liveness, linear scan, spills, rematerialisation, `__launch_bounds__`. *Exercise: liveness and a linear-scan allocator.*
+6.4 **Instruction scheduling.** Dependences, latency, critical-path list scheduling. *Exercise: a list scheduler.*
+6.5 **Loop transforms and fusion.** Unrolling with separate accumulators, the classic loop transforms, kernel fusion.
+
+Paper: *Triton* → **PP-triton** (a mini tile compiler with fused epilogues and an autotuner).
+
+→ **Milestone C5**: Project C complete (beat the compiler: hand-optimise a GEMM micro-kernel in GWX within 48 registers)
+
+Scenario: *occupancy or ILP*: a fused kernel on a register-starved embedded GPU.
 
 ## Part 7: Real workloads
 7.1 **Memory-bound fused ops.** Softmax, layernorm, online normalisation.

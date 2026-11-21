@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "In SASS, what is <code>c[0x0][0x164]</code> in <code>FFMA R7, R2, c[0x0][0x164], R7</code>?",
+     "options": ["A shared-memory address", "A value in the constant bank, here a kernel parameter, used directly as an operand", "A register", "A texture"], "answer": 1,
+     "explanation": "Kernel parameters live in a constant bank that instructions can read directly."},
+    {"id": "q2", "type": "single", "prompt": "You see <code>LDL</code> and <code>STL</code> instructions inside a hot loop. What does that usually mean?",
+     "options": ["Fast shared-memory traffic", "Register spills to local memory", "Vector loads", "Atomics"], "answer": 1,
+     "explanation": "Local memory is per-thread memory in DRAM (cached): spilling there is slow."},
+    {"id": "q3", "type": "numeric", "prompt": "A loop body has 16 FFMA, 2 LDS.128 and 4 other instructions. FMA share, in %?", "unit": "%", "answer": 72.73, "tolerance": 0.05,
+     "explanation": "16 / 22."},
+    {"id": "q4", "type": "single", "prompt": "What did the compiler do with <code>if (i &lt; n)</code> in the saxpy SASS?",
+     "options": ["Removed it", "Turned it into a predicated EXIT for threads with i ≥ n", "Made it a loop", "Moved it to the host"], "answer": 1,
+     "explanation": "Predication replaces a short branch."},
+    {"id": "q5", "type": "single", "prompt": "What do SASS control bits encode?",
+     "options": ["Comments", "Scheduling information the compiler sets: stall counts, yields and dependency barriers", "The register count", "Debug symbols"], "answer": 1,
+     "explanation": "That's how the compiler tells the hardware when results will be ready."}
+  ]
+}

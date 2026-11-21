@@ -1,0 +1,20 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "In Triton, what does the programmer decide, and what does the compiler decide?",
+     "options": ["The programmer writes per-thread code; the compiler picks tile sizes", "The programmer works on tiles (what each program instance computes); the compiler maps tile operations onto threads, registers and shared memory", "The compiler does everything", "The programmer writes PTX"], "answer": 1,
+     "explanation": "Tile-level programming: the split of work is yours, the mapping below a tile is the compiler's."},
+    {"id": "q2", "type": "multi", "prompt": "Which of these does the Triton compiler do that you did by hand in Part 4?",
+     "options": ["Insert barriers around shared-memory use", "Coalesce memory accesses", "Prefetch (software pipelining)", "Choose the network architecture"], "answer": [0, 1, 2],
+     "explanation": "The low-level mechanics of a tile."},
+    {"id": "q3", "type": "single", "prompt": "Why does grouped program ordering help a matmul?",
+     "options": ["Fewer FLOPs", "Programs running together share A and B panels, so the working set fits in L2 better", "It avoids bank conflicts", "It removes barriers"], "answer": 1,
+     "explanation": "Locality across program instances, which the per-tile compiler can't see."},
+    {"id": "q4", "type": "single", "prompt": "What does Triton's auto-tuner search?",
+     "options": ["Model weights", "Kernel parameters such as tile sizes and pipeline stages, per problem shape and GPU", "Which GPU to buy", "Compiler flags only"], "answer": 1,
+     "explanation": "The best tile configuration depends on the shape and the hardware (Chapter 5.4)."},
+    {"id": "q5", "type": "single", "prompt": "Which part of PyTorch 2 generates Triton kernels?",
+     "options": ["Autograd", "TorchInductor, its compiler back end", "TorchScript", "cuDNN"], "answer": 1,
+     "explanation": "Fused operations are emitted as Triton by default on NVIDIA GPUs."}
+  ]
+}

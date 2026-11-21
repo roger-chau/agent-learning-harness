@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "When can two values share one register?",
+     "options": ["When they have the same type", "When their live ranges never overlap", "Never", "When one is a constant"], "answer": 1,
+     "explanation": "Non-overlapping lives don't interfere."},
+    {"id": "q2", "type": "numeric", "prompt": "A kernel uses 80 registers per thread. Warps per SM on a 65,536-register SM (ignoring allocation granularity, limit 64)?", "unit": "warps", "answer": 25, "tolerance": 0,
+     "explanation": "⌊65536 / (32 × 80)⌋ = 25."},
+    {"id": "q3", "type": "single", "prompt": "Why are spills in a hot loop so costly?",
+     "options": ["They use shared memory", "Local memory is per-thread memory in DRAM: each spill and reload is a memory access", "They cause divergence", "They disable FMA"], "answer": 1,
+     "explanation": "Cached, but still memory traffic and latency."},
+    {"id": "q4", "type": "single", "prompt": "What is rematerialisation?",
+     "options": ["Recomputing a cheap value instead of keeping it in a register", "Reloading from shared memory", "Unrolling", "Re-running the kernel"], "answer": 0,
+     "explanation": "Trading an instruction for a register."},
+    {"id": "q5", "type": "single", "prompt": "Why does liveness need a dataflow analysis once there are loops?",
+     "options": ["Loops are slower", "A value used in the next iteration is live around the back edge, so lives aren't simple intervals of the instruction list", "SSA forbids loops", "It doesn't"], "answer": 1,
+     "explanation": "Compilers iterate liveness over the control-flow graph."}
+  ]
+}
