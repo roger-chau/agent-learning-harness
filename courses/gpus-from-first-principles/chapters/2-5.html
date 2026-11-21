@@ -1,0 +1,60 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Two problems have been waiting for a tool. A <strong>transpose</strong> must read rows and write columns, so one side is always uncoalesced. And <strong>reuse</strong> through caches depends on luck: what the replacement policy keeps, and what other warps push out. Both need a place where a block's threads can put data <em>on purpose</em>, read it back in any order, and share it with each other.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Shared memory is a small, fast, on-chip scratchpad that all threads of a block can read and write.</strong> It lives in the same storage as L1 on each SM, has latency of a few tens of cycles instead of hundreds, and is managed entirely by your code. In the simulator you declare it inside the kernel:</p>
+<pre><code>const tile = shared("tile", 32 * 32);   // one per block; every thread gets the same array</code></pre>
+<p>Because threads write data that <em>other</em> threads will read, they need a <strong>barrier</strong>: <code>__syncthreads()</code> waits until every thread of the block has reached it, so all writes before it are visible to all reads after it. The pattern is always the same:</p>
+<ol>
+<li><strong>Load:</strong> threads cooperatively copy a tile from global memory into shared memory, <em>coalesced</em>.</li>
+<li><code>__syncthreads()</code></li>
+<li><strong>Compute:</strong> threads read the tile in whatever order the algorithm needs.</li>
+<li>If the tile is about to be overwritten, <code>__syncthreads()</code> again.</li>
+</ol>
+<p>For a transpose: load a 32×32 tile by rows (coalesced), sync, then write it out by rows of the <em>output</em>, reading the tile by columns. Both global accesses are now coalesced; the awkward access pattern happens in shared memory, where it's cheap. Almost cheap, anyway, as the next block shows.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: banks</h2>
+<p>Shared memory serves a whole warp per cycle by splitting into <strong>32 banks</strong>. Successive 4-byte words go to successive banks: word $w$ lives in bank $w \bmod 32$. Each bank delivers one word per cycle, so:</p>
+<ul>
+<li>32 lanes touching 32 different banks: <strong>1 pass</strong>.</li>
+<li>Several lanes reading the <em>same word</em>: it's broadcast, still 1 pass.</li>
+<li>$k$ lanes touching <em>different words in the same bank</em>: a <strong>$k$-way bank conflict</strong>, $k$ passes.</li>
+</ul>
+<p>Now read a column of a 32×32 float tile. Lane $\ell$ reads word $32\ell + c$, and $32\ell \bmod 32 = 0$, so <em>every lane hits the same bank</em>: a 32-way conflict, 32 passes for one instruction. The transpose above walks into exactly this.</p>
+<p>The classic fix is one word of <strong>padding</strong>: declare the tile as 32×33 and index it as <code>tile[row * 33 + col]</code>. Now lane $\ell$ reads word $33\ell + c$, which lands in bank $(\ell + c) \bmod 32$: all different. One wasted column buys a 32× speedup on that access.</p>
+<div data-gw="banks"></div>
+<p>Try the presets: a row is conflict-free, a column is 32-way, a padded column is conflict-free, and a broadcast costs nothing extra. Then try strides 2, 4, 8, 16: the conflict degree is the largest power of two dividing the stride, up to 32. Any odd stride is conflict-free.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>Here is the conflict-free tiled transpose. Blocks are 32×8, so each thread handles 4 elements of the 32×32 tile:</p>
+<pre><code>function transpose(a, b, n) {
+  const T = 32;
+  const tile = shared("tile", T * (T + 1));                   // padded
+  const x = blockIdx.x * T + threadIdx.x;
+  for (let j = 0; j &lt; T; j += blockDim.y)                       // coalesced reads of rows
+    tile[(threadIdx.y + j) * (T + 1) + threadIdx.x] = a[(blockIdx.y * T + threadIdx.y + j) * n + x];
+  __syncthreads();
+  const ox = blockIdx.y * T + threadIdx.x;
+  for (let j = 0; j &lt; T; j += blockDim.y)                       // coalesced writes of rows
+    b[(blockIdx.x * T + threadIdx.y + j) * n + ox] = tile[threadIdx.x * (T + 1) + threadIdx.y + j];
+}</code></pre>
+<p>In the simulator, shared accesses are reported as <code>sharedLoads</code>, <code>sharedStores</code> and <code>bankConflicts</code>. Each extra pass costs an instruction issue slot, so a 32-way conflict can make a kernel issue-bound. You'll measure exactly that in milestone A3.</p>
+<p><strong>Barrier rules.</strong> Every thread of the block must reach the same <code>__syncthreads()</code>. A barrier inside a branch that only some threads take can deadlock; the simulator detects that and tells you. And <code>__syncthreads()</code> must sit directly in the kernel function, not inside a helper.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Size and carve-out.</strong> Real SMs have on the order of 100–230 KB of combined L1/shared storage, with a configurable split. Blocks get 48 KB of shared memory by default and can opt into more. The GW-1 allows 48 KB per block and 64 KB per SM. Shared memory per block is also an occupancy limiter (next chapter).</li>
+<li><strong>Swizzling.</strong> Instead of padding, high-performance libraries often XOR the column index with the row (<code>col ^ row</code>) so that a tile's rows and columns both hit distinct banks without wasting space. CUTLASS and Triton do this automatically.</li>
+<li><strong>Wider accesses.</strong> With 8- or 16-byte accesses per lane, the hardware splits the warp into phases. The rule becomes "conflicts within each phase", but the idea is the same.</li>
+<li><strong>Async copies.</strong> Ampere and later can copy global memory straight into shared memory without passing through registers (<code>cp.async</code>, and Hopper's TMA). That overlaps the load phase with compute. Part 4 uses it.</li>
+</ul>
+</section>

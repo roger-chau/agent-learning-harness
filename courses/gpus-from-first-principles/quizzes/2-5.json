@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single",
+     "prompt": "Why is <code>__syncthreads()</code> needed between loading a shared tile and reading it?",
+     "options": ["To flush the L2 cache", "So every thread's writes are complete and visible before any thread reads another's data", "To reduce bank conflicts", "It isn't needed"],
+     "answer": 1, "explanation": "Threads read data that other threads wrote; the barrier orders those accesses."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "Lane l reads 4-byte word 16·l of shared memory. What's the conflict degree?",
+     "unit": "-way", "answer": 16, "tolerance": 0,
+     "explanation": "16·l mod 32 takes only two values (0 and 16), each hit by 16 lanes with distinct words: 16-way."},
+    {"id": "q3", "type": "numeric",
+     "prompt": "Lane l reads word 33·l + 5. What's the conflict degree?",
+     "unit": "-way", "answer": 1, "tolerance": 0,
+     "explanation": "(33l + 5) mod 32 = (l + 5) mod 32: all distinct banks."},
+    {"id": "q4", "type": "single",
+     "prompt": "All 32 lanes read the same shared-memory word. Cost?",
+     "options": ["32 passes", "16 passes", "1 pass (broadcast)", "It's an error"],
+     "answer": 2, "explanation": "Reads of an identical word are broadcast."},
+    {"id": "q5", "type": "single",
+     "prompt": "What can go wrong with <code>if (threadIdx.x &lt; 16) { __syncthreads(); }</code>?",
+     "options": ["Nothing", "Threads that skip the barrier never arrive, so the others can wait forever (deadlock or undefined behaviour)", "Bank conflicts", "It's slower but correct"],
+     "answer": 1, "explanation": "Every thread of the block must reach every barrier."},
+    {"id": "q6", "type": "multi",
+     "prompt": "Which make a 32×32 float tile's column reads conflict-free?",
+     "options": ["Padding rows to 33 words", "XOR-swizzling the column index with the row", "Using 64 banks in software", "Reading the column with stride 32"],
+     "answer": [0, 1], "explanation": "Padding and swizzling both spread a column across banks. Stride 32 is the problem itself."}
+  ]
+}

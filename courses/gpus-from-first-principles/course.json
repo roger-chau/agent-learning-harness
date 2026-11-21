@@ -447,51 +447,198 @@
      "type": "chapter",
      "id": "2-1",
      "title": "Arithmetic intensity and the roofline",
-     "summary": "",
-     "status": "planned"
+     "summary": "Is a kernel memory-bound or compute-bound? One number decides.",
+     "exercises": [
+      "2-1-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "is 2 ms good?"
+      ],
+      [
+       "The smallest idea",
+       "FLOPs per byte"
+      ],
+      [
+       "Add one block",
+       "the roofline"
+      ],
+      [
+       "The whole machine",
+       "what each side needs"
+      ],
+      [
+       "Reality",
+       "more roofs, latency"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "2-2",
      "title": "DRAM, transactions and sectors",
-     "summary": "",
-     "status": "planned"
+     "summary": "What one warp load instruction actually costs.",
+     "exercises": [
+      "2-2-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "same load, 8× the cost"
+      ],
+      [
+       "The smallest idea",
+       "32-byte sectors"
+      ],
+      [
+       "Add one block",
+       "counting sectors"
+      ],
+      [
+       "The whole machine",
+       "the simulator's counters"
+      ],
+      [
+       "Reality",
+       "what profilers show"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "2-3",
      "title": "Coalescing",
-     "summary": "",
-     "status": "planned"
-    },
-    {
-     "type": "milestone",
-     "id": "A2",
-     "title": "Milestone A2: Fully coalesced",
-     "summary": "Restructure data layout so every global access is coalesced (≥95%).",
-     "project": "A",
-     "status": "planned"
+     "summary": "Indexing and layouts that make warps touch consecutive addresses.",
+     "exercises": [
+      "2-3-a",
+      "2-3-b"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "you choose the addresses"
+      ],
+      [
+       "The smallest idea",
+       "threadIdx.x on the fastest index"
+      ],
+      [
+       "Add one block",
+       "AoS vs SoA"
+      ],
+      [
+       "The whole machine",
+       "patterns to recognise"
+      ],
+      [
+       "Reality",
+       "some need cooperation"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "2-4",
      "title": "GPU caches",
-     "summary": "",
-     "status": "planned"
+     "summary": "L1, L2, reuse distance, and why GPU caches are small per thread.",
+     "exercises": [
+      "2-4-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "five reads, one fetch"
+      ],
+      [
+       "The smallest idea",
+       "keep recent sectors close"
+      ],
+      [
+       "Add one block",
+       "128 bytes per thread"
+      ],
+      [
+       "The whole machine",
+       "using caches on purpose"
+      ],
+      [
+       "Reality",
+       "generations differ"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "2-5",
      "title": "Shared memory and bank conflicts",
-     "summary": "",
-     "status": "planned"
+     "summary": "A programmer-managed scratchpad, barriers, and the 32 banks behind it.",
+     "exercises": [
+      "2-5-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "transposes and reuse"
+      ],
+      [
+       "The smallest idea",
+       "a block-wide scratchpad"
+      ],
+      [
+       "Add one block",
+       "banks and conflicts"
+      ],
+      [
+       "The whole machine",
+       "the tiled transpose"
+      ],
+      [
+       "Reality",
+       "swizzles and async copies"
+      ]
+     ]
+    },
+    {
+     "type": "milestone",
+     "id": "A2",
+     "title": "Milestone A2: Fully coalesced",
+     "summary": "Coalesce every kernel of the pipeline, including the interleaved RGB read, staged through shared memory.",
+     "project": "A",
+     "exercises": [
+      "A2-a"
+     ]
     },
     {
      "type": "chapter",
      "id": "2-6",
      "title": "Registers, spilling and occupancy",
-     "summary": "",
-     "status": "planned"
+     "summary": "Which resource limits resident warps, and what occupancy buys.",
+     "exercises": [
+      "2-6-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "budgets per SM"
+      ],
+      [
+       "The smallest idea",
+       "occupancy"
+      ],
+      [
+       "Add one block",
+       "worked examples"
+      ],
+      [
+       "The whole machine",
+       "Little's law again"
+      ],
+      [
+       "Reality",
+       "compilers and spills"
+      ]
+     ]
     },
     {
      "type": "paper",
@@ -520,15 +667,19 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-roofline-a"
+     ]
     },
     {
      "type": "milestone",
      "id": "A3",
      "title": "Milestone A3: Bandwidth-bound optimal",
-     "summary": "Tiled blur and conflict-free transpose at ≥80% of peak bandwidth.",
+     "summary": "Transpose three ways and a tiled blur, at ≥80% of peak bandwidth with zero bank conflicts.",
      "project": "A",
-     "status": "planned"
+     "exercises": [
+      "A3-a"
+     ]
     },
     {
      "type": "paper",
@@ -557,14 +708,15 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-volkov-a"
+     ]
     },
     {
      "type": "checkpoint",
      "id": "p2-checkpoint",
      "title": "Part 2 checkpoint",
-     "summary": "Cumulative quiz across the Part.",
-     "status": "planned"
+     "summary": "Cumulative quiz across the Part."
     }
    ],
    "hp": "Ch 2 · Ch 4 · App B · App L"

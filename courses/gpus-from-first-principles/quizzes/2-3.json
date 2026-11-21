@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single",
+     "prompt": "For a row-major array <code>a[y * width + x]</code>, which index should come from <code>threadIdx.x</code>?",
+     "options": ["y", "x", "Either: it doesn't matter", "Neither: use blockIdx"],
+     "answer": 1, "explanation": "x varies fastest in memory, so consecutive lanes should differ in x."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "Structs of 3 floats (12 bytes) in AoS layout. A warp reads field 0 of 32 consecutive structs. What's the efficiency, in percent? (One decimal place.)",
+     "unit": "%", "answer": 33.3, "tolerance": 0.2,
+     "explanation": "The span is 32 × 12 = 384 bytes, 12 sectors, for 128 useful bytes: 33.3%."},
+    {"id": "q3", "type": "single",
+     "prompt": "Why is AoS natural on CPUs but SoA on GPUs?",
+     "options": ["CPUs have no caches", "A CPU thread uses all fields of one object (one cache line); a GPU instruction uses one field of 32 objects", "GPUs can't store structs", "SoA uses less memory"],
+     "answer": 1, "explanation": "The unit of access differs: one object per thread versus one field across a warp."},
+    {"id": "q4", "type": "single",
+     "prompt": "Blocks of 8×32 (x by y) process a row-major image. What's wrong?",
+     "options": ["Nothing", "Each warp covers 8 consecutive x values on 4 rows, so it touches 4 separate 32-byte runs instead of one 128-byte run", "Too many threads per block", "The guard is wrong"],
+     "answer": 1, "explanation": "Narrow blocks make warps span several rows. Use at least 32 threads in x."},
+    {"id": "q5", "type": "single",
+     "prompt": "Rows of a float image are 1,000 elements (4,000 bytes) long. Why might you pad each row to 1,024 elements?",
+     "options": ["To save memory", "So every row starts on a 128-byte boundary, avoiding an extra straddled sector per warp", "Because widths must be powers of two", "To avoid divergence"],
+     "answer": 1, "explanation": "Pitched allocation keeps rows aligned; that's what cudaMallocPitch does."},
+    {"id": "q6", "type": "multi",
+     "prompt": "Which patterns cannot be fully coalesced by changing indexing alone?",
+     "options": ["Matrix transpose", "Reading interleaved 3-byte RGB pixels one per thread", "A grid-stride loop over an array", "Vector addition"],
+     "answer": [0, 1], "explanation": "Both need threads to cooperate through shared memory. Grid-stride loops and vector add are already ideal."}
+  ]
+}

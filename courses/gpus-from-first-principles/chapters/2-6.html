@@ -1,0 +1,48 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Chapter 0.3 said latency hiding needs many resident warps, and that resident warps are limited by on-chip resources. Now you've met all the resources a block uses: its threads, its registers and its shared memory. Each SM has a fixed budget of every one of them. Use a bit too much of one and a whole block no longer fits, so the SM runs fewer warps and hides less latency. Which resource runs out first, and by how much?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Occupancy</strong> is the fraction of an SM's warp slots that are actually filled:</p>
+<div class="eq">$$\text{occupancy} = \frac{\text{resident warps per SM}}{\text{maximum warps per SM}}$$</div>
+<p>Blocks are placed whole, so resident warps = blocks per SM × warps per block, and blocks per SM is the <em>smallest</em> of four limits. On the GW-1:</p>
+<table>
+<tr><th>Limit</th><th>GW-1 budget per SM</th><th>Blocks that fit</th></tr>
+<tr><td>warp slots</td><td>64 warps</td><td>⌊64 / warps per block⌋</td></tr>
+<tr><td>block slots</td><td>16 blocks</td><td>16</td></tr>
+<tr><td>registers</td><td>65,536 (allocated per warp in chunks of 256)</td><td>⌊⌊65,536 / regs per warp⌋ / warps per block⌋</td></tr>
+<tr><td>shared memory</td><td>64 KB (allocated in chunks of 256 B)</td><td>⌊65,536 / shared per block⌋</td></tr>
+</table>
+<p>Registers per warp is the per-thread count times 32, rounded <em>up</em> to a multiple of 256.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: worked examples</h2>
+<p><strong>256-thread blocks (8 warps), 32 registers, no shared memory.</strong> Warps: 64/8 = 8 blocks. Registers: 32 × 32 = 1,024 per warp, so 64 warps' worth, which is 8 blocks. Occupancy: 8 × 8 = 64 warps, <strong>100%</strong>.</p>
+<p><strong>Same, with 64 registers.</strong> 2,048 per warp, so 32 warps, so 4 blocks. Occupancy <strong>50%</strong>, limited by registers.</p>
+<p><strong>Same, with 80 registers.</strong> 2,560 per warp, so 25 warps, so ⌊25/8⌋ = <strong>3 blocks</strong>. Note the rounding: the 25th warp can't be used because blocks come whole. 24 warps, 37.5%.</p>
+<p><strong>128-thread blocks with 20 KB of shared memory.</strong> ⌊64 / 20⌋ = 3 blocks, so 12 warps, <strong>18.75%</strong>, limited by shared memory.</p>
+<div data-gw="occupancy"></div>
+<p>Find the cliffs. Push registers from 64 to 65 with 256-thread blocks: occupancy falls from 50% to 37.5%. Small changes in resource use can drop a whole block.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: what occupancy buys</h2>
+<p>Occupancy matters because of Little's law. To run memory at full bandwidth, enough bytes must be in flight. In the simulator's model, a warp with one 128-byte request outstanding contributes 128 bytes, so the GPU needs</p>
+<div class="eq">$$\text{warps} \ge \frac{\text{bandwidth} \times \text{latency}}{128\ \text{bytes} \times \text{requests in flight per warp}}$$</div>
+<p>For the GW-1: 341 bytes per cycle × 400 cycles ÷ 128 bytes ≈ <strong>1,067 warps</strong>, against a maximum of 16 SMs × 64 = 1,024. Even 100% occupancy only <em>just</em> saturates memory with one request per warp. At 50% occupancy, a simple copy kernel can reach about half of peak bandwidth.</p>
+<p>The simulator applies this. A launch takes an optional <code>registers</code> count per thread (default 32, since JavaScript can't tell us the real number) and reports <code>occupancy</code>, <code>occupancyLimiter</code>, and <code>limitedBy: "DRAM latency"</code> when too few requests are in flight.</p>
+<p><strong>But more occupancy isn't always better.</strong> The term in the denominator, requests in flight <em>per warp</em>, is the other lever. A thread that issues 4 independent loads before using any of them puts 4 requests in flight. It can then run at a quarter of the occupancy with the same bandwidth, and use the freed registers to keep more data close. This Part's last paper chapter, on Volkov's work, is about exactly this trade.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Registers are decided by the compiler.</strong> You don't choose them directly; the compiler allocates as many as the code seems to need. You can cap them with <code>__launch_bounds__(maxThreads, minBlocks)</code> or <code>-maxrregcount</code>.</li>
+<li><strong>Spilling.</strong> If the cap is below what the code needs, values spill to <strong>local memory</strong>. Despite the name, that's per-thread space in DRAM, cached in L1/L2. A few spills are fine; heavy spilling turns register accesses into memory traffic. Part 6 reads the compiler's output to find them.</li>
+<li><strong>Real limits vary by generation.</strong> Typical recent NVIDIA SMs allow 2,048 threads (64 warps), 16–32 blocks, 65,536 registers (at most 255 per thread) and up to about 100–230 KB of shared memory. NVIDIA's occupancy calculator and Nsight Compute do this arithmetic for real GPUs; you now know what they compute.</li>
+<li><strong>Tail effects.</strong> Blocks per SM also decides how many blocks run per wave (Chapter 0.4), so occupancy changes can shift a grid from 2 waves to 3. Part 5 looks at this.</li>
+</ul>
+</section>

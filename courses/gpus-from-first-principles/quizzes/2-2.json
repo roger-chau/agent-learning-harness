@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric",
+     "prompt": "A warp reads 32 consecutive 4-byte floats starting at byte address 64. How many 32-byte sectors does it touch?",
+     "unit": "sectors", "answer": 4, "tolerance": 0,
+     "explanation": "Bytes 64–191, which is exactly sectors 2, 3, 4 and 5 (aligned)."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "Same, but starting at byte address 68. How many sectors?",
+     "unit": "sectors", "answer": 5, "tolerance": 0,
+     "explanation": "Bytes 68–195 span sectors 2 to 6."},
+    {"id": "q3", "type": "numeric",
+     "prompt": "A warp reads floats with stride 4 (lane l reads element 4l). What is the efficiency, in percent?",
+     "unit": "%", "answer": 25, "tolerance": 0,
+     "explanation": "Span 512 bytes, so 16 sectors moved for 128 requested: 25%."},
+    {"id": "q4", "type": "single",
+     "prompt": "Why does memory work in fixed-size chunks rather than single words?",
+     "options": ["To simplify the ISA", "DRAM activates whole rows and transfers bursts; per-word access would waste most of each burst's overhead", "Because registers are 32 bytes", "For error correction only"],
+     "answer": 1, "explanation": "Row activation and burst transfers make consecutive bytes cheap and isolated bytes expensive."},
+    {"id": "q5", "type": "single",
+     "prompt": "All 32 lanes of a warp read the same float. How many sectors does the instruction need?",
+     "options": ["32", "4", "1", "0"],
+     "answer": 2, "explanation": "One sector serves everyone."},
+    {"id": "q6", "type": "single",
+     "prompt": "A memory-bound kernel's loads run at 25% sector efficiency. Roughly how much faster could it get with perfect coalescing?",
+     "options": ["No faster", "Up to about 4×", "Up to about 25×", "Exactly 2×"],
+     "answer": 1, "explanation": "It moves 4× the bytes it needs; removing that waste can cut memory time up to 4×."}
+  ]
+}

@@ -568,6 +568,201 @@
     render();
   };
 
+  // ---------------------------------------------------------------------------
+  // Part 2: roofline plot.
+  // ---------------------------------------------------------------------------
+  const ROOF_KERNELS = [
+    ["vector add", 1 / 12], ["SAXPY", 2 / 12], ["5-tap blur", 9 / 8], ["Sobel", 17 / 8],
+    ["naive GEMM", 0.25], ["tiled GEMM (32)", 8], ["tiled GEMM (128)", 32],
+  ];
+  C["roofline"] = (el) => {
+    const s = shell(el, {
+      title: "Roofline for the GW-1",
+      controls: [
+        { key: "peak", label: "Peak compute", min: 200, max: 4000, step: 8, value: 1536, unit: " GFLOP/s" },
+        { key: "bw", label: "Memory bandwidth", min: 100, max: 2000, step: 4, value: 512, unit: " GB/s" },
+        { key: "ai", label: "Your kernel (FLOP per byte × 100)", min: 3, max: 6400, step: 1, value: 50, unit: "" },
+      ],
+      readouts: [
+        { key: "ridge", label: "Ridge point" },
+        { key: "att", label: "Attainable" },
+        { key: "bound", label: "Bound by" },
+      ],
+    });
+    function draw() {
+      const { ctx, w, h } = s.size(Math.min(340, Math.max(240, s.canvas.parentElement.clientWidth * 0.5)));
+      const peak = s.vals.peak, bw = s.vals.bw, ai = s.vals.ai / 100;
+      const ridge = peak / bw;
+      s.setReadout("ridge", `${fmt(ridge, 2)} FLOP/B`);
+      const att = Math.min(peak, ai * bw);
+      s.setReadout("att", `${fmt(att, 1)} GFLOP/s`);
+      s.setReadout("bound", ai < ridge ? "memory" : "compute");
+      ctx.clearRect(0, 0, w, h);
+      const L = 56, R = 16, T = 14, B = 34;
+      const xMin = Math.log2(1 / 32), xMax = Math.log2(128), yMin = Math.log2(4), yMax = Math.log2(8192);
+      const X = (v) => L + ((Math.log2(v) - xMin) / (xMax - xMin)) * (w - L - R);
+      const Y = (v) => h - B - ((Math.log2(v) - yMin) / (yMax - yMin)) * (h - T - B);
+      ctx.strokeStyle = css("--rule"); ctx.lineWidth = 1; ctx.font = `10px ${css("--font-mono")}`; ctx.fillStyle = css("--muted");
+      for (let e = -5; e <= 7; e += 2) { const x = X(2 ** e); ctx.beginPath(); ctx.moveTo(x, T); ctx.lineTo(x, h - B); ctx.stroke(); ctx.fillText(e >= 0 ? `${2 ** e}` : `1/${2 ** -e}`, x - 8, h - B + 14); }
+      for (let e = 2; e <= 13; e += 2) { const y = Y(2 ** e); ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(w - R, y); ctx.stroke(); ctx.fillText(`${2 ** e}`, 4, y + 3); }
+      ctx.fillText("FLOP per byte of DRAM traffic →", L + 4, h - 4);
+      // roof
+      ctx.strokeStyle = css("--primary"); ctx.lineWidth = 2.5; ctx.beginPath();
+      const x0 = 1 / 32, xr = ridge, x1 = 128;
+      ctx.moveTo(X(x0), Y(Math.max(4, x0 * bw))); ctx.lineTo(X(xr), Y(peak)); ctx.lineTo(X(x1), Y(peak)); ctx.stroke();
+      ctx.setLineDash([4, 4]); ctx.strokeStyle = css("--muted"); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(X(ridge), Y(peak)); ctx.lineTo(X(ridge), h - B); ctx.stroke(); ctx.setLineDash([]);
+      // kernels
+      ctx.font = `11px ${css("--font-ui")}`;
+      for (const [name, k] of ROOF_KERNELS) {
+        const a = Math.min(peak, k * bw);
+        ctx.fillStyle = css("--indigo"); ctx.beginPath(); ctx.arc(X(k), Y(a), 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = css("--ink-2"); ctx.fillText(name, X(k) + 6, Y(a) + 14);
+      }
+      ctx.fillStyle = css("--saffron"); ctx.beginPath(); ctx.arc(X(ai), Y(att), 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = css("--ink"); ctx.fillText("your kernel", X(ai) + 8, Y(att) - 8);
+    }
+    onInput(el, s, draw);
+    window.addEventListener("resize", draw);
+    draw();
+  };
+
+  // ---------------------------------------------------------------------------
+  // Part 2: one warp's addresses mapped onto 32-byte sectors.
+  // ---------------------------------------------------------------------------
+  C["coalescing"] = (el) => {
+    el.classList.add("sim");
+    el.innerHTML = `
+      <div class="sim-head"><span class="sim-kind">Simulation</span><span class="sim-title">One warp's load, mapped onto 32-byte sectors</span></div>
+      <div class="co-wrap"><div class="co-sectors"></div></div>
+      <div class="sim-controls">
+        <label class="sim-ctl"><span class="sim-lab">Element size</span><input type="range" min="0" max="4" value="2" data-k="size"><output class="mono" data-o="size"></output></label>
+        <label class="sim-ctl"><span class="sim-lab">Stride (elements)</span><input type="range" min="1" max="33" value="1" data-k="stride"><output class="mono" data-o="stride"></output></label>
+        <label class="sim-ctl"><span class="sim-lab">Offset (elements)</span><input type="range" min="0" max="31" value="0" data-k="offset"><output class="mono" data-o="offset"></output></label>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><div class="k">Bytes requested</div><div class="v" data-r="req"></div></div>
+        <div class="stat"><div class="k">Sectors touched</div><div class="v" data-r="sec"></div></div>
+        <div class="stat"><div class="k">Bytes moved</div><div class="v" data-r="moved"></div></div>
+        <div class="stat"><div class="k">Efficiency</div><div class="v" data-r="eff"></div></div>
+      </div>`;
+    const SIZES = [1, 2, 4, 8, 16];
+    const v = { size: 2, stride: 1, offset: 0 };
+    const wrap = el.querySelector(".co-sectors");
+    function render() {
+      const size = SIZES[v.size];
+      el.querySelector('[data-o="size"]').textContent = `${size} B`;
+      el.querySelector('[data-o="stride"]').textContent = v.stride;
+      el.querySelector('[data-o="offset"]').textContent = v.offset;
+      const touched = new Map(); // sector -> lanes
+      for (let l = 0; l < 32; l++) {
+        const a = (v.offset + l * v.stride) * size;
+        for (let s = Math.floor(a / 32); s <= Math.floor((a + size - 1) / 32); s++) {
+          if (!touched.has(s)) touched.set(s, []);
+          touched.get(s).push(l);
+        }
+      }
+      const req = 32 * size, sec = touched.size;
+      el.querySelector('[data-r="req"]').textContent = `${req} B`;
+      el.querySelector('[data-r="sec"]').textContent = sec;
+      el.querySelector('[data-r="moved"]').textContent = `${sec * 32} B`;
+      el.querySelector('[data-r="eff"]').textContent = `${Math.round((100 * req) / (sec * 32))}%`;
+      const ids = [...touched.keys()].sort((a, b) => a - b);
+      const shown = ids.slice(0, 40);
+      wrap.innerHTML = shown.map((s) => `<div class="co-sec"><span class="mono">sector ${s}</span><span class="co-lanes">${touched.get(s).map((l) => `<i>${l}</i>`).join("")}</span></div>`).join("") +
+        (ids.length > shown.length ? `<div class="mono muted small">…and ${ids.length - shown.length} more sectors</div>` : "");
+    }
+    el.addEventListener("input", (e) => { if (e.target.dataset.k) { v[e.target.dataset.k] = +e.target.value; render(); } });
+    render();
+  };
+
+  // ---------------------------------------------------------------------------
+  // Part 2: shared-memory banks.
+  // ---------------------------------------------------------------------------
+  C["banks"] = (el) => {
+    el.classList.add("sim");
+    el.innerHTML = `
+      <div class="sim-head"><span class="sim-kind">Simulation</span><span class="sim-title">One warp's shared-memory access across 32 banks</span></div>
+      <div class="bk-presets">
+        <button type="button" class="term-btn" data-p="row">Row of a 32×32 tile</button>
+        <button type="button" class="term-btn" data-p="col">Column of a 32×32 tile</button>
+        <button type="button" class="term-btn" data-p="pad">Column, padded to 33</button>
+        <button type="button" class="term-btn" data-p="bcast">Everyone reads word 0</button>
+      </div>
+      <div class="bk-grid"></div>
+      <div class="sim-controls">
+        <label class="sim-ctl"><span class="sim-lab">Stride (4-byte words)</span><input type="range" min="0" max="33" value="1" data-k="stride"><output class="mono" data-o="stride"></output></label>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><div class="k">Distinct words</div><div class="v" data-r="words"></div></div>
+        <div class="stat"><div class="k">Worst bank</div><div class="v" data-r="worst"></div></div>
+        <div class="stat"><div class="k">Conflict degree</div><div class="v" data-r="deg"></div></div>
+      </div>`;
+    const v = { stride: 1 };
+    const grid = el.querySelector(".bk-grid");
+    function render() {
+      el.querySelector('[data-o="stride"]').textContent = v.stride;
+      const banks = Array.from({ length: 32 }, () => new Set());
+      for (let l = 0; l < 32; l++) { const w = l * v.stride; banks[w % 32].add(w); }
+      const deg = Math.max(...banks.map((b) => b.size));
+      el.querySelector('[data-r="words"]').textContent = new Set(Array.from({ length: 32 }, (_, l) => l * v.stride)).size;
+      el.querySelector('[data-r="worst"]').textContent = `${deg} word${deg > 1 ? "s" : ""}`;
+      el.querySelector('[data-r="deg"]').textContent = deg === 1 ? "none (1 pass)" : `${deg}-way (${deg} passes)`;
+      grid.innerHTML = banks.map((b, i) => `<div class="bk ${b.size > 1 ? "hot" : b.size ? "on" : ""}"><span class="mono">${i}</span><b>${b.size || ""}</b></div>`).join("");
+    }
+    const P = { row: 1, col: 32, pad: 33, bcast: 0 };
+    el.querySelector(".bk-presets").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-p]"); if (!b) return;
+      v.stride = P[b.dataset.p]; el.querySelector('input[data-k="stride"]').value = v.stride; render();
+    });
+    el.addEventListener("input", (e) => { if (e.target.dataset.k) { v[e.target.dataset.k] = +e.target.value; render(); } });
+    render();
+  };
+
+  // ---------------------------------------------------------------------------
+  // Part 2: occupancy calculator (uses the simulator's own rules).
+  // ---------------------------------------------------------------------------
+  C["occupancy"] = (el) => {
+    const s = shell(el, {
+      title: "Occupancy calculator for the GW-1",
+      controls: [
+        { key: "threads", label: "Threads per block", min: 32, max: 1024, step: 32, value: 256, unit: "" },
+        { key: "regs", label: "Registers per thread", min: 16, max: 255, step: 1, value: 32, unit: "" },
+        { key: "smem", label: "Shared memory per block", min: 0, max: 48, step: 1, value: 0, unit: " KB" },
+      ],
+      readouts: [
+        { key: "blocks", label: "Blocks per SM" },
+        { key: "warps", label: "Warps per SM" },
+        { key: "occ", label: "Occupancy" },
+        { key: "lim", label: "Limited by" },
+      ],
+    });
+    function draw() {
+      const o = window.GPUSim.occupancy(window.GPUSim.DEFAULT_SPEC, s.vals.threads, s.vals.regs, s.vals.smem * 1024);
+      s.setReadout("blocks", o.blocksPerSM);
+      s.setReadout("warps", `${o.warpsPerSM} / 64`);
+      s.setReadout("occ", `${Math.round(o.occupancy * 100)}%`);
+      s.setReadout("lim", { warps: "warp slots", blocks: "block slots", registers: "registers", sharedMemory: "shared memory" }[o.limiter]);
+      const { ctx, w, h } = s.size(170);
+      ctx.clearRect(0, 0, w, h);
+      const rows = [["warp slots", o.limits.warps], ["block slots", o.limits.blocks], ["registers", o.limits.registers], ["shared memory", o.limits.sharedMemory]];
+      const max = 16, left = 120, bh = 26;
+      ctx.font = `12px ${css("--font-ui")}`;
+      rows.forEach(([name, val], i) => {
+        const y = 14 + i * (bh + 10);
+        const v2 = Number.isFinite(val) ? val : max;
+        const bw2 = Math.max(2, (Math.min(v2, max) / max) * (w - left - 60));
+        ctx.fillStyle = css("--muted"); ctx.fillText(name, 10, y + 17);
+        ctx.fillStyle = val === o.blocksPerSM ? css("--saffron") : css("--indigo-soft");
+        roundRect(ctx, left, y, bw2, bh, 6); ctx.fill();
+        ctx.fillStyle = css("--ink"); ctx.fillText(Number.isFinite(val) ? `${val} blocks` : "no limit", left + bw2 + 8, y + 17);
+      });
+    }
+    onInput(el, s, draw);
+    window.addEventListener("resize", draw);
+    draw();
+  };
+
   function mount(root) {
     root.querySelectorAll("[data-gw]").forEach((el) => {
       const fn = C[el.dataset.gw];

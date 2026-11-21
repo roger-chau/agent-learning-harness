@@ -23,17 +23,22 @@ const STAT_ROWS = [
   ["memInstructions", "warp memory instructions"], ["transactions", "32-byte transactions"],
   ["bytesRequested", "bytes requested"], ["bytesMoved", "bytes moved"],
   ["coalescing", "coalescing efficiency"], ["branches", "warp-level branches"],
-  ["divergentBranches", "divergent branches"], ["cycles", "estimated cycles"], ["timeUs", "estimated time (µs)"],
-  ["achievedBandwidthGBs", "achieved bandwidth (GB/s)"],
+  ["divergentBranches", "divergent branches"],
+  ["l2HitRate", "L2 hit rate"], ["dramBytes", "DRAM bytes"],
+  ["sharedLoads", "shared loads (warp)"], ["sharedStores", "shared stores (warp)"], ["bankConflicts", "bank conflicts"], ["barriers", "barriers (warp)"],
+  ["occupancy", "occupancy"], ["occupancyLimiter", "occupancy limited by"],
+  ["cycles", "estimated cycles"], ["timeUs", "estimated time (µs)"],
+  ["achievedBandwidthGBs", "achieved bandwidth (GB/s)"], ["percentOfPeakBandwidth", "% of peak bandwidth"], ["limitedBy", "limited by"],
 ];
 
 function table(obj) {
   if (obj && "transactions" in obj && "warps" in obj) {
     const lines = STAT_ROWS.filter(([k]) => k in obj).map(([k, label]) => {
       let v = obj[k];
-      if (k === "coalescing") v = `${(v * 100).toFixed(1)}%`;
+      if (k === "coalescing" || k === "l2HitRate" || k === "occupancy") v = `${(v * 100).toFixed(1)}%`;
+      if ((k.startsWith("shared") || k === "bankConflicts" || k === "barriers") && !obj.sharedLoads && !obj.sharedStores) return null;
       return `  ${label.padEnd(28)} ${fmt(v)}`;
-    });
+    }).filter(Boolean);
     out(lines.join("\n"), "table");
     return;
   }

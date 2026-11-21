@@ -1,0 +1,25 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single",
+     "prompt": "In the Roofline paper, operational intensity divides operations by what?",
+     "options": ["Loads and stores in the source code", "Bytes of DRAM traffic, after the caches", "Cache-line size", "Register file size"],
+     "answer": 1, "explanation": "DRAM traffic, so the same algorithm can have different intensity depending on cache behaviour."},
+    {"id": "q2", "type": "single",
+     "prompt": "What does a compute <em>ceiling</em> below the roof represent?",
+     "options": ["A hardware bug", "The performance limit if a specific optimisation (e.g. SIMD or ILP) is missing", "The DRAM bandwidth", "The L2 size"],
+     "answer": 1, "explanation": "Ceilings tell you which optimisation would lift a kernel stuck beneath them."},
+    {"id": "q3", "type": "numeric",
+     "prompt": "A kernel does 3 × 10⁹ FLOPs and moves 1.5 × 10⁹ bytes of DRAM traffic on the GW-1 (1,536 GFLOP/s, 512 GB/s). What's its attainable GFLOP/s?",
+     "unit": "GFLOP/s", "answer": 1024, "tolerance": 0,
+     "explanation": "I = 2; min(1536, 2 × 512) = 1,024 GFLOP/s."},
+    {"id": "q4", "type": "single",
+     "prompt": "Why might a machine with a ridge point far to the right be 'hard to use'?",
+     "options": ["It has little memory", "Only kernels with very high intensity can reach its peak compute", "It can't run memory-bound kernels", "Its caches are too large"],
+     "answer": 1, "explanation": "Most kernels sit left of a far-right ridge and can only use a fraction of peak compute."},
+    {"id": "q5", "type": "multi",
+     "prompt": "Where is the roofline used today?",
+     "options": ["Nsight Compute's hierarchical roofline charts", "Intel Advisor's roofline analysis", "Deciding whether ML layers are compute- or memory-bound", "Choosing a GPU's clock frequency at run time"],
+     "answer": [0, 1, 2], "explanation": "It's a design and analysis model; it doesn't control clocks."}
+  ]
+}

@@ -545,3 +545,17 @@ svg .d-arrowhead { fill: var(--muted); }
 .ix-grid i.sel { outline: 2px solid var(--ink); outline-offset: 0; }
 .ix-info { font-size: .78rem; color: var(--ink-2); margin-top: 10px; min-height: 2.6em; line-height: 1.5; }
 .ix-info .bad { color: var(--rose-ink); }
+
+/* Part 2 components */
+.co-wrap { background: var(--surface-2); border: 1px solid var(--rule); border-radius: var(--radius-lg); padding: 10px; max-height: 300px; overflow-y: auto; }
+.co-sectors { display: grid; gap: 6px; }
+.co-sec { display: grid; grid-template-columns: 90px 1fr; gap: 10px; align-items: center; font-size: .74rem; color: var(--muted); }
+.co-lanes { display: flex; flex-wrap: wrap; gap: 3px; }
+.co-lanes i { font-style: normal; font-family: var(--font-mono); font-size: .64rem; min-width: 20px; text-align: center; padding: 2px 3px; border-radius: 4px; background: var(--accent-soft); color: var(--ink); border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent); }
+.bk-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.bk-grid { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; background: var(--surface-2); border: 1px solid var(--rule); border-radius: var(--radius-lg); padding: 10px; }
+.bk { display: grid; place-items: center; gap: 2px; padding: 6px 0; border-radius: 6px; background: var(--surface-3); border: 1px solid var(--rule); font-size: .62rem; color: var(--muted); }
+.bk b { font-size: .86rem; color: var(--ink); min-height: 1.1em; }
+.bk.on { background: var(--accent-soft); border-color: color-mix(in srgb, var(--primary) 50%, transparent); }
+.bk.hot { background: var(--rose-soft); border-color: var(--rose-line); }
+@media (max-width: 560px) { .bk-grid { grid-template-columns: repeat(8, 1fr); } }

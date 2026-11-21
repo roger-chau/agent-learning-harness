@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric",
+     "prompt": "SAXPY <code>y[i] = a*x[i] + y[i]</code> on floats: 2 FLOPs, reads x and y, writes y. What's its arithmetic intensity in FLOP/byte? (Round to 3 decimals.)",
+     "unit": "FLOP/B", "answer": 0.167, "tolerance": 0.002,
+     "explanation": "2 FLOPs / 12 bytes ≈ 0.167."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "A GPU has 2,000 GFLOP/s peak and 500 GB/s bandwidth. Where is its ridge point, in FLOP/byte?",
+     "unit": "FLOP/B", "answer": 4, "tolerance": 0,
+     "explanation": "2000 / 500 = 4."},
+    {"id": "q3", "type": "numeric",
+     "prompt": "On that GPU, a kernel with intensity 1.5 can reach at most how many GFLOP/s?",
+     "unit": "GFLOP/s", "answer": 750, "tolerance": 0,
+     "explanation": "min(2000, 1.5 × 500) = 750, memory-bound."},
+    {"id": "q4", "type": "single",
+     "prompt": "A memory-bound kernel runs at 90% of peak bandwidth. What's the most promising next step?",
+     "options": ["Use faster math instructions", "Reduce DRAM traffic (reuse, fusion, smaller types)", "Add more threads", "Nothing: it's already at its limit"],
+     "answer": 1, "explanation": "At 90% of bandwidth, the only way up is to need fewer bytes, i.e. raise intensity. Faster math doesn't help a memory-bound kernel."},
+    {"id": "q5", "type": "single",
+     "prompt": "A new GPU doubles peak FLOP/s but keeps bandwidth the same. What happens to the ridge point?",
+     "options": ["Halves", "Stays put", "Doubles: more kernels become memory-bound", "Disappears"],
+     "answer": 2, "explanation": "Ridge = peak / bandwidth."},
+    {"id": "q6", "type": "multi",
+     "prompt": "Which change raises a kernel's arithmetic intensity (as measured with DRAM traffic)?",
+     "options": ["Reusing loaded data from shared memory instead of reloading it", "Fusing two kernels so the intermediate never goes to DRAM", "Storing data as FP16 instead of FP32", "Running at a higher clock speed"],
+     "answer": [0, 1, 2], "explanation": "All three cut bytes for the same FLOPs. Clock speed changes the roof, not the kernel's intensity."}
+  ]
+}

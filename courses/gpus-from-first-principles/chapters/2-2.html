@@ -1,0 +1,50 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>A warp issues one load instruction, and each of its 32 threads wants 4 bytes. From your code's point of view, 128 bytes were requested. But memory doesn't hand out 4-byte pieces. What it actually moves, and therefore what the load costs, depends on <em>where</em> those 32 addresses are. The same instruction can cost 4 units of memory traffic or 32.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Memory moves data in fixed-size chunks, and you pay for every chunk you touch.</strong> On modern NVIDIA GPUs the unit is a <strong>32-byte sector</strong>, aligned to a multiple of 32. Four sectors make a 128-byte cache line. When a warp's load reaches the memory system, the hardware works out which sectors the 32 addresses fall in, and fetches each one once.</p>
+<div class="eq">$$\text{efficiency} = \frac{\text{bytes requested}}{32 \times \text{sectors touched}}$$</div>
+<p>Why chunks at all? A DRAM chip is a grid of rows. Reading anything means <em>activating</em> a whole row into a row buffer, which is slow, then streaming bursts out of it, which is fast. Interfaces are built to deliver bursts of consecutive bytes at a time. Asking for 4 isolated bytes still costs a whole burst. Caches and memory controllers are organised around these fixed-size pieces, and the 32-byte sector is how that physical reality shows up for a GPU programmer.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: counting sectors</h2>
+<p>Take 4-byte floats and a warp where lane $\ell$ reads element $o + \ell \cdot s$ (offset $o$, stride $s$):</p>
+<table>
+<tr><th>Pattern</th><th>Bytes spanned</th><th>Sectors</th><th>Efficiency</th></tr>
+<tr><td>contiguous, aligned ($s=1$, $o=0$)</td><td>128</td><td>4</td><td>100%</td></tr>
+<tr><td>contiguous, shifted by one element ($o=1$)</td><td>bytes 4–131</td><td>5</td><td>80%</td></tr>
+<tr><td>stride 2</td><td>256</td><td>8</td><td>50%</td></tr>
+<tr><td>stride 8 or more</td><td>each lane alone</td><td>32</td><td>12.5%</td></tr>
+<tr><td>all lanes, same address</td><td>4</td><td>1</td><td>(1 sector serves everyone)</td></tr>
+</table>
+<p>Element size matters too: 32 lanes reading consecutive 8-byte doubles span 256 bytes, 8 sectors, still 100%. Reading consecutive single bytes spans 32 bytes, 1 sector, also 100%, but only 32 bytes per instruction, which needs far more instructions for the same data.</p>
+<div data-gw="coalescing"></div>
+<p>Set the stride to 2, then 4, then 8, and watch the sectors multiply. Then go back to stride 1 and shift the offset by one: the warp now straddles one extra sector. Alignment matters, though less than stride.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>Sectors are the currency of the memory system. In the GW-1 simulator:</p>
+<ul>
+<li><code>transactions</code> counts sectors requested from L2, summed over all warp memory instructions;</li>
+<li><code>bytesMoved</code> is <code>transactions × 32</code>, the traffic between the SMs and L2;</li>
+<li><code>dramBytes</code> is what actually came from or went to DRAM: sectors that missed in L2 (2.4);</li>
+<li><code>coalescing</code> is bytes requested ÷ bytes moved, the efficiency above averaged over the whole kernel.</li>
+</ul>
+<p>A kernel with 12.5% efficiency moves 8× the data it needs. If it's memory-bound, and most simple kernels are, it runs up to 8× slower than it should. That's why the next chapter, on arranging accesses so warps touch as few sectors as possible, is the most important optimisation in GPU programming.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Older GPUs were stricter.</strong> Early CUDA GPUs required specific alignment and ordering to "coalesce" at all. Modern ones simply count distinct sectors, which is the model used here, so any permutation of addresses within the same sectors is equally fast.</li>
+<li><strong>Writes too.</strong> Stores are counted the same way. Partial-sector writes can be extra costly in real hardware because the memory may have to read, merge and write back.</li>
+<li><strong>Caches soften, but don't remove, the cost.</strong> A real GPU's L1 cache may catch the second warp that touches a sector the first warp already fetched. Counting sectors per instruction is still how profilers report it: NVIDIA's Nsight Compute shows "sectors per request", and 4 is ideal for 4-byte loads.</li>
+<li><strong>DRAM pages and channels.</strong> Below the sectors, addresses are spread across memory channels and banks. Pathological strides can pile every request onto one channel ("partition camping"). Modern GPUs hash addresses to make that rare.</li>
+</ul>
+<div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 2</strong>'s sections on memory technology explain DRAM rows, banks and bursts, and why row-buffer locality matters.</div>
+</section>

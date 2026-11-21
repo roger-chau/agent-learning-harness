@@ -1,0 +1,25 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single",
+     "prompt": "What is the central claim of Volkov's work on latency hiding?",
+     "options": ["Occupancy should always be maximised", "What matters is operations in flight; they can come from ILP within threads, not only from more warps", "GPUs have no memory latency", "Registers should be minimised"],
+     "answer": 1, "explanation": "Little's law counts concurrency, whatever its source."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "Latency 400 cycles, peak 341 bytes per cycle, 128 bytes per request, ILP 4. How many warps are needed to saturate memory?",
+     "unit": "warps", "answer": 267, "tolerance": 1,
+     "explanation": "400 × 341.3 / (128 × 4) ≈ 266.7, so 267 warps."},
+    {"id": "q3", "type": "single",
+     "prompt": "Why can lower occupancy make a kernel <em>faster</em>?",
+     "options": ["Fewer warps means fewer instructions", "More registers per thread enable data reuse and more independent work, while ILP keeps enough operations in flight", "The scheduler runs faster with fewer warps", "It can't"],
+     "answer": 1, "explanation": "Registers are the fastest storage; trading warps for per-thread work can cut memory traffic."},
+    {"id": "q4", "type": "single",
+     "prompt": "Arithmetic latency is ~4 cycles and memory latency ~400. What does that imply for required concurrency?",
+     "options": ["They need the same occupancy", "Hiding memory latency needs far more operations in flight than hiding arithmetic latency", "Arithmetic needs more", "Neither needs concurrency"],
+     "answer": 1, "explanation": "Required concurrency scales with latency × throughput, so it differs by ~100× here."},
+    {"id": "q5", "type": "multi",
+     "prompt": "Which kernels commonly run fast at modest occupancy?",
+     "options": ["CUTLASS-style GEMMs", "FlashAttention", "A naive vector add with one element per thread", "Kernels with heavy register-level data reuse"],
+     "answer": [0, 1, 3], "explanation": "A naive vector add has no reuse and ILP 1, so it needs high occupancy (or more work per thread)."}
+  ]
+}

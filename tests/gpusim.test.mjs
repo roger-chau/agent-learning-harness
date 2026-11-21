@@ -118,3 +118,71 @@ test("warp trace records stores and per-warp divergence; test image", () => {
   assert.equal(img.length, 600);
   assert.equal(img.type, "u8");
 });
+
+const { occupancy, DEFAULT_SPEC } = require("../learnharness/static/sim/gpusim.js");
+
+test("__syncthreads + shared memory: tiled transpose is correct; bank conflicts counted", () => {
+  const g = new Device();
+  const src = (pad) => `
+    function tr(a, b, n) {
+      const T = 32;
+      const tile = shared("tile", T * (T + ${pad}));
+      const x = blockIdx.x * T + threadIdx.x, y = blockIdx.y * T + threadIdx.y;
+      tile[threadIdx.y * (T + ${pad}) + threadIdx.x] = a[y * n + x];
+      __syncthreads();
+      const ox = blockIdx.y * T + threadIdx.x, oy = blockIdx.x * T + threadIdx.y;
+      b[oy * n + ox] = tile[threadIdx.x * (T + ${pad}) + threadIdx.y];
+    }`;
+  const n = 64;
+  const a = g.from(Array.from({ length: n * n }, (_, i) => i));
+  for (const pad of [0, 1]) {
+    const { tr } = g.compile(src(pad));
+    const b = g.alloc(n * n);
+    const s = g.launch(tr, { grid: { x: 2, y: 2 }, block: { x: 32, y: 32 } }, a, b, n);
+    let ok = true;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (b.data[y * n + x] !== a.data[x * n + y]) ok = false;
+    assert.ok(ok, "transpose correct");
+    assert.equal(s.coalescing, 1);
+    assert.equal(s.barriers, 4 * 32);
+    if (pad === 0) assert.equal(s.bankConflicts, 4 * 32 * 31); // column read: 32-way per warp
+    else assert.equal(s.bankConflicts, 0);
+  }
+});
+
+test("broadcast is not a conflict; barrier deadlock is detected", () => {
+  const g = new Device();
+  const { k } = g.compile(`function k(out) { const s = shared("s", 32); s[threadIdx.x] = threadIdx.x; __syncthreads(); out[threadIdx.x] = s[0]; }`);
+  const out = g.alloc(32);
+  const st = g.launch(k, { grid: 1, block: 32 }, out);
+  assert.equal(st.bankConflicts, 0);
+  assert.equal(out.data[5], 0);
+  const { bad } = g.compile(`function bad(out) { if (threadIdx.x < 16) { __syncthreads(); } out[threadIdx.x] = 1; }`);
+  assert.throws(() => g.launch(bad, { grid: 1, block: 32 }, out), /deadlock/);
+});
+
+test("occupancy calculator", () => {
+  let o = occupancy(DEFAULT_SPEC, 256, 32, 0);
+  assert.equal(o.blocksPerSM, 8); assert.equal(o.occupancy, 1);
+  o = occupancy(DEFAULT_SPEC, 256, 64, 0);
+  assert.equal(o.blocksPerSM, 4); assert.equal(o.limiter, "registers"); assert.equal(o.occupancy, 0.5);
+  o = occupancy(DEFAULT_SPEC, 256, 80, 0); // 80*32 = 2560 regs/warp -> 25 warps -> 3 blocks
+  assert.equal(o.blocksPerSM, 3);
+  o = occupancy(DEFAULT_SPEC, 128, 32, 20000);
+  assert.equal(o.blocksPerSM, 3); assert.equal(o.limiter, "sharedMemory");
+  o = occupancy(DEFAULT_SPEC, 32, 16, 0);
+  assert.equal(o.blocksPerSM, 16); assert.equal(o.limiter, "blocks"); assert.equal(o.occupancy, 0.25);
+});
+
+test("L2 hits on reuse; small launches are latency-limited", () => {
+  const g = new Device();
+  const { k } = g.compile(`function k(a, out, n) { const i = blockIdx.x * blockDim.x + threadIdx.x; if (i < n) out[i] = a[i % 64]; }`);
+  const a = g.alloc(64), out = g.alloc(4096);
+  const s = g.launch(k, { grid: 16, block: 256 }, a, out, 4096);
+  assert.ok(s.l2HitRate > 0.4);
+  const { v } = g.compile(`function v(a, b, n) { const i = blockIdx.x * blockDim.x + threadIdx.x; if (i < n) b[i] = a[i]; }`);
+  const big = 1 << 18, x = g.alloc(big), y = g.alloc(big);
+  const sBig = g.launch(v, { grid: big / 256, block: 256 }, x, y, big);
+  const sSmall = g.launch(v, { grid: 4, block: 256 }, x, y, 1024);
+  assert.ok(sBig.percentOfPeakBandwidth > 80, `big ${sBig.percentOfPeakBandwidth}`);
+  assert.match(sSmall.limitedBy, /latency/);
+});

@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single",
+     "prompt": "When does a repeated access to the same sector hit in an LRU cache?",
+     "options": ["Always", "When the distinct data touched since its last use is smaller than the cache", "Only on the third access", "When it's aligned"],
+     "answer": 1, "explanation": "That distinct data is the reuse distance; if it fits, the sector is still there."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "An SM has 192 KB of L1 and 1,536 resident threads. How many bytes of L1 is that per thread?",
+     "unit": "bytes", "answer": 128, "tolerance": 0,
+     "explanation": "196,608 / 1,536 = 128 bytes."},
+    {"id": "q3", "type": "single",
+     "prompt": "Why does a 5-tap blur's DRAM traffic stay near 'read once, write once' despite five reads per pixel in the source?",
+     "options": ["The compiler removes four reads", "Neighbouring threads read overlapping data within a short window, so repeats hit in cache", "DRAM merges duplicate requests", "Blurs don't read neighbours"],
+     "answer": 1, "explanation": "Short reuse distance plus neighbouring threads sharing data."},
+    {"id": "q4", "type": "single",
+     "prompt": "A kernel sweeps cyclically over 600 KB of data many times with a 512 KB LRU cache. What hit rate do you expect after the first pass?",
+     "options": ["About 85%", "About 50%", "Close to 0%", "100%"],
+     "answer": 2, "explanation": "With a cyclic sweep larger than an LRU cache, each sector is evicted just before it's needed again: the LRU cliff."},
+    {"id": "q5", "type": "multi",
+     "prompt": "Which make cache reuse more likely?",
+     "options": ["Processing in tiles rather than full rows or columns", "Keeping the working set below cache capacity", "Increasing the stride between consecutive threads", "Having neighbouring threads use overlapping data"],
+     "answer": [0, 1, 3], "explanation": "Larger strides spread accesses out and hurt both coalescing and reuse."},
+    {"id": "q6", "type": "single",
+     "prompt": "When reuse is predictable, why is shared memory often better than relying on a cache?",
+     "options": ["It's larger than L2", "You control exactly what stays and when, with no evictions by other data", "It's slower but simpler", "It avoids synchronisation"],
+     "answer": 1, "explanation": "Explicit management beats hoping the replacement policy keeps the right data."}
+  ]
+}

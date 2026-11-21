@@ -1,0 +1,49 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>The last chapter gave the rule: a warp's access costs one unit per distinct 32-byte sector it touches. Now turn it around. You decide which thread touches which address, through your indexing and your data layout. Get it right and every warp load costs 4 sectors; get it wrong and the same work costs 32. Same algorithm, same answers, 8× the memory traffic.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Make consecutive lanes of a warp touch consecutive addresses.</strong> That's called a <strong>coalesced</strong> access. Since lanes are consecutive values of <code>threadIdx.x</code>, the rule becomes:</p>
+<div class="callout key"><b>The rule</b>The index that varies fastest in memory should be driven by <code>threadIdx.x</code>.</div>
+<p>For a row-major 2D array (<code>a[y * width + x]</code>), <code>x</code> varies fastest in memory, so <code>x</code> should come from <code>threadIdx.x</code>. Swap them, so that each thread walks a column or <code>threadIdx.x</code> picks the row, and consecutive lanes are <code>width × 4</code> bytes apart. Each lane then lands in its own sector.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: layouts</h2>
+<p>Indexing is half the story; the other half is how the data is laid out. Consider particles, each with a position and velocity:</p>
+<pre><code>// Array of structures (AoS): x, y, vx, vy, x, y, vx, vy, ...
+p[4*i + 0] = x,  p[4*i + 1] = y,  p[4*i + 2] = vx,  p[4*i + 3] = vy
+
+// Structure of arrays (SoA): four separate arrays
+x[i], y[i], vx[i], vy[i]</code></pre>
+<p>In AoS, when a warp reads every particle's <code>x</code>, lane $\ell$ reads byte $16\ell$: a stride of 16 bytes. The warp spans 512 bytes, 16 sectors for 128 useful bytes, which is <strong>25% efficiency</strong>. Reading <code>y</code>, <code>vx</code> and <code>vy</code> hits the same sectors again. A real cache would save some of that, but the per-instruction cost is still 4× the ideal. In SoA, all 32 lanes read 32 consecutive <code>x</code> values, 4 sectors, <strong>100%</strong>.</p>
+<p>AoS is natural for CPUs, where one thread processes one object and wants all its fields in one cache line. SoA is natural for GPUs, where 32 threads process 32 objects and each instruction wants <em>one field of many objects</em>. Converting AoS to SoA is one of the most common GPU porting steps.</p>
+<div data-gw="coalescing"></div>
+<p>Set the element size to 4 bytes and the stride to 4: that's the AoS particle read. Stride 1 is SoA.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: patterns to recognise</h2>
+<table>
+<tr><th>Pattern</th><th>Efficiency</th><th>Fix</th></tr>
+<tr><td><code>a[i]</code>, i from the 1D global index</td><td>100%</td><td>(already ideal)</td></tr>
+<tr><td><code>a[y*w + x]</code> with x from <code>threadIdx.x</code></td><td>100% if blocks are ≥32 wide</td><td>use blocks like 32×8, not 8×32</td></tr>
+<tr><td><code>a[x*h + y]</code> (column walk)</td><td>~12.5%</td><td>swap the roles of x and y, or change the layout</td></tr>
+<tr><td>AoS field access, k-field struct</td><td>~1/k</td><td>convert to SoA</td></tr>
+<tr><td>Grid-stride loops</td><td>100%</td><td>each iteration, lanes are contiguous</td></tr>
+<tr><td>Transpose (read rows, write columns)</td><td>one side always bad</td><td>stage through shared memory (2.5, milestone A3)</td></tr>
+<tr><td>Gathers <code>a[idx[i]]</code></td><td>depends on idx</td><td>sort or bin indices so neighbours are close</td></tr>
+</table>
+<p>Also check <strong>alignment and pitch</strong>. If each row of an image starts at an arbitrary byte offset (say, width 1000 floats = 4000 bytes, not a multiple of 128), every row's warps straddle an extra sector. Real code often pads rows to a multiple of 128 bytes. CUDA's <code>cudaMallocPitch</code> does exactly this and returns the padded row length, the <em>pitch</em>.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Some patterns can't be fixed with indexing alone.</strong> A transpose must read rows and write columns; a 3-byte-per-pixel RGB image puts each pixel's channels 3 bytes apart. The fix for both is <em>cooperation</em>: threads load a tile coalesced into fast on-chip shared memory, then each reads whatever it needs from there. That's 2.5, and it's how milestone A2 coalesces your imaging pipeline.</li>
+<li><strong>Vector loads help too.</strong> Real GPUs can load 8 or 16 bytes per thread in one instruction (<code>float2</code>, <code>float4</code>). That's fewer instructions for the same sectors; Part 4 uses it.</li>
+<li><strong>Measure it.</strong> Profilers report sectors per request and "uncoalesced global accesses". The simulator's <code>coalescing</code> field is the same idea.</li>
+</ul>
+</section>

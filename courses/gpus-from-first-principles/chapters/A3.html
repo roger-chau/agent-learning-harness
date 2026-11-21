@@ -1,0 +1,32 @@
+<div class="paper-ref">
+<div class="k">Project A · Imaging kernels · Milestone 3 of 3</div>
+The last milestone of Project A: two kernels taken to the memory roofline. You've measured everything in this Part; now hit the numbers.
+</div>
+
+<h2>Part 1: transpose, three ways</h2>
+<p>Transpose an $n \times n$ float matrix: <code>b[x][y] = a[y][x]</code>, with $n$ a multiple of 32. Write three kernels and a launcher:</p>
+<ol>
+<li><code>transposeNaive(a, b, n)</code>: one element per thread, straight from global to global. One side is always uncoalesced.</li>
+<li><code>transposeTiled(a, b, n)</code>: a 32×32 tile in shared memory, <em>without</em> padding. Both global sides are coalesced; the shared-memory column read is a 32-way bank conflict.</li>
+<li><code>transposePadded(a, b, n)</code>: the same with a 32×33 tile. No conflicts.</li>
+<li><code>runTranspose(kind, a, b, n)</code>, where <code>kind</code> is <code>"naive"</code>, <code>"tiled"</code> or <code>"padded"</code>, launches the right kernel and returns the stats. For the tiled kernels, 32×8 blocks with 4 elements per thread (as in Chapter 2.5) work well.</li>
+</ol>
+<p>Before you run them, predict each one's <code>limitedBy</code> on a 512×512 matrix. Then check your predictions: naive is limited by L2 bandwidth (wasted sectors), tiled by instruction issue (conflict passes), padded by DRAM. The padded one will say "DRAM latency": even at full occupancy the GW-1 sits just under Little's-law saturation (Chapter 2.6), so it lands around 90% of peak rather than 100%.</p>
+
+<h2>Part 2: a tiled horizontal blur</h2>
+<p>Your A2 horizontal blur reads each pixel 5 times from global memory. L2 catches the repeats, but L2 bandwidth becomes the limit. Write <code>blurHTiled(src, dst, w, h)</code>:</p>
+<ul>
+<li>each block loads its row segment <strong>plus a 2-pixel halo on each side</strong> into shared memory, once;</li>
+<li><code>__syncthreads()</code>;</li>
+<li>each thread computes its output from shared memory.</li>
+</ul>
+<p>and <code>runBlurH(src, dst, w, h)</code> to launch it. Same clamp-to-edge borders as before. Think about block shape: the halo costs a few extra, poorly coalesced loads per row segment, so wider segments waste less.</p>
+
+<h2>How it's checked (on 512×512 unless noted)</h2>
+<ul>
+<li>All three transposes correct (also on 96×96). Tiled and padded transposes ≥ 99% coalescing and use shared memory.</li>
+<li><code>transposePadded</code>: <strong>zero bank conflicts</strong> and <strong>≥ 80% of peak bandwidth</strong>.</li>
+<li><code>transposeTiled</code> has bank conflicts (it's meant to: that's the comparison).</li>
+<li><code>blurHTiled</code>: correct (also on 203×157), ≥ 95% coalescing, zero bank conflicts, <strong>≥ 80% of peak bandwidth</strong>.</li>
+</ul>
+<p>When you pass, print all four kernels' stats side by side. That table of coalescing, L2 hit rate, bank conflicts and % of peak is the write-up of Project A.</p>

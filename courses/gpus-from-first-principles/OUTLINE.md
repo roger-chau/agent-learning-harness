@@ -24,8 +24,8 @@ Every chapter ends with a graded quiz, and every Part ends with a cumulative che
 
 ### Project A: Imaging kernels
 - **A1** (after Part 1): grayscale, 5×5 separable blur and Sobel on a real image. Borders must be correct, with zero divergence in interior tiles.
-- **A2** (after 2.3): restructure the data layout so every global access is fully coalesced. Gate: coalescing efficiency of at least 95%.
-- **A3** (after Part 2): shared-memory tiled blur plus a conflict-free transpose. Gate: at least 80% of simulated peak bandwidth, zero bank conflicts, and a short metrics write-up.
+- **A2** (after 2.5): coalesce the whole pipeline. Grayscale's interleaved RGB read is staged through shared memory (≥95% coalescing); the stencils use warp-wide rows (≥80%).
+- **A3** (after Part 2): naive, tiled and conflict-free transposes plus a shared-memory tiled blur, on 512×512. Gate: the conflict-free transpose at ≥80% of simulated peak bandwidth with zero bank conflicts, and the tiled blur at ≥95% coalescing.
 
 ### Project B: Parallel primitives
 - **B1** (after 3.1): reduction using warp shuffles and multiple elements per thread. Gate: a bandwidth target.
@@ -97,9 +97,9 @@ Each paper chapter rebuilds the paper's key idea from first principles, gives a 
 ## Part 2: Memory is the whole game
 2.1 **Arithmetic intensity and the roofline.** Is this kernel memory-bound or compute-bound? *Companion: H&P.*
 2.2 **DRAM, transactions and sectors.** What one load instruction from a warp actually costs.
-2.3 **Coalescing.** Access patterns, strides, structure-of-arrays vs array-of-structures. → **Milestone A2**
+2.3 **Coalescing.** Access patterns, strides, structure-of-arrays vs array-of-structures.
 2.4 **GPU caches.** L1/L2 behaviour, the read-only path, cache-line reuse.
-2.5 **Shared memory and bank conflicts.** Banks, broadcast, padding and swizzling.
+2.5 **Shared memory and bank conflicts.** Banks, broadcast, padding and swizzling. → **Milestone A2** (interleaved RGB can only be coalesced by staging through shared memory)
 2.6 **Registers, spilling and occupancy.** The occupancy calculator from first principles, and why more occupancy isn't always better.
 
 → **Milestone A3**: Project A complete

@@ -1,0 +1,43 @@
+<div class="paper-ref">
+<div class="k">The paper</div>
+<b>S. Williams, A. Waterman, D. Patterson. "Roofline: An Insightful Visual Performance Model for Multicore Architectures."</b> <em>Communications of the ACM</em>, vol. 52, no. 4, 2009.
+<br><a href="https://scholar.google.com/scholar?q=Roofline%3A+An+Insightful+Visual+Performance+Model+for+Multicore+Architectures" target="_blank" rel="noopener noreferrer">Find it on Google Scholar</a> · Short and very readable: one sitting.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>By the late 2000s, processors had become wildly diverse: multicore x86 chips, many-threaded designs, and the Cell processor with its explicitly managed local stores. Programmers and architects needed a way to answer "how fast <em>should</em> this kernel run on that machine, and what's stopping it?" without a cycle-accurate simulator. Detailed models were too complex to be insightful, and simple metrics like peak FLOP/s were misleading for memory-bound code.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p>You've already used it in Chapter 2.1: <strong>bound performance by two numbers, peak compute and peak memory bandwidth, and place each kernel by its operational intensity.</strong> The paper's contributions beyond the basic roof are worth knowing precisely:</p>
+<ul>
+<li><strong>Operational intensity uses DRAM traffic</strong>, measured after the caches have filtered accesses, not the loads and stores in the source. That's why the same algorithm can sit at different places on the roofline depending on how well it uses the caches.</li>
+<li><strong>Ceilings.</strong> Below the roof, the paper draws additional horizontal lines (compute ceilings), each showing performance if some optimisation is <em>missing</em>: for example without instruction-level parallelism, or without SIMD. It also draws extra slanted lines (bandwidth ceilings), for example without proper memory affinity on multi-socket machines, or without software prefetching. A kernel sitting under a ceiling tells you which optimisation would lift it.</li>
+<li><strong>The ridge point as a machine property.</strong> A machine whose ridge sits far to the right is hard to use well: only high-intensity kernels reach its peak.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ol class="reading">
+<li><strong>The opening and the model's derivation.</strong> Read closely. Note the exact definition of operational intensity and why they chose DRAM traffic.</li>
+<li><strong>The figures that build the roofline step by step.</strong> Read closely. Rebuild one figure on paper with the GW-1's numbers (1,536 GFLOP/s, 512 GB/s).</li>
+<li><strong>Adding ceilings.</strong> Read closely. For each ceiling, write down which optimisation it represents, and decide whether it's a compute or a bandwidth ceiling.</li>
+<li><strong>The case studies</strong> on four multicore platforms with several scientific kernels. Skim for the method: how they measured intensity, and how the plots explained the results. Note which kernels sat where, and why.</li>
+<li><strong>The fallacies section.</strong> Read closely. These are the most common misreadings of the model, and they still come up in performance reviews today.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>The simulator gives you everything the paper needed: DRAM bytes (<code>dramBytes</code>) and time (<code>timeUs</code>). Add the FLOP count, which you know from the algorithm, and you can place any kernel on the GW-1's roofline:</p>
+<div class="eq">$$I = \frac{\text{FLOPs}}{\text{dramBytes}} \qquad \text{achieved GFLOP/s} = \frac{\text{FLOPs}}{\text{time}} \qquad \text{efficiency} = \frac{\text{achieved}}{\min(1536,\ 512 \cdot I)}$$</div>
+<p>In the exercise you'll write that measurement as a function and use it on two kernels: a memory-bound one and one that reuses data. You'll also add a ceiling, "without fused multiply-add", which halves peak compute, and see which kernels it affects.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>The roofline became the standard first-order performance model in HPC and then in GPU and ML work. Profilers draw it directly: NVIDIA Nsight Compute plots a kernel on a hierarchical roofline with separate roofs for L1, L2 and DRAM, and for FP32, FP64 and tensor-core math, and Intel Advisor does the same on CPUs. In ML, "is this layer compute-bound or memory-bound?" is answered with exactly this model. That reasoning underlies FlashAttention (Part 8) and much of LLM inference optimisation, where decoding is typically memory-bound.</p>
+</section>

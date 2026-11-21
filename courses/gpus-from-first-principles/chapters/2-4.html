@@ -1,0 +1,63 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>A 5-tap blur reads every pixel five times: once for itself and once as a neighbour of four others. If each of those reads went to DRAM, the blur would move five times the data it needs. Yet blurs on real GPUs run close to "read once, write once" speed. Something between the SMs and DRAM is catching the repeats.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>A cache keeps recently used sectors close, so repeated accesses skip DRAM.</strong> It works when the same data is reused <em>soon enough</em>, before other data pushes it out. "Soon enough" has a precise meaning: if the amount of distinct data touched between two uses of a sector (its <strong>reuse distance</strong>) is smaller than the cache, the second use hits.</p>
+<p>GPUs have two levels of hardware cache for global memory:</p>
+<ul>
+<li><strong>L1</strong>, per SM, combined with shared memory in the same on-chip storage (hundreds of KB per SM on recent GPUs, split between the two).</li>
+<li><strong>L2</strong>, shared by all SMs, in front of DRAM. Every DRAM access passes through it. Large GPUs have tens of megabytes.</li>
+</ul>
+<p>The GW-1 simulator models a <strong>256 KB L2</strong>: an LRU (least recently used) cache of 32-byte sectors. A sector that hits costs L2 bandwidth (twice DRAM's) but no DRAM traffic. <code>l2HitRate</code> and <code>dramBytes</code> report what happened.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: GPU caches are small per thread</h2>
+<p>Here's the number that makes GPU caching different from CPU caching. Divide the cache by the threads sharing it:</p>
+<div class="eq">$$\frac{\text{256 KB of L1 per SM}}{2048 \text{ resident threads}} = 128 \text{ bytes per thread}$$</div>
+<p>A CPU core might have 32–48 KB of L1 for one or two threads. A GPU thread gets about a cache line's worth. A GPU cache can't hold each thread's private working set. It helps when <strong>neighbouring threads</strong> share data (the blur's neighbours, a stencil's halo, a matrix row many threads read), and when reuse happens within a short window.</p>
+<p><strong>Worked example:</strong> a 5-tap horizontal blur over a 512×512 float image. Warps process rows left to right, so the neighbours a warp reads were loaded by the same or the previous warp a moment ago. The reuse distance is tiny, and almost every repeat read hits. DRAM sees about 4 bytes read and 4 written per pixel, even though the code issues five reads.</p>
+<p>Now a bad case: a matrix walked by columns, where each warp's sectors aren't touched again until the whole column (thousands of sectors later) has been visited. If that exceeds the cache, every reuse misses.</p>
+<div data-gw="playground" data-title="cache.js" data-key="2-4-cache"><script type="text/plain">
+// Same blur, two image sizes. Watch l2HitRate and dramBytes.
+function blurH(src, dst, w, h) {
+  const x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
+  if (x < w && y < h) {
+    const r = y * w, c = (k) => Math.min(Math.max(x + k, 0), w - 1);
+    dst[r + x] = (src[r + c(-2)] + 4 * src[r + c(-1)] + 6 * src[r + x] + 4 * src[r + c(1)] + src[r + c(2)]) / 16;
+  }
+}
+
+function main() {
+  const w = 512, h = 256;
+  const src = gpu.alloc(w * h), dst = gpu.alloc(w * h);
+  const s = gpu.launch(blurH, { grid: { x: w / 32, y: h / 8 }, block: { x: 32, y: 8 } }, src, dst, w, h);
+  print("source reads per pixel: 5; DRAM bytes per pixel:", s.dramBytes / (w * h));
+  table(s);
+}
+</script></div>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>How to use caches deliberately:</p>
+<ul>
+<li><strong>Shrink reuse distance.</strong> Process data in an order where reuse comes soon: tiles instead of whole rows or columns. Block shape decides which threads run together, and so what's "recently used".</li>
+<li><strong>Keep working sets under capacity.</strong> If a kernel's hot data fits in L2, repeated passes over it are nearly free; if it's 2× too big, an LRU cache can hit almost never on a cyclic sweep. That cliff is worth knowing about.</li>
+<li><strong>Don't depend on luck.</strong> When reuse is predictable, it's usually better to manage it yourself in <strong>shared memory</strong>: you choose what's kept and for how long, with no evictions. That's the next chapter.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Real L1 behaviour varies by generation.</strong> Whether global loads are cached in L1 by default, the line and sector sizes, and the L1/shared-memory split have all changed across NVIDIA architectures. The <em>read-only data path</em> (<code>const __restrict__</code> pointers, or <code>__ldg</code>) tells the compiler a load can use the texture/read-only caching path.</li>
+<li><strong>Write policy.</strong> Writes typically go to L2 (not L1) and are merged there. The simulator counts a written sector that misses as one sector of DRAM traffic.</li>
+<li><strong>L2 controls.</strong> Ampere and later GPUs let you set aside part of L2 for "persisting" accesses, keeping a chosen buffer resident across kernels.</li>
+<li><strong>Replacement isn't perfect LRU.</strong> Real caches are set-associative with approximate replacement. The simulator's fully associative LRU is a clean model to reason with, not a cycle-exact copy.</li>
+</ul>
+<div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Appendix B</strong> (cache basics: associativity, replacement, the three Cs of misses) and <strong>Chapter 2</strong> (advanced cache optimisations).</div>
+</section>

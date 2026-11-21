@@ -1,0 +1,45 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>You've written a kernel and it runs in 2 ms. Is that good? Without a reference point you can't tell whether there's 10× left on the table or nothing at all. And if there is room, you don't know which way to push: fewer instructions, or fewer bytes.</p>
+<p>The GPU has two ceilings: how fast it can compute and how fast it can move data. Every kernel hits one of them first. To know which, you need one number about the kernel.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Arithmetic intensity</strong> is the work a kernel does per byte it moves to or from DRAM:</p>
+<div class="eq">$$I = \frac{\text{floating-point operations}}{\text{bytes of DRAM traffic}} \quad \left[\tfrac{\text{FLOP}}{\text{byte}}\right]$$</div>
+<p>Vector addition <code>c[i] = a[i] + b[i]</code> on floats does 1 FLOP per element and moves 12 bytes (two 4-byte reads, one 4-byte write): $I = 1/12 \approx 0.083$. A tiled matrix multiply reuses each loaded number dozens of times and can reach $I$ of 10 or more.</p>
+<p>Intensity is a property of the <em>algorithm and its data movement</em>, not of the hardware. That's what makes it useful: it lets you place any kernel on any machine.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: the roofline</h2>
+<p>A kernel can't go faster than peak compute, and it can't process data faster than memory delivers it. With bandwidth $B$ (bytes/s) and intensity $I$, memory feeds at most $I \cdot B$ FLOP/s. So</p>
+<div class="eq">$$\text{attainable FLOP/s} = \min\big(\text{peak FLOP/s},\ I \times B\big)$$</div>
+<p>On a log-log plot of attainable performance against $I$, that's a slanted line (memory-bound) meeting a flat line (compute-bound): a <strong>roofline</strong>. The corner is the <strong>ridge point</strong>, $I^* = \text{peak} / B$. Kernels to its left are memory-bound; to its right, compute-bound.</p>
+<p><strong>For the GW-1:</strong> peak compute is 16 SMs × 32 lanes × 2 FLOP per fused multiply-add × 1.5 GHz = <strong>1,536 GFLOP/s</strong>, and bandwidth is <strong>512 GB/s</strong>. The ridge is at $1536/512 = 3$ FLOP/byte. Vector addition, at $I = 1/12$, can reach at most $512/12 \approx 43$ GFLOP/s: under 3% of peak compute, however well it's written. Its only meaningful goal is to run at full <em>bandwidth</em>.</p>
+<div data-gw="roofline"></div>
+<p>Drag your kernel's intensity across the ridge. Then raise the bandwidth: every memory-bound kernel speeds up, and the ridge moves left. Raise peak compute instead and memory-bound kernels gain nothing. Most GPU generations add compute faster than bandwidth, so the ridge keeps moving right, and more kernels become memory-bound.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>The roofline tells you <em>which</em> resource to measure yourself against and <em>which</em> optimisations can help:</p>
+<table>
+<tr><th>If the kernel is…</th><th>measure against</th><th>what helps</th></tr>
+<tr><td>memory-bound (left of the ridge)</td><td>% of peak bandwidth</td><td>moving fewer bytes: coalescing (2.3), reuse via caches and shared memory (2.4–2.5), fusion of kernels, smaller data types</td></tr>
+<tr><td>compute-bound (right of the ridge)</td><td>% of peak FLOP/s</td><td>fewer or cheaper instructions, keeping all lanes busy (no divergence), tensor cores (Part 4)</td></tr>
+</table>
+<p>The intensity in the formula counts <em>DRAM</em> traffic, which is what actually happens, not what the source code seems to read. A blur reads each pixel 5 times in the source, but if the neighbours come from cache, DRAM sees each pixel about once. So the same code can have very different intensity depending on how well it uses the memory hierarchy. Much of performance engineering is <strong>moving a kernel rightwards on the roofline</strong> by cutting DRAM traffic.</p>
+<p>The GW-1 simulator reports <code>dramBytes</code>, so from now on you can compute any kernel's real intensity.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>There are more roofs.</strong> Real GPUs have a ceiling for each level of the hierarchy (L2 bandwidth, shared-memory bandwidth) and for each kind of math (FP32, FP16, tensor cores). Tensor-core peak is often 10–20× the FP32 peak, which pushes the ridge far to the right.</li>
+<li><strong>Peaks aren't reachable.</strong> Practical ceilings are typically 80–90% of spec-sheet bandwidth and somewhat less than peak FLOP/s. The roofline is an upper bound, not a prediction.</li>
+<li><strong>Latency can keep you under both roofs.</strong> A kernel with too little parallelism is limited by neither bandwidth nor compute but by latency, as in Part 0. Then it sits below the roofline, and the fix is more concurrency, not fewer bytes. This Part's Volkov paper chapter is about exactly this.</li>
+</ul>
+<div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 4</strong> presents the roofline model in its section on data-level parallelism. This Part's Roofline paper chapter covers the original paper.</div>
+</section>

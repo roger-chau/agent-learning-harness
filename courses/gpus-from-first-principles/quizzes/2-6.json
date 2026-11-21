@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric",
+     "prompt": "GW-1, 128-thread blocks, 48 registers per thread, no shared memory. How many blocks fit per SM?",
+     "unit": "blocks", "answer": 10, "tolerance": 0,
+     "explanation": "48 × 32 = 1,536 registers per warp (a multiple of 256); 65,536 / 1,536 = 42 warps; 4 warps per block, so 10 blocks. The warp limit allows 16 and the block limit 16, so registers win: 40 warps, 62.5%."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "Same kernel: what's the occupancy, in percent?",
+     "unit": "%", "answer": 62.5, "tolerance": 0.1,
+     "explanation": "40 / 64 = 62.5%."},
+    {"id": "q3", "type": "single",
+     "prompt": "A kernel uses 64 registers per thread in 256-thread blocks (50% occupancy). The compiler update makes it use 65. What happens on the GW-1?",
+     "options": ["Nothing", "Occupancy drops to 37.5%: one fewer block fits", "Occupancy rises", "The kernel fails to launch"],
+     "answer": 1, "explanation": "65 × 32 = 2,080, which rounds up to 2,304 per warp; 28 warps fit, so ⌊28/8⌋ = 3 blocks."},
+    {"id": "q4", "type": "single",
+     "prompt": "What is 'local memory' on a GPU?",
+     "options": ["Shared memory", "Per-thread storage for spilled registers, located in DRAM (cached)", "The register file", "L1 cache"],
+     "answer": 1, "explanation": "Spills go to per-thread local memory, which physically lives in device memory."},
+    {"id": "q5", "type": "multi",
+     "prompt": "Which can let a kernel reach full bandwidth at lower occupancy?",
+     "options": ["More independent memory requests in flight per thread (ILP)", "Larger requests per instruction (e.g., 16-byte vector loads)", "More __syncthreads() calls", "Smaller blocks with the same resources"],
+     "answer": [0, 1], "explanation": "Little's law cares about bytes in flight: more or bigger requests per warp substitute for more warps."},
+    {"id": "q6", "type": "single",
+     "prompt": "Why does the GW-1 barely saturate DRAM even at 100% occupancy with one 128-byte request per warp?",
+     "options": ["Its caches are too small", "Bandwidth × latency ≈ 136 KB, while 1,024 warps × 128 B ≈ 131 KB: just under the requirement", "The clock is too slow", "Bank conflicts"],
+     "answer": 1, "explanation": "Little's law: 341 B/cycle × 400 cycles ≈ 136 KB in flight needed."}
+  ]
+}

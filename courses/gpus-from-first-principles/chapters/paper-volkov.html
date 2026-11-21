@@ -1,0 +1,47 @@
+<div class="paper-ref">
+<div class="k">The work</div>
+<b>V. Volkov. "Understanding Latency Hiding on GPUs."</b> PhD thesis, University of California, Berkeley, 2016 (EECS technical report).
+<br>Also see his earlier talk, <b>"Better Performance at Lower Occupancy"</b> (NVIDIA GPU Technology Conference, 2010), which made the idea famous.
+<br><a href="https://scholar.google.com/scholar?q=Volkov+Understanding+Latency+Hiding+on+GPUs" target="_blank" rel="noopener noreferrer">Find the thesis on Google Scholar</a> · It's long: the reading guide picks the chapters that matter here.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>For years, GPU programming advice said: <em>maximise occupancy</em>. More resident warps means more latency hiding, so use few registers, small blocks, little shared memory. But that advice is often wrong, and following it can make kernels slower. Using fewer registers can mean recomputing values, spilling, or giving up the data reuse that registers provide. Volkov asked a precise question: how much parallelism does a GPU actually need to hide latency, and does it have to come from <em>warps</em>?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Latency hiding needs enough independent operations in flight, and they can come from instruction-level parallelism within each thread as well as from more threads.</strong> It's Little's law, applied carefully:</p>
+<div class="eq">$$\text{operations in flight needed} = \text{latency} \times \text{throughput}$$</div>
+<div class="eq">$$\text{in flight} = \text{resident warps} \times \text{independent operations per warp (ILP)}$$</div>
+<p>So a target can be met with many warps and ILP 1, or a quarter as many warps and ILP 4. The second option leaves each thread more registers, which can hold data the kernel reuses, turning memory traffic into register traffic. That's why some of the fastest kernels, like dense matrix multiply, run at <em>low</em> occupancy: each thread computes many outputs, holds many values in registers, and keeps many independent loads and FMAs in flight.</p>
+<p>The thesis also shows that "how much occupancy you need" isn't one number. It differs for arithmetic latency (short) and memory latency (long), and for memory it depends on bytes in flight, not just instruction counts. The simple occupancy rules of thumb ignored both.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ol class="reading">
+<li><strong>The introduction and the statement of the problem.</strong> Read closely. Note the folklore he's correcting.</li>
+<li><strong>The chapters developing the latency-hiding model</strong> (how Little's law applies to arithmetic and to memory). Read closely; this is the core. Compare his formulas with Chapter 2.6's.</li>
+<li><strong>The experimental chapters</strong> that measure latency and throughput on real GPUs. Skim for method: how he measures the latency and the required concurrency.</li>
+<li><strong>The discussion of occupancy versus ILP.</strong> Read closely, alongside the 2010 talk's examples.</li>
+<li><strong>Related work.</strong> Skim, to see how this fits with earlier analytical GPU models.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>A note on the simulator. JavaScript can't tell the simulator how many of a warp's loads are independent, so a launch <em>declares</em> it with the <code>ilp</code> option (default 1), just as it declares <code>registers</code>. The time model then uses Little's law: bytes in flight = resident warps × bytes per request × <code>ilp</code>.</p>
+<p>The experiment: a copy kernel where each thread moves 4 elements, with all 4 loads issued before any store. That's genuinely 4 independent requests per thread. Then:</p>
+<ul>
+<li>launch it with <code>registers: 128</code>, which drops occupancy to 25%, and <code>ilp: 1</code>. Bandwidth collapses, because too little is in flight;</li>
+<li>launch the same thing with <code>ilp: 4</code>. Bandwidth comes back to near peak, at a quarter of the occupancy.</li>
+</ul>
+<p>Before running it, predict both numbers from the formula. That's the point of the model.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>"Lower occupancy, more work per thread" became standard practice in high-performance kernels. CUTLASS GEMMs, FlashAttention and most hand-tuned kernels deliberately use many registers per thread and run at modest occupancy, relying on ILP and software pipelining (Part 4) to keep enough operations in flight. Profilers changed their message too: Nsight Compute reports occupancy, but its guidance focuses on <em>why warps are stalled</em> rather than on raising occupancy for its own sake (Part 5).</p>
+</section>

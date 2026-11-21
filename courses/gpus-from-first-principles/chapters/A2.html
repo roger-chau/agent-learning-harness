@@ -1,0 +1,25 @@
+<div class="paper-ref">
+<div class="k">Project A · Imaging kernels · Milestone 2 of 3</div>
+Start from your A1 pipeline. Same kernels, same results, same rule about divergence. Now every kernel must also be <strong>coalesced</strong>.
+</div>
+
+<h2>What changes</h2>
+<p>Run your A1 pipeline and look at each kernel's <code>coalescing</code>. Two problems usually show up:</p>
+<ol>
+<li><strong>Grayscale reads interleaved RGB.</strong> One pixel per thread means lane $\ell$ reads bytes $3\ell$, $3\ell+1$, $3\ell+2$. Each of those three load instructions spans 96 bytes, about 3 sectors, to deliver 32 useful bytes. That's roughly a third efficient, and no indexing trick fixes it: the data layout is the problem.</li>
+<li><strong>Stencils with narrow blocks.</strong> With 16-wide blocks, a warp covers two half-rows. When it reads $x \pm 1$ or $x \pm 2$, each half-row straddles an extra sector.</li>
+</ol>
+
+<h2>The fixes</h2>
+<p><strong>Grayscale: stage through shared memory.</strong> Let a block of $T$ threads handle $T$ consecutive pixels, which are $3T$ consecutive bytes. In three rounds, thread $t$ copies byte $k \cdot T + t$ of that range into a shared <code>u8</code> array. Each round, a warp reads 32 <em>consecutive</em> bytes: one sector, fully coalesced. After <code>__syncthreads()</code>, thread $t$ reads its pixel's three bytes from shared memory at $3t$, $3t+1$, $3t+2$. Shared memory doesn't care about stride (and this pattern has no bank conflicts: neighbouring lanes share words, which broadcast).</p>
+<pre><code>const s = shared("rgb", 3 * T, "u8");</code></pre>
+<p>Watch the guards. The last block may have fewer than $T$ pixels, so bytes past the end of the image must not be read. An <code>if</code> around the byte copy would split warps whose pixels are all valid. Clamping the byte index with <code>Math.min</code> instead (Chapter 1.5) keeps them clean. And <code>__syncthreads()</code> must be reached by <em>every</em> thread, so put it outside any <code>if</code>.</p>
+<p><strong>Stencils: make warps span full rows.</strong> Use blocks that are at least 32 wide (for example 32×8), so a warp's reads at $x+k$ form one contiguous run of 128 bytes. That's 4 sectors when aligned, 5 when shifted.</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li><strong>Correctness</strong>, as in A1, on several sizes.</li>
+<li><strong>Coalescing:</strong> grayscale ≥ 95%. Both blur passes and Sobel ≥ 80%. (Shifted neighbour reads can't reach 100% without tiling; that's A3.)</li>
+<li><strong>Control flow:</strong> as in A1, warps that lie entirely inside the image must not diverge. The grayscale kernel is checked on its output pixels.</li>
+</ul>
+<p>Same API as A1: <code>runPipeline(rgb, w, h)</code> returns <code>{ gray, blurred, edges, stats: [4 launch results] }</code>.</p>
