@@ -1,0 +1,23 @@
+<div class="scenario-brief">
+<div class="k">Scenario · Divergent physics</div>
+<b>Your team's particle simulation step is too slow, and the profiler says warps are mostly idle.</b>
+<dl>
+<dt>Context</dt><dd>A game-physics prototype updates 20,000 particles per frame. Each particle is in one of three states: <em>idle</em> (about 60%), <em>drifting</em> (about 30%) or <em>colliding</em> (about 10%). The states are scattered randomly through the array.</dd>
+<dt>The cost</dt><dd>Updating a particle runs <code>physics(v, trips)</code>, a loop of 0, 8 or 64 iterations depending on its state.</dd>
+<dt>Goal</dt><dd>Produce exactly the same results in <strong>at most half the simulated cycles</strong> of the baseline kernel, measured as the total over all the launches you make.</dd>
+<dt>Constraints</dt><dd>Don't change <code>physics</code> or <code>TRIPS</code>. You may add launches, buffers and JavaScript code on the "host" (outside kernels); if you do host-side work, discuss its cost in your write-up.</dd>
+</dl>
+</div>
+
+<h2>Starting point</h2>
+<p>Run the starter's <code>main()</code> and read the baseline's stats. Before changing anything, write down what you think the bottleneck is and why. Chapter 1.4's loop-divergence animation is the picture to have in mind: with 10% of particles colliding, almost every warp contains at least one colliding lane ($1 - 0.9^{32} \approx 97\%$).</p>
+
+<h2>There's more than one way</h2>
+<p>Approaches people actually use for this kind of problem include:</p>
+<ul>
+<li>reordering work so particles with the same state share warps (by index list, or by physically reordering the data);</li>
+<li>one launch per state over a compacted list of indices;</li>
+<li>spreading expensive particles' work over several threads.</li>
+</ul>
+<p>Each has costs the others don't: extra memory traffic, extra launches, gathers that hurt coalescing, host-side work. Pick based on measurement, and say why in the write-up. Part 3 gives you GPU primitives (compaction, sorting) that would replace any host-side preprocessing. For now, assume it's acceptable but not free.</p>
+<p>Your <code>runParticles(state, x, out, n)</code> must return an <strong>array of the stats of every launch you make</strong>, so the check can total them honestly.</p>

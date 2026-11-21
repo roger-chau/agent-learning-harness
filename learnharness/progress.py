@@ -49,11 +49,13 @@ class Progress:
         if it["status"] != "ready":
             return False
         rec = self.data["courses"].get(slug, {}).get("items", {}).get(it["id"]) or {}
-        if not it["exercises"] and not it["has_quiz"]:
+        wu = it.get("writeup")
+        if not it["exercises"] and not it["has_quiz"] and not wu:
             return bool(rec.get("read"))  # nothing to pass: reading it is enough
         ex_ok = all(rec.get("exercises", {}).get(e, {}).get("passed") for e in it["exercises"])
         quiz_ok = (not it["has_quiz"]) or bool((rec.get("quiz") or {}).get("passed"))
-        return ex_ok and quiz_ok
+        wu_ok = (not wu) or (rec.get("writeup") or {}).get("words", 0) >= wu.get("min_words", 100)
+        return ex_ok and quiz_ok and wu_ok
 
     def states(self, slug: str) -> dict[str, dict]:
         unlock_all = os.environ.get("GROUNDWORK_UNLOCK") == "1"
@@ -69,8 +71,10 @@ class Progress:
                 state = "complete" if done else "open"
             else:
                 state = "locked"
+            wu = rec.get("writeup") or {}
             out[it["id"]] = {
                 "state": state,
+                "writeup_words": wu.get("words", 0),
                 "blocked_by": None if state != "locked" else blocked_by,
                 "exercises": {e: bool(rec.get("exercises", {}).get(e, {}).get("passed")) for e in it["exercises"]},
                 "quiz": rec.get("quiz"),
@@ -111,6 +115,17 @@ class Progress:
             }
             self._mark(slug, item_id, rec)
             self.save()
+
+    def save_writeup(self, slug: str, item_id: str, text: str) -> None:
+        with self._lock:
+            rec = self._item(slug, item_id)
+            rec["writeup"] = {"text": text, "words": len(text.split()), "at": _now()}
+            self._mark(slug, item_id, rec)
+            self.save()
+
+    def writeup(self, slug: str, item_id: str) -> str:
+        rec = self.data["courses"].get(slug, {}).get("items", {}).get(item_id) or {}
+        return (rec.get("writeup") or {}).get("text", "")
 
     def mark_read(self, slug: str, item_id: str) -> None:
         with self._lock:

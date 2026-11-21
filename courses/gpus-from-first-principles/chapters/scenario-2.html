@@ -1,0 +1,23 @@
+<div class="scenario-brief">
+<div class="k">Scenario · Edge camera ISP</div>
+<b>A camera image-processing stage on an embedded board misses its frame budget.</b>
+<dl>
+<dt>Context</dt><dd>Your product runs a small image-signal-processing (ISP) stage on an SoC's integrated GPU before frames go to a vision model. The GPU is the <strong>GW-E</strong>: 4 SMs at 1.0 GHz, 51.2 GB/s of shared LPDDR bandwidth, 300-cycle memory latency and a 128 KB L2. It's much smaller than the GW-1.</dd>
+<dt>The stage</dt><dd>For each 640×360 frame of 16-bit raw pixels: (1) subtract a black level of 64 (clamping at 0) and multiply by a gain; (2) a 3×3 box denoise with clamp-to-edge borders; (3) tone-map through a 1,024-entry 8-bit lookup table, after rounding and clamping to [0, 1023]. The output is an 8-bit image.</dd>
+<dt>Today</dt><dd>Three kernels, with 32-bit float intermediates written to and read back from DRAM. That takes about 170 µs of GPU time per frame.</dd>
+<dt>Goal</dt><dd><strong>≤ 90 µs</strong> of total GPU time per frame (all launches), with output identical to the reference. Stretch: ≤ 65 µs.</dd>
+<dt>Constraints</dt><dd>Your <code>runISP(dev, raw, lut, w, h, gain)</code> receives the GW-E device as <code>dev</code>; use <code>dev.alloc</code> and <code>dev.launch</code>, not <code>gpu</code>. Return <code>{ out, stats: [ … every launch … ] }</code>.</dd>
+</dl>
+</div>
+
+<h2>Think before you code</h2>
+<p>Count the bytes. Per pixel, the baseline reads 2 bytes of raw data, writes and reads back two 4-byte float images, and writes 1 byte of output. That's at least 19 bytes of DRAM traffic per pixel, even with perfect caching. What does the <em>minimum</em> look like? Where does the roofline put this stage on the GW-E? Is it memory-bound at all once you've fixed the obvious problem?</p>
+
+<h2>Things to weigh</h2>
+<ul>
+<li><strong>Fusion</strong> removes intermediate traffic, but a fused 3×3 stencil re-reads neighbours. Is that DRAM traffic or L2 traffic here?</li>
+<li><strong>Tiling</strong> in shared memory removes the re-reads, but adds a barrier and a halo.</li>
+<li><strong>Small data types</strong> (16-bit inputs, 8-bit outputs) mean each warp instruction moves only 64 or 32 bytes. That's many instructions per byte, and what does that do to which resource you're limited by?</li>
+<li><strong>The lookup table</strong> is 1 KB of random-access reads per pixel. Where should it live?</li>
+</ul>
+<p>This is the kind of trade-off you'll make on Jetson-class hardware in the Embedded GPUs course. The numbers differ there, but the reasoning is the same.</p>

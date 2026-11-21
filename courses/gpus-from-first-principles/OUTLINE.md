@@ -15,6 +15,8 @@ Three long-running projects grow across the course in milestones, then a capston
 
 Every chapter ends with a graded quiz, and every Part ends with a cumulative checkpoint quiz. Both are required to move on.
 
+Every Part also has a **real-world scenario**: an open-ended brief (e.g. "this particle step is too slow, make it 2× faster", "fit this camera ISP stage into a frame budget on an embedded GPU"), graded on a measured outcome plus a design write-up.
+
 | Project | Runs through | What you end up with |
 |---|---|---|
 | **A. Imaging kernels** | Parts 1–2 | A small image-processing library: grayscale, separable blur, Sobel and transpose. It goes from correct to bandwidth-bound-optimal. |

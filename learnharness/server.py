@@ -90,6 +90,7 @@ def _course_stats(c: dict) -> dict:
         "written": sum(1 for i in chapters if i["status"] == "ready"),
         "projects": len(c.get("projects", [])),
         "milestones": sum(1 for i in c["order"] if i["type"] == "milestone"),
+        "scenarios": sum(1 for i in c["order"] if i["type"] == "scenario"),
         "papers": sum(1 for i in c["order"] if i["type"] == "paper"),
         "quizzes": sum(1 for i in c["order"] if i["has_quiz"]),
     }
@@ -129,6 +130,8 @@ def get_item(slug: str, item_id: str):
         "prev": order[idx - 1]["id"] if idx > 0 else None,
         "next": order[idx + 1]["id"] if idx + 1 < len(order) else None,
         "qa": agent.transcript(progress.qa(slug, item_id)),
+        "writeup": it.get("writeup"),
+        "writeup_text": progress.writeup(slug, item_id),
     }
 
 
@@ -153,6 +156,21 @@ def submit_quiz(slug: str, item_id: str, body: QuizIn):
                 r.pop("answer", None)
                 r["explanation"] = ""
     return result | {"state": progress.states(slug)[item_id], "progress": progress.summary(slug)}
+
+
+class WriteupIn(BaseModel):
+    text: str = Field(max_length=40000)
+
+
+@app.post("/api/courses/{slug}/items/{item_id}/writeup")
+def save_writeup(slug: str, item_id: str, body: WriteupIn):
+    _course(slug)
+    it = _item(slug, item_id)
+    _require_open(slug, item_id)
+    if not it.get("writeup"):
+        raise HTTPException(404, "this item has no write-up")
+    progress.save_writeup(slug, item_id, body.text)
+    return {"state": progress.states(slug)[item_id], "progress": progress.summary(slug)}
 
 
 class ExerciseIn(BaseModel):

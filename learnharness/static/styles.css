@@ -559,3 +559,12 @@ svg .d-arrowhead { fill: var(--muted); }
 .bk.on { background: var(--accent-soft); border-color: color-mix(in srgb, var(--primary) 50%, transparent); }
 .bk.hot { background: var(--rose-soft); border-color: var(--rose-line); }
 @media (max-width: 560px) { .bk-grid { grid-template-columns: repeat(8, 1fr); } }
+
+.wu-prompts { margin: 0 0 14px; padding-left: 1.2em; color: var(--ink-2); }
+.wu-prompts li { margin: .3em 0; }
+.wu-text { font-family: var(--font-serif); font-size: 1rem; line-height: 1.6; min-height: 240px; margin-bottom: 10px; }
+.scenario-brief { font-family: var(--font-ui); background: var(--surface); border: 1px solid var(--mint-line); border-left: 4px solid var(--mint-line); border-radius: var(--radius-lg); padding: 16px 18px; margin: 0 0 1.4em; }
+.scenario-brief .k { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--mint-ink); margin-bottom: 6px; }
+.scenario-brief dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 10px 0 0; font-size: .92rem; }
+.scenario-brief dt { color: var(--muted); }
+.scenario-brief dd { margin: 0; }

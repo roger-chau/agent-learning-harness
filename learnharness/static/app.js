@@ -172,7 +172,7 @@
   }
 
   // ---------- Course overview ----------
-  const TYPE_LABEL = { chapter: "chapter", milestone: "milestone", checkpoint: "checkpoint", paper: "paper" };
+  const TYPE_LABEL = { chapter: "chapter", milestone: "milestone", checkpoint: "checkpoint", paper: "paper", scenario: "scenario" };
 
   async function renderCourse(slug) {
     setNav("courses");
@@ -231,10 +231,10 @@
                   ${part.items.map((it) => {
                     const n = it.type === "chapter" ? ++chapterNo : null;
                     const icon = it.state === "complete" ? CHECK : it.state === "open" ? "" : LOCK;
-                    const tone = it.state === "complete" ? "t-mint" : it.state === "open" ? "t-indigo" : it.type === "milestone" ? "t-saffron" : it.type === "paper" ? "t-rose" : "t-empty";
+                    const tone = it.state === "complete" ? "t-mint" : it.state === "open" ? "t-indigo" : it.type === "milestone" ? "t-saffron" : it.type === "paper" ? "t-rose" : it.type === "scenario" ? "t-mint" : "t-empty";
                     const tag = it.state === "planned" ? "coming soon" : it.state === "locked" ? "locked" : TYPE_LABEL[it.type];
                     const label = it.type === "chapter" ? `${it.id.replace("-", ".")}  ${it.title}` : it.title;
-                    const inner = `<span class="n">${it.type === "chapter" ? pad(n) : it.type === "milestone" ? "◆" : it.type === "paper" ? "¶" : "✓"}</span><span class="name">${esc(label)}</span><span class="tag">${icon} ${esc(tag)}</span>`;
+                    const inner = `<span class="n">${it.type === "chapter" ? pad(n) : it.type === "milestone" ? "◆" : it.type === "paper" ? "¶" : it.type === "scenario" ? "★" : "✓"}</span><span class="name">${esc(label)}</span><span class="tag">${icon} ${esc(tag)}</span>`;
                     return it.state === "open" || it.state === "complete"
                       ? `<a class="block ${tone} link" href="#/c/${slug}/${it.id}">${inner}</a>`
                       : `<div class="block ${tone}" title="${it.state === "locked" ? `Complete ${esc(it.blocked_by)} first` : "Not written yet"}">${inner}</div>`;
@@ -260,7 +260,7 @@
     }
     Object.assign(reader, { slug, item: it, course: c });
     const chNum = it.type === "chapter" ? it.id.replace("-", ".") : null;
-    const kicker = it.type === "chapter" ? `Part ${it.part.n} · Chapter ${chNum}` : it.type === "milestone" ? `Part ${it.part.n} · Project milestone` : it.type === "paper" ? `Part ${it.part.n} · Paper` : `Part ${it.part.n} · Checkpoint`;
+    const kicker = it.type === "chapter" ? `Part ${it.part.n} · Chapter ${chNum}` : it.type === "milestone" ? `Part ${it.part.n} · Project milestone` : it.type === "paper" ? `Part ${it.part.n} · Paper` : it.type === "scenario" ? `Part ${it.part.n} · Real-world scenario` : `Part ${it.part.n} · Checkpoint`;
 
     main.innerHTML = `
       <div class="reader container">
@@ -290,9 +290,16 @@
                 <span class="n">${pad(i + 1)}</span><span class="name">${esc(name)}</span><span class="tag">${esc(tag)}</span></a>`).join("")}</div>` : ""}
           </header>
           <div class="ch-body prose" id="ch-body">${it.html}</div>
-          ${it.exercises.length ? `<section class="practice" id="practice"><p class="eyebrow">Practice</p><h2>Exercises</h2>
+          ${it.exercises.length ? `<section class="practice" id="practice"><p class="eyebrow">Practice</p><h2>${it.type === "scenario" ? "Your solution" : "Exercises"}</h2>
             <p class="muted">Pass every exercise${it.quiz ? " and the quiz" : ""} to unlock the next chapter. Your code is saved in this browser as you type.</p>
             <div id="exercises"></div></section>` : ""}
+          ${it.writeup ? `<section class="practice" id="writeup-sec"><p class="eyebrow">Design notes</p><h2>Write-up</h2>
+            <p class="muted">At least ${it.writeup.min_words} words. Cover:</p>
+            <ul class="wu-prompts">${it.writeup.prompts.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+            <textarea class="field wu-text" id="wu-text" rows="12" placeholder="What you measured, what you tried, what you chose and why…"></textarea>
+            <div class="quiz-actions"><button class="btn btn-primary" type="button" id="wu-save">Save write-up</button>
+              <button class="btn btn-ghost" type="button" id="wu-review">Ask for a review</button>
+              <span class="quiz-score muted" id="wu-count"></span></div></section>` : ""}
           ${it.quiz ? `<section class="practice" id="quiz-sec"><p class="eyebrow">Check yourself</p><h2>${it.type === "checkpoint" ? "Checkpoint quiz" : "Quiz"}</h2>
             <p class="muted">Pass mark ${Math.round(it.quiz.pass * 100)}%. Retake it as many times as you like; explanations appear for questions you get right.</p>
             <form id="quiz" class="quiz"></form></section>` : ""}
@@ -321,6 +328,7 @@
     renderQuiz(slug, it);
     renderGate(it.state, it);
     setupAsk(slug, it);
+    if (it.writeup) setupWriteup(slug, it);
     if (!it.exercises.length && !it.quiz && it.state.state === "open") {
       api(`/api/courses/${slug}/items/${it.id}/read`, { method: "POST" }).then((r) => renderGate(r.state, it)).catch(() => {});
     }
@@ -420,18 +428,44 @@
     });
   }
 
+  function setupWriteup(slug, it) {
+    const ta = $("#wu-text"), count = $("#wu-count");
+    const key = `gw-wu-${slug}-${it.id}`;
+    let draft = null; try { draft = localStorage.getItem(key); } catch (e) {}
+    ta.value = draft ?? it.writeup_text ?? "";
+    const words = () => (ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0);
+    const upd = () => { count.textContent = `${words()} / ${it.writeup.min_words} words${it.writeup_text && ta.value === it.writeup_text ? " · saved" : ""}`; };
+    ta.addEventListener("input", () => { try { localStorage.setItem(key, ta.value); } catch (e) {} upd(); });
+    upd();
+    $("#wu-save").addEventListener("click", async () => {
+      try {
+        const r = await api(`/api/courses/${slug}/items/${it.id}/writeup`, { method: "POST", body: JSON.stringify({ text: ta.value }) });
+        it.writeup_text = ta.value; upd();
+        count.textContent += words() < it.writeup.min_words ? " · too short to count yet" : "";
+        renderGate(r.state, it);
+      } catch (e) { count.textContent = e.message; }
+    });
+    $("#wu-review").addEventListener("click", () => {
+      $("#ask-open").click();
+      const q = $("#ask-input");
+      q.value = `Please review my design write-up for this scenario like a senior engineer would.\n\n---\n${ta.value}`;
+      q.focus();
+    });
+  }
+
   function renderGate(state, it) {
     const g = $("#gate");
     if (!g) return;
     const exLeft = Object.values(state.exercises || {}).filter((v) => !v).length;
     const quizLeft = it.quiz && !(state.quiz && state.quiz.passed);
+    const wuLeft = it.writeup && (state.writeup_words || 0) < it.writeup.min_words;
     const done = state.state === "complete";
     const nextLink = it.next ? `#/c/${reader.slug}/${it.next}` : `#/c/${reader.slug}`;
     g.className = `gate ${done ? "done" : ""}`;
     g.innerHTML = done
       ? `<div><b>${CHECK} Complete.</b> ${it.next ? "The next chapter is unlocked." : "That's everything written so far."}</div>
          <a class="btn btn-primary" href="${nextLink}">${it.next ? "Next" : "Back to course"} ${ARROW}</a>`
-      : `<div><b>${LOCK} Next chapter locked.</b> ${[exLeft ? `${exLeft} exercise${exLeft > 1 ? "s" : ""} to pass` : "", quizLeft ? "quiz to pass" : ""].filter(Boolean).join(" · ") || "Finishing up…"}</div>
+      : `<div><b>${LOCK} Next chapter locked.</b> ${[exLeft ? `${exLeft} check${exLeft > 1 ? "s" : ""} to pass` : "", quizLeft ? "quiz to pass" : "", wuLeft ? "write-up to save" : ""].filter(Boolean).join(" · ") || "Finishing up…"}</div>
          <button class="btn btn-ghost" type="button" disabled>Next ${ARROW}</button>`;
     // keep the TOC in sync
     if (done) {

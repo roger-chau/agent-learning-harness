@@ -79,6 +79,7 @@ self.onmessage = async (e) => {
     const results = [];
     const t = {
       gpu,
+      GPUSim,
       print,
       table,
       show,

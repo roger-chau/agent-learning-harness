@@ -2,7 +2,8 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
-const { Device } = require("../learnharness/static/sim/gpusim.js");
+const GPUSim = require("../learnharness/static/sim/gpusim.js");
+const { Device } = GPUSim;
 
 function loadExercise(file) {
   const GW = { exercises: {}, exercise(def) { this.exercises[def.id] = def; } };
@@ -17,12 +18,12 @@ async function runChecks(ex, code) {
   const results = [];
   let fns;
   try {
-    fns = gpu.compile(code, { print, gpu, table: () => {}, show: () => {}, console: { log: print } });
+    fns = gpu.compile(code, { print, gpu, GPUSim, table: () => {}, show: () => {}, console: { log: print } });
   } catch (e) {
     return { passed: false, results: [{ name: "compile", pass: false, detail: e.message }] };
   }
   const t = {
-    gpu, print, table: () => {}, show: () => {},
+    gpu, GPUSim, print, table: () => {}, show: () => {},
     fn(name) { if (typeof fns[name] !== "function") throw new Error(`Define a function named ${name}(...)`); return fns[name]; },
     has(name) { return typeof fns[name] === "function"; },
     check(name, ok, detail = "") { results.push({ name, pass: !!ok, detail: ok ? "" : String(detail) }); return !!ok; },

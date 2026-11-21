@@ -429,6 +429,24 @@
      ]
     },
     {
+     "type": "scenario",
+     "id": "scenario-1",
+     "title": "Scenario: divergent physics",
+     "summary": "A particle step where most warps idle. Make it 2× faster, any way you can justify.",
+     "exercises": [
+      "scenario-1-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "What did the baseline's stats tell you, and what did you predict before changing anything?",
+       "Which approaches did you consider, and why did you pick yours?",
+       "What does your approach cost that the baseline didn't (memory traffic, launches, host work)?",
+       "How would you expect the result to change on a real GPU, or with a different mix of states?"
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p1-checkpoint",
      "title": "Part 1 checkpoint",
@@ -711,6 +729,24 @@
      "exercises": [
       "paper-volkov-a"
      ]
+    },
+    {
+     "type": "scenario",
+     "id": "scenario-2",
+     "title": "Scenario: edge camera ISP",
+     "summary": "Fit a camera ISP stage into a 90 µs frame budget on a small embedded GPU.",
+     "exercises": [
+      "scenario-2-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "Where does the stage sit on the GW-E's roofline before and after your change? Show the arithmetic.",
+       "Which bottleneck did each change move you to (DRAM, L2, instruction issue)?",
+       "What did you try that didn't help, and why not?",
+       "What would you check first on the real embedded board (e.g. a Jetson-class SoC with shared LPDDR)?"
+      ]
+     }
     },
     {
      "type": "checkpoint",
