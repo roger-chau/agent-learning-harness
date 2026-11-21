@@ -1,0 +1,52 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Count how many pixels have each brightness value: a 256-bin histogram. Every thread looks at a pixel and wants to add 1 to <em>some</em> bin, and which bin depends on the data. Thousands of threads updating a few hundred counters at once is a recipe for lost updates. If two threads both read 41 and both write 42, one increment vanishes.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>An atomic operation performs read-modify-write as one indivisible step.</strong> <code>atomicAdd(bins, v, 1)</code> adds 1 to <code>bins[v]</code> and returns the old value, and no other thread's update can slip in between. In the simulator, as in CUDA, there's a family: <code>atomicAdd</code>, <code>atomicSub</code>, <code>atomicMax</code>, <code>atomicMin</code>, <code>atomicExch</code>, <code>atomicCAS</code> (compare-and-swap), <code>atomicOr</code> and <code>atomicAnd</code>. Each works on global buffers and on <code>shared()</code> arrays.</p>
+<p>Atomics are correct, but correctness isn't the problem; <strong>contention</strong> is. Atomics to the <em>same address</em> must happen one after another. If all 32 lanes of a warp hit the same bin, that one instruction becomes 32 serialised updates. The simulator reports this as <code>atomicSerialization</code>: the sum over atomic warp instructions of the worst same-address count.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: privatise, then merge</h2>
+<p>Global atomics travel all the way to L2. The standard fix is <strong>privatisation</strong>: each block keeps its own histogram in shared memory, does its atomics there (fast and on-chip), and at the end adds each non-zero bin into the global histogram once. With 64 blocks and 256 bins, that's at most 16,384 global atomics instead of one per element.</p>
+<pre><code>function hist(x, bins, n) {
+  const h = shared("h", 256, "u32");
+  h[threadIdx.x] = 0;                                  // blocks of 256: one bin each
+  __syncthreads();
+  for (let i = blockIdx.x * blockDim.x + threadIdx.x; i &lt; n; i += blockDim.x * gridDim.x)
+    atomicAdd(h, x[i], 1);
+  __syncthreads();
+  if (h[threadIdx.x] &gt; 0) atomicAdd(bins, threadIdx.x, h[threadIdx.x]);
+}</code></pre>
+<p><strong>But skew still hurts.</strong> If the image is mostly black, most lanes of every warp hit the <em>same shared counter</em>, and privatisation doesn't help at all. In the simulator, a privatised histogram of a constant image is about 3.5× slower than one of uniform noise. Real images are skewed: sky, shadows, blank documents.</p>
+<p>Two families of fixes:</p>
+<ul>
+<li><strong>Combine before the atomic.</strong> A thread that sees the same value repeatedly can count locally and do one atomic with the run's count. Or the lanes of a warp can agree on a value with <code>__shfl_sync</code> and <code>__ballot_sync</code>, so one lane adds the number of matching lanes (<em>warp aggregation</em>).</li>
+<li><strong>Spread the counters.</strong> Keep several copies of each hot counter (for example one per warp), so fewer lanes collide on each, and sum the copies at the end.</li>
+</ul>
+<p>Each costs something on uniform data. Milestone B3 asks you to make one histogram that's good on every distribution.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>Atomics are also how blocks <em>coordinate</em>:</p>
+<ul>
+<li><strong>Allocation.</strong> <code>const slot = atomicAdd(count, 0, k)</code> reserves <code>k</code> output slots, as in "append to a queue". It's fast, but the order of the output depends on timing.</li>
+<li><strong>Work distribution.</strong> A global counter handing out tile ids (B2's dynamic tile ids).</li>
+<li><strong>Arbitrary read-modify-write</strong> via compare-and-swap: read the old value, compute a new one, and <code>atomicCAS</code> it in only if nobody changed it meanwhile, retrying otherwise. That's how floating-point <code>atomicMax</code>, or atomics on custom types, are built.</li>
+</ul>
+<p>Floats deserve a note: <code>atomicAdd</code> on floats makes the summation order depend on timing, so results can vary in the last bits between runs (Chapter 3.1's reproducibility point again).</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Hardware help.</strong> Modern GPUs perform global atomics at L2 with high throughput, and newer generations add warp-level matching (<code>__match_any_sync</code>), which groups lanes with equal values in one instruction to make warp aggregation cheap.</li>
+<li><strong>Libraries.</strong> CUB's <code>DeviceHistogram</code> uses privatised shared-memory histograms. Histogramming is also the first step of radix sort (Chapter 3.5, milestone B4).</li>
+<li><strong>Contention is everywhere.</strong> A single global counter that every thread bumps is a classic accidental bottleneck in "simple" GPU code. Profilers report it as atomic throughput saturation.</li>
+</ul>
+<div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 5</strong> (Thread-Level Parallelism) covers the atomic primitives (exchange, test-and-set, compare-and-swap) from which locks and other synchronisation are built.</div>
+</section>

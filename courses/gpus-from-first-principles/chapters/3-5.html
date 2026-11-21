@@ -1,0 +1,49 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Two workhorse operations need everything in this Part at once. <strong>Compaction</strong>: from a million particles, keep the ones still alive, in their original order. <strong>Sorting</strong>: put a million keys in order. Both move every element to a position that depends on all the elements before it. With reduce, scan, histogram and atomics in hand, you can now build both.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Compaction is flag → exclusive scan → scatter.</strong></p>
+<table>
+<tr><th>x</th><td>5</td><td>−2</td><td>8</td><td>−1</td><td>3</td></tr>
+<tr><th>keep = x &gt; 0</th><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+<tr><th>exclusive scan</th><td>0</td><td>1</td><td>1</td><td>2</td><td>2</td></tr>
+<tr><th>out[scan[i]] = x[i] if kept</th><td colspan="5">out = [5, 8, 3]</td></tr>
+</table>
+<p>The scan gives each kept element its output position, so the result is <em>stable</em>: kept elements keep their order. (The <code>atomicAdd</code> "reserve a slot" version from Chapter 3.3 is faster but unordered.) At GPU scale, the scan is your device-wide scan, or the three-phase version: per-block counts, a scan of the counts, then a per-block scatter using block-local scans.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: radix sort is compaction, many times</h2>
+<p><strong>LSD radix sort</strong> sorts integer keys by looking at $d$ bits at a time, starting from the least significant digit. Each pass is a stable <em>counting sort</em> on one digit:</p>
+<ol>
+<li><strong>histogram</strong> the digit: how many keys have digit 0, digit 1, … ($2^d$ bins);</li>
+<li><strong>exclusive scan</strong> the counts: where each digit's keys start in the output;</li>
+<li><strong>stable scatter</strong>: each key goes to its digit's start plus the number of earlier keys with the same digit.</li>
+</ol>
+<p>Why does starting from the <em>least</em> significant digit work? After the pass on digit $k$, keys are sorted by digits $0 \ldots k$. The pass on digit $k+1$ is <strong>stable</strong>, so keys with equal digit $k+1$ keep their order from the previous passes. Stability is the whole trick: an unstable scatter breaks the sort.</p>
+<p>On a GPU, each pass splits the keys into tiles (one per block). The histogram becomes a table of counts, <code>counts[digit][tile]</code>. Scanning that table in digit-major order gives every (digit, tile) pair its global starting offset. Within a tile, a key's rank among same-digit keys can come from warp ballots: <code>__ballot_sync(…, digit === d)</code> marks which lanes share digit <code>d</code>, and counting the set bits below your lane gives your rank inside the warp.</p>
+<p><strong>Choosing $d$.</strong> 32-bit keys need $32/d$ passes, and each pass reads and writes every key. Larger digits mean fewer passes but bigger histograms (256 bins for $d = 8$, 16 for $d = 4$) and more work per pass. Fast GPU sorts typically use $d = 8$: four passes.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>Count the memory traffic of a straightforward radix sort pass: read keys for the histogram, read keys again for the scatter, write keys. That's about $3n$ per pass, times 4 passes for 32-bit keys with $d = 8$. A sort is memory-bound, so this traffic <em>is</em> the runtime. This Part's paper chapter, Onesweep, shows how to cut it:</p>
+<ul>
+<li>compute <strong>all four</strong> digit histograms in one upfront pass over the keys;</li>
+<li>then make each digit pass a single sweep that reads and writes the keys once, using decoupled look-back (B2's technique) to get each tile's global offsets without a separate scan phase.</li>
+</ul>
+<p>Milestone B4 asks you to build a correct radix sort from your own primitives. How far you push it toward Onesweep is up to you; B5 measures it.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Libraries:</strong> CUB's <code>DeviceRadixSort</code> (which adopted Onesweep), Thrust's <code>sort</code>, and <code>torch.sort</code> all use radix sort for primitive key types.</li>
+<li><strong>Floats and signed integers</strong> radix-sort correctly after a bit-twiddling transform that makes their bit patterns order like unsigned integers (flip the sign bit for positives, all bits for negatives).</li>
+<li><strong>Key-value sorts</strong> move a payload along with each key, which doubles the traffic. Sorting indices or 32-bit handles instead of fat records is a classic optimisation.</li>
+<li><strong>Where sorting shows up in GPU work:</strong> binning particles into cells, ordering rays or work items by type to remove divergence (Chapter 1.4's fix), building BVHs, mixture-of-experts token routing, and database operators.</li>
+</ul>
+</section>

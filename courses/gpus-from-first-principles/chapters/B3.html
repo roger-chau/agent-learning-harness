@@ -1,0 +1,21 @@
+<div class="paper-ref">
+<div class="k">Project B · Parallel primitives · Milestone 3 of 5</div>
+A 256-bin histogram that stays fast whatever the data looks like.
+</div>
+
+<h2>Build: <code>histogramRobust</code></h2>
+<p>Write <code>histogramRobust(x, bins, n)</code> for <code>u8</code> input and a zero-initialised <code>u32</code> output, and <code>runHistogramRobust(x, bins, n)</code>, which returns an array of the stats of every launch you make.</p>
+<p>It will be run on $n = 65{,}536$ values in three distributions:</p>
+<ul>
+<li><strong>uniform</strong>: random values 0–255;</li>
+<li><strong>constant</strong>: every value the same;</li>
+<li><strong>skewed</strong>: 90% one value, 10% random.</li>
+</ul>
+<p>Your 3.3 privatised histogram takes about 1,400 cycles on uniform data but around 4,900 on constant data. The target: <strong>≤ 2,600 cycles total on every distribution</strong>.</p>
+<p>The chapter lists two families of fixes, combining before the atomic and spreading counters, and they trade off differently between uniform and skewed data. Measure before choosing. If you try warp aggregation, remember that warp operations must be reached by all lanes of the warp together (Chapter 1.4).</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li>Correct on all three distributions, and on small sizes.</li>
+<li>≤ 2,600 total cycles on each distribution at $n = 65{,}536$.</li>
+</ul>

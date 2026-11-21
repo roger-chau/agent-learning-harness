@@ -1,0 +1,21 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "In flag → exclusive scan → scatter compaction, where does a kept element at index i go?",
+     "options": ["out[i]", "out[scan[i]]", "out[count − i]", "Wherever atomicAdd says"], "answer": 1,
+     "explanation": "The exclusive scan counts kept elements before i."},
+    {"id": "q2", "type": "single", "prompt": "Why must each pass of an LSD radix sort be stable?",
+     "options": ["To save memory", "So keys with equal current digits keep the order established by the earlier (less significant) passes", "To avoid bank conflicts", "Stability is optional"],
+     "answer": 1, "explanation": "Stability carries the earlier passes' ordering forward."},
+    {"id": "q3", "type": "numeric", "prompt": "How many passes does an LSD radix sort of 32-bit keys with 4-bit digits need?",
+     "unit": "passes", "answer": 8, "tolerance": 0, "explanation": "32 / 4 = 8."},
+    {"id": "q4", "type": "numeric", "prompt": "A straightforward pass reads keys twice and writes once. For 32-bit keys with 8-bit digits, how many times is each key moved through DRAM over the whole sort? (Count reads + writes.)",
+     "unit": "", "answer": 12, "tolerance": 0, "explanation": "4 passes × 3 = 12 key movements."},
+    {"id": "q5", "type": "single", "prompt": "Inside a warp, how can a lane find its rank among lanes with the same digit d (and lower lane ids)?",
+     "options": ["Loop over all keys in global memory", "Ballot (digit === d), mask to lower lanes, count the set bits", "atomicAdd on a global counter", "Shuffle down by d"],
+     "answer": 1, "explanation": "popcount(ballot & lanemask_lt) is the classic trick."},
+    {"id": "q6", "type": "single", "prompt": "How do you radix-sort IEEE floats correctly?",
+     "options": ["You can't", "Transform the bits so their unsigned order matches numeric order (flip the sign bit for positives, all bits for negatives)", "Sort the absolute values", "Convert to integers by rounding"],
+     "answer": 1, "explanation": "A reversible bit transform makes floats sort as unsigned integers."}
+  ]
+}

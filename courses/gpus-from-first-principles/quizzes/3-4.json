@@ -1,0 +1,23 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "A producer writes <code>value</code>, then sets <code>flag</code>, with no fence. A consumer in another block sees the flag set. What can it read from <code>value</code>?",
+     "options": ["Always the new value", "Possibly the old value: the two writes may become visible out of order", "Always zero", "It deadlocks"],
+     "answer": 1, "explanation": "Relaxed memory models allow the reordering; a fence (or release/acquire atomics) prevents it."},
+    {"id": "q2", "type": "single", "prompt": "What does <code>__threadfence()</code> do?",
+     "options": ["Waits for all threads in the grid", "Orders this thread's memory writes so earlier ones are visible device-wide before later ones", "Flushes the L2 cache", "Synchronises a warp"],
+     "answer": 1, "explanation": "It's an ordering point, not a barrier: nobody waits."},
+    {"id": "q3", "type": "single", "prompt": "Why can't you build a grid-wide barrier by having every block spin on a global counter?",
+     "options": ["Atomics are too slow", "If not all blocks fit on the GPU at once, running blocks wait for blocks that can never be scheduled: deadlock", "Counters overflow", "It works fine"],
+     "answer": 1, "explanation": "Only cooperative launches guarantee co-residency."},
+    {"id": "q4", "type": "multi", "prompt": "Which are legitimate ways to get a grid-wide synchronisation point?",
+     "options": ["End the kernel and launch another", "A cooperative launch with grid.sync()", "__syncthreads()", "Spinning in every block on a counter, in an ordinary launch"],
+     "answer": [0, 1], "explanation": "__syncthreads() is per-block; spinning risks deadlock."},
+    {"id": "q5", "type": "single", "prompt": "In the last-block pattern, how does a block know it's the last one?",
+     "options": ["blockIdx.x == gridDim.x − 1", "The atomicAdd on the counter returns gridDim.x − 1 to it", "It checks the clock", "By reading every partial"],
+     "answer": 1, "explanation": "Block indices say nothing about finishing order; the atomic ticket does."},
+    {"id": "q6", "type": "single", "prompt": "Why can't the GW-1 simulator reproduce memory-visibility races?",
+     "options": ["It has no memory", "It runs blocks one at a time, so writes are always visible in program order", "It ignores fences", "It only runs one thread"],
+     "answer": 1, "explanation": "It does randomise block order, which catches ordering assumptions, but not visibility bugs."}
+  ]
+}

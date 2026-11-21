@@ -568,3 +568,7 @@ svg .d-arrowhead { fill: var(--muted); }
 .scenario-brief dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 10px 0 0; font-size: .92rem; }
 .scenario-brief dt { color: var(--muted); }
 .scenario-brief dd { margin: 0; }
+
+.tree-wrap { background: var(--surface-2); border: 1px solid var(--rule); border-radius: var(--radius-lg); padding: 8px; overflow-x: auto; }
+.tree-svg { width: 100%; min-width: 560px; height: auto; display: block; }
+.tree-label { font-size: .78rem; color: var(--ink-2); margin-top: 8px; min-height: 1.4em; }

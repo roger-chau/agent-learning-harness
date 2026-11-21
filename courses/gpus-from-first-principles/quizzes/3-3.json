@@ -1,0 +1,22 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "Two threads run <code>bins[v] = bins[v] + 1</code> (not atomic) at the same time on the same v. What can happen?",
+     "options": ["bins[v] increases by 2", "An increment is lost: both read the same old value", "The GPU traps", "Nothing: GPUs serialise this automatically"],
+     "answer": 1, "explanation": "Read-modify-write without atomicity races."},
+    {"id": "q2", "type": "numeric", "prompt": "All 32 lanes of a warp do atomicAdd on the same shared counter. How many serialised updates does that one instruction cost?",
+     "unit": "", "answer": 32, "tolerance": 0, "explanation": "Same-address atomics take turns."},
+    {"id": "q3", "type": "single", "prompt": "Why does privatising a histogram in shared memory help on uniform data but not on a constant image?",
+     "options": ["Shared memory is slower on constant data", "It removes global traffic, but lanes still collide on the same shared counter when values repeat", "Constant images are larger", "It doesn't help either"],
+     "answer": 1, "explanation": "Contention moves from L2 to shared memory; it doesn't disappear."},
+    {"id": "q4", "type": "multi", "prompt": "Which reduce atomic contention on skewed data?",
+     "options": ["Counting runs of equal values in a register before one atomic", "Warp aggregation: one lane adds the count of matching lanes", "Several copies of hot counters, summed at the end", "Using atomicExch instead of atomicAdd"],
+     "answer": [0, 1, 2], "explanation": "atomicExch doesn't count anything."},
+    {"id": "q5", "type": "single", "prompt": "<code>const slot = atomicAdd(count, 0, 1); out[slot] = v;</code> builds a compacted list. What's the catch?",
+     "options": ["It's incorrect", "The output order depends on timing, not on input order", "It can't handle more than 32 threads", "It reads uninitialised memory"],
+     "answer": 1, "explanation": "Correct and fast, but unordered. A scan gives a stable order (Chapter 3.5)."},
+    {"id": "q6", "type": "single", "prompt": "How is an operation like float atomicMax built when the hardware lacks it?",
+     "options": ["With __syncthreads()", "A compare-and-swap loop: read, compute, CAS, retry if it changed", "It can't be", "With shuffles"],
+     "answer": 1, "explanation": "atomicCAS is the universal building block."}
+  ]
+}

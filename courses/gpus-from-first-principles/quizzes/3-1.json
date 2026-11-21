@@ -1,0 +1,22 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric", "prompt": "How many rounds does a tree reduction of 1,024 values take?", "unit": "rounds", "answer": 10, "tolerance": 0,
+     "explanation": "log₂ 1024 = 10, with 1,023 additions in total, the same as a loop."},
+    {"id": "q2", "type": "single", "prompt": "Why is sequential addressing (stride n/2, n/4, …) faster than interleaved addressing (stride 1, 2, 4, …) in shared memory?",
+     "options": ["It does fewer additions", "Active threads are contiguous, so warps don't diverge and lanes hit consecutive banks", "It needs no barriers", "It uses less shared memory"],
+     "answer": 1, "explanation": "Same math; better mapping onto warps and banks."},
+    {"id": "q3", "type": "single", "prompt": "What does <code>__shfl_down_sync(0xffffffff, v, 4)</code> return in lane 3?",
+     "options": ["Lane 3's own v", "Lane 7's v", "Lane −1's v", "The sum of lanes 3–7"],
+     "answer": 1, "explanation": "The value from the lane 4 places higher."},
+    {"id": "q4", "type": "single", "prompt": "Why do fast reductions give each thread many elements (a grid-stride loop) rather than one?",
+     "options": ["Fewer threads use fewer registers", "It keeps the launch at machine size, does most of the work in coalesced registers-only loops, and shrinks the tree overhead", "Shuffles only work on large arrays", "It avoids floating-point error"],
+     "answer": 1, "explanation": "The tree becomes a tiny fraction of the work, and the main loop runs at bandwidth."},
+    {"id": "q5", "type": "single", "prompt": "Summing the same floats with a tree instead of a loop gives a result that differs in the last bit. Why?",
+     "options": ["A bug", "Floating-point addition isn't exactly associative, so a different order rounds differently", "Shuffles lose precision", "Shared memory stores at lower precision"],
+     "answer": 1, "explanation": "Different summation orders round differently. That's expected."},
+    {"id": "q6", "type": "multi", "prompt": "Which are valid ways to combine per-block partial sums into one result?",
+     "options": ["Write partials, then run a second small kernel", "atomicAdd each block's partial into the result", "Have every block read every other block's shared memory", "Use __syncthreads() across the whole grid"],
+     "answer": [0, 1], "explanation": "Blocks can't see each other's shared memory, and __syncthreads() only synchronises one block."}
+  ]
+}

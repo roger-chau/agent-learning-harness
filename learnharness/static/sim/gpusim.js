@@ -46,6 +46,7 @@
   });
 
   const MAX_BRANCH_EVALS = 20_000_000;
+  const TARGET = Symbol("gw.target");
 
   // ---------------------------------------------------------------------------
   // Source instrumentation: wrap `if`, `while`, `do..while` and `for` conditions so
@@ -262,22 +263,47 @@
     return s.length - 1;
   }
 
+  const WARP_OPS = ["__shfl_sync", "__shfl_down_sync", "__shfl_up_sync", "__shfl_xor_sync", "__ballot_sync", "__any_sync", "__all_sync", "__syncwarp"];
+  const SYNC_RE = new RegExp(`\\b(__syncthreads|${WARP_OPS.join("|")})\\s*\\(`, "g");
+
+  // Rewrite each synchronising call `name(args)` into `(yield ["name", args])`.
+  function rewriteSyncCalls(body) {
+    let out = "", i = 0;
+    SYNC_RE.lastIndex = 0;
+    let m;
+    while ((m = SYNC_RE.exec(body))) {
+      if (m.index > 0 && /[\w$.]/.test(body[m.index - 1])) continue;
+      const open = m.index + m[0].length - 1;
+      let depth = 0, j = open;
+      for (; j < body.length; j++) {
+        const c = body[j];
+        if (c === '"' || c === "'" || c === "`") { j++; while (j < body.length && body[j] !== c) { if (body[j] === "\\") j++; j++; } continue; }
+        if (c === "(") depth++;
+        else if (c === ")" && --depth === 0) break;
+      }
+      const args = body.slice(open + 1, j).trim();
+      const inner = rewriteSyncCalls(args);
+      out += body.slice(i, m.index) + (m[1] === "__syncthreads" ? "(yield 0)" : `(yield [${JSON.stringify(m[1])}${inner ? ", " + inner : ""}])`);
+      i = j + 1;
+      SYNC_RE.lastIndex = j + 1;
+    }
+    return out + body.slice(i);
+  }
+
   function barriersToYields(src) {
     const re = /\bfunction\s+([A-Za-z_$][\w$]*)\s*\(/g;
-    const BAR = /\b__syncthreads\s*\(\s*\)/g;
     let out = "", last = 0, m;
     while ((m = re.exec(src))) {
       const open = src.indexOf("{", re.lastIndex);
       if (open < 0) break;
       const close = matchBraceSimple(src, open);
       const body = src.slice(open, close + 1);
-      if (BAR.test(body)) {
-        BAR.lastIndex = 0;
-        out += src.slice(last, m.index) + `function* ${m[1]}(` + src.slice(re.lastIndex, open) + body.replace(BAR, "(yield 0)");
+      SYNC_RE.lastIndex = 0;
+      if (SYNC_RE.test(body)) {
+        out += src.slice(last, m.index) + `function* ${m[1]}(` + src.slice(re.lastIndex, open) + rewriteSyncCalls(body);
         last = close + 1;
         re.lastIndex = close + 1;
       }
-      BAR.lastIndex = 0;
     }
     return out + src.slice(last);
   }
@@ -353,7 +379,8 @@
     compile(src, globals = {}) {
       const { code, sites } = instrument(barriersToYields(src));
       const names = topLevelFunctionNames(src);
-      const rt = { br: (id, v) => v, seg: () => {}, shared: () => { throw new Error("shared() can only be used inside a kernel launch"); } };
+      const rt = { br: (id, v) => v, seg: () => {}, shared: () => { throw new Error("shared() can only be used inside a kernel launch"); },
+        atomic: () => { throw new Error("atomics can only be used inside a kernel launch"); } };
       const gNames = Object.keys(globals).filter((k) => /^[A-Za-z_$][\w$]*$/.test(k));
       const factory = new Function(
         "__rt", ...gNames,
@@ -363,6 +390,17 @@ const __br = (id, v) => __rt.br(id, v);
 const __seg = (id) => __rt.seg(id);
 const shared = (name, n, type) => __rt.shared(name, n, type);
 const __syncthreads = () => { throw new Error("__syncthreads() must be called directly in the kernel function's own body, not inside a helper or callback"); };
+${WARP_OPS.map((n) => `const ${n} = () => { throw new Error("${n}() must be called directly in the kernel function's own body, not inside a helper or callback"); };`).join("\n")}
+const __threadfence = () => {};
+const __threadfence_block = () => {};
+const atomicAdd = (a, i, v) => __rt.atomic("add", a, i, v);
+const atomicSub = (a, i, v) => __rt.atomic("sub", a, i, v);
+const atomicMax = (a, i, v) => __rt.atomic("max", a, i, v);
+const atomicMin = (a, i, v) => __rt.atomic("min", a, i, v);
+const atomicExch = (a, i, v) => __rt.atomic("exch", a, i, v);
+const atomicOr = (a, i, v) => __rt.atomic("or", a, i, v);
+const atomicAnd = (a, i, v) => __rt.atomic("and", a, i, v);
+const atomicCAS = (a, i, cmp, v) => __rt.atomic("cas", a, i, v, cmp);
 const __set = (e) => { threadIdx = e.threadIdx; blockIdx = e.blockIdx; blockDim = e.blockDim; gridDim = e.gridDim; warpSize = e.warpSize; };
 ${code}
 ;return { __set, fns: { ${names.map((n) => `${n}: typeof ${n} === "undefined" ? undefined : ${n}`).join(", ")} } };`
@@ -408,6 +446,7 @@ ${code}
         memInstructions: 0, loads: 0, stores: 0, transactions: 0,
         bytesRequested: 0, bytesMoved: 0, dramBytes: 0, l2Hits: 0, l2Misses: 0,
         sharedLoads: 0, sharedStores: 0, sharedWavefronts: 0, bankConflicts: 0, barriers: 0,
+        atomics: 0, globalAtomics: 0, atomicSerialization: 0, warpOps: 0,
         branches: 0, divergentBranches: 0,
         divergentSites: {}, sites, registers, sharedPerBlock: 0,
       };
@@ -452,6 +491,7 @@ ${code}
           get(t, p) {
             if (isIndex(p)) { const i = +p; touch(a, i, false); return a.data[i]; }
             if (p === "length") return a.data.length;
+            if (p === TARGET) return { kind: "global", buf: a };
             return undefined;
           },
           set(t, p, v) {
@@ -487,7 +527,7 @@ ${code}
           lane.smem.push(base + i * bpe, store ? 1 : 0, lane.seg * 1e4 + lane.pos++);
         };
         const proxy = new Proxy({}, {
-          get(t, p) { if (isIndex(p)) { const i = +p; check(i, false); return data[i]; } if (p === "length") return n; return undefined; },
+          get(t, p) { if (isIndex(p)) { const i = +p; check(i, false); return data[i]; } if (p === "length") return n; if (p === TARGET) return { kind: "shared", data, base, bpe, n, name }; return undefined; },
           set(t, p, v) { if (isIndex(p)) { const i = +p; check(i, true); data[i] = v; return true; } throw new TypeError("can't set properties on shared memory"); },
         });
         s = { data, proxy };
@@ -495,9 +535,77 @@ ${code}
         return proxy;
       };
 
+      const prevAtomic = rt.atomic;
+      rt.atomic = (op, arr, i, v, cmp) => {
+        const tg = arr && arr[TARGET];
+        if (!tg) throw new TypeError("atomic operations need a device buffer or a shared() array as their first argument");
+        if (!Number.isInteger(i)) throw new TypeError(`atomic index ${i} is not an integer`);
+        let data;
+        if (tg.kind === "global") {
+          data = tg.buf.data;
+          if (i < 0 || i >= data.length) throw new RangeError(`out-of-bounds atomic: index ${i} into a buffer of length ${data.length}`);
+          lane.mem.push(tg.buf.id, i * tg.buf.bytesPerElement, tg.buf.bytesPerElement, 1, lane.seg * 1e4 + lane.pos);
+          lane.atom.push(0, tg.buf.id * 1e9 + i, lane.seg * 1e4 + lane.pos++);
+        } else {
+          data = tg.data;
+          if (i < 0 || i >= tg.n) throw new RangeError(`out-of-bounds shared atomic: index ${i} into shared("${tg.name}")`);
+          lane.smem.push(tg.base + i * tg.bpe, 1, lane.seg * 1e4 + lane.pos);
+          lane.atom.push(1, tg.base + i * tg.bpe, lane.seg * 1e4 + lane.pos++);
+        }
+        const old = data[i];
+        switch (op) {
+          case "add": data[i] = old + v; break;
+          case "sub": data[i] = old - v; break;
+          case "max": data[i] = Math.max(old, v); break;
+          case "min": data[i] = Math.min(old, v); break;
+          case "exch": data[i] = v; break;
+          case "or": data[i] = old | v; break;
+          case "and": data[i] = old & v; break;
+          case "cas": if (old === cmp) data[i] = v; break;
+        }
+        return old;
+      };
+
+      // Warp-level operations: all active lanes of a warp meet, then each gets its result.
+      const resolveWarpOp = (lanes) => {
+        const op = lanes[0].wait[0];
+        for (const t of lanes) if (t.wait[0] !== op) throw new Error(`warp lanes reached different warp operations (${op} vs ${t.wait[0]}): is one inside a divergent branch?`);
+        stats.warpOps++;
+        const byLane = new Map(lanes.map((t) => [t.laneId, t]));
+        const val = (l, fallback) => (byLane.has(l) ? byLane.get(l).wait[2] : fallback);
+        const results = lanes.map((t) => {
+          const [, , v, x] = t.wait;
+          let r;
+          switch (op) {
+            case "__shfl_sync": r = val(((x % W) + W) % W, v); break;
+            case "__shfl_down_sync": r = t.laneId + x < W ? val(t.laneId + x, v) : v; break;
+            case "__shfl_up_sync": r = t.laneId - x >= 0 ? val(t.laneId - x, v) : v; break;
+            case "__shfl_xor_sync": r = val(t.laneId ^ x, v); break;
+            case "__ballot_sync": r = lanes.reduce((m, u) => (u.wait[2] ? m | (1 << u.laneId) : m), 0) >>> 0; break;
+            case "__any_sync": r = lanes.some((u) => u.wait[2]); break;
+            case "__all_sync": r = lanes.every((u) => u.wait[2]); break;
+            default: r = undefined;
+          }
+          return r;
+        });
+        lanes.forEach((t, k) => { t.resume = results[k]; t.wait = null; });
+      };
+
       const nWarps = Math.ceil(threadsPerBlock / W);
+      // Block execution order: in order by default; "shuffle" runs them in a random order, as real
+      // hardware may, to expose code that wrongly assumes blocks run in index order.
+      const order = [];
+      for (let bz = 0; bz < grid.z; bz++) for (let by = 0; by < grid.y; by++) for (let bx = 0; bx < grid.x; bx++) order.push([bx, by, bz]);
+      if (config && config.blockOrder === "shuffle") {
+        let seed = (config.seed ?? 12345) >>> 0;
+        for (let i = order.length - 1; i > 0; i--) {
+          seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
+          const j = seed % (i + 1);
+          [order[i], order[j]] = [order[j], order[i]];
+        }
+      }
       try {
-        for (let bz = 0; bz < grid.z; bz++) for (let by = 0; by < grid.y; by++) for (let bx = 0; bx < grid.x; bx++) {
+        for (const [bx, by, bz] of order) {
           const blockIdx = Object.freeze({ x: bx, y: by, z: bz });
           blockShared = { arrays: new Map(), bytes: 0 };
           const threads = [];
@@ -507,7 +615,7 @@ ${code}
               y: Math.floor(tid / block.x) % block.y,
               z: Math.floor(tid / (block.x * block.y)),
             });
-            threads.push({ threadIdx, lane: { mem: [], smem: [], branches: [], branchCount: {}, segCount: {}, seg: 0, pos: 0 }, it: null, done: false });
+            threads.push({ threadIdx, laneId: tid % W, warp: Math.floor(tid / W), lane: { mem: [], smem: [], atom: [], branches: [], branchCount: {}, segCount: {}, seg: 0, pos: 0 }, it: null, done: false, wait: null, resume: undefined });
           }
           const ctx = (t) => { lane = t.lane; set({ threadIdx: t.threadIdx, blockIdx, blockDim: block, gridDim: grid, warpSize: W }); };
           const where = (t) => `block (${bx},${by},${bz}) thread (${t.threadIdx.x},${t.threadIdx.y},${t.threadIdx.z})`;
@@ -517,22 +625,38 @@ ${code}
             for (const t of threads) { ctx(t); run(t, () => kernel(...kargs)); }
           } else {
             for (const t of threads) { ctx(t); t.it = run(t, () => kernel(...kargs)); }
-            let phase = 0;
+            const warps = [];
+            for (const t of threads) (warps[t.warp] ||= []).push(t);
             for (;;) {
-              let yielded = 0, finished = 0;
+              let progress = false;
               for (const t of threads) {
-                if (t.done) continue;
+                if (t.done || t.wait !== null) continue;
                 ctx(t);
-                const r = run(t, () => t.it.next());
-                if (r.done) { t.done = true; finished++; } else yielded++;
+                const r = run(t, () => t.it.next(t.resume));
+                t.resume = undefined;
+                progress = true;
+                if (r.done) t.done = true; else t.wait = r.value;
               }
-              if (yielded === 0) break;
-              if (finished > 0 || threads.some((t) => t.done)) {
-                const t = threads.find((x) => x.done);
-                throw new Error(`__syncthreads() deadlock: some threads of block (${bx},${by},${bz}) reached barrier ${phase + 1} but thread (${t.threadIdx.x},${t.threadIdx.y},${t.threadIdx.z}) had already finished. Is a __syncthreads() inside a branch or loop that not all threads take?`);
+              // Warp operations resolve when every lane still running in the warp has reached one.
+              for (const lanes of warps) {
+                const live = lanes.filter((t) => !t.done);
+                if (live.length && live.every((t) => Array.isArray(t.wait))) { resolveWarpOp(live); progress = true; }
               }
-              phase++;
-              stats.barriers += nWarps; // one barrier instruction per warp
+              const live = threads.filter((t) => !t.done);
+              if (!live.length) break;
+              if (live.every((t) => t.wait === 0)) {
+                if (live.length < threads.length) {
+                  const t = threads.find((x) => x.done);
+                  throw new Error(`__syncthreads() deadlock: some threads of block (${bx},${by},${bz}) are waiting at a barrier but thread (${t.threadIdx.x},${t.threadIdx.y},${t.threadIdx.z}) has already finished. Is a __syncthreads() inside a branch or loop that not all threads take?`);
+                }
+                for (const t of live) t.wait = null;
+                stats.barriers += nWarps;
+                progress = true;
+              }
+              if (!progress) {
+                const t = live.find((x) => x.wait !== null);
+                throw new Error(`deadlock in block (${bx},${by},${bz}): threads are waiting at different synchronisation points (e.g. thread (${t.threadIdx.x},${t.threadIdx.y}) at ${t.wait === 0 ? "__syncthreads()" : t.wait[0]}). Are some lanes of a warp inside a branch the others skipped?`);
+              }
             }
           }
           stats.sharedPerBlock = Math.max(stats.sharedPerBlock, blockShared.bytes);
@@ -560,6 +684,7 @@ ${code}
         rt.br = prevBr;
         rt.seg = prevSeg;
         rt.shared = prevShared;
+        rt.atomic = prevAtomic;
       }
 
       // Occupancy and the time model.
@@ -579,7 +704,7 @@ ${code}
       const dramRate = Math.max(1e-9, Math.min(dramPeak, inFlight / spec.dramLatencyCycles));
       const dramCycles = stats.dramBytes / dramRate;
       const l2Cycles = stats.bytesMoved / (spec.l2BandwidthGBs / spec.clockGHz);
-      const warpInstr = stats.memInstructions + stats.branches + stats.sharedWavefronts + stats.barriers;
+      const warpInstr = stats.memInstructions + stats.branches + stats.sharedWavefronts + stats.barriers + stats.warpOps + (stats.atomicSerialization - stats.atomics);
       const issueCycles = warpInstr / (spec.sms * spec.issuePerSmPerCycle);
       const cycles = Math.max(dramCycles, l2Cycles, issueCycles) + (stats.memInstructions ? spec.dramLatencyCycles : 0);
       stats.limitedBy = cycles === 0 ? "nothing" : dramCycles >= l2Cycles && dramCycles >= issueCycles
@@ -691,6 +816,24 @@ ${code}
       stats.sharedWavefronts += degree;
       stats.bankConflicts += degree - 1;
     }
+    // Atomics: lanes of one warp instruction that hit the same address are serialised.
+    const aGroups = new Map();
+    for (const L of lanes) {
+      const m = L.atom;
+      for (let o = 0; o < m.length; o += 3) {
+        const k = m[o + 2] * 2 + m[o];
+        let g = aGroups.get(k);
+        if (!g) { g = new Map(); aGroups.set(k, g); }
+        g.set(m[o + 1], (g.get(m[o + 1]) || 0) + 1);
+      }
+    }
+    for (const [k, g] of aGroups) {
+      stats.atomics++;
+      if (((k % 2) + 2) % 2 === 0) stats.globalAtomics++;
+      let worst = 1;
+      for (const c of g.values()) worst = Math.max(worst, c);
+      stats.atomicSerialization += worst;
+    }
     // Branches: the n-th evaluation of branch site `id` in each lane executes together.
     const seen = new Map(); // "id#n" -> bitmask of outcomes (1 = some false, 2 = some true)
     for (const L of lanes) {
@@ -710,5 +853,5 @@ ${code}
     }
   }
 
-  return { Device, Buffer, DEFAULT_SPEC, instrument, topLevelFunctionNames, testImage, toRGBA, occupancy, barriersToYields };
+  return { Device, Buffer, DEFAULT_SPEC, instrument, topLevelFunctionNames, testImage, toRGBA, occupancy, barriersToYields, WARP_OPS };
 });

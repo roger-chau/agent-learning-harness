@@ -1,0 +1,54 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>B2's look-back had one block write a value and then set a flag, while another block read the flag and then the value. That only works if the reader can never see the new flag together with the <em>old</em> value. On a machine with many SMs, caches, write buffers and a memory system that reorders requests for speed, nothing makes that order automatic. When exactly does one thread's write become visible to another thread, and what can you rely on?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Without synchronisation, other threads may see your writes late, and in a different order from the one you made them in.</strong> A <strong>memory model</strong> is the contract that says which orderings are guaranteed. GPUs, like most modern processors, have <em>relaxed</em> models: ordinary loads and stores can be reordered as seen by other threads, and you add ordering explicitly where you need it.</p>
+<p>The tools, from narrowest to widest scope:</p>
+<table>
+<tr><th>Tool</th><th>What it guarantees</th></tr>
+<tr><td><code>__syncwarp()</code></td><td>lanes of a warp synchronise, and their memory operations before it are visible to each other after it</td></tr>
+<tr><td><code>__syncthreads()</code></td><td>the same for all threads of a block: a barrier plus visibility of shared and global writes within the block</td></tr>
+<tr><td><code>__threadfence()</code></td><td>no waiting, but this thread's earlier writes become visible device-wide before its later ones</td></tr>
+<tr><td>atomics</td><td>indivisible read-modify-write; with the right ordering (acquire/release) they also order surrounding accesses</td></tr>
+</table>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: message passing</h2>
+<p>The pattern B2 used, publishing data and then a flag, is called <strong>message passing</strong>. It needs ordering on <em>both</em> sides:</p>
+<pre><code>// producer (block A)                 // consumer (block B)
+value[tile] = total;                  while (status[tile] === 0) {}   // wait for the flag
+__threadfence();   // value before flag      __threadfence(); // flag before value (acquire side)
+status[tile] = 1;                     const v = value[tile];</code></pre>
+<p>Without the producer's fence, the flag's write could reach memory first, and the consumer would read a stale <code>value</code>. Without the consumer's ordering, it could read <code>value</code> early (from cache) and the flag later. In CUDA C++ you'd also make the flag accesses <code>volatile</code> or atomic, so the spin loop really re-reads memory instead of a value the compiler cached in a register.</p>
+<p>A second classic: the <strong>last block done</strong> pattern, a single-pass reduction without look-back:</p>
+<ol>
+<li>each block writes its partial sum to <code>partials[blockIdx.x]</code>;</li>
+<li><code>__threadfence()</code>;</li>
+<li>thread 0 does <code>atomicAdd(counter, 0, 1)</code>; the block that gets back <code>gridDim.x − 1</code> knows every other block has already published;</li>
+<li>that last block sums <code>partials</code> and writes the result.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: what you can't do</h2>
+<p><strong>There's no grid-wide barrier in an ordinary kernel.</strong> Suppose every block spins until all blocks reach some point. If the grid has more blocks than can be resident at once, the running blocks wait for blocks that can never start, because the waiting blocks occupy the SMs. That's a deadlock. Cross-block cooperation must therefore be:</p>
+<ul>
+<li><strong>one-directional and forward-progress-safe</strong>: wait only on blocks that have definitely started, which is why B2 uses dynamic tile ids; or</li>
+<li><strong>split across kernel launches</strong>, since a launch boundary is a full grid barrier; or</li>
+<li><strong>a cooperative launch</strong>, where the runtime guarantees all blocks are resident at once, so <code>grid.sync()</code> from cooperative groups is legal.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>The simulator can't show you visibility races.</strong> It runs blocks one at a time, so writes are always visible in program order. It <em>does</em> randomise block order (<code>blockOrder: "shuffle"</code>), which catches the most common bug, assuming blocks run in index order. Visibility bugs only show up on real hardware, intermittently, which is exactly why you need to reason about them rather than test for them.</li>
+<li><strong>Scopes and orders.</strong> CUDA's C++ memory model (via <code>cuda::atomic</code>) lets you say exactly what you mean: scope (thread block, device, system) and order (relaxed, acquire, release, sequentially consistent). That's the modern replacement for <code>volatile</code> plus fences.</li>
+<li><strong>Warps aren't implicitly synchronous</strong> on Volta and later (Chapter 1.4). Code that exchanges data through shared memory within a warp needs <code>__syncwarp()</code>.</li>
+</ul>
+<div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 5</strong>, on memory consistency models and synchronisation. The GPU story is the same ideas at a larger scale.</div>
+</section>

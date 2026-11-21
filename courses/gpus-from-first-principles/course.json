@@ -889,6 +889,24 @@
      "status": "planned"
     },
     {
+     "type": "scenario",
+     "id": "scenario-3",
+     "title": "Scenario: lidar voxel occupancy",
+     "summary": "Turn a robot's lidar sweep into a compact, sorted list of occupied voxels within a time budget.",
+     "exercises": [
+      "scenario-3-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "Which primitives did you compose, and why that combination rather than another (atomics + compaction, sort + run-length, …)?",
+       "Where does the time go in your design (which launch, which resource)?",
+       "How does your design behave if the scene changes: a dense wall close to the sensor versus an empty field?",
+       "What would you change on a real embedded GPU with a camera and other models sharing it?"
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p3-checkpoint",
      "title": "Part 3 checkpoint",

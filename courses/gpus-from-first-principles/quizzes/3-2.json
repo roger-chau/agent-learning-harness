@@ -1,0 +1,20 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "What is the exclusive scan of [2, 0, 5, 1]?", "options": ["[2, 2, 7, 8]", "[0, 2, 2, 7]", "[0, 2, 7, 8]", "[8, 6, 6, 1]"],
+     "answer": 1, "explanation": "Each output is the sum of everything strictly before it."},
+    {"id": "q2", "type": "numeric", "prompt": "How many additions does a Hillis–Steele inclusive scan of 16 elements perform?", "unit": "additions", "answer": 49, "tolerance": 0,
+     "explanation": "Rounds with offsets 1, 2, 4, 8 do 15 + 14 + 12 + 8 = 49 additions, versus 15 sequentially."},
+    {"id": "q3", "type": "single", "prompt": "Why is Blelloch's scan called work-efficient?",
+     "options": ["It uses fewer threads", "It performs O(n) additions in total, like the sequential scan", "It needs no barriers", "It runs in one round"],
+     "answer": 1, "explanation": "Roughly 2n additions, versus n log n for Hillis–Steele."},
+    {"id": "q4", "type": "single", "prompt": "A thread keeps k_i items. How does it know where to start writing them in a compacted output?",
+     "options": ["The inclusive scan of k at i", "The exclusive scan of k at i", "The total of k", "atomicAdd with no scan"],
+     "answer": 1, "explanation": "The exclusive prefix counts everything kept before it. (atomicAdd also works, but it doesn't preserve order.)"},
+    {"id": "q5", "type": "numeric", "prompt": "Reduce-then-scan moves about how many times n elements through DRAM? (Answer with the multiple.)", "unit": "× n", "answer": 3, "tolerance": 0,
+     "explanation": "Read n to reduce, read n again to scan, write n: 3n."},
+    {"id": "q6", "type": "single", "prompt": "Why can't a block just wait at a barrier for the previous block's total?",
+     "options": ["__syncthreads() only synchronises threads within one block", "Barriers are too slow", "Blocks can't write global memory", "Totals are in registers"],
+     "answer": 0, "explanation": "There's no grid-wide barrier inside an ordinary kernel. Cross-block communication needs global memory, atomics and care (Chapter 3.4)."}
+  ]
+}

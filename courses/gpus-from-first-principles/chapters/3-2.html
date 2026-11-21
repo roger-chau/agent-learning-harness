@@ -1,0 +1,50 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Each thread of a filter keeps some elements and drops others. Where should element 5,000 go in the output? It depends on how many elements before it were kept, which depends on every earlier thread's decision. Allocating output space, splitting work into buckets, building sparse structures, radix sorting: they all need, for every position, <strong>the total of everything before it</strong>. That looks inherently sequential. It isn't.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p>A <strong>scan</strong> (prefix sum) turns $x_0, x_1, x_2, \ldots$ into running totals:</p>
+<table>
+<tr><th></th><th>x</th><th>3</th><th>1</th><th>7</th><th>0</th><th>4</th></tr>
+<tr><td>inclusive</td><td>$y_i = x_0 + \cdots + x_i$</td><td>3</td><td>4</td><td>11</td><td>11</td><td>15</td></tr>
+<tr><td>exclusive</td><td>$y_i = x_0 + \cdots + x_{i-1}$</td><td>0</td><td>3</td><td>4</td><td>11</td><td>11</td></tr>
+</table>
+<p>The exclusive scan of "how many items does each thread keep?" is exactly "where does each thread start writing?". Like reduction, scan only needs associativity, so it can be computed as a tree. The question is <em>which</em> tree.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: two classic trees</h2>
+<div data-gw="tree" data-preset="scan-hillis"></div>
+<p><strong>Hillis–Steele</strong>: in round $k$, every element adds the one $2^k$ places to its left. That's $\log_2 n$ rounds, every thread busy every round, and $n \log_2 n$ additions in total. Simple and short, but it does more work than needed, so it's best for small $n$ such as the 32 lanes of a warp.</p>
+<div data-gw="tree" data-preset="scan-blelloch"></div>
+<p><strong>Blelloch</strong>: an up-sweep (a reduction tree that keeps its partial sums), then a down-sweep that pushes prefixes back down. That's $2 \log_2 n$ rounds but only about $2n$ additions: <em>work-efficient</em>. It's better for large block-level scans when the extra rounds are affordable.</p>
+<p><strong>A warp scan with shuffles</strong> is Hillis–Steele in registers:</p>
+<pre><code>// inclusive scan across the 32 lanes of a warp
+const lane = threadIdx.x % 32;
+for (let d = 1; d &lt; 32; d *= 2) {
+  const y = __shfl_up_sync(0xffffffff, v, d);
+  if (lane &gt;= d) v += y;
+}</code></pre>
+<p>A <strong>block scan</strong> composes it: scan within each warp, write each warp's total to shared memory, scan those totals (with one warp), then add each warp's exclusive offset back. That's two barriers in total.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: scanning across blocks</h2>
+<p>Blocks can't see each other's shared memory or wait for each other with a barrier. So how do you scan a million elements spread over hundreds of blocks? Classic answers take several kernel launches:</p>
+<ol>
+<li><strong>Reduce, then scan.</strong> Kernel 1: each block reduces its tile to one total. Kernel 2: scan the tile totals (small). Kernel 3: each block scans its tile again, starting from its tile's offset. DRAM traffic: read $n$, read $n$ again, write $n$, so $3n$.</li>
+<li><strong>Scan, then propagate.</strong> Each block scans its tile and writes it plus its total; scan the totals; add offsets in a final pass. Traffic: about $4n$.</li>
+</ol>
+<p>Both are correct, but a scan is memory-bound, so $3n$ means it runs at most at a third of copy speed. The ideal is $2n$: read once, write once. Getting there needs blocks to pass prefixes to their successors <em>during</em> a single pass. This Part's paper chapter, on decoupled look-back, shows how, and milestone B2 builds it.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Libraries:</strong> CUB's <code>DeviceScan</code> uses the single-pass design. Thrust and PyTorch's <code>cumsum</code> build on similar machinery.</li>
+<li><strong>Scans of other operators</strong> (max, logical OR, even matrix products) work the same way, provided the operator is associative. "Segmented" scans restart at segment boundaries and are the core of many sparse algorithms.</li>
+<li><strong>Floats again:</strong> different trees round differently, so a GPU <code>cumsum</code> can differ from a sequential one in the last bits.</li>
+</ul>
+</section>

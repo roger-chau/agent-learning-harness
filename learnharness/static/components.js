@@ -763,6 +763,96 @@
     draw();
   };
 
+  // ---------------------------------------------------------------------------
+  // Part 3: reduction and scan trees, stepped level by level.
+  // ---------------------------------------------------------------------------
+  const TREES = {
+    "reduce-interleaved": { title: "Tree reduction, interleaved addressing (stride doubles)", kind: "reduce", steps(n) {
+      const st = []; for (let s = 1; s < n; s *= 2) { const ops = []; for (let t = 0; t < n; t++) if (t % (2 * s) === 0) ops.push([t + s, t]); st.push({ label: `stride ${s}: thread t with t % ${2 * s} == 0 adds a[t+${s}]`, ops, threads: ops.map(([, d]) => d) }); } return st; } },
+    "reduce-sequential": { title: "Tree reduction, sequential addressing (stride halves)", kind: "reduce", steps(n) {
+      const st = []; for (let s = n / 2; s >= 1; s /= 2) { const ops = []; for (let t = 0; t < s; t++) ops.push([t + s, t]); st.push({ label: `stride ${s}: threads 0..${s - 1} add a[t+${s}]`, ops, threads: ops.map(([, d]) => d) }); } return st; } },
+    "scan-hillis": { title: "Inclusive scan, Hillis–Steele (n log n adds)", kind: "scan", steps(n) {
+      const st = []; for (let s = 1; s < n; s *= 2) { const ops = []; for (let t = s; t < n; t++) ops.push([t - s, t]); st.push({ label: `offset ${s}: every t ≥ ${s} adds a[t−${s}]`, ops, threads: ops.map(([, d]) => d) }); } return st; } },
+    "scan-blelloch": { title: "Exclusive scan, Blelloch (up-sweep, then down-sweep)", kind: "blelloch", steps(n) {
+      const st = [];
+      for (let s = 1; s < n; s *= 2) { const ops = []; for (let t = 2 * s - 1; t < n; t += 2 * s) ops.push([t - s, t, "add"]); st.push({ label: `up-sweep, stride ${s}`, ops, threads: ops.map(([, d]) => d) }); }
+      st.push({ label: "clear the last element (it holds the total)", ops: [[n - 1, n - 1, "zero"]], threads: [n - 1] });
+      for (let s = n / 2; s >= 1; s /= 2) { const ops = []; for (let t = 2 * s - 1; t < n; t += 2 * s) ops.push([t - s, t, "swapadd"]); st.push({ label: `down-sweep, stride ${s}: swap left into right, add`, ops, threads: ops.map(([, d]) => d) }); }
+      return st; } },
+  };
+  C["tree"] = (el) => {
+    const P = TREES[el.dataset.preset] || TREES["reduce-sequential"];
+    const n = 16, init = [3, 1, 7, 0, 4, 1, 6, 3, 5, 2, 2, 8, 1, 4, 0, 6];
+    const steps = P.steps(n);
+    const states = [init.slice()];
+    for (const stp of steps) {
+      const a = states[states.length - 1].slice();
+      const prev = a.slice();
+      for (const [src, dst, kind] of stp.ops) {
+        if (kind === "zero") a[dst] = 0;
+        else if (kind === "swapadd") { a[src] = prev[dst]; a[dst] = prev[dst] + prev[src]; }
+        else a[dst] = prev[dst] + prev[src];
+      }
+      states.push(a);
+    }
+    el.classList.add("sim");
+    el.innerHTML = `
+      <div class="sim-head"><span class="sim-kind">Animation</span><span class="sim-title">${P.title}</span></div>
+      <div class="tree-wrap"><svg class="tree-svg" viewBox="0 0 640 ${60 + steps.length * 0}" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="tree-label mono"></div>
+      <div class="sim-transport">
+        <button type="button" class="term-btn" data-t="play">▶ Play</button>
+        <button type="button" class="term-btn" data-t="step">Step</button>
+        <button type="button" class="term-btn" data-t="reset">Reset</button>
+        <span class="sim-clock mono"></span></div>
+      <div class="sim-readout">
+        <div class="stat"><div class="k">Steps</div><div class="v" data-r="steps"></div></div>
+        <div class="stat"><div class="k">Adds so far</div><div class="v" data-r="adds"></div></div>
+        <div class="stat"><div class="k">Active threads this step</div><div class="v" data-r="act"></div></div>
+        <div class="stat"><div class="k">Warps touched (8 lanes/warp here)</div><div class="v" data-r="warps"></div></div>
+      </div>`;
+    const svg = el.querySelector("svg");
+    let k = 0, timer = 0;
+    function render() {
+      const cw = 36, gap = 4, x0 = (640 - (n * cw + (n - 1) * gap)) / 2, rowH = 46;
+      const rows = Math.min(k, steps.length) + 1;
+      svg.setAttribute("viewBox", `0 0 640 ${rows * rowH + 10}`);
+      let html = `<defs><marker id="tarrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="d-arrowhead" d="M0,0 L10,5 L0,10 z"/></marker></defs>`;
+      for (let r = 0; r < rows; r++) {
+        const y = 8 + r * rowH;
+        const st = r > 0 ? steps[r - 1] : null;
+        const touched = new Set(st ? st.threads : []);
+        for (let i = 0; i < n; i++) {
+          const x = x0 + i * (cw + gap);
+          const hot = touched.has(i);
+          html += `<rect class="d-box ${hot ? "teal" : ""}" x="${x}" y="${y}" width="${cw}" height="24" rx="5"/><text class="d-text" x="${x + cw / 2}" y="${y + 16}" text-anchor="middle">${states[r][i]}</text>`;
+        }
+        if (st) for (const [src, dst] of st.ops) {
+          if (src === dst) continue;
+          const xs = x0 + src * (cw + gap) + cw / 2, xd = x0 + dst * (cw + gap) + cw / 2;
+          html += `<path class="d-arrow" marker-end="url(#tarrow)" d="M${xs},${y - rowH + 32} C${xs},${y - 8} ${xd},${y - 14} ${xd},${y - 2}"/>`;
+        }
+      }
+      svg.innerHTML = html;
+      const cur = k > 0 ? steps[k - 1] : null;
+      el.querySelector(".tree-label").textContent = cur ? cur.label : "Initial values. Each box is one element; each step is one round of threads.";
+      const adds = steps.slice(0, k).reduce((a, s2) => a + s2.ops.filter((o) => o[2] !== "zero").length, 0);
+      el.querySelector('[data-r="steps"]').textContent = `${k} / ${steps.length}`;
+      el.querySelector('[data-r="adds"]').textContent = adds;
+      el.querySelector('[data-r="act"]').textContent = cur ? cur.threads.length : "–";
+      el.querySelector('[data-r="warps"]').textContent = cur ? new Set(cur.threads.map((t) => Math.floor(t / 8))).size : "–";
+      el.querySelector(".sim-clock").textContent = `step ${k}/${steps.length}`;
+    }
+    const stop = () => { clearInterval(timer); timer = 0; el.querySelector('[data-t="play"]').textContent = "▶ Play"; };
+    el.querySelector(".sim-transport").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-t]"); if (!b) return;
+      if (b.dataset.t === "play") { if (timer) return stop(); if (k >= steps.length) k = 0; b.textContent = "❚❚ Pause"; timer = setInterval(() => { k++; render(); if (k >= steps.length) stop(); }, 900); }
+      if (b.dataset.t === "step") { stop(); k = Math.min(steps.length, k + 1); render(); }
+      if (b.dataset.t === "reset") { stop(); k = 0; render(); }
+    });
+    render();
+  };
+
   function mount(root) {
     root.querySelectorAll("[data-gw]").forEach((el) => {
       const fn = C[el.dataset.gw];

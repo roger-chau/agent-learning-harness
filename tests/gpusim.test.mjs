@@ -186,3 +186,61 @@ test("L2 hits on reuse; small launches are latency-limited", () => {
   assert.ok(sBig.percentOfPeakBandwidth > 80, `big ${sBig.percentOfPeakBandwidth}`);
   assert.match(sSmall.limitedBy, /latency/);
 });
+
+test("warp shuffles, ballot and votes", () => {
+  const g = new Device();
+  const { k } = g.compile(`function k(x, out, flags) {
+    const i = blockIdx.x * blockDim.x + threadIdx.x;
+    let v = x[i];
+    for (let d = 16; d > 0; d >>= 1) v += __shfl_down_sync(0xffffffff, v, d);
+    const b = __ballot_sync(0xffffffff, x[i] > 2);
+    const all = __all_sync(0xffffffff, x[i] >= 0);
+    if (threadIdx.x % 32 === 0) { out[i / 32] = v; flags[i / 32] = b; }
+    if (!all) out[0] = -1;
+  }`);
+  const x = g.from(Array.from({ length: 64 }, (_, i) => i % 5)), out = g.alloc(2), flags = g.alloc(2, "u32");
+  const s = g.launch(k, { grid: 2, block: 32 }, x, out, flags);
+  const want0 = Array.from({ length: 32 }, (_, i) => i % 5).reduce((a, b) => a + b, 0);
+  assert.equal(out.data[0], want0);
+  let m = 0; for (let l = 0; l < 32; l++) if (l % 5 > 2) m |= 1 << l;
+  assert.equal(flags.data[0], m >>> 0);
+  assert.equal(s.warpOps, 2 * (5 + 2));
+});
+
+test("atomics: correct totals and contention counted", () => {
+  const g = new Device();
+  const { h } = g.compile(`function h(x, bins, n) { const i = blockIdx.x * blockDim.x + threadIdx.x; if (i < n) atomicAdd(bins, x[i], 1); }`);
+  const n = 4096;
+  const x1 = g.from(Array.from({ length: n }, (_, i) => i % 256), "i32"), x2 = g.from(Array(n).fill(7), "i32");
+  const b1 = g.alloc(256, "u32"), b2 = g.alloc(256, "u32");
+  const s1 = g.launch(h, { grid: n / 256, block: 256 }, x1, b1, n);
+  const s2 = g.launch(h, { grid: n / 256, block: 256 }, x2, b2, n);
+  assert.equal(b1.data[3], 16); assert.equal(b2.data[7], n);
+  assert.equal(s1.atomicSerialization, s1.atomics); // distinct addresses per warp
+  assert.equal(s2.atomicSerialization, s2.atomics * 32); // all lanes collide
+  assert.ok(s2.cycles > s1.cycles);
+  const { sh } = g.compile(`function sh(x, bins, n) {
+    const local = shared("b", 256, "u32");
+    for (let k = threadIdx.x; k < 256; k += blockDim.x) local[k] = 0;
+    __syncthreads();
+    const i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) atomicAdd(local, x[i], 1);
+    __syncthreads();
+    for (let k = threadIdx.x; k < 256; k += blockDim.x) if (local[k]) atomicAdd(bins, k, local[k]);
+  }`);
+  const b3 = g.alloc(256, "u32");
+  g.launch(sh, { grid: n / 256, block: 256 }, x2, b3, n);
+  assert.equal(b3.data[7], n);
+});
+
+test("shuffled block order and warp-op deadlock detection", () => {
+  const g = new Device();
+  const { k } = g.compile(`function k(order, ctr) { if (threadIdx.x === 0) order[blockIdx.x] = atomicAdd(ctr, 0, 1); }`);
+  const order = g.alloc(16, "i32"), ctr = g.alloc(1, "i32");
+  g.launch(k, { grid: 16, block: 32, blockOrder: "shuffle", seed: 3 }, order, ctr);
+  const seq = order.toArray();
+  assert.deepEqual([...seq].sort((a, b) => a - b), [...Array(16).keys()]);
+  assert.notDeepEqual(seq, [...Array(16).keys()]);
+  const { bad } = g.compile(`function bad(out) { if (threadIdx.x < 16) { out[threadIdx.x] = __shfl_sync(0xffff, threadIdx.x, 0); } else { __syncthreads(); } }`);
+  assert.throws(() => g.launch(bad, { grid: 1, block: 32 }, g.alloc(32)), /deadlock|different/);
+});

@@ -1,0 +1,28 @@
+<div class="paper-ref">
+<div class="k">Project B · Parallel primitives · Milestone 2 of 5</div>
+A device-wide inclusive scan in a <strong>single pass</strong>: one launch, reading the input once and writing the output once. Read the decoupled look-back paper chapter right after this one, or before if you prefer the theory first.
+</div>
+
+<h2>Build: <code>scanInclusive</code></h2>
+<p>Write <code>scanInclusive(x, y, n)</code>: <code>y[i] = x[0] + … + x[i]</code> over all <code>n</code> floats, using <strong>exactly one kernel launch</strong>. Return that launch's stats. The design:</p>
+<ol>
+<li><strong>Dynamic tile ids.</strong> Each block takes a tile number from a global counter with <code>atomicAdd</code>, <em>not</em> from <code>blockIdx</code>. Blocks then process tiles in the order they actually start, so a block only ever waits for tiles that have already started.</li>
+<li><strong>Scan the tile</strong> in shared memory and registers (your 3.2 block scan).</li>
+<li><strong>Publish the tile's aggregate</strong>: write its total and a status flag "aggregate available" (A) for this tile into global arrays.</li>
+<li><strong>Look back</strong>: one thread walks backwards over predecessor tiles, adding their aggregates, until it finds a tile with status "inclusive prefix available" (P), adds that prefix, and stops. If it meets a tile with no status yet (X), it waits (spins) and checks again.</li>
+<li><strong>Publish the inclusive prefix</strong> (P) for this tile, then add the exclusive prefix to every element and write the output.</li>
+</ol>
+<p>Use <code>__threadfence()</code> between writing a value and setting the flag that announces it. On real GPUs that ordering is essential (Chapter 3.4).</p>
+
+<h2>The simulator will test your assumptions</h2>
+<p>The checks launch with <code>blockOrder: "shuffle"</code>, so blocks run in a random order, as they can on real hardware. If your tile id comes from <code>blockIdx</code>, a block can end up waiting for a tile that hasn't started. The simulator then hits its execution limit ("is there an infinite loop?"). That isn't a simulator bug; on a GPU it would be a hang. Your launch must pass <code>blockOrder</code> and <code>seed</code> through from the <code>opts</code> argument:</p>
+<pre><code>function scanInclusive(x, y, n, opts = {}) {
+  ...
+  return gpu.launch(kernel, { grid, block: 256, ...opts }, ...);
+}</code></pre>
+
+<h2>How it's checked</h2>
+<ul>
+<li>Correct on several sizes and several shuffled block orders.</li>
+<li>Exactly one launch, with DRAM traffic ≤ 1.25 × the bytes of input plus output. That's single-pass: no re-reading the input, and the status words are small overhead.</li>
+</ul>

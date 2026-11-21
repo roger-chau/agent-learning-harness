@@ -1,0 +1,47 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Add up a million numbers. On one CPU core it's a loop: each addition waits for the previous one, a chain a million operations long. On a GPU, a million threads each holding one number is easy, but the answer is one number, and something has to combine them. How do thousands of threads cooperate to produce a single result, without spending all their time waiting on each other?</p>
+<p>Reduction (sum, max, min, count, dot product, norm) is the simplest "many to one" pattern, and it shows up everywhere: softmax denominators, loss functions, statistics, the first step of every histogram and scan. Writing a fast one teaches almost every technique in this Part.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Addition is associative, so the chain can become a tree.</strong> Pair up the numbers and add each pair in parallel, then pair up the results, and so on. $n$ numbers need $\log_2 n$ rounds instead of $n - 1$ sequential steps, and the total number of additions is still $n - 1$. Nothing is wasted.</p>
+<div data-gw="tree" data-preset="reduce-sequential"></div>
+<p>Within a block, the tree lives in shared memory. Each round, thread $t$ adds element $t + s$ into element $t$, with a <code>__syncthreads()</code> between rounds so every thread sees the previous round's results.</p>
+<div class="callout key"><b>A warning about floats</b>Floating-point addition is <em>not</em> exactly associative: $(a + b) + c$ can differ from $a + (b + c)$ in the last bits. A tree sums in a different order from a loop, so the results differ slightly. That's expected, and the tests allow for it. Part 9 comes back to reproducibility.</div>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: which threads do the work</h2>
+<p>There are two natural ways to lay out the tree, and they perform very differently.</p>
+<div data-gw="tree" data-preset="reduce-interleaved"></div>
+<p><strong>Interleaved addressing</strong> (stride 1, 2, 4, …): thread $t$ works if $t \bmod 2s = 0$. The active threads are scattered, so <em>every warp diverges</em> in every round, and the shared-memory accesses at stride $2s$ cause bank conflicts.</p>
+<p><strong>Sequential addressing</strong> (stride $n/2$, $n/4$, …, the first animation): threads $0 \ldots s-1$ work. The active threads are contiguous, so whole warps are either fully active or fully idle. No divergence until $s < 32$, and lanes read consecutive words with no conflicts. Same math, a much better fit for the hardware.</p>
+<p><strong>The last 32.</strong> Once $s \le 32$, only one warp is working. There's no need for shared memory or block-wide barriers any more: the warp can pass values between lanes directly with <strong>shuffles</strong>.</p>
+<pre><code>// sum the 32 values held by the lanes of a warp
+for (let d = 16; d &gt; 0; d &gt;&gt;= 1) v += __shfl_down_sync(0xffffffff, v, d);
+// lane 0 now holds the warp's total</code></pre>
+<p><code>__shfl_down_sync(mask, v, d)</code> returns the value of <code>v</code> held by the lane <code>d</code> places higher. It costs one instruction, involves no memory, and needs no barrier, because lanes of a warp meet at the shuffle. (<code>mask</code> names the participating lanes; <code>0xffffffff</code> means all 32.)</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: a fast reduction</h2>
+<p>A memory-bound reduction should run at DRAM bandwidth: read each number once, do one add. Three things get it there:</p>
+<ol>
+<li><strong>Many elements per thread.</strong> Launch roughly enough threads to fill the GPU (Chapter 2.6), not one per element. Each thread first sums its share with a grid-stride loop (Chapter 1.2), which is fully coalesced. This also shrinks the tree part to a tiny fraction of the work.</li>
+<li><strong>Warp, then block.</strong> Each warp reduces with shuffles. Each warp's lane 0 writes its result to shared memory, one barrier, and then the first warp reduces those values with shuffles again.</li>
+<li><strong>Combine the blocks.</strong> Either write one partial per block and launch a tiny second kernel, or have each block <code>atomicAdd</code> its partial into the result (Chapter 3.3). With a few hundred blocks, both cost almost nothing.</li>
+</ol>
+<p>The data never leaves registers except for one shared-memory round per block and one global write per block. DRAM traffic is essentially $4n$ bytes, the minimum.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Libraries do this for you</strong> (CUB's <code>DeviceReduce</code>, Thrust, <code>torch.sum</code>). Write your own when you need to <em>fuse</em> the reduction into other work: computing a softmax's maximum and sum in the same pass as loading the data, for example (Part 7).</li>
+<li><strong>Determinism.</strong> With atomics, the order blocks finish changes the summation order, so float results can differ run to run in the last bits. When reproducibility matters, use the two-pass version with a fixed tree.</li>
+<li><strong>Newer hardware helps.</strong> Recent NVIDIA GPUs add warp-level reduce instructions for integers, and Hopper's thread-block clusters let blocks combine results through distributed shared memory. The tree is the same idea underneath.</li>
+</ul>
+<div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 4</strong> discusses reductions as a loop-carried dependence that parallelises only through associativity, in its section on detecting and enhancing loop-level parallelism.</div>
+</section>

@@ -25,6 +25,7 @@ const STAT_ROWS = [
   ["coalescing", "coalescing efficiency"], ["branches", "warp-level branches"],
   ["divergentBranches", "divergent branches"],
   ["l2HitRate", "L2 hit rate"], ["dramBytes", "DRAM bytes"],
+  ["atomics", "atomic instructions (warp)"], ["globalAtomics", "  of which global"], ["atomicSerialization", "atomic serialisation"], ["warpOps", "warp shuffles/votes"],
   ["sharedLoads", "shared loads (warp)"], ["sharedStores", "shared stores (warp)"], ["bankConflicts", "bank conflicts"], ["barriers", "barriers (warp)"],
   ["occupancy", "occupancy"], ["occupancyLimiter", "occupancy limited by"],
   ["cycles", "estimated cycles"], ["timeUs", "estimated time (µs)"],
@@ -37,6 +38,8 @@ function table(obj) {
       let v = obj[k];
       if (k === "coalescing" || k === "l2HitRate" || k === "occupancy") v = `${(v * 100).toFixed(1)}%`;
       if ((k.startsWith("shared") || k === "bankConflicts" || k === "barriers") && !obj.sharedLoads && !obj.sharedStores) return null;
+      if ((k.toLowerCase().includes("atomic")) && !obj.atomics) return null;
+      if (k === "warpOps" && !obj.warpOps) return null;
       return `  ${label.padEnd(28)} ${fmt(v)}`;
     }).filter(Boolean);
     out(lines.join("\n"), "table");

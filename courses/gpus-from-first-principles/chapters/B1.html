@@ -1,0 +1,17 @@
+<div class="paper-ref">
+<div class="k">Project B · Parallel primitives · Milestone 1 of 5</div>
+Project B builds a small library of parallel primitives: reduce, scan, histogram, then radix sort built only from them. B5 profiles the whole library. Keep each milestone's code; later ones reuse it.
+</div>
+
+<h2>Build: <code>reduceSum</code></h2>
+<p>Write <code>reduceSum(x, n)</code>, which returns <code>{ sum, stats: [ … every launch … ] }</code>, where <code>sum</code> is the total of the <code>n</code> floats in <code>x</code>. Use as many launches as you like, but no host-side summing of the input: the GPU must do the reduction. Reading a handful of per-block partials back on the host is fine.</p>
+
+<h2>What "fast" means here</h2>
+<p>A reduction is memory-bound with intensity ~1/4 FLOP per byte, so the target is bandwidth. The check computes your <strong>effective bandwidth</strong> as $4n$ bytes divided by the total simulated time of all your launches, and needs it to be <strong>≥ 75% of the GW-1's 512 GB/s</strong> on $n = 2^{20}$.</p>
+<p>The chapter has all the ingredients: a machine-sized launch with a grid-stride loop, warp shuffles, one shared-memory round per block, and a cheap way to combine block results. If you're stuck below the target, look at <code>limitedBy</code> and at occupancy. How many warps did you actually launch?</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li>Correct sum (relative error ≤ 10⁻⁴) for several sizes, including $n = 1$ and $n$ not a power of two.</li>
+<li>Effective bandwidth ≥ 75% of peak for $n = 2^{20}$.</li>
+</ul>

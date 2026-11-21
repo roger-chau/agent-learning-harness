@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "What's wrong with a plain chained scan, where each tile waits for its predecessor's inclusive prefix?",
+     "options": ["It's incorrect", "Tile latencies form a serial chain across the whole input", "It uses too much shared memory", "It needs three launches"],
+     "answer": 1, "explanation": "Tile k can't publish until tile k−1 has, so the latencies add up."},
+    {"id": "q2", "type": "single", "prompt": "In decoupled look-back, what does a tile publish before looking back?",
+     "options": ["Nothing", "Its aggregate (own total), with status A", "Its inclusive prefix", "Its output"],
+     "answer": 1, "explanation": "Publishing A early lets successors make progress without waiting for this tile's full prefix."},
+    {"id": "q3", "type": "numeric", "prompt": "Looking back from tile 9, you see tile 8: A=4, tile 7: A=6, tile 6: P=100. What is tile 9's exclusive prefix?",
+     "unit": "", "answer": 110, "tolerance": 0, "explanation": "4 + 6 + 100 = 110, after inspecting 3 tiles."},
+    {"id": "q4", "type": "single", "prompt": "Why take tile ids from an atomic counter rather than blockIdx?",
+     "options": ["It's faster", "Blocks may be scheduled in any order; a tile must only wait on tiles that have already started, or it can deadlock", "blockIdx isn't available", "To reduce memory traffic"],
+     "answer": 1, "explanation": "Dynamic ids follow actual start order, which guarantees forward progress."},
+    {"id": "q5", "type": "single", "prompt": "What problem does packing status and value together (or fencing between them) prevent?",
+     "options": ["Bank conflicts", "A reader seeing a status flag before the value it announces", "Divergence", "L2 misses"],
+     "answer": 1, "explanation": "Without ordering, the flag's write could become visible before the value's."}
+  ]
+}
