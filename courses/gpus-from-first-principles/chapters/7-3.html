@@ -1,0 +1,38 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>A kernel is only part of a job. Data has to reach the GPU over PCIe (tens of GB/s, an order of magnitude slower than GPU memory), results have to come back, and on a busy system the GPU waits for the host, or the host for the GPU. A pipeline that copies, then computes, then copies back leaves two of the three engines idle at any moment. On embedded systems, with a camera feeding frames, that idle time is missed frames.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: streams</h2>
+<p><strong>A stream is an in-order queue of GPU work. Work in different streams may overlap.</strong> A GPU has separate engines: one or more for compute, and copy engines for each direction. So copying chunk <em>k+1</em> in, computing chunk <em>k</em>, and copying chunk <em>k−1</em> out can all happen at once, if they're in different streams:</p>
+<pre><code>for each chunk k:  s = streams[k % nStreams]
+    s.memcpy(chunkBytes, "h2d")
+    s.launch(kernel, cfg, ...)
+    s.memcpy(chunkBytes, "d2h")</code></pre>
+<p>In the simulator: <code>gpu.stream()</code> creates a stream with <code>memcpy(bytes, "h2d" | "d2h")</code> and <code>launch(...)</code>. <code>gpu.streamTime()</code> is when everything finishes, and <code>gpu.streamTrace()</code> lists every operation's start and end. PCIe runs at 25 GB/s per direction, plus 1 µs per copy; one kernel runs at a time.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: how much overlap is possible</h2>
+<p>With copy-in time $C_i$, compute $T$ and copy-out $C_o$, a perfect pipeline approaches $\max(C_i, T, C_o)$ plus the time to fill and drain it, instead of $C_i + T + C_o$. More chunks shorten the fill and drain but add a fixed cost per copy and per launch, and small kernels stop filling the GPU (Chapter 5.4). Two or three streams are usually enough; the number of chunks is the real tuning knob.</p>
+<div data-gw="streams-timeline"></div>
+<p>Try it: with one stream, chunking only adds overhead. With two or three, the engines overlap. Then raise the compute time until it dominates, and watch the copies disappear behind it.</p>
+<p>Real CUDA details that matter: host memory must be <strong>pinned</strong> (page-locked) for copies to be asynchronous; the default stream synchronises with others unless you use per-thread or non-blocking streams; and events (<code>cudaEventRecord</code>, <code>cudaStreamWaitEvent</code>) express dependencies between streams.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: more than one GPU</h2>
+<p>Large models span several GPUs, connected by NVLink (hundreds of GB/s) or PCIe and networks (H&amp;P Chapter 6 and Appendix F). The workhorse collective is <strong>all-reduce</strong> (every GPU ends up with the sum of everyone's gradients). The ring algorithm sends each byte around a ring of <em>g</em> GPUs in two phases:</p>
+<div class="eq">$$t \approx \frac{2(g-1)}{g}\cdot\frac{\text{bytes}}{\text{link bandwidth}} + 2(g-1)\cdot\text{latency}$$</div>
+<p>The bandwidth term barely grows with <em>g</em>, which is why rings scale. The latency term does, which is why small messages use tree algorithms instead. Libraries like NCCL pick for you, and overlap communication with computation using exactly this chapter's streams.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Nsight Systems shows the timeline: copies, kernels and host calls per stream. It's the first tool to reach for when GPU utilisation is low, before any kernel profiler.</li>
+<li>On systems with unified memory (many embedded GPUs share DRAM with the CPU), there may be no copy at all, and the question becomes cache coherence and who touches the data when.</li>
+<li>Overlapping only helps if each engine has work: a compute-bound pipeline gains little from hiding copies that are already short.</li>
+</ul>
+</section>

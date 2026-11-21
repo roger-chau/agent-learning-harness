@@ -1,0 +1,14 @@
+<div class="scenario-brief">
+<div class="k">Scenario · Serving an LLM</div>
+<b>A team serves a 7B-parameter model on one GPU. They batch requests in fixed groups and the GPU sits half-idle. Write the scheduler that decides, step by step, which requests run.</b>
+<dl>
+<dt>The model of the system</dt><dd>Generation proceeds in <em>decode steps</em>. In each step, every active request produces one token. A step costs <code>stepBaseUs</code> (reading 7 GB of weights at 1 TB/s: 7,000 µs) plus <code>usPerKvToken</code> (0.5 µs) per token held in the active requests' KV caches. So batching is nearly free until the KV cache grows: Scenario 4 from the other side.</dd>
+<dt>Memory</dt><dd>The KV cache is paged: <code>blocks</code> = 512 blocks of <code>blockSize</code> = 16 tokens. A request holding <code>prompt + generated</code> tokens uses ⌈that / 16⌉ blocks. Every step, the active requests' blocks must fit (after the step's new token).</dd>
+<dt>Rules</dt><dd>All requests are waiting at time 0, each with a known prompt length and output length. Once a request starts, it runs in every step until it has produced all its tokens: no preemption.</dd>
+<dt>Goal</dt><dd><code>schedule(requests, cfg)</code> returns the list of steps, each an array of request ids. It must be valid and finish <strong>at least 1.8× faster</strong> than the team's current static batching (in the starter) on hidden workloads. Stretch: 2.3×.</dd>
+</dl>
+</div>
+
+<h2>Where the time goes</h2>
+<p>Static batching takes groups of requests that fit if each one reserved the maximum length, and runs each group until its longest request finishes. Short requests finish early and leave their slot idle while the long ones run. That's padding, and worst-case reservation on top. The vLLM paper (earlier in this Part) attacks both: <em>continuous batching</em> admits a new request the moment there's room, and <em>paging</em> means "room" is measured in blocks actually used.</p>
+<p>The hard part is admission without preemption: admit too eagerly and the cache overflows later as everyone's context grows. The starter's <code>evaluate</code> tells you exactly where a schedule breaks.</p>

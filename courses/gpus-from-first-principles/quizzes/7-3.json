@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "Why can a copy in one stream overlap a kernel in another?",
+     "options": ["Streams share nothing", "Copies run on separate copy engines, so they don't compete with the compute engine", "Kernels pause during copies", "They can't"], "answer": 1,
+     "explanation": "Different hardware engines, different streams: real overlap."},
+    {"id": "q2", "type": "numeric", "prompt": "Copy in 10 µs, compute 4 µs, copy out 10 µs per batch, perfectly pipelined over many batches. Steady-state time per batch, in µs?", "unit": "µs", "answer": 10, "tolerance": 0,
+     "explanation": "The slowest engine sets the rate: max(10, 4, 10)."},
+    {"id": "q3", "type": "single", "prompt": "Why don't more chunks always help?",
+     "options": ["Streams run out", "Each copy and launch has a fixed cost, and tiny kernels stop filling the GPU", "PCIe gets slower", "They always help"], "answer": 1,
+     "explanation": "Fill and drain shrink, but per-chunk overheads grow."},
+    {"id": "q4", "type": "single", "prompt": "What must host memory be for cudaMemcpyAsync to really be asynchronous?",
+     "options": ["Aligned to 4 KB", "Pinned (page-locked)", "Shared with the GPU", "Read-only"], "answer": 1,
+     "explanation": "Pageable memory forces a staged, synchronous copy."},
+    {"id": "q5", "type": "single", "prompt": "In a ring all-reduce over g GPUs, how does the bandwidth term scale with g?",
+     "options": ["Linearly in g", "Barely: 2(g−1)/g approaches 2", "Quadratically", "It shrinks to zero"], "answer": 1,
+     "explanation": "Rings are bandwidth-optimal; the latency term is what grows."}
+  ]
+}

@@ -52,6 +52,7 @@
     jitter: 0.03,           // relative run-to-run noise
     outlierRate: 0.04,      // chance a run is interrupted and takes 1.5-3x longer
     seed: 1,
+    pcieGBs: 25,            // host <-> device copies, each direction
   });
 
   const MAX_BRANCH_EVALS = 20_000_000;
@@ -409,6 +410,46 @@
       this.loaded = new WeakSet();
       this.rngState = (this.spec.seed >>> 0) || 1;
     }
+
+    /**
+     * Streams: an in-order queue of copies and kernels. Different streams may overlap, limited by
+     * the engines: one compute engine (kernels run one at a time) and one copy engine per
+     * direction (host-to-device, device-to-host). Times are in µs on a device timeline that
+     * starts at 0; gpu.streamTime() is when everything queued so far has finished.
+     */
+    stream(name) {
+      if (!this._streams) this.resetStreams();
+      const dev = this, st = { name: name || `stream ${this._streams.length}`, end: 0 };
+      this._streams.push(st);
+      const run = (engine, durUs, label) => {
+        const start = Math.max(st.end, dev._engines[engine]);
+        st.end = dev._engines[engine] = start + durUs;
+        dev._streamTrace.push({ stream: st.name, engine, label, start: +start.toFixed(3), end: +st.end.toFixed(3) });
+        return st.end;
+      };
+      return {
+        name: st.name,
+        /** Copy `bytes` between host and device: direction "h2d" or "d2h". */
+        memcpy(bytes, direction) {
+          if (direction !== "h2d" && direction !== "d2h") throw new TypeError('memcpy direction must be "h2d" or "d2h"');
+          return run(direction, bytes / (dev.spec.pcieGBs * 1e3) + 1, `${direction} ${bytes} B`); // +1 µs per copy
+        },
+        /** Launch a kernel on this stream (runs it now; schedules its time on the timeline). */
+        launch(kernel, config, ...args) {
+          const s = dev.launch(kernel, config, ...args);
+          run("compute", s.timeUs, kernel.name || "kernel");
+          return s;
+        },
+        /** Make this stream wait until another stream's queued work is done (like an event). */
+        waitFor(other) { const o = dev._streams.find((x) => x.name === other.name); st.end = Math.max(st.end, o ? o.end : 0); },
+        get time() { return st.end; },
+      };
+    }
+    resetStreams() { this._streams = []; this._engines = { compute: 0, h2d: 0, d2h: 0 }; this._streamTrace = []; }
+    /** When all work queued on all streams has finished (µs). */
+    streamTime() { return this._streams ? Math.max(0, ...this._streams.map((s) => s.end)) : 0; }
+    /** Every queued operation: { stream, engine, label, start, end }. */
+    streamTrace() { return (this._streamTrace || []).slice(); }
 
     rand() { // xorshift32, deterministic per device
       let x = this.rngState; x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0;

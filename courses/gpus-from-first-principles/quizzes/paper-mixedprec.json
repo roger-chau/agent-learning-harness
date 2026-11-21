@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "Why keep an FP32 master copy of the weights?",
+     "options": ["FP32 is faster", "Updates much smaller than the weight round away to nothing in FP16; FP32 accumulates them", "To save memory", "Tensor cores need it"], "answer": 1,
+     "explanation": "lr · gradient is often below half an FP16 ulp of the weight."},
+    {"id": "q2", "type": "single", "prompt": "What does loss scaling fix?",
+     "options": ["Overflow of large weights", "Small gradients flushing to zero in FP16", "Slow convergence", "Bank conflicts"], "answer": 1,
+     "explanation": "Scaling the loss scales every gradient into FP16's range."},
+    {"id": "q3", "type": "single", "prompt": "With dynamic loss scaling, what happens when a gradient overflows to Inf?",
+     "options": ["Training stops", "The step is skipped and the scale is lowered", "The scale is raised", "Nothing"], "answer": 1,
+     "explanation": "Back off on overflow, grow again after a run of good steps."},
+    {"id": "q4", "type": "single", "prompt": "Why does BF16 usually not need loss scaling?",
+     "options": ["More mantissa bits", "It has FP32's exponent range, so small gradients don't underflow", "It's slower", "It always accumulates in FP64"], "answer": 1,
+     "explanation": "Range, not precision, was the underflow problem."},
+    {"id": "q5", "type": "numeric", "prompt": "The largest |gradient| is 0.004. Largest power-of-two loss scale that keeps it below 65,504?", "unit": "", "answer": 8388608, "tolerance": 0,
+     "explanation": "0.004 × 2²³ ≈ 33,554 < 65,504, but × 2²⁴ ≈ 67,109 overflows."}
+  ]
+}

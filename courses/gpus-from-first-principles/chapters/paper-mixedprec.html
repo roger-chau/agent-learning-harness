@@ -1,0 +1,40 @@
+<div class="paper-ref">
+<div class="k">The work</div>
+<b>P. Micikevicius, S. Narang, J. Alben, G. Diamos, E. Elsen, D. Garcia, B. Ginsburg, M. Houston, O. Kuchaiev, G. Venkatesh, H. Wu. "Mixed Precision Training."</b> ICLR 2018.
+<br><a href="https://arxiv.org/abs/1710.03740" target="_blank" rel="noopener noreferrer">arXiv:1710.03740</a> · Short and practical. Read it with Chapter 4.5 fresh in mind.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>Volta's tensor cores (Chapter 4.5) were many times faster in FP16 than FP32, and FP16 halves memory and bandwidth. But training networks in plain FP16 often failed: accuracy dropped or training diverged. FP16 has only 10 mantissa bits and a smallest normal value around 6 × 10⁻⁵, while training involves tiny gradients and tiny updates to much larger weights.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Use FP16 where it's safe and FP32 where it isn't: three techniques together.</strong></p>
+<ol>
+<li><strong>An FP32 master copy of the weights.</strong> Forward and backward passes use FP16 weights, but the optimiser updates an FP32 copy. An update of 10⁻⁶ to a weight of 1.0 is below half an FP16 ulp (2⁻¹¹ ≈ 4.9 × 10⁻⁴), so it rounds away to nothing in FP16; in FP32 it accumulates.</li>
+<li><strong>Loss scaling.</strong> Many activation gradients are smaller than FP16 can represent and flush to zero. Multiply the loss by a scale factor <em>S</em> before backpropagation (so every gradient is <em>S</em> times larger and stays representable), then divide the weight gradients by <em>S</em> before the update. Choose <em>S</em> as large as possible without overflowing.</li>
+<li><strong>FP32 accumulation.</strong> Products in FP16, sums in FP32: dot products (what tensor cores do), and reductions such as softmax and normalisation.</li>
+</ol>
+<p>With these, the paper matched FP32 accuracy across image classification, detection, speech, translation, language modelling and GANs, while halving memory for activations and weights.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ul>
+<li><strong>The gradient histogram</strong>: the figure showing how much of a network's gradient distribution falls below FP16's range. It's the whole argument for loss scaling in one picture.</li>
+<li><strong>The three techniques</strong>, and which models needed which.</li>
+<li><strong>Choosing the scale</strong>: the paper used a constant per model. Practice moved to <em>dynamic</em> loss scaling: raise the scale periodically, lower it (and skip the step) when an overflow appears.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>With the simulator's <code>f16()</code> rounding, show the three failures and fixes: an FP16 weight that never changes, an FP32 master weight that does, and gradients rescued from underflow by a good scale.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>Mixed precision became the default way to train. Frameworks automated it (automatic mixed precision, with dynamic loss scaling). BF16, with FP32's exponent range, made loss scaling unnecessary for most models, and TPUs and later GPUs adopted it. The same pattern, low precision for the bulk and high precision where errors accumulate, continued down to FP8 training on Hopper and Blackwell, with per-tensor (and then finer-grained) scaling factors as the descendants of loss scaling.</p>
+</section>

@@ -1,0 +1,38 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Attention is the core of every transformer: for each query, a weighted average of values, weighted by how well the query matches each key. Its FLOPs are two matrix multiplies, which you know how to make fast. Its problem is the matrix in between: for a sequence of <em>N</em> tokens, the attention scores form an <em>N</em> × <em>N</em> matrix. At N = 8,192 that's 67 million values per head, per layer, and written naively they go to DRAM and back several times.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: attention is GEMM, softmax, GEMM</h2>
+<p>With queries $Q$, keys $K$ and values $V$ (each $N \times d$, with head dimension $d$ typically 64–128):</p>
+<div class="eq">$$S = \frac{QK^\top}{\sqrt{d}}, \qquad P = \text{softmax}_{\text{rows}}(S), \qquad O = PV$$</div>
+<p>FLOPs: about $4N^2 d$ (two GEMMs). Naive memory traffic: read $Q, K, V$; write $S$ ($N^2$); read $S$, write $P$ (softmax); read $P$ and $V$, write $O$. The $N^2$ terms dominate. Per byte moved, the naive version does only about $d$ FLOPs on the $N^2$ part: memory-bound, even though it's "made of GEMMs".</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: never write S</h2>
+<p><strong>Process the keys in blocks, and keep a running softmax for each query row: the online softmax from Chapter 7.1, extended to carry the output along.</strong> For a query row, keep the running max $m$, the running sum $\ell$, and an unnormalised output accumulator $o$ (length $d$). For each block of $B_c$ keys:</p>
+<ol>
+<li>scores $s_j = q \cdot k_j / \sqrt{d}$ for the block;</li>
+<li>new max $m' = \max(m, \max_j s_j)$, and rescale factor $\alpha = e^{m - m'}$;</li>
+<li>$\ell \leftarrow \alpha \ell + \sum_j e^{s_j - m'}$ and $o \leftarrow \alpha o + \sum_j e^{s_j - m'} v_j$;</li>
+</ol>
+<p>and at the end, $O = o / \ell$. The result is <em>exact</em>, not an approximation, and only a block of scores exists at any time. On a GPU, the block lives in registers or shared memory: $S$ and $P$ never touch DRAM.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: tiling Q too</h2>
+<p>A GPU kernel tiles both sides: a block of threads takes a tile of $B_r$ query rows (kept on-chip for the whole kernel) and streams tiles of $K$ and $V$ through shared memory. Each $K/V$ tile is reused by all $B_r$ queries, so DRAM traffic is roughly $Q$ and $O$ once, plus $K$ and $V$ once per query tile:</p>
+<div class="eq">$$\text{bytes} \approx b\left(2Nd + 2Nd \left\lceil N / B_r \right\rceil\right)$$</div>
+<p>Bigger $B_r$ means less traffic but more on-chip storage: the same tile-size trade-off as GEMM (Part 4). This is FlashAttention (Part 8's paper), and the capstone asks you to build it.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Causal (decoder) attention masks future keys: half the blocks can be skipped entirely, and the diagonal blocks need a mask.</li>
+<li>In decoding (one new query per step, Scenario 4), attention reads the whole KV cache for one query: purely memory-bound, and the KV cache's size dominates serving cost. That's PagedAttention, later in this Part.</li>
+<li>Exponentials matter here: with small $d$, the exp count ($N^2$) is a real fraction of the work, which FlashAttention-3 works hard to hide.</li>
+</ul>
+</section>

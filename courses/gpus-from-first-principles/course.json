@@ -1869,22 +1869,94 @@
      "type": "chapter",
      "id": "7-1",
      "title": "Memory-bound fused ops",
-     "summary": "",
-     "status": "planned"
+     "summary": "Softmax in one read, online softmax, and where fused kernels come from.",
+     "exercises": [
+      "7-1-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "small ops, big traffic"
+      ],
+      [
+       "The smallest idea",
+       "softmax in one read"
+      ],
+      [
+       "Add one block",
+       "online softmax"
+      ],
+      [
+       "The whole machine",
+       "where fused ops come from"
+      ],
+      [
+       "Reality",
+       "shapes, precision, exp"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "7-2",
      "title": "Attention from first principles",
-     "summary": "",
-     "status": "planned"
+     "summary": "Why naive attention is memory-bound, and exact tiled attention with online softmax.",
+     "exercises": [
+      "7-2-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "the N × N matrix"
+      ],
+      [
+       "The smallest idea",
+       "attention is GEMM, softmax, GEMM"
+      ],
+      [
+       "Add one block",
+       "never write S"
+      ],
+      [
+       "The whole machine",
+       "tiling Q too"
+      ],
+      [
+       "Reality",
+       "causal masks, decoding, exp"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "7-3",
      "title": "Streams and overlap",
-     "summary": "",
-     "status": "planned"
+     "summary": "Copy and compute engines, pipelining over streams, and multi-GPU all-reduce.",
+     "exercises": [
+      "7-3-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "idle engines"
+      ],
+      [
+       "The smallest idea",
+       "streams"
+      ],
+      [
+       "Add one block",
+       "how much overlap is possible"
+      ],
+      [
+       "The whole machine",
+       "more than one GPU"
+      ],
+      [
+       "Reality",
+       "timelines and unified memory"
+      ]
+     ]
     },
     {
      "type": "paper",
@@ -1913,7 +1985,9 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-mixedprec-a"
+     ]
     },
     {
      "type": "paper",
@@ -1942,7 +2016,9 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-paged-a"
+     ]
     },
     {
      "type": "milestone",
@@ -1950,14 +2026,42 @@
      "title": "Paper project: a paged KV cache",
      "summary": "Build a paged KV cache with block tables, and measure fragmentation against a contiguous one.",
      "project": "Papers",
-     "status": "planned"
+     "exercises": [
+      "PP-paged-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "How many more requests of a realistic length mix fit with your paged cache than with contiguous allocation? Show the numbers.",
+       "Which block size would you choose, and what do smaller and larger blocks each cost (waste, table size, gather efficiency)?",
+       "Where does copy-on-write save the most memory in real serving?",
+       "What would a PagedAttention kernel do differently from your gather?"
+      ]
+     }
+    },
+    {
+     "type": "scenario",
+     "id": "scenario-7",
+     "title": "Scenario: serving an LLM",
+     "summary": "Write the scheduler for continuous batching under a paged KV-cache budget, with no preemption.",
+     "exercises": [
+      "scenario-7-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "What admission rule did you use, and why is it safe without preemption?",
+       "Where did the speedup over static batching come from: padding, reservation, or packing? Estimate each.",
+       "How would arrivals over time (instead of all at time 0) change your design?",
+       "What would you add if preemption (swapping or recomputing a request's KV cache) were allowed?"
+      ]
+     }
     },
     {
      "type": "checkpoint",
      "id": "p7-checkpoint",
      "title": "Part 7 checkpoint",
-     "summary": "Cumulative quiz across the Part.",
-     "status": "planned"
+     "summary": "Cumulative quiz across the Part."
     }
    ],
    "hp": "Ch 6 · App F"

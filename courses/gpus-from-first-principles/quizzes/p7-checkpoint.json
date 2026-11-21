@@ -1,0 +1,32 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "c1", "type": "single", "prompt": "A layernorm kernel is DRAM-bound at 90% of peak and reads its input twice. Best next step?",
+     "options": ["Unroll", "Read once: keep the row on-chip, or use a one-pass (Welford) statistic", "More registers", "Tensor cores"], "answer": 1,
+     "explanation": "Bandwidth-bound: fewer bytes is the only lever."},
+    {"id": "c2", "type": "numeric", "prompt": "Online softmax: state (m = 2, s = 3) merged with a single value x = 4. New s? (to 3 decimals)", "unit": "", "answer": 1.406, "tolerance": 0.002,
+     "explanation": "3·e^(2−4) + 1 = 3·0.1353 + 1 ≈ 1.406."},
+    {"id": "c3", "type": "single", "prompt": "What makes tiled (Flash-style) attention exact rather than approximate?",
+     "options": ["Higher precision", "Online softmax: running max and sum, with the output rescaled whenever the max changes", "Skipping small scores", "Recomputing S twice"], "answer": 1,
+     "explanation": "Associative merging of partial softmax states."},
+    {"id": "c4", "type": "numeric", "prompt": "Naive attention, N = 2048, d = 64, 2-byte values: traffic from S and P alone (write + read each), in MB?", "unit": "MB", "answer": 33.554, "tolerance": 0.01,
+     "explanation": "4 × 2048² × 2 bytes ≈ 33.55 MB."},
+    {"id": "c5", "type": "single", "prompt": "Copy in 8 µs, compute 20 µs, copy out 8 µs per chunk. What does splitting into streams buy at best?",
+     "options": ["Nothing", "Roughly hides the copies behind compute: ~20 µs per chunk in steady state instead of 36", "Faster compute", "It halves compute"], "answer": 1,
+     "explanation": "The slowest engine sets the pace."},
+    {"id": "c6", "type": "single", "prompt": "In mixed-precision training, which stays in FP32?",
+     "options": ["Activations", "The master weights and the accumulations (dot products, reductions)", "Everything", "Nothing"], "answer": 1,
+     "explanation": "FP16 for the bulk, FP32 where errors accumulate."},
+    {"id": "c7", "type": "single", "prompt": "Why does a decode step's time hardly change between batch 1 and batch 8 for a 7B model?",
+     "options": ["The GPU ignores extra requests", "Each step must read all the weights anyway; the extra requests add little compute or KV traffic until the cache grows", "Batching is free in general", "Tensor cores"], "answer": 1,
+     "explanation": "Memory-bound on weights: Scenario 4 and 7."},
+    {"id": "c8", "type": "single", "prompt": "What two wastes does continuous batching with paging remove?",
+     "options": ["Compute and power", "Idle slots from finished requests waiting for the longest one, and memory reserved for lengths never reached", "PCIe and NVLink", "Registers and shared memory"], "answer": 1,
+     "explanation": "Admit as soon as there's room; measure room in blocks actually used."},
+    {"id": "c9", "type": "single", "prompt": "Why does a paged KV gather still coalesce well?",
+     "options": ["It doesn't", "Within a block, consecutive tokens are contiguous, so consecutive lanes read consecutive addresses", "The table is cached", "Atomics"], "answer": 1,
+     "explanation": "Indirection per block, not per token."},
+    {"id": "c10", "type": "numeric", "prompt": "Ring all-reduce of 400 MB over 4 GPUs with 200 GB/s links, ignoring latency: time in ms?", "unit": "ms", "answer": 3, "tolerance": 0.01,
+     "explanation": "2·3/4 × 400 MB / 200 GB/s = 1.5 × 2 ms = 3 ms."}
+  ]
+}

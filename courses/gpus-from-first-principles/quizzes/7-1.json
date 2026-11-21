@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "Why subtract the row max before exponentiating in softmax?",
+     "options": ["It's faster", "To keep e^x from overflowing; the result is unchanged", "To make values positive", "It improves coalescing"], "answer": 1,
+     "explanation": "e^(x−m) ≤ 1 for every x in the row."},
+    {"id": "q2", "type": "numeric", "prompt": "Three-kernel softmax reads the row three times and writes it once. Fused, it reads once and writes once. Traffic ratio (fused / unfused), ignoring the small intermediates?", "unit": "", "answer": 0.5, "tolerance": 0.001,
+     "explanation": "2 passes instead of 4."},
+    {"id": "q3", "type": "single", "prompt": "Online softmax state (m, s) meets a new value x > m. What happens to s?",
+     "options": ["s += 1", "s = s · e^(m − x) + 1, and m becomes x", "s is reset to 0", "s = s + e^x"], "answer": 1,
+     "explanation": "Rescale the old sum to the new max, then add the new term."},
+    {"id": "q4", "type": "single", "prompt": "Why does it matter that the online-softmax merge is associative?",
+     "options": ["It's faster to type", "Partial results can be merged in any grouping: sequentially, in a tree, or across blocks", "It avoids exp", "It isn't important"], "answer": 1,
+     "explanation": "That's what lets FlashAttention process keys in tiles."},
+    {"id": "q5", "type": "single", "prompt": "Why compute layernorm's variance with Welford/Chan merges instead of Σx² − (Σx)²/n?",
+     "options": ["Fewer FLOPs", "The textbook formula subtracts two large, nearly equal numbers and loses precision", "It uses less memory", "It's required by CUDA"], "answer": 1,
+     "explanation": "Catastrophic cancellation."}
+  ]
+}

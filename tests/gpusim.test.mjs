@@ -304,3 +304,24 @@ test("wall clock: async launches, warm-up, synchronise; sol, balance and bank co
   assert.equal(new Device({ sharedBanks: 32 }).launch(b, { grid: 1, block: 32 }, g.alloc(32)).bankConflicts, 15);
   assert.equal(new Device({ sharedBanks: 16 }).launch(b, { grid: 1, block: 32 }, g.alloc(32)).bankConflicts, 31);
 });
+
+test("streams: in-order per stream, engines overlap across streams", () => {
+  const g = new Device();
+  const { k } = g.compile(`function k(y) { y[threadIdx.x] = 1; }`);
+  const y = g.alloc(32);
+  g.resetStreams();
+  const a = g.stream();
+  a.memcpy(25e3, "h2d"); a.launch(k, { grid: 1, block: 32 }, y); a.memcpy(25e3, "d2h");
+  const serial = g.streamTime(), tr = g.streamTrace();
+  assert.equal(tr.length, 3);
+  assert.ok(tr[1].start >= tr[0].end && tr[2].start >= tr[1].end);   // in order within a stream
+  assert.equal(tr[0].end, 2);                                         // 25 KB at 25 GB/s = 1 µs, + 1 µs
+  g.resetStreams();
+  const s1 = g.stream(), s2 = g.stream();
+  s1.memcpy(25e3, "h2d"); s2.memcpy(25e3, "d2h");
+  assert.equal(g.streamTime(), 2);                                    // different engines overlap
+  s2.waitFor(s1); s2.launch(k, { grid: 1, block: 32 }, y);
+  assert.ok(g.streamTrace()[2].start >= 2);
+  assert.throws(() => s1.memcpy(10, "sideways"), /direction/);
+  assert.ok(serial > 4);
+});

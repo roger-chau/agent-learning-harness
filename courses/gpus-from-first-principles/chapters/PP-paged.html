@@ -1,0 +1,23 @@
+<div class="paper-ref">
+<div class="k">Paper project · A paged KV cache</div>
+Virtual memory for attention: block tables, reference counts and copy-on-write, then the GPU gather that reads through them.
+</div>
+
+<h2>Build, part 1: the cache</h2>
+<p>A pool of <code>numBlocks</code> physical blocks, each holding <code>blockSize</code> tokens (one number per token stands in for its K and V vectors). Functions on a cache object <code>c</code>:</p>
+<table>
+<tr><th>Function</th><th>Does</th></tr>
+<tr><td><code>createCache(numBlocks, blockSize)</code></td><td>An empty cache</td></tr>
+<tr><td><code>addSeq(c, id)</code></td><td>A new, empty sequence</td></tr>
+<tr><td><code>append(c, id, value)</code></td><td>Add one token. Allocates a block when the last one is full, and <strong>copies on write</strong> if the last block is shared. Returns <code>false</code> and changes nothing if no block is free</td></tr>
+<tr><td><code>fork(c, src, dst)</code></td><td>A new sequence sharing all of <code>src</code>'s blocks (reference counts up, no copying)</td></tr>
+<tr><td><code>read(c, id)</code></td><td>The sequence's values in order, through its block table</td></tr>
+<tr><td><code>freeSeq(c, id)</code></td><td>Drop the sequence; blocks whose count reaches 0 return to the pool</td></tr>
+<tr><td><code>usedBlocks(c)</code></td><td>Physical blocks currently in use</td></tr>
+</table>
+
+<h2>Build, part 2: the gather on the GPU</h2>
+<p><code>runGather(pool, table, out, nTokens, blockSize)</code>: a simulator kernel that copies a sequence's tokens into <code>out</code> in logical order, where token <code>t</code> lives at <code>pool[table[⌊t / blockSize⌋] · blockSize + t mod blockSize]</code>. It must be correct and keep coalescing ≥ 0.9: the lookup indirection shouldn't cost bandwidth if consecutive lanes read consecutive tokens. Return the stats.</p>
+
+<h2>Then think</h2>
+<p>The write-up asks you to compare your cache's capacity with contiguous allocation on a realistic mix of lengths, and to choose a block size: what do small and large blocks each cost?</p>

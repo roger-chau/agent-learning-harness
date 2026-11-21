@@ -1058,6 +1058,55 @@
     draw();
   };
 
+  // Streams: copy-in / compute / copy-out engines, chunks spread round-robin over streams.
+  C["streams-timeline"] = (el) => {
+    const s = shell(el, {
+      title: "Overlapping copies and compute with streams",
+      controls: [
+        { key: "chunks", label: "Chunks", min: 1, max: 8, value: 1 },
+        { key: "streams", label: "Streams", min: 1, max: 3, value: 1 },
+        { key: "compute", label: "Compute for the whole job", min: 4, max: 40, value: 12, unit: " µs" },
+      ],
+      readouts: [
+        { key: "total", label: "Total time" },
+        { key: "serial", label: "One chunk, one stream" },
+        { key: "speed", label: "Speedup" },
+      ],
+    });
+    const COPY = 10; // µs each way for the whole job, at 25 GB/s
+    const plan = (chunks, streams, comp) => {
+      const eng = { h2d: 0, compute: 0, d2h: 0 }, ends = new Array(streams).fill(0), ops = [];
+      const run = (st, e, d) => { const start = Math.max(ends[st], eng[e]); ends[st] = eng[e] = start + d; ops.push({ st, e, start, end: start + d }); };
+      for (let k = 0; k < chunks; k++) { const st = k % streams; run(st, "h2d", COPY / chunks + 1); run(st, "compute", comp / chunks + 0.3); run(st, "d2h", COPY / chunks + 1); }
+      return { ops, total: Math.max(...ends) };
+    };
+    const hues = ["--indigo", "--saffron", "--mint-ink"];
+    function draw() {
+      const { chunks, streams, compute } = s.vals, p = plan(chunks, streams, compute), base = plan(1, 1, compute);
+      const { ctx, w, h } = s.size(170);
+      ctx.clearRect(0, 0, w, h);
+      const x0 = 86, sx = (w - x0 - 10) / Math.max(base.total, p.total), rows = ["h2d", "compute", "d2h"], label = { h2d: "copy in", compute: "compute", d2h: "copy out" };
+      ctx.font = `11px ${css("--font-ui")}`;
+      rows.forEach((e, r) => {
+        const y = 12 + r * 40;
+        ctx.fillStyle = css("--surface-3"); ctx.fillRect(x0, y, w - x0 - 10, 28);
+        ctx.fillStyle = css("--muted"); ctx.fillText(label[e], 6, y + 18);
+        for (const o of p.ops.filter((q) => q.e === e)) {
+          ctx.fillStyle = css(hues[o.st]); ctx.globalAlpha = 0.85;
+          roundRect(ctx, x0 + o.start * sx + 1, y + 3, Math.max(2, (o.end - o.start) * sx - 2), 22, 4); ctx.fill(); ctx.globalAlpha = 1;
+        }
+      });
+      ctx.fillStyle = css("--ink-2"); ctx.fillText(`${p.total.toFixed(1)} µs`, x0 + p.total * sx - 40, 140);
+      ctx.strokeStyle = css("--rule-strong"); ctx.beginPath(); ctx.moveTo(x0 + p.total * sx, 8); ctx.lineTo(x0 + p.total * sx, 128); ctx.stroke();
+      s.setReadout("total", `${p.total.toFixed(1)} µs`);
+      s.setReadout("serial", `${base.total.toFixed(1)} µs`);
+      s.setReadout("speed", `${(base.total / p.total).toFixed(2)}×`);
+    }
+    onInput(el, s, draw);
+    window.addEventListener("resize", draw);
+    draw();
+  };
+
   function mount(root) {
     root.querySelectorAll("[data-gw]").forEach((el) => {
       const fn = C[el.dataset.gw];

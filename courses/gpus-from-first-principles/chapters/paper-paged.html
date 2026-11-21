@@ -1,0 +1,41 @@
+<div class="paper-ref">
+<div class="k">The work</div>
+<b>W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. E. Gonzalez, H. Zhang, I. Stoica. "Efficient Memory Management for Large Language Model Serving with PagedAttention."</b> SOSP 2023.
+<br><a href="https://arxiv.org/abs/2309.06180" target="_blank" rel="noopener noreferrer">arXiv:2309.06180</a> · A systems paper: read it as an operating-systems idea moved onto a GPU. It's the paper behind vLLM.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>Serving an LLM, every request keeps a <strong>KV cache</strong>: the keys and values of all its tokens so far, for every layer, so each new token can attend to them. It's large: for a 13B-parameter model, the paper puts it at around 800 KB per token. And it grows token by token, to a length nobody knows in advance. Systems of the time allocated each request a contiguous chunk sized for the maximum possible length. The paper measured that most of that memory was wasted, through over-reservation and fragmentation, and that this, not compute, capped how many requests could be batched.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Treat the KV cache like virtual memory.</strong> Split it into fixed-size <em>blocks</em> (pages) of, say, 16 tokens. Each request has a <em>block table</em> mapping its logical blocks to physical blocks anywhere in GPU memory, allocated on demand as it grows:</p>
+<ul>
+<li>waste is limited to the unfilled part of each request's last block;</li>
+<li>no external fragmentation, since any free block fits anywhere;</li>
+<li><strong>sharing</strong>: requests with a common prefix (parallel sampling, beam search, shared system prompts) point at the same physical blocks, with reference counts and <strong>copy-on-write</strong> when one of them appends to a shared, partly filled block.</li>
+</ul>
+<p>The cost: attention can no longer assume a request's keys are contiguous. The <em>PagedAttention</em> kernel reads keys and values through the block table, a gather, which the paper shows costs little next to what the extra batch size gains.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ul>
+<li><strong>The memory-waste analysis</strong>: where the KV cache's memory goes in earlier systems (reserved, internally and externally fragmented, actually used).</li>
+<li><strong>PagedAttention and the block table</strong>, then the copy-on-write sharing for parallel sampling and beam search.</li>
+<li><strong>Scheduling and preemption</strong>: what vLLM does when memory runs out (swap to CPU or recompute), which your Scenario 7 sidesteps with no preemption.</li>
+<li><strong>The evaluation</strong>: throughput at equal latency against the systems of the time; the gains grow with longer sequences and larger sampling widths.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>Size a KV cache from a model's shape, and measure the waste of contiguous reservation against paging for a mix of request lengths. The paper project then builds the paged cache itself, with copy-on-write.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>vLLM became one of the most widely used open-source serving engines, and paged KV caches and continuous batching became standard across serving systems. Follow-ups pushed further: prefix caching across requests, chunked prefill mixing prompt processing with decoding, quantised KV caches, and splitting prefill and decode onto different GPUs. The kernel side (paged, split-KV decoding attention) is FlashAttention's territory, the capstone's paper.</p>
+</section>

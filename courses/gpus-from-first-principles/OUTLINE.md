@@ -152,9 +152,13 @@ Paper: *Triton* → **PP-triton** (a mini tile compiler with fused epilogues and
 Scenario: *occupancy or ILP*: a fused kernel on a register-starved embedded GPU.
 
 ## Part 7: Real workloads
-7.1 **Memory-bound fused ops.** Softmax, layernorm, online normalisation.
-7.2 **Attention from first principles.** Why naive attention is bound by memory traffic; tiling Q, K and V.
-7.3 **Streams and overlap.** Concurrency, copy/compute overlap, multi-GPU basics.
+7.1 **Memory-bound fused ops.** Softmax in one read, online softmax, Welford. *Exercise: online softmax and a fused one-pass kernel.*
+7.2 **Attention from first principles.** Why naive attention is memory-bound; exact tiled attention. *Exercise: tiled attention with online softmax.*
+7.3 **Streams and overlap.** Copy and compute engines, pipelining, multi-GPU all-reduce. *Exercise: a copy–compute–copy pipeline on streams.*
+
+Papers: *Mixed Precision Training* (numerics exercises); *PagedAttention* → **PP-paged** (block tables, copy-on-write, a GPU gather).
+
+Scenario: *serving an LLM*: a continuous-batching scheduler under a paged KV-cache budget.
 
 ## Part 8: Capstone: a fused attention kernel
 Design, implement, tune and explain a FlashAttention-style fused attention forward pass, reusing your GEMM tiles (Project C) and reductions (Project B):

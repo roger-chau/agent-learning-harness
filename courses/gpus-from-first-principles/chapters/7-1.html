@@ -1,0 +1,36 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Most of a neural network's operations aren't matrix multiplies. Softmax, layer normalisation, activations and residual adds each do a handful of FLOPs per element, so they're memory-bound (Part 2). Yet together they can take as long as the GEMMs, because written naively each one reads and writes the whole tensor, sometimes several times. The fix is always the same: <strong>touch each byte as few times as possible</strong>.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: softmax in one read</h2>
+<p>Softmax of a row: $y_i = e^{x_i - m} / \sum_j e^{x_j - m}$, where $m = \max_j x_j$. Subtracting the max keeps $e^x$ from overflowing; it doesn't change the result. Written as three kernels (max, sum, normalise), it reads the row three times and writes it once, plus the small intermediate arrays.</p>
+<p><strong>Fused</strong>: one block per row loads the row into registers once, reduces the max (shuffles, then a few values through shared memory: Part 3), reduces the sum, and writes the result. One read, one write: the minimum possible.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: online softmax</h2>
+<p>What if the row is too long to hold in registers, or arrives in pieces? You'd seem to need the max before you can start summing. <strong>Online softmax</strong> (Milakov &amp; Gimelshein, 2018) keeps a running pair $(m, s)$: the max so far, and the sum of $e^{x - m}$ so far. When a new max appears, rescale the old sum:</p>
+<div class="eq">$$(m_a, s_a) \oplus (m_b, s_b) = \left(m,\; s_a e^{m_a - m} + s_b e^{m_b - m}\right), \quad m = \max(m_a, m_b)$$</div>
+<p>The operator is associative, so it works sequentially, in a tree reduction, or across blocks. That's the property that makes FlashAttention possible (next chapter, and the capstone).</p>
+<p>Layer normalisation has the same structure with a different pair: the running mean and the sum of squared deviations, merged with Welford's (or Chan's) formula. It's more accurate than computing $\sum x^2 - (\sum x)^2/n$, which cancels catastrophically.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: where fused ops come from</h2>
+<ul>
+<li>ML compilers (Part 6's Triton and TorchInductor) generate exactly these fused kernels from model code.</li>
+<li>Libraries ship hand-written fused versions of the hottest ones (softmax, layernorm, RMSNorm, fused bias + activation).</li>
+<li>The best fusion is into a neighbouring GEMM's epilogue (PP-triton), so the elementwise op costs no extra memory traffic at all.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Rows shorter than a block (e.g. 128 values) should use a warp per row; longer rows than registers allow use online softmax over chunks.</li>
+<li>Reduced precision: inputs in FP16 or BF16, but max, sum and the exponentials in FP32. The Mixed Precision paper later in this Part explains why.</li>
+<li><code>exp</code> is a special-function-unit instruction on GPUs, with lower throughput than FMA. Rarely the limit for memory-bound ops, but it matters in attention.</li>
+</ul>
+</section>

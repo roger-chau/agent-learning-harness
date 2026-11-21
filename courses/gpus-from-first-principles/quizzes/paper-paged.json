@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "What limited batch size in LLM serving before PagedAttention, according to the paper?",
+     "options": ["Compute", "KV-cache memory, mostly wasted by over-reservation and fragmentation", "PCIe bandwidth", "The number of SMs"], "answer": 1,
+     "explanation": "Memory, not FLOPs, capped how many requests could run together."},
+    {"id": "q2", "type": "single", "prompt": "With paging, where is KV-cache memory still wasted?",
+     "options": ["Everywhere", "Only in the unfilled part of each request's last block", "In the block table", "Nowhere at all"], "answer": 1,
+     "explanation": "Internal fragmentation of at most one block per request."},
+    {"id": "q3", "type": "single", "prompt": "Two samples share a prompt whose last block is half full. One appends a token. What happens?",
+     "options": ["Both see the token", "Copy-on-write: the appending sample gets a private copy of that block first", "The other sample is freed", "An error"], "answer": 1,
+     "explanation": "Shared blocks are reference-counted; writes to shared blocks copy them."},
+    {"id": "q4", "type": "single", "prompt": "What does the PagedAttention kernel have to do that a contiguous one doesn't?",
+     "options": ["Use tensor cores", "Look up each block's physical location in the block table: a gather", "Sort the keys", "Synchronise across GPUs"], "answer": 1,
+     "explanation": "Keys and values are reached through the block table."},
+    {"id": "q5", "type": "numeric", "prompt": "KV cache bytes per token for 32 layers, hidden size 4096, FP16?", "unit": "bytes", "answer": 524288, "tolerance": 0,
+     "explanation": "2 (K and V) × 32 × 4096 × 2 bytes = 512 KB."}
+  ]
+}
