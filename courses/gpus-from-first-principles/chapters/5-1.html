@@ -1,0 +1,44 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>So far, every launch has handed you exact numbers: the simulator's stats are what a perfect profiler would report. Real measurement is messier. You time a kernel and get 4 µs; you change one line and get 155 µs; you run it again and get 8.4 µs. None of these numbers is the kernel's speed. Most benchmark mistakes in GPU work aren't subtle, but they are common, and they make claims like "my change made it 30% faster" wrong more often than right.</p>
+<p>From this Part on, the simulator also has a <strong>wall clock</strong> that behaves like a real one: <code>gpu.now()</code> (host time in µs) and <code>gpu.synchronize()</code>.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: launches are asynchronous</h2>
+<p><strong>A kernel launch returns as soon as the work is queued, not when it's done.</strong> The host pays a few microseconds to issue the launch, and the GPU runs it later, in order. So this measures only the launch overhead:</p>
+<pre><code>const t0 = gpu.now();
+gpu.launch(k, cfg, x, y, n);
+const t1 = gpu.now();          // ~4 µs, whatever the kernel does</code></pre>
+<p>To time the kernel, wait for it: <code>gpu.synchronize()</code> before reading the clock. (In CUDA: <code>cudaDeviceSynchronize()</code>, or better, CUDA events recorded on the stream. Copying results back to the host also synchronises, which hides this bug in a lot of code.)</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: warm-up and noise</h2>
+<p>Even a synchronised measurement isn't one number:</p>
+<ul>
+<li><strong>The first run is special.</strong> The first launch of a kernel loads its code onto the device (here: +150 µs), and the GPU's clock ramps up over the first few launches. Always run a few warm-up iterations and throw them away.</li>
+<li><strong>Runs vary.</strong> Every run jitters a little, and now and then one is interrupted (another process, a clock change, an interrupt) and takes 2–3× longer.</li>
+</ul>
+<p>So repeat, and summarise with a statistic that ignores outliers: the <strong>median</strong> (typical run) or the <strong>minimum</strong> (best case, closest to the hardware's capability). The <strong>mean</strong> is dragged by outliers and the first run; never report a mean without saying what was excluded.</p>
+<p>To compare two versions, run them interleaved (A, B, A, B, ...) rather than all of A then all of B, so slow drifts affect both equally, and look at how far apart the distributions are, not just two numbers.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: latency vs throughput</h2>
+<p>There are two honest answers to "how long does this kernel take?":</p>
+<ul>
+<li><strong>Latency</strong>: launch, synchronise, repeat. Each measurement includes the launch overhead. That's the right number when the kernel runs once, alone, with the host waiting.</li>
+<li><strong>Throughput</strong>: launch it many times back to back, synchronise once, divide. The launch overhead overlaps with the previous kernel's execution. That's the right number for a kernel inside a pipeline of many launches.</li>
+</ul>
+<p>For a big kernel they agree. For a tiny one they don't: if the kernel runs for 1 µs and a launch costs 4 µs, back-to-back throughput is one kernel per 4 µs, and the GPU is idle 75% of the time. That kernel is <strong>launch-bound</strong>, and no amount of kernel tuning helps. Fusing kernels, batching work or CUDA Graphs (which pre-record a chain of launches) do.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Real profilers (Nsight Compute) lock clocks to a base frequency by default so numbers are reproducible. That makes them lower than what users see under boost clocks. Know which one you're quoting.</li>
+<li>Caches carry over between runs on real hardware: a second run may find its data in L2. Benchmarks either flush the L2 between runs or say they don't. (The simulator starts each launch with a cold L2.)</li>
+<li>Report: the statistic, the number of runs, warm-up, problem size, and the hardware. A number without these can't be checked.</li>
+</ul>
+</section>

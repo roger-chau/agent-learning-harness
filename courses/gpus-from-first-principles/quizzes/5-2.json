@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric", "prompt": "A kernel moves 6.8 MB from DRAM in 20,000 cycles on the GW-1 (341.3 B/cycle peak). DRAM speed of light, in %?", "unit": "%", "answer": 99.6, "tolerance": 0.5,
+     "explanation": "6.8e6 / 341.3 ≈ 19,922 cycles of DRAM work in 20,000 cycles."},
+    {"id": "q2", "type": "single", "prompt": "DRAM SOL is 95% and sectors per request is 32 for 4-byte loads. What's going on?",
+     "options": ["The kernel is optimal", "DRAM is saturated, but mostly with bytes nobody asked for: fix the access pattern", "It's compute-bound", "It's launch-bound"], "answer": 1,
+     "explanation": "4 sectors per request would be coalesced; 32 means each lane gets its own sector."},
+    {"id": "q3", "type": "single", "prompt": "Every SOL percentage is below 20%. What kind of problem is it most likely?",
+     "options": ["Bandwidth", "Compute", "Latency: not enough work in flight to keep any unit busy", "Bank conflicts"], "answer": 2,
+     "explanation": "Nothing is busy, so the kernel is waiting."},
+    {"id": "q4", "type": "single", "prompt": "The top stall reason is \"MIO throttle / short scoreboard\". Where do you look first?",
+     "options": ["DRAM coalescing", "Shared-memory access patterns and bank conflicts", "Launch overhead", "Tensor cores"], "answer": 1,
+     "explanation": "Those stalls are about the shared-memory pipeline."},
+    {"id": "q5", "type": "single", "prompt": "Why not time a kernel while profiling it?",
+     "options": ["Profilers replay the kernel to collect counters, which distorts timing", "Profilers are inaccurate", "It's against the license", "It doesn't matter"], "answer": 0,
+     "explanation": "Measure time and counters in separate runs."}
+  ]
+}

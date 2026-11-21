@@ -1,0 +1,32 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "c1", "type": "single", "prompt": "Which timing procedure gives a trustworthy single-launch latency?",
+     "options": ["One run, no synchronise", "Warm up, then repeat (synchronise, read clock) many times and take the median", "Average of all runs including the first", "Time 100 launches without synchronising"], "answer": 1,
+     "explanation": "Warm-up, synchronisation and a robust statistic."},
+    {"id": "c2", "type": "numeric", "prompt": "Back to back, 1,000 launches of a 2 µs kernel with 4 µs launch overhead take how long in total, in µs?", "unit": "µs", "answer": 4000, "tolerance": 50,
+     "explanation": "Launch-bound: one launch per 4 µs (plus a final 2 µs)."},
+    {"id": "c3", "type": "single", "prompt": "SOL: DRAM 22%, L2 17%, issue 97%, FMA share 3%, lots of atomic serialisation. Diagnosis and first fix?",
+     "options": ["Bandwidth-bound: coalesce", "Issue-bound on contended atomics: privatise (registers or shared memory), then merge", "Latency-bound: more warps", "Compute-bound: tensor cores"], "answer": 1,
+     "explanation": "Serialised atomics are issued instructions that do no useful work."},
+    {"id": "c4", "type": "single", "prompt": "A kernel is DRAM-bound at 98% SOL but reads one float of every 32-byte struct. What can the kernel itself do?",
+     "options": ["Unroll", "Very little: the waste is in the data layout. Change it upstream (structure of arrays) or fuse the consumer", "Use shared memory", "Increase occupancy"], "answer": 1,
+     "explanation": "At the roof, only fewer bytes help, and here that means a different layout."},
+    {"id": "c5", "type": "numeric", "prompt": "48 equal tiles on 16 SMs, one at a time per SM: tail efficiency, in %?", "unit": "%", "answer": 100, "tolerance": 0,
+     "explanation": "3 full waves."},
+    {"id": "c6", "type": "numeric", "prompt": "49 equal tiles on 16 SMs, one at a time per SM: tail efficiency, in %?", "unit": "%", "answer": 76.5625, "tolerance": 0.1,
+     "explanation": "4 waves, 64 slots: 49/64. One extra tile costs a whole wave."},
+    {"id": "c7", "type": "single", "prompt": "What does a pointer chase isolate?",
+     "options": ["Bandwidth", "Latency: each load depends on the previous one", "Bank conflicts", "Occupancy"], "answer": 1,
+     "explanation": "Nothing overlaps."},
+    {"id": "c8", "type": "single", "prompt": "In a microbenchmark sweep, the time per byte jumps at some size. Before calling it a cache capacity, what should you rule out?",
+     "options": ["Nothing", "A change of regime unrelated to caches, e.g. latency-limited at small sizes, bandwidth-limited at large ones", "The clock speed", "Compiler errors"], "answer": 1,
+     "explanation": "Design experiments so that only the target property changes."},
+    {"id": "c9", "type": "single", "prompt": "Stream-K vs split-K: what's the key difference?",
+     "options": ["Stream-K uses tensor cores", "Split-K splits every tile's k-loop by a fixed factor; Stream-K gives each persistent block an equal range of iterations across tiles", "They're the same", "Split-K needs no fix-up"], "answer": 1,
+     "explanation": "Stream-K balances total work exactly; split-K just makes more pieces."},
+    {"id": "c10", "type": "single", "prompt": "A PR makes a kernel 3× slower; coalescing dropped from 0.86 to 0.25 and sectors per request rose from 4.7 to 16. Most likely cause?",
+     "options": ["Launch overhead", "Each thread now handles consecutive elements, so a warp's lanes access addresses far apart", "Bank conflicts", "Fewer registers"], "answer": 1,
+     "explanation": "Coarsen across the grid (stride by the thread count), not within a thread's own contiguous chunk."}
+  ]
+}

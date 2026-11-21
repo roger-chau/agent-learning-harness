@@ -44,6 +44,14 @@
     maxSharedPerBlock: 49152,
     sharedAllocUnit: 256,
     tensorFmaPerSmPerCycle: 256, // tensor cores: 8x the FP32 lanes (peak 12,288 GFLOP/s)
+    sharedBanks: 32,
+    // Wall clock (gpu.now / gpu.synchronize): launches are asynchronous and timings are noisy.
+    launchOverheadUs: 4,    // host time to issue one launch
+    moduleLoadUs: 150,      // extra device time the first time a kernel runs
+    clockRampLaunches: 5,   // the first launches run at a lower clock while it ramps up
+    jitter: 0.03,           // relative run-to-run noise
+    outlierRate: 0.04,      // chance a run is interrupted and takes 1.5-3x longer
+    seed: 1,
   });
 
   const MAX_BRANCH_EVALS = 20_000_000;
@@ -377,6 +385,38 @@
     constructor(spec = {}) {
       this.spec = Object.freeze({ ...DEFAULT_SPEC, ...spec });
       this.trace = false;
+      // Wall-clock model: the host enqueues launches; the device runs them in order.
+      this.hostUs = 0; this.deviceFreeUs = 0; this.launchCount = 0;
+      this.loaded = new WeakSet();
+      this.rngState = (this.spec.seed >>> 0) || 1;
+    }
+
+    rand() { // xorshift32, deterministic per device
+      let x = this.rngState; x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0;
+      this.rngState = x; return x / 4294967296;
+    }
+
+    /** Host wall-clock time in microseconds. Launches return before the kernel finishes. */
+    now() { return +this.hostUs.toFixed(3); }
+
+    /** Wait until every launched kernel has finished. */
+    synchronize() { this.hostUs = Math.max(this.hostUs, this.deviceFreeUs); return this.now(); }
+
+    /** Spend host time (e.g. CPU work between launches). */
+    hostWork(us) { this.hostUs += Math.max(0, us); }
+
+    _clockLaunch(kernel, kernelUs) {
+      const sp = this.spec;
+      const issued = this.hostUs + sp.launchOverheadUs;
+      this.hostUs = issued;
+      let t = kernelUs;
+      if (this.launchCount < sp.clockRampLaunches) t *= 1.25 - (0.25 * this.launchCount) / sp.clockRampLaunches;
+      this.launchCount++;
+      const g = Math.sqrt(-2 * Math.log(1 - this.rand())) * Math.cos(2 * Math.PI * this.rand());
+      t *= Math.max(0.5, 1 + sp.jitter * g);
+      if (this.rand() < sp.outlierRate) t *= 1.5 + 1.5 * this.rand();
+      if (!this.loaded.has(kernel)) { this.loaded.add(kernel); t += sp.moduleLoadUs; }
+      this.deviceFreeUs = Math.max(this.deviceFreeUs, issued) + t;
     }
 
     alloc(n, type = "f32") {
@@ -481,7 +521,7 @@ ${code}
         atomics: 0, globalAtomics: 0, atomicSerialization: 0, warpOps: 0,
         fmaInstructions: 0, flops: 0, tensorOps: 0,
         branches: 0, divergentBranches: 0,
-        divergentSites: {}, sites, registers, sharedPerBlock: 0,
+        divergentSites: {}, sites, registers, ilp, sharedPerBlock: 0,
       };
       if (this.trace) stats.warpTrace = [];
       const l2 = new SectorCache(spec.l2Bytes, spec.sectorBytes);
@@ -693,8 +733,12 @@ ${code}
           [order[i], order[j]] = [order[j], order[i]];
         }
       }
+      // Per-block work, for scheduling blocks onto SMs in the time model.
+      const issued = () => stats.memInstructions + stats.branches + stats.sharedWavefronts + stats.barriers + stats.warpOps + (stats.atomicSerialization - stats.atomics) + stats.fmaInstructions;
+      const marks = [];
       try {
         for (const [bx, by, bz] of order) {
+          marks.push([issued(), stats.tensorOps]);
           const blockIdx = Object.freeze({ x: bx, y: by, z: bz });
           blockShared = { arrays: new Map(), bytes: 0 };
           const threads = [];
@@ -755,7 +799,7 @@ ${code}
             stats.idleLanes += W - lanes.length;
             stats.threads += lanes.length;
             const divBefore = stats.divergentBranches;
-            accountWarp(lanes, stats, sector, l2);
+            accountWarp(lanes, stats, sector, l2, spec.sharedBanks);
             if (this.trace) {
               const stores = {};
               for (const L of lanes) {
@@ -795,13 +839,23 @@ ${code}
       const dramRate = Math.max(1e-9, Math.min(dramPeak, inFlight / spec.dramLatencyCycles));
       const dramCycles = stats.dramBytes / dramRate;
       const l2Cycles = stats.bytesMoved / (spec.l2BandwidthGBs / spec.clockGHz);
-      const warpInstr = stats.memInstructions + stats.branches + stats.sharedWavefronts + stats.barriers + stats.warpOps + (stats.atomicSerialization - stats.atomics) + stats.fmaInstructions;
-      // Blocks are spread over the SMs in rounds: an SM that gets ceil(blocks / sms) blocks does
-      // that many blocks' worth of work. Too few blocks leaves SMs idle; a partial last round
-      // is the tail effect.
-      const smRounds = Math.ceil(stats.blocks / spec.sms);
-      const issueCycles = (smRounds * (warpInstr / stats.blocks)) / spec.issuePerSmPerCycle;
-      const tensorCycles = (smRounds * (stats.tensorOps / stats.blocks) * 4096) / spec.tensorFmaPerSmPerCycle;
+      const warpInstr = issued();
+      // Blocks are dispatched in order, each to the SM with the least work so far. The busiest
+      // SM sets the time: too few blocks leaves SMs idle, a partial last wave is the tail
+      // effect, and uneven blocks are load imbalance.
+      marks.push([warpInstr, stats.tensorOps]);
+      const smIssue = new Float64Array(spec.sms), smTensor = new Float64Array(spec.sms);
+      for (let b = 0; b + 1 < marks.length; b++) {
+        const iw = (marks[b + 1][0] - marks[b][0]) / spec.issuePerSmPerCycle;
+        const tw = ((marks[b + 1][1] - marks[b][1]) * 4096) / spec.tensorFmaPerSmPerCycle;
+        let m = 0;
+        for (let k = 1; k < spec.sms; k++) if (Math.max(smIssue[k], smTensor[k]) < Math.max(smIssue[m], smTensor[m])) m = k;
+        smIssue[m] += iw; smTensor[m] += tw;
+      }
+      const issueCycles = Math.max(...smIssue), tensorCycles = Math.max(...smTensor);
+      const smBusy = Array.from(smIssue, (v, k) => Math.max(v, smTensor[k]));
+      const busiest = Math.max(...smBusy);
+      stats.smBalance = busiest ? +(smBusy.reduce((a, b) => a + b, 0) / (spec.sms * busiest)).toFixed(4) : 1;
       const cycles = Math.max(dramCycles, l2Cycles, issueCycles, tensorCycles) + (stats.memInstructions ? spec.dramLatencyCycles : 0);
       const top = Math.max(dramCycles, l2Cycles, issueCycles, tensorCycles);
       stats.limitedBy = cycles === 0 ? "nothing"
@@ -819,6 +873,10 @@ ${code}
       stats.divergence = stats.branches ? +(stats.divergentBranches / stats.branches).toFixed(4) : 0;
       stats.achievedGflops = cycles ? +((stats.flops / (cycles / spec.clockGHz))).toFixed(1) : 0;
       stats.percentOfPeakFp32 = +((100 * stats.achievedGflops) / (spec.sms * spec.lanesPerSM * 2 * spec.clockGHz)).toFixed(1);
+      // "Speed of light": how busy each unit was, as % of the kernel's duration.
+      const pct = (x) => (cycles ? +Math.min(100, (100 * x) / cycles).toFixed(1) : 0);
+      stats.sol = { dram: pct(stats.dramBytes / dramPeak), l2: pct(l2Cycles), issue: pct(issueCycles), tensor: pct(tensorCycles) };
+      this._clockLaunch(kernel, stats.timeUs);
       return stats;
     }
   }
@@ -867,7 +925,7 @@ ${code}
   }
 
   /** Line up lanes' memory ops, shared-memory ops and branches by order and account them per warp. */
-  function accountWarp(lanes, stats, sector, l2) {
+  function accountWarp(lanes, stats, sector, l2, banks = 32) {
     if (!lanes.length) return;
     // FMAs: lanes issue together, so the warp issues as many FMA instructions as its busiest lane.
     let fmaMax = 0;
@@ -902,13 +960,13 @@ ${code}
         }
       }
     }
-    // Shared memory: 32 banks of 4-byte words. Lanes reading the same word share it
+    // Shared memory: banks (32 by default) of 4-byte words. Lanes reading the same word share it
     // (broadcast); distinct words in the same bank are serialised (a bank conflict).
     const sGroups = new Map(); // key*2+store -> Map(bank -> Set(word))
     for (const L of lanes) {
       const m = L.smem;
       for (let o = 0; o < m.length; o += 3) {
-        const word = Math.floor(m[o] / 4), bank = word % 32, k = m[o + 2] * 2 + m[o + 1];
+        const word = Math.floor(m[o] / 4), bank = word % banks, k = m[o + 2] * 2 + m[o + 1];
         let g = sGroups.get(k);
         if (!g) { g = new Map(); sGroups.set(k, g); }
         if (!g.has(bank)) g.set(bank, new Set());

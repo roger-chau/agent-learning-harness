@@ -1,0 +1,20 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "SOL: DRAM 12%, L2 9%, issue 15%. Occupancy 12%. Diagnosis?",
+     "options": ["Bandwidth-bound", "Latency-bound: too little work in flight", "Compute-bound", "Launch-bound"], "answer": 1,
+     "explanation": "Nothing is busy, and occupancy is low: raise warps or ILP."},
+    {"id": "q2", "type": "single", "prompt": "Issue SOL 96%, FMA share 22%, many bank conflicts. Best first fix?",
+     "options": ["Use tensor cores", "Remove the bank conflicts and other non-FMA instructions", "Increase occupancy", "Use CUDA Graphs"], "answer": 1,
+     "explanation": "Issue-bound on overhead: cut the overhead."},
+    {"id": "q3", "type": "single", "prompt": "A kernel takes 1.5 µs; back to back, each launch costs 4 µs of wall time. Diagnosis?",
+     "options": ["Latency-bound", "Launch-bound", "Compute-bound", "Can't tell"], "answer": 1,
+     "explanation": "The kernel's own time is under half the wall time per launch."},
+    {"id": "q4", "type": "single", "prompt": "DRAM SOL 91%, coalescing 1.0, intensity 0.25 FLOP/B. What's left to try?",
+     "options": ["Nothing for this kernel alone: it's at the bandwidth roof. Reduce bytes (fusion, smaller types) or accept it", "Unroll loops", "More occupancy", "Tensor cores"], "answer": 0,
+     "explanation": "A bandwidth-bound kernel only gets faster by moving fewer bytes."},
+    {"id": "q5", "type": "multi", "prompt": "Which are fixes for a latency-bound kernel?",
+     "options": ["More resident warps (fewer registers, smaller blocks)", "More independent loads per thread (ILP)", "Double buffering", "Coalescing an already coalesced access"], "answer": [0, 1, 2],
+     "explanation": "All of them put more work in flight."}
+  ]
+}

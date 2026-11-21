@@ -1345,29 +1345,125 @@
      "type": "chapter",
      "id": "5-1",
      "title": "Timing correctly",
-     "summary": "",
-     "status": "planned"
+     "summary": "Asynchronous launches, warm-up, noise, robust statistics, and latency vs throughput.",
+     "exercises": [
+      "5-1-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "numbers that lie"
+      ],
+      [
+       "The smallest idea",
+       "launches are asynchronous"
+      ],
+      [
+       "Add one block",
+       "warm-up and noise"
+      ],
+      [
+       "The whole machine",
+       "latency vs throughput"
+      ],
+      [
+       "Reality",
+       "clocks, caches, reporting"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "5-2",
      "title": "Profiler metrics",
-     "summary": "",
-     "status": "planned"
+     "summary": "Speed of light per unit, the ratios behind it, and what stall reasons point at.",
+     "exercises": [
+      "5-2-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "hundreds of metrics"
+      ],
+      [
+       "The smallest idea",
+       "speed of light"
+      ],
+      [
+       "Add one block",
+       "the metrics behind the SOL"
+      ],
+      [
+       "The whole machine",
+       "stall reasons"
+      ],
+      [
+       "Reality",
+       "replays and realistic peaks"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "5-3",
-     "title": "From stall reasons to bottleneck",
-     "summary": "",
-     "status": "planned"
+     "title": "From metrics to bottleneck",
+     "summary": "Five kinds of slow, a procedure to tell them apart, and how the bottleneck moves.",
+     "exercises": [
+      "5-3-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "\"it's slow\" isn't a diagnosis"
+      ],
+      [
+       "The smallest idea",
+       "five kinds of slow"
+      ],
+      [
+       "Add one block",
+       "the procedure"
+      ],
+      [
+       "The whole machine",
+       "the bottleneck moves"
+      ],
+      [
+       "Reality",
+       "phases and dependency chains"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "5-4",
      "title": "Tail effects and load balance",
-     "summary": "",
-     "status": "planned"
+     "summary": "Waves, partial waves, uneven blocks, and decompositions that avoid them.",
+     "exercises": [
+      "5-4-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "the last SM decides"
+      ],
+      [
+       "The smallest idea",
+       "waves"
+      ],
+      [
+       "Add one block",
+       "uneven blocks"
+      ],
+      [
+       "The whole machine",
+       "choosing a decomposition"
+      ],
+      [
+       "Reality",
+       "small problems on big GPUs"
+      ]
+     ]
     },
     {
      "type": "paper",
@@ -1396,7 +1492,9 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-dissect-a"
+     ]
     },
     {
      "type": "milestone",
@@ -1404,7 +1502,18 @@
      "title": "Paper project: dissect the GW-1",
      "summary": "Write microbenchmarks that reveal the simulator's hidden latencies, cache sizes and bank count.",
      "project": "Papers",
-     "status": "planned"
+     "exercises": [
+      "PP-microbench-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "For each quantity: what does your microbenchmark vary, and why does only that quantity affect the time?",
+       "Which measurement could have fooled you, and how did you rule that out?",
+       "What did you find surprising or hard to measure?",
+       "Which of these quantities matter most for the kernels you've written so far, and why?"
+      ]
+     }
     },
     {
      "type": "paper",
@@ -1433,7 +1542,9 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-streamk-a"
+     ]
     },
     {
      "type": "milestone",
@@ -1441,22 +1552,52 @@
      "title": "Paper project: Stream-K GEMM",
      "summary": "Remove your GEMM's tail effect with a Stream-K decomposition.",
      "project": "C",
-     "status": "planned"
+     "exercises": [
+      "PP-streamk-a"
+     ]
     },
     {
      "type": "milestone",
      "id": "B5",
-     "title": "Milestone B5: Profile your library",
-     "summary": "Diagnose every primitive with evidence; fix the worst two.",
+     "title": "Milestone B5: Profile and fix a library",
+     "summary": "Diagnose four primitives with evidence; make two of them at least 3× faster.",
      "project": "B",
-     "status": "planned"
+     "exercises": [
+      "B5-a"
+     ],
+     "writeup": {
+      "min_words": 200,
+      "prompts": [
+       "For each of the four kernels: the diagnosis (Chapter 5.3), with the metrics that prove it.",
+       "Which kernel couldn't be fixed inside the kernel, and what would you change instead?",
+       "For each fix: what changed, which metric moved, and what's the new limiter?",
+       "What would you check with a real profiler on a real GPU that the simulator can't show you?"
+      ]
+     }
+    },
+    {
+     "type": "scenario",
+     "id": "scenario-5",
+     "title": "Scenario: the regression",
+     "summary": "A PR may have slowed a filter down, or the benchmark is noisy. Build an A/B tool you trust, find the cause and fix it.",
+     "exercises": [
+      "scenario-5-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "What's your verdict on PR #4711, with the number and how confident you are in it?",
+       "What was the root cause, as a mechanism, and which metrics show it?",
+       "Was launch overhead ever a real problem for this kernel at this size? Show the arithmetic.",
+       "What could still make a nightly benchmark lie, and how would you guard against it?"
+      ]
+     }
     },
     {
      "type": "checkpoint",
      "id": "p5-checkpoint",
      "title": "Part 5 checkpoint",
-     "summary": "Cumulative quiz across the Part.",
-     "status": "planned"
+     "summary": "Cumulative quiz across the Part."
     }
    ],
    "hp": "Ch 1"

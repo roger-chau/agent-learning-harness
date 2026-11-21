@@ -1,0 +1,20 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "Why does a pointer chase measure latency rather than bandwidth?",
+     "options": ["It uses few threads", "Each load's address depends on the previous load's result, so nothing can overlap", "It reads small values", "It bypasses the caches"], "answer": 1,
+     "explanation": "Dependent loads serialise: time per access is latency."},
+    {"id": "q2", "type": "single", "prompt": "In a latency-vs-size curve, what marks a cache's capacity?",
+     "options": ["The height of a plateau", "The size at which the latency steps up", "The noise", "The last point"], "answer": 1,
+     "explanation": "Steps are capacities; plateaus are latencies."},
+    {"id": "q3", "type": "single", "prompt": "What's the general recipe for a microbenchmark?",
+     "options": ["Run a real application and average", "Make run time depend on one hidden property, vary one parameter, and find where the time changes", "Read the spec sheet", "Profile with every counter enabled"], "answer": 1,
+     "explanation": "Isolate one effect, sweep one variable."},
+    {"id": "q4", "type": "single", "prompt": "According to the paper, why can reordering register numbers make Volta code faster?",
+     "options": ["Registers have different speeds", "Operands in the same register bank conflict and cost extra cycles", "It increases occupancy", "It changes the clock"], "answer": 1,
+     "explanation": "Register bank conflicts: a compiler (or hand-written assembly) can avoid them."},
+    {"id": "q5", "type": "single", "prompt": "To measure a cache's line (or sector) size, what do you sweep?",
+     "options": ["Array size", "Access stride", "Thread count", "Clock frequency"], "answer": 1,
+     "explanation": "Cost per access grows with stride until each access needs its own line."}
+  ]
+}

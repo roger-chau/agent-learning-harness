@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "What does Stream-K divide equally among blocks?",
+     "options": ["Output tiles", "Inner-loop (k) iterations across all tiles", "Rows of A", "Shared memory"], "answer": 1,
+     "explanation": "Work-centric: equal iterations, crossing tile boundaries."},
+    {"id": "q2", "type": "single", "prompt": "Why does Stream-K need a fix-up step?",
+     "options": ["To zero C", "Tiles covered by more than one block have several partial accumulators that must be summed", "To handle bank conflicts", "For FP16 rounding"], "answer": 1,
+     "explanation": "Split tiles are finished by combining partials."},
+    {"id": "q3", "type": "numeric", "prompt": "30 tiles, 16 SMs, 8 iterations per tile. Data-parallel time ÷ Stream-K time?", "unit": "×", "answer": 1.0667, "tolerance": 0.002,
+     "explanation": "DP: 2 waves × 8 = 16. SK: ⌈240/16⌉ = 15. 16/15 ≈ 1.067."},
+    {"id": "q4", "type": "single", "prompt": "Why does the paper prefer a hybrid (data-parallel full waves + Stream-K remainder)?",
+     "options": ["It's simpler to write", "Fewer split tiles: less fix-up traffic and better cache locality, with the same tail removal", "It uses tensor cores", "It needs fewer registers"], "answer": 1,
+     "explanation": "Split only what the tail needs."},
+    {"id": "q5", "type": "single", "prompt": "How many blocks does a Stream-K kernel launch?",
+     "options": ["One per output tile", "About as many as the GPU can run at once (persistent blocks)", "One per k-iteration", "Exactly 1"], "answer": 1,
+     "explanation": "Persistent blocks each loop over their share of iterations."}
+  ]
+}

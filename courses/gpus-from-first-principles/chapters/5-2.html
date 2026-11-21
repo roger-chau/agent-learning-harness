@@ -1,0 +1,54 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>A profiler like Nsight Compute reports hundreds of metrics per kernel. Reading them all is hopeless; reading the wrong one is worse. A performance engineer starts from a handful that answer one question, <em>which part of the machine is this kernel using up?</em>, and only then drills into the details.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: speed of light</h2>
+<p><strong>For each unit, compare what the kernel asked of it with what the unit could have done in the same time.</strong> That ratio is the unit's "speed of light" (SOL) percentage, and Nsight Compute's first section shows it for compute and memory:</p>
+<div class="eq">$$\text{SOL}_{\text{DRAM}} = \frac{\text{DRAM bytes} / \text{peak bytes per cycle}}{\text{kernel cycles}}$$</div>
+<p>A unit near 100% is the bottleneck; making anything else faster won't help. On the GW-1:</p>
+<table>
+<tr><th>Unit</th><th>Work counted</th><th>Peak per cycle</th></tr>
+<tr><td>DRAM</td><td><code>dramBytes</code></td><td>512 GB/s ÷ 1.5 GHz ≈ 341 B</td></tr>
+<tr><td>L2</td><td><code>bytesMoved</code> (every sector a warp touches)</td><td>1024 GB/s ÷ 1.5 GHz ≈ 683 B</td></tr>
+<tr><td>Issue</td><td>warp instructions, on the busiest SM</td><td>1 per SM</td></tr>
+<tr><td>Tensor</td><td>MMA FMAs, on the busiest SM</td><td>256 per SM</td></tr>
+</table>
+<p>The simulator reports these as <code>stats.sol</code>. The warp instructions it counts are <code>memInstructions + branches + sharedWavefronts + barriers + warpOps + (atomicSerialization − atomics) + fmaInstructions</code>.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: the metrics behind the SOL</h2>
+<p>When a unit is saturated, the next question is whether it's doing <em>useful</em> work. A few ratios answer that:</p>
+<ul>
+<li><strong>Sectors per request</strong> (<code>transactions / memInstructions</code>): 4 for a coalesced warp of 4-byte loads, up to 32 for scattered ones. High DRAM SOL with high sectors per request means bandwidth spent on bytes nobody wanted (Part 2).</li>
+<li><strong>Arithmetic intensity</strong> (<code>flops / dramBytes</code>): where the kernel sits on the roofline.</li>
+<li><strong>Achieved bandwidth</strong> (<code>dramBytes / time</code>), and the <strong>L2 hit rate</strong>.</li>
+<li><strong>FMA share</strong> of issued instructions: is the issue-bound kernel issuing math, or overhead?</li>
+<li><strong>Achieved occupancy</strong> and <strong>bank conflicts</strong>: the usual suspects when nothing is saturated (next chapter).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: stall reasons</h2>
+<p>Real profilers also sample <em>why warps aren't issuing</em>, each cycle. The common names, and what they point at:</p>
+<table>
+<tr><th>Stall reason (Nsight Compute)</th><th>Usually means</th></tr>
+<tr><td>Long scoreboard</td><td>Waiting on global or local memory: latency or bandwidth</td></tr>
+<tr><td>Short scoreboard / MIO throttle</td><td>Waiting on shared memory: often bank conflicts</td></tr>
+<tr><td>Math pipe throttle</td><td>The FP32 or tensor units are busy: compute-bound (good)</td></tr>
+<tr><td>Barrier</td><td>Waiting at <code>__syncthreads</code>: imbalance inside the block</td></tr>
+<tr><td>Not selected</td><td>Enough eligible warps; the scheduler picked another. Healthy</td></tr>
+</table>
+<p>The simulator doesn't sample stalls, but its time model has the same structure: the largest SOL decides <code>limitedBy</code>, and when every SOL is low, the kernel is waiting on latency.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Profilers replay the kernel several times to collect all counters, so profiled runs are slower and must not be used for timing.</li>
+<li>Percentages are relative to peaks the hardware rarely reaches: 80–90% of DRAM peak is excellent in practice.</li>
+<li>Learn your profiler's speed-of-light, memory-workload and warp-state sections first. They cover most real diagnoses.</li>
+</ul>
+</section>

@@ -1,0 +1,23 @@
+<div class="paper-ref">
+<div class="k">Project B · Parallel primitives · Milestone 5 of 5</div>
+A teammate's primitives library is "slow". Find out why, with evidence, and fix what can be fixed.
+</div>
+
+<h2>The brief</h2>
+<p>The starter contains a small library as shipped, with a runner for each kernel:</p>
+<table>
+<tr><th>Runner</th><th>What it does</th><th>Size</th></tr>
+<tr><td><code>runSum(x, out, n)</code></td><td>Sum of a float array into <code>out[0]</code></td><td>n = 2<sup>18</sup></td></tr>
+<tr><td><code>runHist(x, bins, n)</code></td><td>16-bin histogram of <code>x &amp; 15</code> (u32). The real data is skewed: most values land in one bin</td><td>n = 2<sup>18</sup></td></tr>
+<tr><td><code>runSpeed(p, out, n)</code></td><td><code>2 · vx</code> for particles stored as 8 floats each (x, y, z, vx, vy, vz, mass, id)</td><td>n = 2<sup>18</sup></td></tr>
+<tr><td><code>runScan(x, y, n)</code></td><td>Inclusive prefix sum</td><td>n = 2<sup>16</sup></td></tr>
+</table>
+<p>Each runner returns the array of its launch stats. Keep the signatures; change anything inside. The inputs' layout is fixed: other code produces them.</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li>All four runners still correct.</li>
+<li>At least <strong>two</strong> of sum, histogram and scan made <strong>≥ 3× faster</strong> (total cycles over all launches) than the shipped versions.</li>
+<li>A write-up: a diagnosis of <em>each</em> kernel, using the Chapter 5.3 procedure and quoting the numbers, before and after. One of the four can't be fixed inside the kernel at all. Say which, prove it with metrics, and say what you'd change instead.</li>
+</ul>
+<p>Use what you built in Project B. Diagnose first: the shipped code has more than one problem in places, and only some of them matter.</p>

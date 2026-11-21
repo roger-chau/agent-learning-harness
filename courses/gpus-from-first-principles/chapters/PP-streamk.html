@@ -1,0 +1,22 @@
+<div class="paper-ref">
+<div class="k">Paper project · Stream-K (Project C)</div>
+Remove your GEMM's tail effect.
+</div>
+
+<h2>Build</h2>
+<p>Using your C3 kernel's inner loop (64 × 64 tiles, k-steps of 16, or your own shape), write two launchers. Each returns the array of stats for every launch it made:</p>
+<ul>
+<li><code>runDataParallel(A, B, C, n)</code>: one block per output tile.</li>
+<li><code>runStreamK(A, B, C, n)</code>: one persistent block per SM, each doing an equal range of the total k-iterations, with a fix-up for split tiles. Any correct fix-up is fine: <code>atomicAdd</code> into C, a workspace plus a second kernel, or the paper's flags.</li>
+</ul>
+<p>Two practical notes:</p>
+<ul>
+<li><strong><code>C</code> arrives full of garbage</strong>, as it would on a real GPU. If your fix-up accumulates into C, clear the split tiles first (and count that launch).</li>
+<li>In the simulator, a helper function can't contain <code>__syncthreads()</code>. Write the tile loop out in each kernel.</li>
+</ul>
+
+<h2>How it's checked</h2>
+<ul>
+<li>Both correct at n = 192 (9 tiles: less than one wave on 16 SMs), and Stream-K <strong>at least 1.4× faster</strong> than your data-parallel version there, counting all its launches.</li>
+<li>Stream-K correct at n = 320 (25 tiles), with its main kernel's <code>smBalance</code> ≥ 0.95.</li>
+</ul>

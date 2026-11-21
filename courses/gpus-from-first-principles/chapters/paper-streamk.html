@@ -1,0 +1,38 @@
+<div class="paper-ref">
+<div class="k">The work</div>
+<b>M. Osama, D. Merrill, C. Cecka, M. Garland, J. D. Owens. "Stream-K: Work-centric Parallel Decomposition for Dense Matrix-Matrix Multiplication on the GPU."</b> PPoPP 2023.
+<br><a href="https://scholar.google.com/scholar?q=Stream-K+Work-centric+Parallel+Decomposition+for+Dense+Matrix-Matrix+Multiplication" target="_blank" rel="noopener noreferrer">Find it on Google Scholar</a> · Short and clear. Merrill is also an author of the decoupled look-back paper from Part 3, and it shows.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>GEMM libraries split C into output tiles and give each block one tile: the <em>data-parallel</em> decomposition. When the tile count isn't a multiple of the number of SMs, the last wave is partly empty (Chapter 5.4). Libraries fight this with many kernel variants per GPU (different tile shapes, split-K factors) and heuristics to pick one per problem size. That means big binaries, fragile heuristics, and performance that still falls off a cliff for unlucky shapes.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Divide the work, not the output.</strong> A GEMM's total work is (number of tiles) × (k-iterations per tile) inner-loop iterations. Stream-K launches exactly as many persistent blocks as the GPU can run at once, and gives each one an equal, contiguous range of those iterations, in tile order. A block's range may start in the middle of one tile and end in the middle of another.</p>
+<div class="eq">$$\text{iterations per block} = \left\lceil \frac{\text{tiles} \times \text{iters per tile}}{\text{blocks}} \right\rceil$$</div>
+<p>Tiles covered by more than one block need a <strong>fix-up</strong>: each contributor produces a partial accumulator, and someone adds them up. In the paper, contributors write partials to a workspace and signal with flags; the block that owns the tile's final iterations waits for them and finishes it, the same consumer–producer pattern as decoupled look-back. Simpler variants use atomic adds into C, or a second, small kernel.</p>
+<p>Since every block does the same number of iterations, there is no tail, whatever the problem shape. One kernel configuration covers shapes that used to need many.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ul>
+<li><strong>The motivation figures</strong>: data-parallel efficiency against problem size is a sawtooth; Stream-K's is flat.</li>
+<li><strong>The basic Stream-K algorithm</strong>: the iteration-range arithmetic, and the fix-up protocol.</li>
+<li><strong>The hybrid schedules</strong>: pure Stream-K splits many tiles, and every split costs fix-up traffic and hurts cache locality. The paper's practical answer: run full waves data-parallel, and use Stream-K only for the remainder ("data-parallel + Stream-K").</li>
+<li><strong>The evaluation</strong>: thousands of problem shapes against cuBLAS, which picks from many kernels; Stream-K matches or beats it with one.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>Do the scheduling arithmetic: data-parallel time, Stream-K time, and how many tiles end up split (each costing a fix-up). Then the paper project builds Stream-K on your GEMM.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>Stream-K went into CUTLASS, NVIDIA's open-source GEMM library, as a standard tile scheduler. Work-centric decomposition has since spread to other kernels with uneven parallelism. For example, attention kernels for LLM decoding split long sequences across blocks with a final reduction ("split-KV" or "flash-decoding"), which you'll meet again in Part 8.</p>
+</section>

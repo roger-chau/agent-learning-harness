@@ -1,0 +1,22 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "<code>t0 = now(); launch(...); t1 = now();</code> reports 4 µs for a big kernel. Why?",
+     "options": ["The kernel is very fast", "Launches are asynchronous: it measured only the time to queue the launch", "The clock is broken", "The kernel was cached"], "answer": 1,
+     "explanation": "Synchronise before reading the clock."},
+    {"id": "q2", "type": "single", "prompt": "Why discard the first few runs?",
+     "options": ["They're always wrong by exactly 2×", "The first launch loads the kernel's code and clocks ramp up, so early runs don't represent steady state", "To save time", "Because of L2 bank conflicts"], "answer": 1,
+     "explanation": "Warm-up removes one-off costs."},
+    {"id": "q3", "type": "single", "prompt": "30 runs: 29 take about 10 µs, one takes 300 µs. Which summary best describes typical performance?",
+     "options": ["Mean (19.7 µs)", "Median (about 10 µs)", "Maximum (300 µs)", "Sum"], "answer": 1,
+     "explanation": "The median ignores the outlier; the mean doesn't."},
+    {"id": "q4", "type": "numeric", "prompt": "A kernel takes 1 µs on the GPU, and each launch costs the host 4 µs. Back to back, what fraction of the time is the GPU busy, in %?", "unit": "%", "answer": 25, "tolerance": 0.5,
+     "explanation": "One kernel per 4 µs, 1 µs of which is work."},
+    {"id": "q5", "type": "multi", "prompt": "Which help a launch-bound workload?",
+     "options": ["Fusing small kernels into one", "CUDA Graphs", "Batching work into fewer, bigger launches", "Optimising the kernel's inner loop"], "answer": [0, 1, 2],
+     "explanation": "The kernel isn't the bottleneck; the launches are."},
+    {"id": "q6", "type": "single", "prompt": "Why interleave A and B runs when comparing two versions?",
+     "options": ["It's faster", "Slow drifts (temperature, clocks, other load) then affect both equally", "To warm the cache", "It isn't necessary"], "answer": 1,
+     "explanation": "Otherwise drift shows up as a false difference."}
+  ]
+}

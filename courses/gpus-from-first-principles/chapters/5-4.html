@@ -1,0 +1,41 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>A kernel's time is set by the <strong>last</strong> SM to finish. Every SM that finishes early and sits idle is wasted hardware, and no per-thread optimisation recovers it. This waste comes from how work is cut into blocks, not from what the blocks do.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: waves</h2>
+<p><strong>Blocks run in waves.</strong> With $S$ SMs and $b$ blocks resident per SM, the GPU runs $S \cdot b$ blocks at a time, so a grid of $B$ equal blocks takes</p>
+<div class="eq">$$\text{waves} = \left\lceil \frac{B}{S \cdot b} \right\rceil, \qquad \text{efficiency} = \frac{B}{\text{waves} \cdot S \cdot b}$$</div>
+<p>A GEMM of 320 × 320 with 64 × 64 tiles has 25 tiles. On 16 SMs, one tile each: two waves, the second only 9/16 full. Efficiency is 25/32 = 78%, and nearly a quarter of the GPU idles for half the kernel. This is the <strong>tail effect</strong>, and it's worst when blocks are few and big, which is exactly what a well-tuned GEMM has.</p>
+<div data-gw="gpu-waves"></div>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: uneven blocks</h2>
+<p>When blocks do different amounts of work, the hardware's dispatcher helps: each new block goes to whichever SM frees up first. With many small blocks this balances well on its own. With few large ones, one heavy block that starts last decides the time. Two classic fixes:</p>
+<ul>
+<li><strong>Split the work finer</strong>, so no single block is a large share of the total.</li>
+<li><strong>Pair or reorder work</strong> so blocks are equal: in a triangular loop, row $i$ with row $n - 1 - i$; or start the heaviest blocks first.</li>
+</ul>
+<p>The simulator models this: blocks are dispatched in order to the least-loaded SM, and the busiest SM sets the time. <code>stats.smBalance</code> is average SM work divided by the busiest SM's (1.0 is perfect).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: choosing a decomposition</h2>
+<p>Tile size trades per-tile efficiency (big tiles reuse more, Part 4) against wave quantisation (big tiles mean few tiles and a bad tail). Libraries choose tile shapes per problem size, sometimes by search. Two structural fixes avoid the trade-off:</p>
+<ul>
+<li><strong>Split-K</strong>: split the $k$ loop of each tile across several blocks and add the partial results. More, smaller pieces of work.</li>
+<li><strong>Stream-K</strong> (this Part's paper): give each SM an exactly equal share of the total inner-loop iterations, crossing tile boundaries, with a fix-up step for tiles split between SMs.</li>
+</ul>
+<p>Both use <strong>persistent</strong> blocks: launch exactly one block per SM (or per resident slot) and loop over work inside the kernel, instead of letting the hardware schedule.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>On a GPU with 132 SMs (an H100), a 1024 × 1024 GEMM with 128 × 128 tiles has 64 tiles, less than half a wave. The tail effect is the norm for small and medium problems, which is what inference runs.</li>
+<li>Other GPU work (another kernel, another process) can occupy SMs, so the "number of SMs" a kernel effectively gets varies.</li>
+<li>Check: grid size divided by (SMs × blocks per SM). If the fractional part is small, you have a tail.</li>
+</ul>
+</section>

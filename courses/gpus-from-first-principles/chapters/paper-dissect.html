@@ -1,0 +1,36 @@
+<div class="paper-ref">
+<div class="k">The work</div>
+<b>Z. Jia, M. Maggioni, B. Staiger, D. P. Scarpazza. "Dissecting the NVIDIA Volta GPU Architecture via Microbenchmarking."</b> Technical report, Citadel, 2018 (arXiv:1804.06826).
+<br><a href="https://arxiv.org/abs/1804.06826" target="_blank" rel="noopener noreferrer">arXiv</a> · Long, and organised as a reference. The reading guide picks a path through it. The same team later published similar reports on Turing and on the Graphcore IPU.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>NVIDIA publishes peak numbers and a programming guide, but not the details that decide whether code is fast: cache latencies and sizes, how the register file is banked, how instructions are encoded and scheduled, how tensor-core operations break down. A trading firm that needed every last microsecond decided to find out for itself, by measurement, and then published what it found.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Design tiny programs whose run time depends on exactly one hidden property, then vary one parameter and watch where the time changes.</strong> The classic is the <em>pointer chase</em>: an array where each element holds the index of the next one to read. Every load depends on the previous one, so nothing overlaps, and time per access is pure latency. Sweep the array size: while it fits in L1, each access costs L1 latency; past L1's capacity, L2 latency; past L2's, DRAM. The <em>steps</em> in the curve are the capacities, and the <em>plateaus</em> are the latencies.</p>
+<p>The same pattern, one variable at a time, measures line sizes (sweep the stride), associativity (sweep conflicting addresses), bank counts, throughput per instruction, and more. The paper applies it systematically, and adds something unusual: it reverse-engineers the instruction encoding, so it can read and patch the machine code itself.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ul>
+<li><strong>The memory hierarchy chapter</strong>: the pointer-chase plots. Learn to read a latency-vs-size curve; it's the most reused technique in the paper.</li>
+<li><strong>The register file and instruction encoding</strong>: Volta moved to 128-bit instructions with scheduling control information inside them, and the paper finds a register file with two 64-bit-wide banks. It shows how a register bank conflict costs a cycle, and how reordering register numbers removes it. This is a compiler's job (Part 6), and a reason hand-tuned assembly can still beat compilers.</li>
+<li><strong>The tensor core section</strong>: how one warp-level matrix instruction maps onto the hardware, and the fragment layouts (compare with Chapter 4.5).</li>
+<li>Skim the rest: it's a reference for when you need it.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>Read a pointer-chase curve: given (array size, cycles per access) measurements, find the plateaus and where they end. The paper project after this chapter goes further: the simulator's spec is hidden and randomised, and you measure it.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>Microbenchmark studies became a standard companion to every new GPU generation, from academic groups and companies alike, and they feed directly into performance models, compilers and tools. Performance engineers keep their own suites too: when a new GPU arrives, the first job is to check the numbers the code depends on. Knowing how to design a measurement that isolates one effect is the core skill behind all of it.</p>
+</section>

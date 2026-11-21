@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric", "prompt": "A grid of 40 equal blocks, 16 SMs, 2 blocks resident per SM. Tail efficiency, in %?", "unit": "%", "answer": 62.5, "tolerance": 0.1,
+     "explanation": "2 waves of 32 slots; 40 / 64 = 62.5%."},
+    {"id": "q2", "type": "single", "prompt": "Why is the tail effect worst for well-tuned GEMMs?",
+     "options": ["They use atomics", "Big tiles mean few blocks, so a partial last wave is a large fraction of the work", "They are memory-bound", "They diverge"], "answer": 1,
+     "explanation": "Few big blocks quantise badly onto the SMs."},
+    {"id": "q3", "type": "single", "prompt": "Blocks of very unequal work, dispatched in order of increasing work. What happens to the time?",
+     "options": ["Nothing", "The heaviest blocks start last, and one of them decides when the kernel ends", "It always halves", "The GPU reorders them perfectly"], "answer": 1,
+     "explanation": "Start heavy work first, or split it."},
+    {"id": "q4", "type": "multi", "prompt": "Which reduce tail effects?",
+     "options": ["Split-K", "Stream-K", "Smaller tiles (at some per-tile efficiency cost)", "Adding __syncthreads()"], "answer": [0, 1, 2],
+     "explanation": "All three make the work divide more evenly over the SMs."},
+    {"id": "q5", "type": "single", "prompt": "What is a persistent kernel?",
+     "options": ["One that never finishes", "One launched with about one block per SM that loops over work items itself", "One cached on the device", "One with high occupancy"], "answer": 1,
+     "explanation": "The kernel, not the hardware, distributes the work."}
+  ]
+}

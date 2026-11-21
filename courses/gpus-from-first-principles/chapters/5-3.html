@@ -1,0 +1,42 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>"It's slow" isn't a diagnosis. Before changing a line of code, a performance engineer names the bottleneck and points at the evidence. The fix follows from the name: you don't coalesce a compute-bound kernel, and you don't unroll a latency-bound one. Most wasted optimisation effort comes from skipping this step.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: five kinds of slow</h2>
+<p><strong>Every kernel is limited by one of a few things, and the metrics from Chapter 5.2 tell you which.</strong></p>
+<table>
+<tr><th>Diagnosis</th><th>Evidence</th><th>Typical fixes</th></tr>
+<tr><td><strong>Launch-bound</strong></td><td>Kernel time well under the wall time per launch</td><td>Fuse kernels, batch work, CUDA Graphs</td></tr>
+<tr><td><strong>Latency-bound</strong></td><td>Every SOL low (here: busiest unit under 60%)</td><td>More warps, more ILP, more work in flight, double buffering</td></tr>
+<tr><td><strong>Bandwidth-bound</strong> (DRAM or L2)</td><td>That memory's SOL high</td><td>Fewer bytes: coalescing, reuse, tiling, fusion, smaller types</td></tr>
+<tr><td><strong>Compute-bound</strong></td><td>Issue SOL high, mostly FMAs (or tensor SOL high)</td><td>Better algorithm, tensor cores, lower precision. Or celebrate</td></tr>
+<tr><td><strong>Issue-bound</strong></td><td>Issue SOL high, mostly <em>not</em> FMAs</td><td>Fewer instructions per useful op: register tiling, vector loads, no bank conflicts, less divergence</td></tr>
+</table>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: the procedure</h2>
+<ol>
+<li><strong>Launch check.</strong> If the kernel's own time is less than half the wall time per launch, stop: it's launch-bound.</li>
+<li><strong>Find the busiest unit</strong> among DRAM, L2, issue and tensor SOL.</li>
+<li><strong>If it's below 60%</strong>, nothing is saturated: latency-bound. Check occupancy and ILP (Little's law).</li>
+<li><strong>Otherwise it's that unit.</strong> For issue, split by FMA share: at least half FMAs means compute-bound, otherwise issue-bound. Then find out <em>which</em> instructions: bank conflicts (wavefronts), branches, address arithmetic, barriers.</li>
+</ol>
+<p>The 60% line is a convention, not a law. Near it, a kernel is usually a mix, and the honest diagnosis says so.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: the bottleneck moves</h2>
+<p>Fixing the bottleneck exposes the next one. Part 4 was this loop: naive GEMM (issue-bound on loads), tiled (issue-bound on shared loads), register-tiled (compute-bound), tensor cores (latency-bound), double-buffered (issue-bound again, at 2.7× the FP32 roof). Each step's diagnosis chose the next step's fix. Keep a log, as you did in C3.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Real kernels have phases: a load phase that's bandwidth-bound and a compute phase that's issue-bound. Whole-kernel averages hide that; source-level profiling (per-instruction stall sampling) shows it.</li>
+<li>"Latency-bound" on real hardware also covers dependency chains within a thread, not just memory. The fix is the same: more independent work.</li>
+<li>Write the diagnosis down with its numbers before you change anything. That's what B5 asks for.</li>
+</ul>
+</section>

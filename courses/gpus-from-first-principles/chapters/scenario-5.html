@@ -1,0 +1,13 @@
+<div class="scenario-brief">
+<div class="k">Scenario · The regression</div>
+<b>The nightly benchmark says the smoothing filter got slower after PR #4711. The PR's author says the benchmark is noisy and nothing is wrong. Settle it, and fix it.</b>
+<dl>
+<dt>Context</dt><dd>A 5-tap smoothing filter (<code>y[i] = 0.1·x[i−2] + 0.2·x[i−1] + 0.4·x[i] + 0.2·x[i+1] + 0.1·x[i+2]</code>, for 2 ≤ i &lt; n−2) runs on every frame of a signal-processing pipeline. The PR description: "process 4 outputs per thread to cut launch overhead". Both versions are in the starter.</dd>
+<dt>Part 1</dt><dd>The team needs a trustworthy A/B tool. Write <code>compare(dev, runA, runB, reps)</code>: <code>runA()</code> and <code>runB()</code> each launch one version once on <code>dev</code>. Return <code>{ ratio, verdict }</code>, where <code>ratio</code> is B's typical synchronised time over A's (within ±3%) and <code>verdict</code> is <code>"slower"</code>, <code>"faster"</code> or <code>"same"</code> (B vs A; "same" means within 3%). The tests run it on pairs with known true times, through the simulator's noisy clock: warm-up effects, jitter and occasional 1.5–3× outliers.</dd>
+<dt>Part 2</dt><dd>Find the root cause in the PR with the profiler metrics, and write <code>runFixed(x, y, n)</code> (returning an array of launch stats): correct, and <strong>no slower than the pre-PR version</strong> (within 5%) at n = 2<sup>18</sup>. Stretch: ≤ 7,500 cycles. The pre-PR kernel wasn't at the roof either.</dd>
+</dl>
+</div>
+
+<h2>What a good answer looks like</h2>
+<p>A verdict with a number and an uncertainty, not "seems slower". A root cause stated as a mechanism and backed by metrics, before and after. A fix, with its own measurement. And, because the PR author had a point, an honest look at whether launch overhead was ever the problem for this kernel at this size.</p>
+<p>Interleave A and B, warm up, use robust statistics. Then think about what else could make a nightly benchmark lie, such as other jobs on the machine or clocks, and how you'd guard against it.</p>

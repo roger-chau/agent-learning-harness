@@ -1,0 +1,27 @@
+<div class="paper-ref">
+<div class="k">Paper project · Dissecting a GPU</div>
+You're handed a GPU with no spec sheet. Measure it.
+</div>
+
+<h2>The setup</h2>
+<p>Write <code>dissect(dev)</code>. The tests call it on GW-1 variants whose spec is <strong>hidden and different from the documented GW-1</strong>. <code>dev</code> has <code>alloc</code>, <code>from</code> and <code>launch</code>, but <code>launch</code> returns only <code>{ cycles }</code>: a stopwatch, nothing else. Compile your kernels with the global <code>gpu.compile</code>; they run on any device.</p>
+<p>Return:</p>
+<table>
+<tr><th>Key</th><th>What</th><th>Accuracy</th></tr>
+<tr><td><code>dramLatencyCycles</code></td><td>Latency of a DRAM access</td><td>±5%</td></tr>
+<tr><td><code>dramBytesPerCycle</code></td><td>Peak DRAM bandwidth</td><td>±5%</td></tr>
+<tr><td><code>l2Bytes</code></td><td>L2 capacity (a power of two)</td><td>exact</td></tr>
+<tr><td><code>sectorBytes</code></td><td>Memory transaction size</td><td>exact</td></tr>
+<tr><td><code>sharedBanks</code></td><td>Number of shared-memory banks</td><td>exact</td></tr>
+</table>
+
+<h2>Things you know (from the earlier Parts)</h2>
+<ul>
+<li>Time = the largest of the DRAM, L2, issue and tensor times, plus one DRAM latency. DRAM time is bandwidth-limited, or latency-limited when too few bytes are in flight (Little's law). Use that model to design each experiment so that the quantity you want is the only thing that changes.</li>
+<li>Each launch starts with an empty L2. Blocks run in index order.</li>
+<li><strong>Difference measurements</strong> cancel fixed costs: time with 33 loads minus time with 1 load, rather than time with 33 loads.</li>
+<li>Make sure the regime you think you're in is the one you're in. A sweep that's latency-limited at small sizes and bandwidth-limited at large ones has a "knee" that has nothing to do with caches.</li>
+</ul>
+
+<h2>Then explain</h2>
+<p>The write-up asks for each microbenchmark: what it varies, why only the target quantity affects it, and what could have fooled it. That last part is the real skill: the authors of the Volta paper spent most of their effort ruling out wrong explanations.</p>

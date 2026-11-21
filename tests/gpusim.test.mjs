@@ -279,3 +279,28 @@ test("fma counting, vector loads, f16 rounding and tensor-core mma", () => {
   assert.ok(ok);
   assert.equal(sm.tensorOps, 1);
 });
+
+test("wall clock: async launches, warm-up, synchronise; sol, balance and bank count", () => {
+  const g = new Device({ jitter: 0, outlierRate: 0 });
+  const { k } = g.compile(`function k(x, y, n) { const i = blockIdx.x * blockDim.x + threadIdx.x; if (i < n) y[i] = x[i]; }`);
+  const n = 1 << 14, x = g.from(new Array(n).fill(1)), y = g.alloc(n);
+  const t0 = g.now(); const s = g.launch(k, { grid: n / 256, block: 256 }, x, y, n);
+  assert.equal(g.now() - t0, g.spec.launchOverheadUs);           // launch returns before the kernel runs
+  const first = g.synchronize() - t0;
+  assert.ok(first > g.spec.moduleLoadUs);                         // first launch loads the module
+  for (let i = 0; i < 10; i++) g.launch(k, { grid: n / 256, block: 256 }, x, y, n);
+  g.synchronize();
+  const t1 = g.now(); g.launch(k, { grid: n / 256, block: 256 }, x, y, n); g.synchronize();
+  assert.ok(Math.abs(g.now() - t1 - (g.spec.launchOverheadUs + s.timeUs)) < 1e-6); // warm, no noise
+  assert.ok(s.sol.dram > 0 && s.sol.dram <= 100 && s.sol.issue > 0);
+  // uneven blocks: one heavy block dominates the busiest SM
+  const { uneven } = g.compile(`function uneven(y) { let a = 0; const m = blockIdx.x === 0 ? 4000 : 10; for (let i = 0; i < m; i++) a = fma(a, 1, 1); y[threadIdx.x] = a; }`);
+  const su = g.launch(uneven, { grid: 16, block: 32 }, g.alloc(32));
+  assert.ok(su.smBalance < 0.1);
+  const se = g.launch(uneven, { grid: 1, block: 32 }, g.alloc(32));
+  assert.equal(se.smBalance, 0.0625);
+  // configurable bank count
+  const { b } = g.compile(`function b(y) { const s = shared("s", 1024); y[threadIdx.x] = s[threadIdx.x * 16]; }`);
+  assert.equal(new Device({ sharedBanks: 32 }).launch(b, { grid: 1, block: 32 }, g.alloc(32)).bankConflicts, 15);
+  assert.equal(new Device({ sharedBanks: 16 }).launch(b, { grid: 1, block: 32 }, g.alloc(32)).bankConflicts, 31);
+});

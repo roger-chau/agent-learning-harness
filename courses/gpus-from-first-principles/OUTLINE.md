@@ -34,7 +34,7 @@ Every Part also has a **real-world scenario**: an open-ended brief (e.g. "this p
 - **B2** (after 3.2): single-pass scan with decoupled look-back.
 - **B3** (after 3.3): histogram with privatisation; it must hold up under a skewed, high-contention input.
 - **B4** (after Part 3): LSD radix sort for 32-bit keys, built only from your B1–B3, tested on hidden adversarial inputs.
-- **B5** (after Part 5): profile your whole library, write up the bottleneck of each primitive with evidence, and fix the worst two.
+- **B5** (after Part 5): profile a teammate's primitives library (reduce, histogram, an array-of-structs read, scan), write up the bottleneck of each with evidence, and make two of them at least 3× faster. One cannot be fixed inside the kernel.
 
 ### Project C: GEMM, naive to tensor cores
 - **C1** (after 4.2): shared-memory tiled SGEMM.
@@ -125,12 +125,16 @@ Each paper chapter rebuilds the paper's key idea from first principles, gives a 
 → **Milestone C4**
 
 ## Part 5: Measuring like a performance engineer
-5.1 **Timing correctly.** Warm-up, synchronisation, variance, what not to measure.
-5.2 **Profiler metrics.** Throughput, achieved occupancy, stall reasons, memory charts (Nsight Compute concepts).
-5.3 **From stall reasons to bottleneck.** Latency-bound vs bandwidth-bound vs compute-bound vs launch-bound. *Exercises: diagnose mystery kernels.*
-5.4 **Tail effects and load balance.** Waves, partial waves, grid sizing.
+5.1 **Timing correctly.** Asynchronous launches, warm-up, noise and outliers, robust statistics, latency vs throughput, launch-bound kernels.
+5.2 **Profiler metrics.** Speed of light per unit, sectors per request, intensity, FMA share, stall reasons (Nsight Compute concepts).
+5.3 **From metrics to bottleneck.** Launch-, latency-, bandwidth-, compute- and issue-bound, and a procedure to tell them apart. *Exercise: diagnose eleven mystery kernels.*
+5.4 **Tail effects and load balance.** Waves, partial waves, uneven blocks, persistent kernels, split-K and Stream-K.
 
-→ **Milestone B5**: Project B complete
+Papers: *Dissecting Volta* → **PP-microbench** (measure a GW-1 with a hidden, randomised spec through a stopwatch); *Stream-K* → **PP-streamk** (remove your GEMM's tail).
+
+→ **Milestone B5**: Project B complete (a teammate's library: diagnose four kernels with evidence, make two ≥ 3× faster)
+
+Scenario: *the regression*: build a trustworthy A/B comparison under a noisy clock, find a PR's root cause, fix it.
 
 ## Part 6: The compiler's view
 6.1 **From CUDA C to PTX to SASS.** The compilation pipeline and what each stage decides.
