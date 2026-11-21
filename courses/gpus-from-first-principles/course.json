@@ -767,8 +767,32 @@
      "type": "chapter",
      "id": "3-1",
      "title": "Reduction",
-     "summary": "",
-     "status": "planned"
+     "summary": "Turning a sequential chain into a tree, and mapping the tree onto warps.",
+     "exercises": [
+      "3-1-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "many values, one answer"
+      ],
+      [
+       "The smallest idea",
+       "associativity makes a tree"
+      ],
+      [
+       "Add one block",
+       "which threads work, then shuffles"
+      ],
+      [
+       "The whole machine",
+       "a bandwidth-speed reduction"
+      ],
+      [
+       "Reality",
+       "libraries and determinism"
+      ]
+     ]
     },
     {
      "type": "milestone",
@@ -776,14 +800,40 @@
      "title": "Milestone B1: Reduction",
      "summary": "Warp-shuffle reduction at a bandwidth target.",
      "project": "B",
-     "status": "planned"
+     "exercises": [
+      "B1-a"
+     ]
     },
     {
      "type": "chapter",
      "id": "3-2",
      "title": "Scan",
-     "summary": "",
-     "status": "planned"
+     "summary": "Prefix sums: Hillis–Steele, Blelloch, warp scans, and scanning across blocks.",
+     "exercises": [
+      "3-2-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "where does my output go?"
+      ],
+      [
+       "The smallest idea",
+       "running totals"
+      ],
+      [
+       "Add one block",
+       "two classic trees"
+      ],
+      [
+       "The whole machine",
+       "scanning across blocks"
+      ],
+      [
+       "Reality",
+       "libraries and other operators"
+      ]
+     ]
     },
     {
      "type": "milestone",
@@ -791,7 +841,9 @@
      "title": "Milestone B2: Scan",
      "summary": "Single-pass scan with decoupled look-back.",
      "project": "B",
-     "status": "planned"
+     "exercises": [
+      "B2-a"
+     ]
     },
     {
      "type": "paper",
@@ -820,14 +872,40 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-lookback-a"
+     ]
     },
     {
      "type": "chapter",
      "id": "3-3",
      "title": "Atomics and histograms",
-     "summary": "",
-     "status": "planned"
+     "summary": "Indivisible read-modify-write, contention, privatisation and skew.",
+     "exercises": [
+      "3-3-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "lost updates"
+      ],
+      [
+       "The smallest idea",
+       "atomic operations"
+      ],
+      [
+       "Add one block",
+       "privatise, then merge"
+      ],
+      [
+       "The whole machine",
+       "atomics for coordination"
+      ],
+      [
+       "Reality",
+       "hardware help and hot counters"
+      ]
+     ]
     },
     {
      "type": "milestone",
@@ -835,21 +913,71 @@
      "title": "Milestone B3: Histogram",
      "summary": "Privatised histogram that survives skewed input.",
      "project": "B",
-     "status": "planned"
+     "exercises": [
+      "B3-a"
+     ]
     },
     {
      "type": "chapter",
      "id": "3-4",
      "title": "Synchronisation and the memory model",
-     "summary": "",
-     "status": "planned"
+     "summary": "Visibility, ordering, fences, message passing, and why there's no grid barrier.",
+     "exercises": [
+      "3-4-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "when is a write visible?"
+      ],
+      [
+       "The smallest idea",
+       "relaxed memory, explicit ordering"
+      ],
+      [
+       "Add one block",
+       "message passing"
+      ],
+      [
+       "The whole machine",
+       "what you can't do"
+      ],
+      [
+       "Reality",
+       "scopes, orders, and the simulator's limits"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "3-5",
      "title": "Compaction and sorting",
-     "summary": "",
-     "status": "planned"
+     "summary": "Stable compaction from scan, and LSD radix sort as repeated stable counting sorts.",
+     "exercises": [
+      "3-5-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "positions depend on everything before"
+      ],
+      [
+       "The smallest idea",
+       "flag, scan, scatter"
+      ],
+      [
+       "Add one block",
+       "radix sort"
+      ],
+      [
+       "The whole machine",
+       "counting the traffic"
+      ],
+      [
+       "Reality",
+       "libraries, floats, payloads"
+      ]
+     ]
     },
     {
      "type": "paper",
@@ -878,7 +1006,9 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-onesweep-a"
+     ]
     },
     {
      "type": "milestone",
@@ -886,7 +1016,9 @@
      "title": "Milestone B4: Radix sort",
      "summary": "Onesweep-style LSD radix sort built only from your own primitives.",
      "project": "B",
-     "status": "planned"
+     "exercises": [
+      "B4-a"
+     ]
     },
     {
      "type": "scenario",
@@ -910,8 +1042,7 @@
      "type": "checkpoint",
      "id": "p3-checkpoint",
      "title": "Part 3 checkpoint",
-     "summary": "Cumulative quiz across the Part.",
-     "status": "planned"
+     "summary": "Cumulative quiz across the Part."
     }
    ],
    "hp": "Ch 5"

@@ -1,0 +1,20 @@
+<div class="paper-ref">
+<div class="k">Project B · Parallel primitives · Milestone 4 of 5</div>
+A GPU radix sort for 32-bit unsigned keys, built from your own primitives: histogram, scan and a stable scatter. Correctness first; B5 (after Part 5's profiling chapters) makes it fast.
+</div>
+
+<h2>Build: <code>radixSort</code></h2>
+<p>Write <code>radixSort(keys, n)</code>, where <code>keys</code> is a <code>u32</code> device buffer. Return <code>{ sorted, stats }</code>: <code>sorted</code> is a <code>u32</code> buffer holding the keys in ascending order, and <code>stats</code> lists every launch. A standard design per digit pass:</p>
+<ol>
+<li><strong>Histogram</strong> each tile's digits into a table <code>counts[digit × tiles + tile]</code>, digit-major, so one scan of the whole table gives every (digit, tile) its global offset.</li>
+<li><strong>Exclusive scan</strong> the table. Your B2 scan, or anything correct: the table is small.</li>
+<li><strong>Stable scatter</strong>: each key goes to its (digit, tile) offset plus its rank among same-digit keys earlier in its tile. Warp ballots (Chapter 3.5) give the rank within a warp; per-warp counts in shared memory give the rest.</li>
+</ol>
+<p>Choose your digit width. Four bits means 16 bins and 8 passes; eight bits means 256 bins and 4 passes. Ping-pong between two buffers.</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li>Sorted output on random keys, all-equal keys, already sorted, reverse sorted, a few distinct values, and keys near <code>0xFFFFFFFF</code> (watch your shifts: use <code>&gt;&gt;&gt;</code>, not <code>&gt;&gt;</code>).</li>
+<li>Sizes 16,384, 1,000 and 1.</li>
+<li><code>Array.prototype.sort</code> and typed-array <code>sort</code> are disabled during the checks. The GPU does the sorting.</li>
+</ul>

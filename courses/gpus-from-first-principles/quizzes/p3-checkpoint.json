@@ -1,0 +1,27 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "c1", "type": "single", "prompt": "A block reduction uses shared memory down to 32 values. Why finish with shuffles?",
+     "options": ["Shuffles are more accurate", "Only one warp is left: shuffles need no shared memory and no block-wide barriers", "Shared memory is full", "Shuffles avoid atomics"], "answer": 1,
+     "explanation": "Lanes of a warp exchange registers directly."},
+    {"id": "c2", "type": "numeric", "prompt": "Exclusive scan of [4, 0, 3, 1, 2]: what is the last element?", "unit": "", "answer": 8, "tolerance": 0,
+     "explanation": "0, 4, 4, 7, 8."},
+    {"id": "c3", "type": "single", "prompt": "Why does a single-pass scan take tile ids from an atomic counter?",
+     "options": ["Speed", "So a tile only waits on tiles that have already started; blockIdx order isn't guaranteed", "To reduce bank conflicts", "Atomics are required for float sums"], "answer": 1,
+     "explanation": "Forward progress requires waiting only on started tiles."},
+    {"id": "c4", "type": "single", "prompt": "A privatised shared-memory histogram is slow on a mostly-black image. Why?",
+     "options": ["Global atomics", "Lanes collide on the same shared counter, so atomics serialise", "Bank conflicts from padding", "The image is too large"], "answer": 1,
+     "explanation": "Skew moves contention into shared memory."},
+    {"id": "c5", "type": "multi", "prompt": "Which provide a legitimate grid-wide synchronisation point?",
+     "options": ["A kernel launch boundary", "Cooperative launch with grid.sync()", "__syncthreads()", "__threadfence()"], "answer": [0, 1],
+     "explanation": "__syncthreads is per block; a fence orders but doesn't wait."},
+    {"id": "c6", "type": "single", "prompt": "What makes compaction via exclusive scan <em>stable</em>, unlike atomicAdd slot reservation?",
+     "options": ["It's slower", "Each kept element's position is the count of kept elements before it, so order is preserved", "It uses shared memory", "It avoids divergence"], "answer": 1,
+     "explanation": "Positions follow input order."},
+    {"id": "c7", "type": "numeric", "prompt": "Lane 5 votes true, and the ballot is 0b101101 (lanes 0, 2, 3, 5). What is popc(ballot & lanes-below-5)?", "unit": "", "answer": 3, "tolerance": 0,
+     "explanation": "Lanes 0, 2, 3 are below lane 5: rank 3."},
+    {"id": "c8", "type": "single", "prompt": "Onesweep reduces radix-sort traffic mainly by…",
+     "options": ["Using float keys", "Computing all digit histograms up front and making each pass a single read-and-write sweep with look-back", "Sorting in shared memory only", "Using more passes"], "answer": 1,
+     "explanation": "About 2n per pass instead of 3n."}
+  ]
+}

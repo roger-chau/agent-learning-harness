@@ -1,0 +1,41 @@
+<div class="paper-ref">
+<div class="k">The paper</div>
+<b>A. Adinets, D. Merrill. "Onesweep: A Faster Least Significant Digit Radix Sort for GPUs."</b> arXiv preprint, 2022.
+<br><a href="https://scholar.google.com/scholar?q=Onesweep%3A+A+Faster+Least+Significant+Digit+Radix+Sort+for+GPUs" target="_blank" rel="noopener noreferrer">Find it on Google Scholar / arXiv</a> · Builds directly on the decoupled look-back paper you've just read.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>Radix sort is memory-bound, so its speed is decided by how many times each key crosses DRAM. A classic GPU LSD radix sort runs each digit pass as <em>reduce-then-scan</em>: read the keys to build histograms, scan the histograms, then read the keys <em>again</em> to scatter them, and write them. That's about $3n$ key movements per pass. For 32-bit keys with 8-bit digits, it's $12n$ across the sort, even though a pass fundamentally only needs to read and write each key once.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Make each digit pass a single sweep, and move histogramming out of the passes.</strong> Two parts:</p>
+<ol>
+<li><strong>All histograms up front.</strong> One kernel reads the keys once and builds the global histogram for <em>every</em> digit position at the same time. Those global histograms give each digit's starting offset in each pass.</li>
+<li><strong>One sweep per pass, with decoupled look-back.</strong> Each tile counts its keys per digit and needs, for each digit, how many keys of that digit come from <em>earlier</em> tiles. That's a scan across tiles, done exactly like B2: publish per-digit tile counts with an "aggregate" flag, look back through predecessors' aggregates until reaching inclusive prefixes, publish the prefix, then scatter. The keys are read once and written once per pass.</li>
+</ol>
+<p>So each pass moves about $2n$ keys instead of $3n$, and the sort as a whole approaches the cost of reading and writing the data once per digit. The authors also discuss the practical details: tile sizes, keeping a tile's keys in shared memory between ranking and scattering to make writes more coalesced, and handling the look-back efficiently across 256 digits at once.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ol class="reading">
+<li><strong>Background:</strong> LSD radix sort and the reduce-then-scan design it improves on. Compare the data-movement count with Chapter 3.5.</li>
+<li><strong>The upfront histogram.</strong> Read closely: why can all digit histograms be computed in one pass, and what does that save?</li>
+<li><strong>The single-sweep pass with look-back.</strong> Read very closely. Map the per-digit status words to B2's X/A/P states, now with 256 digits per tile.</li>
+<li><strong>Implementation and tuning.</strong> Skim for the choices that matter: tile size, digit width, and how scatters are made more coalesced.</li>
+<li><strong>Results.</strong> Note what the comparison is against (the previous CUB sort) and on what hardware.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>The exercise asks you to model key traffic for both designs, and to write a small <em>host-side</em> reference LSD radix sort using counting-sort passes. Having a sequential reference you trust is a habit worth having before optimising a GPU version. Then run your B4 sort and compare its measured <code>dramBytes</code> with the two models.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>Onesweep became the radix sort in CUB, so it's what Thrust and many frameworks run when they sort primitive keys on NVIDIA GPUs. More broadly, it shows a pattern you'll see again in this course: <strong>remove passes over data by computing what you'll need up front, and replace multi-kernel phases with single-pass cooperation</strong>. Kernel fusion (Part 7) and FlashAttention (Part 8) are the same idea in other clothes.</p>
+</section>

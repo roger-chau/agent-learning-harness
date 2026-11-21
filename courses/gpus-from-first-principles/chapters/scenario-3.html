@@ -1,0 +1,22 @@
+<div class="scenario-brief">
+<div class="k">Scenario · Lidar voxel occupancy</div>
+<b>A mobile robot's perception stack needs an occupancy summary of every lidar sweep, fast.</b>
+<dl>
+<dt>Context</dt><dd>Each sweep produces about 50,000 points <code>(x, y, z)</code> in metres, in the robot's frame. Downstream planning wants a <em>sparse</em> summary: which 0.5 m voxels are occupied, and how many points each holds.</dd>
+<dt>The grid</dt><dd>64 × 64 × 16 voxels covering x ∈ [0, 32), y ∈ [−16, 16), z ∈ [−2, 6). Voxel indices are <code>vx = ⌊x / 0.5⌋</code>, <code>vy = ⌊(y + 16) / 0.5⌋</code>, <code>vz = ⌊(z + 2) / 0.5⌋</code>, and the voxel id is <code>(vz · 64 + vy) · 64 + vx</code>. Points outside the grid are ignored.</dd>
+<dt>Output</dt><dd>The ids of occupied voxels in <strong>ascending order</strong>, with their point counts.</dd>
+<dt>Goal</dt><dd><strong>≤ 12,000 simulated cycles</strong> in total on the GW-1, with exact output.</dd>
+<dt>Interface</dt><dd><code>occupancyList(px, py, pz, n)</code> returns <code>{ ids, counts, k, stats }</code>: <code>k</code> occupied voxels, <code>ids</code> and <code>counts</code> are <code>u32</code> device buffers with at least <code>k</code> entries, and <code>stats</code> lists every launch. The host may read back a small number (like <code>k</code>) between launches.</dd>
+</dl>
+</div>
+
+<h2>The data isn't uniform</h2>
+<p>Real sweeps are lumpy. Half the points hit the ground plane (spread thinly over many voxels), a third hit a nearby wall (packed into a few voxels), and the rest are clutter, some of it out of range. Think about what that does to contention, and to how many voxels end up occupied (a few thousand of 65,536).</p>
+
+<h2>Designs to weigh</h2>
+<ul>
+<li><strong>Dense then sparse:</strong> count into a dense grid of 65,536 counters with atomics, then compact the non-zero cells. Compaction in voxel-id order gives sorted output for free.</li>
+<li><strong>Sort-based:</strong> compute each point's voxel id, radix-sort the ids, then run-length encode. No dense grid, but a full sort of 50,000 keys.</li>
+<li><strong>Hybrids:</strong> privatisation, combining before atomics, fusing steps.</li>
+</ul>
+<p>The budget is tight enough that the choice matters. Measure each stage: which launch dominates, and why?</p>

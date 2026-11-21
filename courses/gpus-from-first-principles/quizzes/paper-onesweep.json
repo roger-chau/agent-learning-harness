@@ -1,0 +1,19 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single", "prompt": "What dominates the run time of a GPU radix sort?",
+     "options": ["Comparisons", "Memory traffic: how many times keys cross DRAM", "Branch divergence", "Kernel launch overhead"], "answer": 1,
+     "explanation": "It's memory-bound, so key movements set the time."},
+    {"id": "q2", "type": "single", "prompt": "Why can all digit histograms be computed in one upfront pass?",
+     "options": ["Digits are independent of the order keys end up in, so each key contributes to every digit position's histogram at once", "Because keys are already sorted", "Because GPUs have 256 banks", "They can't"], "answer": 0,
+     "explanation": "The counts of each digit value don't depend on earlier passes, only on the keys."},
+    {"id": "q3", "type": "numeric", "prompt": "For 32-bit keys with 8-bit digits, how many key movements per key does Onesweep need in total (upfront histogram read + 2 per pass)?",
+     "unit": "", "answer": 9, "tolerance": 0, "explanation": "1 + 4 × 2 = 9, versus 12 for reduce-then-scan."},
+    {"id": "q4", "type": "single", "prompt": "How does a tile learn how many keys of each digit come from earlier tiles, within one pass?",
+     "options": ["A separate scan kernel", "Decoupled look-back over per-digit tile counts", "Atomics on a single counter", "It waits for all tiles to finish"], "answer": 1,
+     "explanation": "The same X/A/P look-back as single-pass scan, now per digit."},
+    {"id": "q5", "type": "single", "prompt": "What general lesson does Onesweep share with kernel fusion and FlashAttention?",
+     "options": ["Use more threads", "Remove passes over data: compute what you need up front and cooperate within one pass", "Always use 8-bit digits", "Avoid shared memory"], "answer": 1,
+     "explanation": "Fewer passes over memory is the theme of memory-bound optimisation."}
+  ]
+}
