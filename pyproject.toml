@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "groundwork"
+version = "0.1.0"
+description = "A local tutor agent that finds what you don't know and teaches it from first principles."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "anthropic>=2.12",
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[project.scripts]
+groundwork = "learnharness.server:main"
+
+[tool.setuptools.packages.find]
+include = ["learnharness*"]
+
+[tool.setuptools.package-data]
+learnharness = ["static/*", "static/vendor/*", "static/vendor/katex/*", "static/vendor/katex/fonts/*"]
