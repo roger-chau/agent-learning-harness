@@ -1,0 +1,84 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Part 0 ended with a design decision: to pay for instruction fetch and decode only once per many threads, the GPU groups threads into bundles of 32 that execute <em>the same instruction at the same time</em>. Hardware like that is fast and cheap. The question is how anyone is supposed to program it.</p>
+<p>There have been two answers, and the difference between them is the difference between a CPU's vector unit and a GPU. The first puts the width in front of the programmer. The second hides it.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>SIMD</strong> (single instruction, multiple data) makes the width explicit. A vector register holds, say, 16 floats, and one instruction adds two such registers lane by lane. Your loop becomes "for every chunk of 16 elements: load a vector, compute, store a vector". You, or an auto-vectoriser, write code <em>about vectors</em>. CPU extensions like SSE, AVX and AVX-512 work this way.</p>
+<p><strong>SIMT</strong> (single instruction, multiple threads) hides the width. You write ordinary scalar code for <em>one thread</em>: load my element, compute, store my element. The hardware runs 32 such threads in lockstep, one per lane. Each lane is a whole thread with its own registers and its own index. The vector still exists, but you never name it.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 640 230" role="img" aria-label="SIMD: one instruction on a 16-wide vector register written by the programmer. SIMT: scalar code for one thread, run by 32 lanes in lockstep">
+  <text class="d-label" x="20" y="24">SIMD: you write vector code</text>
+  <rect class="d-box" x="20" y="36" width="280" height="54" rx="8"/>
+  <text class="d-mono" x="32" y="58">v1 = load16(&amp;x[i])</text>
+  <text class="d-mono" x="32" y="78">v2 = v1 * v1 + 1   // 16 at once</text>
+  <g>
+    <rect class="d-box indigo" x="20" y="104" width="280" height="26" rx="6"/>
+    <line class="d-line" x1="37.5" y1="104" x2="37.5" y2="130"/><line class="d-line" x1="55" y1="104" x2="55" y2="130"/><line class="d-line" x1="72.5" y1="104" x2="72.5" y2="130"/><line class="d-line" x1="90" y1="104" x2="90" y2="130"/>
+    <line class="d-line" x1="107.5" y1="104" x2="107.5" y2="130"/><line class="d-line" x1="125" y1="104" x2="125" y2="130"/><line class="d-line" x1="142.5" y1="104" x2="142.5" y2="130"/><line class="d-line" x1="160" y1="104" x2="160" y2="130"/>
+    <line class="d-line" x1="177.5" y1="104" x2="177.5" y2="130"/><line class="d-line" x1="195" y1="104" x2="195" y2="130"/><line class="d-line" x1="212.5" y1="104" x2="212.5" y2="130"/><line class="d-line" x1="230" y1="104" x2="230" y2="130"/>
+    <line class="d-line" x1="247.5" y1="104" x2="247.5" y2="130"/><line class="d-line" x1="265" y1="104" x2="265" y2="130"/><line class="d-line" x1="282.5" y1="104" x2="282.5" y2="130"/>
+  </g>
+  <text class="d-mono" x="20" y="150">one register, 16 lanes, width visible in your code</text>
+  <text class="d-mono" x="20" y="170">tails, gathers and masks: your problem</text>
+
+  <text class="d-label" x="340" y="24">SIMT: you write code for one thread</text>
+  <rect class="d-box" x="340" y="36" width="280" height="54" rx="8"/>
+  <text class="d-mono" x="352" y="58">i = blockIdx.x*blockDim.x + threadIdx.x</text>
+  <text class="d-mono" x="352" y="78">out[i] = x[i] * x[i] + 1</text>
+  <g class="d-fill-teal">
+    <circle cx="352" cy="117" r="5"/><circle cx="370" cy="117" r="5"/><circle cx="388" cy="117" r="5"/><circle cx="406" cy="117" r="5"/>
+    <circle cx="424" cy="117" r="5"/><circle cx="442" cy="117" r="5"/><circle cx="460" cy="117" r="5"/><circle cx="478" cy="117" r="5"/>
+    <circle cx="496" cy="117" r="5"/><circle cx="514" cy="117" r="5"/><circle cx="532" cy="117" r="5"/><circle cx="550" cy="117" r="5"/>
+    <circle cx="568" cy="117" r="5"/><circle cx="586" cy="117" r="5"/><circle cx="604" cy="117" r="5"/>
+  </g>
+  <text class="d-mono" x="340" y="150">32 threads in a warp, one instruction stream</text>
+  <text class="d-mono" x="340" y="170">tails, addresses and masks: the hardware's problem</text>
+  <text class="d-text" x="320" y="212" text-anchor="middle">Same execution hardware underneath. The difference is who has to think about the vector.</text>
+</svg>
+<figcaption>Left: the programmer works in vectors. Right: the programmer works in threads, and the warp is the hidden vector.</figcaption>
+</figure>
+
+<div data-gw="warp-exec" data-preset="uniform"></div>
+<p>Step through it. Every line is one warp instruction, and all 32 lanes execute it together, each on its own data. That's the whole execution model when there are no branches.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: what the hardware takes over</h2>
+<p>Three things make SIMD code tedious. SIMT moves each of them into hardware.</p>
+<ol>
+<li><strong>Tails.</strong> With 16-wide vectors and $n = 1000$, you get $\lfloor 1000/16 \rfloor = 62$ full vectors and a tail of $1000 - 992 = 8$ elements that needs special handling: a scalar loop or a masked vector instruction. In SIMT you launch $\lceil 1000/32 \rceil = 32$ warps, and the last warp has $1000 - 31 \times 32 = 8$ threads that pass the <code>if (i &lt; n)</code> guard. The tail is just threads that do nothing.</li>
+<li><strong>Addresses.</strong> SIMD loads want contiguous, aligned chunks; anything else needs explicit gather and scatter instructions. In SIMT every thread computes its own address, and any pattern is legal. The hardware combines the 32 addresses of a warp into as few memory transactions as it can. Whether that's 1 or 32 transactions is a <em>performance</em> question, not a correctness one; Part 2 is about it.</li>
+<li><strong>Conditionals.</strong> SIMD code handles <code>if</code> with mask registers and blend instructions that you (or the compiler) write. In SIMT each thread just writes <code>if</code>, and the hardware tracks which lanes are active. Chapter 1.4 shows exactly what that costs.</li>
+</ol>
+<div class="callout key"><b>The key idea</b>SIMT is SIMD where the hardware manages the vector: per-lane addresses, tails and masks. You write scalar code; the costs of the vector don't go away, they just stop being visible in the source.</div>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>SIMT didn't appear from nowhere. <strong>Vector supercomputers</strong> such as the Cray-1 already ran long vectors through pipelined units, with a vector-length register to handle tails and "strip-mining" to cut long loops into register-sized pieces. Hennessy &amp; Patterson describe a GPU as a <em>multithreaded SIMD processor</em>, and that phrase is precise:</p>
+<ul>
+<li><strong>SIMD</strong>: a warp is a SIMD instruction stream 32 lanes wide.</li>
+<li><strong>Multithreaded</strong>: the SM holds many warps and switches among them every cycle to hide latency, which is Chapter 0.3 at warp granularity.</li>
+<li><strong>Plus</strong> per-lane addressing and hardware masking, which is what lets each lane pretend to be an independent thread.</li>
+</ul>
+<p>The illusion has limits, and most of this course is about them. Lanes of a warp that want different instructions must take turns (1.4). Lanes that want scattered addresses cost extra transactions (Part 2). The programming model is scalar; the performance model is still a vector.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<p>Different vendors and books use different words for the same pieces. You'll meet all of them:</p>
+<table>
+<tr><th>This course / CUDA</th><th>AMD (ROCm/HIP)</th><th>H&amp;P's vendor-neutral term</th></tr>
+<tr><td>thread</td><td>work-item</td><td>sequence of SIMD lane operations</td></tr>
+<tr><td>warp (32 threads)</td><td>wavefront (64 on CDNA, 32 or 64 on RDNA)</td><td>thread of SIMD instructions</td></tr>
+<tr><td>block</td><td>workgroup</td><td>thread block</td></tr>
+<tr><td>SM</td><td>compute unit (CU)</td><td>multithreaded SIMD processor</td></tr>
+<tr><td>shared memory</td><td>LDS (local data share)</td><td>local memory</td></tr>
+</table>
+<p>One more reality: CPUs and GPUs are converging at the edges. AVX-512 added per-lane masks, which pushes SIMD toward SIMT's convenience. Intel's ISPC compiler offers a SIMT-style "program one lane" model on top of CPU SIMD. And GPUs added warp-level instructions such as shuffles and votes that deliberately expose the vector again, because sometimes the programmer can use it better than the illusion can. Part 3 uses those.</p>
+<div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 4</strong> (Data-Level Parallelism in Vector, SIMD and GPU Architectures): its vector-architecture and GPU sections are this chapter in depth, including the full terminology table. <strong>Appendix G</strong> goes deeper into vector processors and strip-mining.</div>
+</section>

@@ -1,0 +1,46 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Each thread runs its own code, so each thread may take its own path through an <code>if</code>. But a warp issues <em>one</em> instruction at a time for all its lanes. What happens when lanes 0–15 want the <code>then</code> branch and lanes 16–31 want the <code>else</code>?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>The warp executes both paths, one after the other, with lanes masked off.</strong> The hardware keeps an <strong>active mask</strong>, one bit per lane. At a branch where lanes disagree, which is called <strong>divergence</strong>, the warp runs the <code>then</code> path with only the "true" lanes active, then the <code>else</code> path with only the "false" lanes active. At the point where both paths meet again, the <strong>reconvergence point</strong>, the full mask is restored.</p>
+<div data-gw="warp-exec" data-preset="divergent"></div>
+<p>Step through it. Lines 3–4 run with roughly half the lanes, line 6 with the other half. The warp issued three instructions' worth of time for the two paths, but each lane did useful work in only one or two of them. The <strong>SIMD efficiency</strong>, useful lane-slots divided by issued lane-slots, drops below 100%.</p>
+<p>The cost rule is simple: <strong>a divergent if/else costs the sum of both paths</strong>, not one of them. A warp where every lane agrees, even if <em>different warps</em> go different ways, pays only for the path it takes.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: reconvergence, nesting and loops</h2>
+<p><strong>Where do paths rejoin?</strong> The natural place is the <em>immediate post-dominator</em> of the branch: the first instruction that every path from the branch must pass through. For an if/else that's the line after the closing brace. Classic GPUs track this with a small hardware <strong>reconvergence stack</strong>. At a divergent branch it pushes the reconvergence point along with the mask for each side, runs one side, then pops to run the other, and finally pops back to the full mask.</p>
+<p><strong>Nesting multiplies.</strong> A divergent <code>if</code> inside a divergent <code>if</code> can split a warp four ways, each part running with a fraction of the lanes.</p>
+<p><strong>Loops diverge on trip count.</strong> If lane 0 loops once and lane 5 loops four times, the warp keeps executing the loop until its <em>last</em> lane finishes, with finished lanes masked off:</p>
+<div data-gw="warp-exec" data-preset="loop"></div>
+<p><strong>Worked example:</strong> a warp where 31 lanes loop 10 times and one lane loops 100 times runs the loop body 100 times. Lane-slots issued: $100 \times 32 = 3{,}200$. Useful: $31 \times 10 + 100 = 410$. SIMD efficiency is about 13%. One slow lane made the whole warp slow, the same "wait for the slowest lane" rule as loads in Chapter 1.3.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: make conditions warp-uniform</h2>
+<p>Divergence is a property of <em>warps</em>, not of your program. A condition that's the same for all 32 lanes of a warp is <strong>warp-uniform</strong> and costs nothing extra, even if half the warps take each side. So the main tool is <strong>remapping work so that similar work lands in the same warp</strong>:</p>
+<table>
+<tr><th>Condition</th><th>Divergent?</th><th>Why</th></tr>
+<tr><td><code>if (threadIdx.x % 2 == 0)</code></td><td>every warp</td><td>neighbouring lanes disagree</td></tr>
+<tr><td><code>if (threadIdx.x &lt; 16)</code></td><td>warp 0 only (block of 64)</td><td>lanes 0–15 vs 16–31 split warp 0; warp 1 is all false</td></tr>
+<tr><td><code>if ((threadIdx.x / 32) % 2 == 0)</code></td><td>never</td><td>constant within each warp</td></tr>
+<tr><td><code>if (i &lt; n)</code></td><td>at most one warp</td><td>only the warp straddling <code>n</code></td></tr>
+</table>
+<p>When the data itself decides the branch (sparse inputs, rays hitting different materials, particles in different states), you can't pick the condition. Instead you <em>reorder the data</em>: sort or bin the work items so that items taking the same path sit next to each other. That turns divergence into a data-movement problem, which Part 3's compaction and sorting primitives solve.</p>
+<p>Our simulator counts divergence exactly this way. Each evaluation of an <code>if</code>, <code>while</code> or <code>for</code> condition is lined up across the lanes of a warp. If the lanes disagree, that warp-level branch is counted as divergent.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<p><strong>Independent thread scheduling.</strong> From Volta onwards, NVIDIA GPUs give every thread its own program counter and call stack instead of one stack per warp. The scheduler still issues one instruction for a group of lanes at a time, so divergent paths are still serialised and still cost the sum. But it may now <em>interleave</em> the two paths rather than finishing one before starting the other, and reconvergence isn't guaranteed at the post-dominator. Two consequences:</p>
+<ul>
+<li>Algorithms where lanes of the same warp wait on each other, such as a spin-lock taken by one lane, no longer deadlock. Under the old stack model they could, because the lane holding the lock might never get scheduled.</li>
+<li>Code that relied on implicit lockstep ("warp-synchronous programming") is unsafe. Use explicit <code>__syncwarp()</code> and the <code>*_sync</code> warp intrinsics, which name the lanes that must participate.</li>
+</ul>
+<p>Hardware has also tried to recover the lost lanes directly. One of this Part's paper chapters, <em>Dynamic Warp Formation</em>, regroups threads from different warps that sit at the same instruction. And NVIDIA's Ada generation added <em>Shader Execution Reordering</em> for ray tracing, which regroups threads by the work they're about to do.</p>
+<div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 4</strong>, the section on conditional branching in GPUs, describes the mask stack and post-dominator reconvergence in the book's own terms.</div>
+</section>

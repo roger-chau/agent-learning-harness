@@ -200,6 +200,11 @@
       return new Buffer(new T(n), type);
     }
 
+    /** A deterministic RGB test image (u8, row-major, 3 bytes per pixel). */
+    image(width, height) {
+      return this.from(testImage(width, height), "u8");
+    }
+
     from(arr, type = "f32") {
       const b = this.alloc(arr.length, type);
       b.data.set(arr);
@@ -298,6 +303,8 @@ ${code}
         return px;
       };
       const kargs = args.map(wrapArg);
+      const bufById = new Map(args.filter((a) => a instanceof Buffer).map((a) => [a.id, a]));
+      if (this.trace) stats.warpTrace = [];
       const prevBr = rt.br;
       const sector = spec.sectorBytes;
 
@@ -328,7 +335,20 @@ ${code}
             lanes.push(lane);
             stats.threads++;
           }
+          const divBefore = stats.divergentBranches;
           accountWarp(lanes, stats, sector);
+          if (this.trace) {
+            // Per-warp record: which elements each buffer received writes to, and divergence.
+            const stores = {};
+            for (const L of lanes) {
+              for (let o = 0; o < L.mem.length; o += 4) {
+                if (!L.mem[o + 3]) continue;
+                const b = bufById.get(L.mem[o]);
+                (stores[L.mem[o]] ||= []).push(L.mem[o + 1] / b.bytesPerElement);
+              }
+            }
+            stats.warpTrace.push({ block: blockIdx, warp: w, lanes: lanes.length, divergent: stats.divergentBranches - divBefore, stores });
+          }
         }
       }
       rt.br = prevBr;
@@ -347,6 +367,49 @@ ${code}
       stats.divergence = stats.branches ? +(stats.divergentBranches / stats.branches).toFixed(4) : 0;
       return stats;
     }
+  }
+
+  /** Procedural test image: gradient, shapes, a checkerboard and thin lines (plenty of edges). */
+  function testImage(w, h) {
+    const px = new Uint8Array(w * h * 3);
+    const cx = w * 0.32, cy = h * 0.45, r = Math.min(w, h) * 0.22;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        let R = 30 + (170 * x) / Math.max(1, w - 1), G = 40 + (140 * y) / Math.max(1, h - 1), B = 120;
+        const dx = x - cx, dy = y - cy;
+        if (dx * dx + dy * dy < r * r) { R = 240; G = 200; B = 60; }
+        if (x > w * 0.58 && x < w * 0.9 && y > h * 0.18 && y < h * 0.5) { R = 60; G = 190; B = 175; }
+        if (x > w * 0.6 && y > h * 0.62 && y < h * 0.92 && x < w * 0.92) {
+          const c = ((Math.floor(x / 6) + Math.floor(y / 6)) & 1) ? 230 : 25;
+          R = G = B = c;
+        }
+        if (y % 23 === 7 && x < w * 0.5) { R = G = B = 250; }
+        const o = (y * w + x) * 3;
+        px[o] = R; px[o + 1] = G; px[o + 2] = B;
+      }
+    }
+    return px;
+  }
+
+  /** Convert a buffer (1 or 3 channels) to RGBA bytes for display, scaling [min, max] to [0, 255]. */
+  function toRGBA(data, w, h, channels = 1, min = null, max = null) {
+    const n = w * h;
+    if (data.length < n * channels) throw new RangeError(`show(): buffer has ${data.length} values, need ${n * channels}`);
+    if (min === null || max === null) {
+      if (data instanceof Uint8Array) { min = 0; max = 255; }
+      else {
+        let lo = Infinity, hi = -Infinity;
+        for (let i = 0; i < n * channels; i++) { const v = data[i]; if (v < lo) lo = v; if (v > hi) hi = v; }
+        min = lo; max = hi > lo ? hi : lo + 1;
+      }
+    }
+    const out = new Uint8ClampedArray(n * 4);
+    const k = 255 / (max - min);
+    for (let i = 0; i < n; i++) {
+      for (let c = 0; c < 3; c++) out[i * 4 + c] = (data[i * channels + (channels === 3 ? c : 0)] - min) * k;
+      out[i * 4 + 3] = 255;
+    }
+    return out;
   }
 
   /** Line up lanes' memory ops and branches by order and account them per warp. */
@@ -395,5 +458,5 @@ ${code}
     }
   }
 
-  return { Device, Buffer, DEFAULT_SPEC, instrument, topLevelFunctionNames };
+  return { Device, Buffer, DEFAULT_SPEC, instrument, topLevelFunctionNames, testImage, toRGBA };
 });

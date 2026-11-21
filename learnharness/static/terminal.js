@@ -79,6 +79,19 @@
       con.scrollTop = con.scrollHeight;
     };
 
+    const image = (m) => {
+      const fig = document.createElement("figure");
+      fig.className = "term-image";
+      const cv = document.createElement("canvas");
+      cv.width = m.w; cv.height = m.h;
+      cv.getContext("2d").putImageData(new ImageData(m.rgba, m.w, m.h), 0, 0);
+      cv.style.width = Math.min(m.w * 2, 520) + "px";
+      fig.appendChild(cv);
+      if (m.label) { const c = document.createElement("figcaption"); c.textContent = m.label; fig.appendChild(c); }
+      con.appendChild(fig);
+      con.scrollTop = con.scrollHeight;
+    };
+
     let worker = null;
     let busy = false;
     const buttons = () => el.querySelectorAll(".term-btn");
@@ -101,6 +114,7 @@
       worker.onmessage = (ev) => {
         const m = ev.data;
         if (m.type === "out") line(m.text, m.kind);
+        else if (m.type === "image") image(m);
         else if (m.type === "error") { line(`Error: ${m.message}`, "err"); finish(); }
         else if (m.type === "done") { line(`done in ${Math.round(performance.now() - started)} ms`, "dim"); finish(); }
         else if (m.type === "result") {

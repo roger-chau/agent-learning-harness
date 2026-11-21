@@ -90,6 +90,7 @@ def _course_stats(c: dict) -> dict:
         "written": sum(1 for i in chapters if i["status"] == "ready"),
         "projects": len(c.get("projects", [])),
         "milestones": sum(1 for i in c["order"] if i["type"] == "milestone"),
+        "papers": sum(1 for i in c["order"] if i["type"] == "paper"),
         "quizzes": sum(1 for i in c["order"] if i["has_quiz"]),
     }
 
@@ -120,7 +121,7 @@ def get_item(slug: str, item_id: str):
     return {
         "id": it["id"], "type": it["type"], "title": it["title"], "summary": it.get("summary", ""),
         "blocks": it.get("blocks", []), "project": it.get("project"),
-        "part": {"id": part["id"], "n": part.get("n"), "title": part["title"]},
+        "part": {"id": part["id"], "n": part.get("n"), "title": part["title"], "hp": part.get("hp", "")},
         "html": content.chapter_html(slug, item_id),
         "exercises": it["exercises"],
         "quiz": content.public_quiz(content.quiz(slug, item_id)),

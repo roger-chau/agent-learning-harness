@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric",
+     "prompt": "A block is 16×8 threads. Which warp (numbered from 0 within the block) contains the thread with threadIdx = (5, 6)?",
+     "unit": "", "answer": 3, "tolerance": 0,
+     "explanation": "t = 5 + 6 × 16 = 101; ⌊101/32⌋ = 3."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "A block has 200 threads. How many lanes are idle in its last warp?",
+     "unit": "lanes", "answer": 24, "tolerance": 0,
+     "explanation": "⌈200/32⌉ = 7 warps = 224 lanes; 224 − 200 = 24 idle."},
+    {"id": "q3", "type": "single",
+     "prompt": "With 16×16 blocks, which threads form warp 0?",
+     "options": ["Column 0, rows 0–31", "Row 0 and row 1 of the block (16 threads each)", "A 4×8 tile", "Threads chosen by the scheduler at run time"],
+     "answer": 1, "explanation": "x varies fastest, so t = 0..31 covers rows 0 and 1 of 16 threads each."},
+    {"id": "q4", "type": "single",
+     "prompt": "A warp issues a load and 31 lanes' data arrives after 300 cycles, one lane's after 500. When can the warp's next dependent instruction issue?",
+     "options": ["After 300 cycles", "After 500 cycles", "Immediately", "After 800 cycles"],
+     "answer": 1, "explanation": "The warp moves in lockstep: it waits for its slowest lane."},
+    {"id": "q5", "type": "numeric",
+     "prompt": "Each warp does 30 cycles of independent work per memory access with 450 cycles of latency. How many warps does one scheduler need to stay fully busy?",
+     "unit": "warps", "answer": 16, "tolerance": 0,
+     "explanation": "(30 + 450) / 30 = 16 warps."},
+    {"id": "q6", "type": "single",
+     "prompt": "Why should code use <code>warpSize</code> instead of the literal 32?",
+     "options": ["It's faster", "Other GPUs (e.g. AMD's 64-wide wavefronts) use different widths", "32 is reserved", "warpSize varies per launch"],
+     "answer": 1, "explanation": "Portability: the width is a hardware property, not a law of nature."}
+  ]
+}

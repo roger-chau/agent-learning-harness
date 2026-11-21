@@ -1,0 +1,25 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single",
+     "prompt": "What is the core observation behind dynamic warp formation?",
+     "options": ["Branches can be removed by the compiler", "After divergence, threads from different warps often want the same next instruction and could share one warp", "Warps should be 64 wide", "Divergence only happens in loops"],
+     "answer": 1, "explanation": "Partial warps at the same PC can be merged into fuller ones."},
+    {"id": "q2", "type": "single",
+     "prompt": "Why must regrouping keep each thread in its home lane?",
+     "options": ["To keep memory coalesced", "Because a thread's registers live in that lane's register-file bank, and moving them is too expensive", "Because the ISA requires it", "To avoid deadlock"],
+     "answer": 1, "explanation": "The register file is banked per lane, so regrouping is lane-aware."},
+    {"id": "q3", "type": "numeric",
+     "prompt": "Two warps both send lanes 0–15 down path A (10 instructions) and lanes 16–31 down path B (10 instructions). With lane-aware regrouping, how many warp instructions are issued in total for both paths?",
+     "unit": "instructions", "answer": 40, "tolerance": 0,
+     "explanation": "Lanes 0–15 each have 2 A-threads, so A needs 2 warps (20); likewise B needs 2 (20). Total 40, the same as PDOM: the constraint blocks any gain."},
+    {"id": "q4", "type": "numeric",
+     "prompt": "Now warp 1 sends lanes 0–15 down A and warp 2 sends lanes 16–31 down A (B is the rest). Path costs are 10 each. Lane-aware regrouping issues how many warp instructions in total?",
+     "unit": "instructions", "answer": 20, "tolerance": 0,
+     "explanation": "Every lane has exactly one A-thread and one B-thread, so A needs 1 warp and B needs 1: 10 + 10 = 20, half of PDOM's 40."},
+    {"id": "q5", "type": "multi",
+     "prompt": "Which problems did the follow-up, Thread Block Compaction, address?",
+     "options": ["Regrouped warps' memory accesses coalesce worse", "Some threads can wait a long time to be regrouped (starvation)", "Warps couldn't run loops", "Shared memory was too small"],
+     "answer": [0, 1], "explanation": "Mixing threads from all over the SM hurts locality and fairness; compacting within a block limits both."}
+  ]
+}

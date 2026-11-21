@@ -6,7 +6,7 @@ How a GPU really works and how to make code fast on it. The course starts from w
 
 - **Practice environment:** a browser GPU simulator. You write CUDA-style kernels in the in-page terminal. The simulator runs them warp by warp and reports correctness, cycles, memory transactions, coalescing efficiency, divergence, bank conflicts and occupancy. An optional real-CUDA mode runs the same work with `nvcc` when your machine has an NVIDIA GPU.
 - **Companions:**
-  - *Computer Architecture: A Quantitative Approach*, 7th edition (Hennessy & Patterson). Chapter references will be added once the table of contents is confirmed.
+  - *Computer Architecture: A Quantitative Approach*, 7th edition (Hennessy & Patterson). See the mapping below.
   - *It Thinks! Build your own GPU*, for the gate-level view.
 
 ## The projects
@@ -40,6 +40,42 @@ Every chapter ends with a graded quiz, and every Part ends with a cumulative che
 - **C3** (after 4.4): vectorised loads and double buffering. Gate: at least 70% of the simulated roofline, with an optimisation log recording each change, the metric it moved, and why.
 - **C4** (after Part 4): a tensor-core path in FP16/BF16 with FP32 accumulation, and a numerical error budget.
 - **C5** (after Part 6): read the generated code for your inner loop, hand-schedule it in the simulator's PTX-like ISA, and beat the baseline compiler in cycles. Explain each transformation as a compiler concept.
+
+## Companion: Hennessy & Patterson, 7th edition
+
+| Part | Chapters and appendices |
+|---|---|
+| 0. Why throughput machines | Ch 1 Fundamentals of Quantitative Design and Analysis · Ch 2 Memory Hierarchy Design · App B Review of Memory Hierarchy |
+| 1. SIMT | Ch 4 Data-Level Parallelism in Vector, SIMD and GPU Architectures · App G Vector Processors in More Depth |
+| 2. Memory | Ch 2 · Ch 4 (GPU memory) · App B · App L Advanced Concepts on Address Translation |
+| 3. Parallel building blocks | Ch 5 Thread-Level Parallelism (synchronisation, memory consistency) |
+| 4. Matrix multiply | Ch 7 Domain-Specific Architectures (systolic arrays, TPU) · Ch 4 |
+| 5. Measuring | Ch 1 (measuring, reporting and summarising performance) |
+| 6. The compiler's view | Ch 3 Instruction-Level Parallelism · App C Pipelining · App H VLIW and EPIC · App A Instruction Set Principles · App K Survey of ISAs |
+| 7. Real workloads | Ch 6 Warehouse-Scale Computers · App F Interconnection Networks |
+| 9. Reality | App J Computer Arithmetic |
+
+App E (Embedded Systems) belongs to the *Embedded GPUs & Accelerators* course.
+
+## Paper chapters
+
+Each paper chapter rebuilds the paper's key idea from first principles, gives a guided reading (what to read closely, what to skim), reproduces the core result in the simulator, and ends with a quiz and "what happened next". Papers are linked, not reproduced. ★ = also has a paper project.
+
+| Part | Paper | Practice |
+|---|---|---|
+| 1 | Lindholm et al., *NVIDIA Tesla: A Unified Graphics and Computing Architecture* (IEEE Micro, 2008) | Quantitative questions on the G80 design |
+| 1 | Fung et al., *Dynamic Warp Formation and Scheduling for Efficient GPU Control Flow* (MICRO, 2007) | Measure SIMD efficiency with and without regrouping |
+| 2 | Williams, Waterman & Patterson, *Roofline* (CACM, 2009) | Roofline for the GW-1 with your Project A kernels |
+| 2 | Volkov, *Understanding Latency Hiding on GPUs* (PhD thesis, 2016) | Lower occupancy, higher speed |
+| 3 | Merrill & Garland, *Single-pass Parallel Prefix Scan with Decoupled Look-back* (2016) | Theory for milestone B2 |
+| 3 | Adinets & Merrill, *Onesweep* (2022) | Milestone B4 builds it |
+| 4 ★ | Jouppi et al., *In-Datacenter Performance Analysis of a Tensor Processing Unit* (ISCA, 2017) | Project: a systolic array |
+| 5 ★ | Jia et al., *Dissecting the NVIDIA Volta GPU Architecture via Microbenchmarking* (2018) | Project: dissect the GW-1 |
+| 5 ★ | Osama et al., *Stream-K* (PPoPP, 2023) | Project: Stream-K GEMM (extends Project C) |
+| 6 ★ | Tillet, Kung & Cox, *Triton* (MAPL, 2019) | Project: a mini tile compiler |
+| 7 | Micikevicius et al., *Mixed Precision Training* (ICLR, 2018) | Numerics exercises |
+| 7 ★ | Kwon et al., *Efficient Memory Management for LLM Serving with PagedAttention* (SOSP, 2023) | Project: a paged KV cache |
+| 8 | Dao et al., *FlashAttention* 1–3 (2022–2024) | Required reading for the capstone |
 
 ---
 
@@ -127,4 +163,4 @@ Optional: run it on a real NVIDIA GPU in real-CUDA mode and compare against the 
 
 ---
 
-**Size:** 10 parts, 41 chapters, 3 long-term projects (13 milestones) plus 1 capstone.
+**Size:** 10 parts, 41 chapters, 13 paper chapters, 3 long-term projects (13 milestones), 4 paper projects plus a Stream-K extension, and 1 capstone.

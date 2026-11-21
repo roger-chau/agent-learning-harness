@@ -384,6 +384,190 @@
     el.replaceChildren(term);
   };
 
+  // ---------------------------------------------------------------------------
+  // Part 1: a warp executing a program, one warp instruction per step.
+  // ---------------------------------------------------------------------------
+  const W32 = 32;
+  // Deterministic per-lane data so every reader sees the same masks.
+  const laneVals = Array.from({ length: W32 }, (_, l) => ((l * 7 + 3) % 11) - 4); // mix of signs
+  const tripCounts = Array.from({ length: W32 }, (_, l) => 1 + ((l * 5) % 4));      // 1..4
+  const ALL = Array(W32).fill(true);
+  const PRESETS = {
+    uniform: {
+      title: "A warp with no branches",
+      code: ["i = blockIdx.x * blockDim.x + threadIdx.x", "a = x[i]", "b = y[i]", "c = a + b", "out[i] = c"],
+      steps: () => [0, 1, 2, 3, 4].map((line) => ({ line, mask: ALL })),
+    },
+    divergent: {
+      title: "if / else inside a warp",
+      code: ["v = x[i]", "if (v > 0) {", "  v = v * 2", "  v = v + 1", "} else {", "  v = -v", "}", "out[i] = v      // reconverged"],
+      steps: () => {
+        const T = laneVals.map((v) => v > 0), F = T.map((t) => !t);
+        return [{ line: 0, mask: ALL }, { line: 1, mask: ALL }, { line: 2, mask: T }, { line: 3, mask: T }, { line: 5, mask: F }, { line: 7, mask: ALL }];
+      },
+    },
+    predicated: {
+      title: "The same logic, predicated (no branch)",
+      code: ["v = x[i]", "p = v > 0", "t = v * 2 + 1     // every lane", "e = -v            // every lane", "v = p ? t : e     // select", "out[i] = v"],
+      steps: () => [0, 1, 2, 3, 4, 5].map((line) => ({ line, mask: ALL })),
+    },
+    loop: {
+      title: "A loop whose trip count differs per lane",
+      code: ["acc = 0", "for (j = 0; j < n[i]; j++)", "  acc += j", "out[i] = acc"],
+      steps: () => {
+        const st = [{ line: 0, mask: ALL }];
+        const max = Math.max(...tripCounts);
+        for (let k = 0; k <= max; k++) {
+          const alive = tripCounts.map((n) => n >= k);
+          st.push({ line: 1, mask: alive.map((a, l) => a) });
+          if (k < max) st.push({ line: 2, mask: tripCounts.map((n) => n > k) });
+        }
+        st.push({ line: 3, mask: ALL });
+        return st.filter((x) => x.mask.some(Boolean));
+      },
+    },
+  };
+
+  C["warp-exec"] = (el) => {
+    const preset = PRESETS[el.dataset.preset] || PRESETS.uniform;
+    const steps = preset.steps();
+    el.classList.add("sim");
+    el.innerHTML = `
+      <div class="sim-head"><span class="sim-kind">Animation</span><span class="sim-title">${preset.title}</span></div>
+      <div class="warp-exec">
+        <pre class="we-code">${preset.code.map((c, i) => `<div class="we-line" data-l="${i}"><span>${i + 1}</span>${c.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</div>`).join("")}</pre>
+        <div class="we-lanes-wrap"><div class="we-cap mono">32 lanes of one warp</div><div class="we-lanes">${Array.from({ length: W32 }, (_, l) => `<i data-lane="${l}">${l}</i>`).join("")}</div>
+          <div class="we-legend"><span><i class="on"></i>active</span><span><i></i>masked off</span></div></div>
+      </div>
+      <div class="sim-transport">
+        <button type="button" class="term-btn" data-t="play">▶ Play</button>
+        <button type="button" class="term-btn" data-t="step">Step</button>
+        <button type="button" class="term-btn" data-t="reset">Reset</button>
+        <span class="sim-clock mono"></span></div>
+      <div class="sim-readout">
+        <div class="stat"><div class="k">Warp instructions issued</div><div class="v" data-r="issued">0</div></div>
+        <div class="stat"><div class="k">Lane-slots doing work</div><div class="v" data-r="work">0</div></div>
+        <div class="stat"><div class="k">SIMD efficiency</div><div class="v" data-r="eff">–</div></div>
+      </div>`;
+    let k = 0, timer = 0;
+    const lanes = el.querySelectorAll(".we-lanes i"), lines = el.querySelectorAll(".we-line");
+    function render() {
+      const cur = k > 0 ? steps[k - 1] : null;
+      lines.forEach((ln, i) => ln.classList.toggle("cur", !!cur && cur.line === i));
+      lanes.forEach((ln, i) => ln.classList.toggle("on", !!cur && cur.mask[i]));
+      const done = steps.slice(0, k);
+      const work = done.reduce((a, s) => a + s.mask.filter(Boolean).length, 0);
+      el.querySelector('[data-r="issued"]').textContent = k;
+      el.querySelector('[data-r="work"]').textContent = `${work} / ${k * W32}`;
+      el.querySelector('[data-r="eff"]').textContent = k ? `${Math.round((100 * work) / (k * W32))}%` : "–";
+      el.querySelector(".sim-clock").textContent = `step ${k}/${steps.length}`;
+    }
+    const stop = () => { clearInterval(timer); timer = 0; el.querySelector('[data-t="play"]').textContent = "▶ Play"; };
+    el.querySelector(".sim-transport").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-t]"); if (!b) return;
+      if (b.dataset.t === "play") {
+        if (timer) return stop();
+        if (k >= steps.length) k = 0;
+        b.textContent = "❚❚ Pause";
+        timer = setInterval(() => { k++; render(); if (k >= steps.length) stop(); }, 750);
+      }
+      if (b.dataset.t === "step") { stop(); k = Math.min(steps.length, k + 1); render(); }
+      if (b.dataset.t === "reset") { stop(); k = 0; render(); }
+    });
+    render();
+  };
+
+  // ---------------------------------------------------------------------------
+  // 1.2 Index explorer: how (blockIdx, threadIdx) map onto a 2D image.
+  // ---------------------------------------------------------------------------
+  C["index-explorer"] = (el) => {
+    const IW = 22, IH = 12;
+    el.classList.add("sim");
+    el.innerHTML = `
+      <div class="sim-head"><span class="sim-kind">Simulation</span><span class="sim-title">A ${IW}×${IH} image covered by a 2D grid of 2D blocks</span></div>
+      <div class="ix-grid" role="grid" aria-label="Image pixels coloured by block"></div>
+      <div class="ix-info mono">Click a pixel.</div>
+      <div class="sim-controls">
+        <label class="sim-ctl"><span class="sim-lab">blockDim.x</span><input type="range" min="1" max="16" value="8" data-k="bx"><output class="mono" data-o="bx"></output></label>
+        <label class="sim-ctl"><span class="sim-lab">blockDim.y</span><input type="range" min="1" max="8" value="4" data-k="by"><output class="mono" data-o="by"></output></label>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><div class="k">gridDim</div><div class="v" data-r="grid"></div></div>
+        <div class="stat"><div class="k">Threads launched</div><div class="v" data-r="threads"></div></div>
+        <div class="stat"><div class="k">Threads with no pixel</div><div class="v" data-r="idle"></div></div>
+      </div>`;
+    const grid = el.querySelector(".ix-grid"), info = el.querySelector(".ix-info");
+    const v = { bx: 8, by: 4 };
+    let sel = null;
+    function render() {
+      el.querySelectorAll("output[data-o]").forEach((o) => (o.textContent = v[o.dataset.o]));
+      const gx = Math.ceil(IW / v.bx), gy = Math.ceil(IH / v.by);
+      const W = gx * v.bx, H = gy * v.by;
+      el.querySelector('[data-r="grid"]').textContent = `(${gx}, ${gy})`;
+      el.querySelector('[data-r="threads"]').textContent = W * H;
+      el.querySelector('[data-r="idle"]').textContent = W * H - IW * IH;
+      grid.style.gridTemplateColumns = `repeat(${W}, 1fr)`;
+      let html = "";
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const bxi = Math.floor(x / v.bx), byi = Math.floor(y / v.by);
+        const tone = (bxi + byi * gx) % 5;
+        const out = x >= IW || y >= IH;
+        const isSel = sel && sel[0] === x && sel[1] === y;
+        html += `<i class="b${tone}${out ? " out" : ""}${isSel ? " sel" : ""}" data-x="${x}" data-y="${y}"></i>`;
+      }
+      grid.innerHTML = html;
+      if (sel) describe(sel[0], sel[1]);
+    }
+    function describe(x, y) {
+      const b = { x: Math.floor(x / v.bx), y: Math.floor(y / v.by) }, t = { x: x % v.bx, y: y % v.by };
+      const out = x >= IW || y >= IH;
+      info.innerHTML = `blockIdx (${b.x}, ${b.y}) · threadIdx (${t.x}, ${t.y}) → x = ${b.x}·${v.bx} + ${t.x} = <b>${x}</b>, y = ${b.y}·${v.by} + ${t.y} = <b>${y}</b>` +
+        (out ? ` · <span class="bad">outside the image: the guard must skip it</span>` : ` · linear index y·width + x = ${y}·${IW} + ${x} = <b>${y * IW + x}</b>`);
+    }
+    grid.addEventListener("click", (e) => { const c = e.target.closest("i"); if (!c) return; sel = [+c.dataset.x, +c.dataset.y]; render(); });
+    el.addEventListener("input", (e) => { if (e.target.dataset.k) { v[e.target.dataset.k] = +e.target.value; sel = null; info.textContent = "Click a pixel."; render(); } });
+    render();
+  };
+
+  // ---------------------------------------------------------------------------
+  // 1.3 Warp map: which threads of a 2D block share a warp.
+  // ---------------------------------------------------------------------------
+  C["warp-map"] = (el) => {
+    el.classList.add("sim");
+    el.innerHTML = `
+      <div class="sim-head"><span class="sim-kind">Simulation</span><span class="sim-title">Threads of one block, coloured by warp</span></div>
+      <div class="ix-grid wm"></div>
+      <div class="sim-controls">
+        <label class="sim-ctl"><span class="sim-lab">blockDim.x</span><input type="range" min="1" max="32" value="16" data-k="x"><output class="mono" data-o="x"></output></label>
+        <label class="sim-ctl"><span class="sim-lab">blockDim.y</span><input type="range" min="1" max="16" value="8" data-k="y"><output class="mono" data-o="y"></output></label>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><div class="k">Threads per block</div><div class="v" data-r="t"></div></div>
+        <div class="stat"><div class="k">Warps per block</div><div class="v" data-r="w"></div></div>
+        <div class="stat"><div class="k">Idle lanes</div><div class="v" data-r="idle"></div></div>
+        <div class="stat"><div class="k">Rows per warp</div><div class="v" data-r="rows"></div></div>
+      </div>`;
+    const v = { x: 16, y: 8 };
+    const grid = el.querySelector(".ix-grid");
+    function render() {
+      el.querySelectorAll("output[data-o]").forEach((o) => (o.textContent = v[o.dataset.o]));
+      const n = v.x * v.y, warps = Math.ceil(n / 32);
+      el.querySelector('[data-r="t"]').textContent = n;
+      el.querySelector('[data-r="w"]').textContent = warps;
+      el.querySelector('[data-r="idle"]').textContent = warps * 32 - n;
+      el.querySelector('[data-r="rows"]').textContent = v.x >= 32 ? (v.x % 32 ? "warps straddle rows" : `${v.x / 32} warp(s) per row`) : (32 % v.x ? "warps straddle rows" : `${32 / v.x}`);
+      grid.style.gridTemplateColumns = `repeat(${v.x}, 1fr)`;
+      let html = "";
+      for (let y = 0; y < v.y; y++) for (let x = 0; x < v.x; x++) {
+        const tid = x + y * v.x, w = Math.floor(tid / 32);
+        html += `<i class="b${w % 5}" title="threadIdx (${x}, ${y}) · linear ${tid} · warp ${w}, lane ${tid % 32}">${tid % 32 === 0 ? `w${w}` : ""}</i>`;
+      }
+      grid.innerHTML = html;
+    }
+    el.addEventListener("input", (e) => { if (e.target.dataset.k) { v[e.target.dataset.k] = +e.target.value; render(); } });
+    render();
+  };
+
   function mount(root) {
     root.querySelectorAll("[data-gw]").forEach((el) => {
       const fn = C[el.dataset.gw];

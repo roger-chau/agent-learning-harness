@@ -1,0 +1,25 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single",
+     "prompt": "What problem did a <em>unified</em> architecture solve for graphics?",
+     "options": ["Lower memory latency", "Load imbalance: separate vertex and pixel units sat idle when a scene was lopsided", "Higher clock speeds", "Smaller chips"],
+     "answer": 1, "explanation": "One pool of processors runs whatever kind of work the frame needs."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "An SM has 8 SP lanes and warps of 32 threads. How many cycles does one warp instruction occupy the lanes?",
+     "unit": "cycles", "answer": 4, "tolerance": 0,
+     "explanation": "32 / 8 = 4."},
+    {"id": "q3", "type": "numeric",
+     "prompt": "With 8,192 registers and 768 resident threads per SM, what's the most registers each thread can use at full occupancy?",
+     "unit": "registers", "answer": 10, "tolerance": 0,
+     "explanation": "⌊8192 / 768⌋ = 10."},
+    {"id": "q4", "type": "multi",
+     "prompt": "Which ideas from this paper are still central to GPUs today?",
+     "options": ["The SM as a multithreaded core", "Warps of 32 threads and SIMT execution", "Blocks that share on-chip memory and synchronise with barriers", "Separate vertex and pixel processors"],
+     "answer": [0, 1, 2], "explanation": "Separate vertex and pixel processors is exactly what the paper replaced."},
+    {"id": "q5", "type": "single",
+     "prompt": "Why does the paper's model make the same program run on GPUs with different numbers of SMs?",
+     "options": ["The compiler recompiles per GPU", "Blocks are independent and can be scheduled onto however many SMs exist", "Every GPU has the same number of SMs", "Threads migrate between GPUs"],
+     "answer": 1, "explanation": "Independent blocks let hardware scale: more SMs means more blocks at once (fewer waves)."}
+  ]
+}

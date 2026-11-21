@@ -1,0 +1,75 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Real data is rarely a flat list. Images are 2D, matrices are 2D, volumes and video are 3D. You <em>can</em> launch a 1D grid over $\text{width} \times \text{height}$ pixels and recover the coordinates with division and remainder, but every kernel then starts with a little puzzle, and puzzles are where off-by-one bugs live.</p>
+<p>CUDA's answer is to let the grid itself have shape, so each thread is born knowing its $(x, y)$.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p>Blocks and grids are three-dimensional. Four built-in values describe where a thread sits, each with <code>.x</code>, <code>.y</code> and <code>.z</code>:</p>
+<table>
+<tr><th>Built-in</th><th>Meaning</th></tr>
+<tr><td><code>threadIdx</code></td><td>this thread's position inside its block</td></tr>
+<tr><td><code>blockDim</code></td><td>the size of every block</td></tr>
+<tr><td><code>blockIdx</code></td><td>this block's position inside the grid</td></tr>
+<tr><td><code>gridDim</code></td><td>the size of the grid, in blocks</td></tr>
+</table>
+<p>A thread's global coordinates follow the same rule in every dimension:</p>
+<div class="eq">$$x = \texttt{blockIdx.x} \cdot \texttt{blockDim.x} + \texttt{threadIdx.x} \qquad y = \texttt{blockIdx.y} \cdot \texttt{blockDim.y} + \texttt{threadIdx.y}$$</div>
+<p>Memory is still one-dimensional, so a 2D image of width $W$ is stored <strong>row-major</strong>: pixel $(x, y)$ lives at index $y \cdot W + x$. For an RGB image with 3 bytes per pixel, channel $c$ of that pixel is at $(y \cdot W + x) \cdot 3 + c$.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: covering an image</h2>
+<p>To cover a $W \times H$ image with blocks of $B_x \times B_y$ threads, round up in each dimension:</p>
+<div class="eq">$$\texttt{gridDim} = \left(\left\lceil \tfrac{W}{B_x} \right\rceil,\ \left\lceil \tfrac{H}{B_y} \right\rceil\right)$$</div>
+<p><strong>Worked example:</strong> a 1920×1080 image with 16×16 blocks needs $\lceil 1920/16 \rceil = 120$ by $\lceil 1080/16 \rceil = 68$ blocks. That's $1920 \times 1088$ threads: 1080 is not a multiple of 16, so the bottom row of blocks hangs 8 rows past the image. Those $1920 \times 8 = 15{,}360$ threads have no pixel, and the guard must stop them:</p>
+<pre><code>const x = blockIdx.x * blockDim.x + threadIdx.x;
+const y = blockIdx.y * blockDim.y + threadIdx.y;
+if (x &lt; width &amp;&amp; y &lt; height) {
+  out[y * width + x] = f(in[y * width + x]);
+}</code></pre>
+
+<div data-gw="index-explorer"></div>
+<p>Click pixels to see which block and thread own them. Then make the block size not divide the image, say 5×5, and look at the hatched threads hanging off the right and bottom edges. Those are the threads your guard protects you from.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: grid-stride loops</h2>
+<p>"One thread per element" ties your launch size to your data size. Sometimes you'd rather launch a fixed, machine-sized grid, for example just enough blocks to fill every SM, and have each thread handle several elements. The standard pattern is the <strong>grid-stride loop</strong>:</p>
+<pre><code>function scale(x, out, n, s) {
+  const stride = blockDim.x * gridDim.x;          // total threads in the grid
+  for (let i = blockIdx.x * blockDim.x + threadIdx.x; i &lt; n; i += stride) {
+    out[i] = s * x[i];
+  }
+}</code></pre>
+<p>Thread 0 handles elements $0, S, 2S, \ldots$ where $S$ is the total thread count. Neighbouring threads still touch neighbouring elements in every iteration, which matters for memory efficiency (Part 2). The kernel is correct for any $n$ and any grid size, and per-thread setup work is paid once per thread instead of once per element.</p>
+<div data-gw="playground" data-title="grid_stride.js" data-key="1-2-gs"><script type="text/plain">
+function scale(x, out, n, s) {
+  const stride = blockDim.x * gridDim.x;
+  for (let i = blockIdx.x * blockDim.x + threadIdx.x; i < n; i += stride) {
+    out[i] = s * x[i];
+  }
+}
+
+function main() {
+  const n = 5000;
+  const x = gpu.from(Array.from({ length: n }, (_, i) => i));
+  const out = gpu.alloc(n);
+  // A fixed grid: 2 blocks of 64 threads = 128 threads for 5,000 elements.
+  const stats = gpu.launch(scale, { grid: 2, block: 64 }, x, out, n, 0.5);
+  print("out[4999] =", out.data[4999]);
+  table(stats);
+}
+</script></div>
+<p>Look at the divergence count. With 128 threads, $39 \times 128 = 4{,}992$, so the first 8 threads run a 40th iteration and the other 120 stop after 39. In warp 0 the last loop test comes out differently for lanes 0–7 than for lanes 8–31, so the warp splits. That's a mild case of what Chapter 1.4 is about.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Limits.</strong> In CUDA a block holds at most 1,024 threads, with <code>blockDim.z</code> at most 64. A grid can be up to $2^{31}-1$ blocks in x but only 65,535 in y and z. That's one reason large 1D problems use x, and why grid-stride loops are popular.</li>
+<li><strong>Choosing a block shape.</strong> Common choices are 128 or 256 threads, as 256×1 for 1D work or 16×16 / 32×8 for 2D. Keep it a multiple of 32; the next chapter shows why. For 2D, the x-dimension matters most, because consecutive <code>threadIdx.x</code> values end up in the same warp and should touch consecutive memory.</li>
+<li><strong>Index overflow.</strong> In CUDA C++ the built-ins are 32-bit unsigned integers. For buffers with more than $2^{31}$ elements, compute indices in 64-bit, or <code>y * width + x</code> silently wraps. JavaScript in our simulator won't overflow, but real code does.</li>
+</ul>
+</section>

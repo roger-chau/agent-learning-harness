@@ -17,12 +17,12 @@ async function runChecks(ex, code) {
   const results = [];
   let fns;
   try {
-    fns = gpu.compile(code, { print, gpu, table: () => {}, console: { log: print } });
+    fns = gpu.compile(code, { print, gpu, table: () => {}, show: () => {}, console: { log: print } });
   } catch (e) {
     return { passed: false, results: [{ name: "compile", pass: false, detail: e.message }] };
   }
   const t = {
-    gpu, print, table: () => {},
+    gpu, print, table: () => {}, show: () => {},
     fn(name) { if (typeof fns[name] !== "function") throw new Error(`Define a function named ${name}(...)`); return fns[name]; },
     has(name) { return typeof fns[name] === "function"; },
     check(name, ok, detail = "") { results.push({ name, pass: !!ok, detail: ok ? "" : String(detail) }); return !!ok; },

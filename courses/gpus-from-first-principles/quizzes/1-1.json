@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single",
+     "prompt": "What is the main difference between SIMD and SIMT from the programmer's point of view?",
+     "options": ["SIMT hardware has no vector units", "In SIMD you write code about vectors; in SIMT you write scalar code for one thread and the hardware forms the vector", "SIMT is only for graphics", "SIMD can't handle conditionals"],
+     "answer": 1, "explanation": "The execution hardware is similar. What changes is who manages the vector: you (SIMD) or the hardware (SIMT)."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "You process n = 2,500 elements with one thread each, in warps of 32. How many threads in the last warp do real work?",
+     "unit": "threads", "answer": 4, "tolerance": 0,
+     "explanation": "⌈2500/32⌉ = 79 warps; 78 × 32 = 2,496, so the last warp has 2500 − 2496 = 4 active threads."},
+    {"id": "q3", "type": "multi",
+     "prompt": "Which of these does SIMT handle in hardware that SIMD code must handle explicitly?",
+     "options": ["Loop tails when n isn't a multiple of the width", "Per-lane addresses (gather/scatter)", "Per-lane conditionals (masks)", "Memory latency"],
+     "answer": [0, 1, 2], "explanation": "Tails, addressing and masking move into hardware. Latency is still hidden by multithreading, which is a separate mechanism."},
+    {"id": "q4", "type": "single",
+     "prompt": "H&P call a GPU core a 'multithreaded SIMD processor'. What does 'multithreaded' refer to?",
+     "options": ["Each lane runs many instructions at once", "The SM keeps many warps resident and switches among them to hide latency", "Each thread has its own instruction cache", "It runs the operating system"],
+     "answer": 1, "explanation": "Multithreading at warp granularity is the latency-hiding mechanism from Chapter 0.3."},
+    {"id": "q5", "type": "single",
+     "prompt": "On AMD's CDNA data-center GPUs, the equivalent of a warp is a wavefront of how many lanes?",
+     "options": ["16", "32", "64", "128"],
+     "answer": 2, "explanation": "CDNA uses 64-wide wavefronts. RDNA supports both 32 and 64. Code that hardcodes 32 isn't portable."},
+    {"id": "q6", "type": "single",
+     "prompt": "In SIMT, a warp's 32 threads load from 32 scattered addresses. What happens?",
+     "options": ["It's a compile error", "It works correctly, but may need many memory transactions", "Only lane 0's load happens", "The warp splits into 32 warps"],
+     "answer": 1, "explanation": "Any address pattern is correct. Performance depends on how many transactions the addresses need (coalescing, Part 2)."}
+  ]
+}

@@ -100,3 +100,21 @@ function main() { print(f(3)); }`, { print: (v) => out.push(v) });
   main();
   assert.deepEqual(out, [6]);
 });
+
+test("warp trace records stores and per-warp divergence; test image", () => {
+  const g = new Device();
+  g.trace = true;
+  const { k } = g.compile(`function k(out, n) {
+    const i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) out[i] = i;
+  }`);
+  const out = g.alloc(40);
+  const s = g.launch(k, { grid: 2, block: 32 }, out, 40);
+  assert.equal(s.warpTrace.length, 2);
+  assert.equal(s.warpTrace[0].divergent, 0);
+  assert.equal(s.warpTrace[1].divergent, 1);
+  assert.deepEqual(s.warpTrace[1].stores[out.id], [32, 33, 34, 35, 36, 37, 38, 39]);
+  const img = g.image(20, 10);
+  assert.equal(img.length, 600);
+  assert.equal(img.type, "u8");
+});

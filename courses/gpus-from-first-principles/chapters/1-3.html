@@ -1,0 +1,43 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Nothing in a kernel's source mentions warps. You wrote code for one thread, and you chose a block shape. Yet the warp is the unit the hardware actually schedules, issues and stalls. Two kernels with identical source can perform very differently depending on how their threads fall into warps.</p>
+<p>So we need the rule that decides which threads share a warp, and what follows from it.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p>Within a block, threads are numbered by a <strong>linear thread index</strong>, with x varying fastest:</p>
+<div class="eq">$$t = \texttt{threadIdx.x} + \texttt{threadIdx.y}\cdot B_x + \texttt{threadIdx.z}\cdot B_x B_y$$</div>
+<p>Then warps are cut from that sequence in consecutive runs of 32:</p>
+<div class="eq">$$\text{warp} = \lfloor t / 32 \rfloor \qquad \text{lane} = t \bmod 32$$</div>
+<p>That's all. Warps never span blocks: each block is cut into its own warps, and the last one is partial if the block size isn't a multiple of 32.</p>
+<div data-gw="warp-map"></div>
+<p>Try 16×8: each warp covers two rows of 16. Try 32×4: one row per warp. Try 20×3: warps straddle rows unevenly, and the last warp is only partly filled.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: three consequences</h2>
+<ol>
+<li><strong>Block sizes that aren't multiples of 32 waste lanes.</strong> A block of 100 threads becomes 4 warps, and the last has only $100 - 96 = 4$ active lanes. The other 28 lanes still occupy issue slots: $28/128 \approx 22\%$ of the block's issue capacity does nothing. That's why block sizes are almost always multiples of 32.</li>
+<li><strong>Block shape decides which pixels a warp touches.</strong> With 16×16 blocks over an image, a warp is two half-rows of 16 pixels. With 32×8 it's one full row of 32. When we reach memory (Part 2), a warp touching 32 consecutive addresses is ideal, and a warp split across two rows touches two separate runs.</li>
+<li><strong>Lockstep: one instruction for 32 threads.</strong> A warp issues one instruction at a time for all its active lanes. It can't continue until every lane's operands are ready. A load is "done" for the warp only when the <em>slowest</em> lane's data has arrived.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: warps are what hides latency</h2>
+<p>Go back to Chapter 0.3's model, but replace "thread" with "warp". Each <strong>warp scheduler</strong> on an SM keeps a pool of resident warps. Every cycle it picks one that's ready and issues its next instruction. While one warp waits 400 cycles on memory, the scheduler issues from others.</p>
+<p>So the latency-hiding question becomes: <em>how many warps per scheduler</em>? On an SM with 4 schedulers and up to 64 resident warps, each scheduler has at most 16 warps to choose from. By Chapter 0.3's formula, if each warp does $C$ cycles of independent work per memory access of latency $L$, a scheduler stays busy when</p>
+<div class="eq">$$\text{warps per scheduler} \;\ge\; \frac{C + L}{C}$$</div>
+<p><strong>Worked example:</strong> with $L = 400$ cycles and only $C = 20$ cycles of independent work per load, you'd need $420/20 = 21$ warps per scheduler. Only 16 can be resident, so the scheduler idles at least $1 - 16/21 \approx 24\%$ of the time, unless each warp finds more independent work (ILP). This arithmetic is how performance engineers read the profiler's "issue slot utilization" numbers in Part 5.</p>
+<div class="callout key"><b>The key idea</b>Your code is written per thread, but the hardware thinks in warps: they're issued together, stall together, and are the units the scheduler switches between to hide latency.</div>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Warp size.</strong> NVIDIA GPUs have used 32 for every generation so far. AMD uses 64-wide wavefronts on CDNA and 32 or 64 on RDNA. Write <code>warpSize</code> rather than <code>32</code> wherever it matters to correctness. Our simulator provides <code>warpSize</code> too.</li>
+<li><strong>Warps are a contract you can use.</strong> Because lanes of a warp execute together, GPUs offer <em>warp-level</em> instructions: shuffles that pass registers between lanes, and votes that ask "is this true in any or all lanes". They're much faster than going through shared memory, and Part 3 builds reductions and scans on them.</li>
+<li><strong>Not quite lockstep anymore.</strong> Since Volta (2017), NVIDIA threads have <em>independent thread scheduling</em>: the lanes of a warp can sit at different points of the program after a branch. Code that silently assumed lockstep must now say so explicitly with <code>__syncwarp()</code>. The next chapter explains why.</li>
+</ul>
+</section>

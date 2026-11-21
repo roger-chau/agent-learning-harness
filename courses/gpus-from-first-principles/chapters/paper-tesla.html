@@ -1,0 +1,53 @@
+<div class="paper-ref">
+<div class="k">The paper</div>
+<b>E. Lindholm, J. Nickolls, S. Oberman, J. Montrym. "NVIDIA Tesla: A Unified Graphics and Computing Architecture."</b> <em>IEEE Micro</em>, vol. 28, no. 2, 2008.
+<br><a href="https://scholar.google.com/scholar?q=NVIDIA+Tesla%3A+A+Unified+Graphics+and+Computing+Architecture" target="_blank" rel="noopener noreferrer">Find it on Google Scholar</a> · It's often available as a PDF from university course pages. Read this chapter first, then the paper.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>Before 2006, GPUs had <em>separate</em> hardware for different stages of the graphics pipeline: vertex processors to transform geometry and pixel (fragment) processors to shade it. Each was sized for an "average" game. But real frames are lopsided: a scene with huge triangles is pixel-heavy, a scene with dense geometry is vertex-heavy. One kind of unit sat idle while the other was the bottleneck.</p>
+<p>At the same time, people were abusing those pixel processors for general computation, disguising arrays as textures and computations as shading. It worked, but it was painful: no arbitrary memory writes, no way for threads to cooperate, and graphics APIs in the way.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Replace the specialised units with one unified array of programmable processors, and expose that array directly for general computing.</strong> Vertex, geometry and pixel work all run as threads on the same processors, so load balancing is automatic. A new programming model, CUDA, lets you launch those threads directly.</p>
+<p>Everything in Part 0 and Part 1 of this course traces back to the design described here:</p>
+<ul>
+<li><strong>The SM.</strong> The paper's GeForce 8800 has 16 streaming multiprocessors, each with 8 scalar "streaming processor" (SP) cores, two special-function units, a multithreaded instruction unit and 16 KB of shared memory.</li>
+<li><strong>Massive multithreading.</strong> Each SM keeps up to 768 threads resident and schedules among them with zero overhead. That's Chapter 0.3's latency-hiding design.</li>
+<li><strong>SIMT and the warp.</strong> The paper names it: the SM creates, manages, schedules and executes threads in groups of 32 parallel threads called <em>warps</em>, and calls the model <em>single-instruction, multiple-thread</em>. Divergent threads are handled by the hardware, as in Chapter 1.4.</li>
+<li><strong>Cooperative thread arrays.</strong> Threads are grouped into blocks that share memory and synchronise with barriers: Chapter 0.4's blocks.</li>
+</ul>
+<p>With 8 SPs per SM and 32 threads per warp, one warp instruction occupies the SPs for $32/8 = 4$ cycles. Narrow hardware runs a wide warp over several cycles, which also gives the pipeline time to fetch the next instruction.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ol class="reading">
+<li><strong>Introduction and the unified-architecture overview.</strong> Read closely. Note the motivation (load balancing, programmability) and the top-level block diagram: texture/processor clusters, SMs, the interconnect, memory partitions.</li>
+<li><strong>The graphics pipeline sections.</strong> Skim. Understand that vertex, geometry and pixel work become threads on the same SMs. The details of rasterisation aren't needed for this course.</li>
+<li><strong>The streaming multiprocessor and SIMT sections.</strong> Read very closely; this is the heart of it. Find the sentences that define warps and SIMT, and compare them with SIMD as described in the paper. Notice how divergence and reconvergence are described.</li>
+<li><strong>The parallel computing architecture and CUDA sections.</strong> Read closely. Map their terms (thread blocks / cooperative thread arrays, grids, shared memory, barriers) onto Chapters 0.4 and 1.2.</li>
+<li><strong>Performance and scalability.</strong> Skim the numbers, but note the argument: the same program runs on GPUs with more or fewer SMs, because blocks are independent. That's why the grid exists.</li>
+</ol>
+<p>While reading, keep a list of every number you find (SMs, SPs, threads per SM, registers, shared memory, clocks, bandwidth). You'll need them for the exercise.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>Use the course's tools on the paper's machine. The GeForce 8800 GTX has 16 SMs × 8 SPs = 128 SPs at about 1.35 GHz, up to 768 resident threads per SM, 8,192 32-bit registers per SM, and about 86.4 GB/s of memory bandwidth.</p>
+<ul>
+<li><strong>Resident threads:</strong> $16 \times 768 = 12{,}288$.</li>
+<li><strong>Registers per thread at full occupancy:</strong> $8192 / 768 \approx 10.7$. That's tiny! Kernels needing more registers ran with fewer threads. This trade-off (Chapter 0.3) has been with GPUs from the start.</li>
+<li><strong>Can it saturate its memory?</strong> At 86.4 GB/s and, say, 400 ns of latency, Little's law needs $86.4 \times 400 \approx 34.6$ KB in flight, about 8,640 four-byte loads. 12,288 resident threads, each with one load in flight, cover that. The design is balanced, as Part 0 said it should be.</li>
+</ul>
+<p>The exercise turns these calculations into functions and asks you to run them on other configurations.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>This architecture launched general-purpose GPU computing. CUDA's model of grids, blocks, threads, shared memory and barriers has survived almost unchanged for nearly two decades. AMD's HIP, OpenCL, SYCL and Apple's Metal compute all follow the same shape.</p>
+<p>The hardware has grown far more than the model. Later generations added caches (Fermi), much larger register files and shared memory, independent thread scheduling (Volta), tensor cores (Volta onwards) and asynchronous copy engines (Ampere and Hopper). But the SM, the warp, and latency hiding through massive multithreading are still the core of every NVIDIA GPU. Reading this paper is reading the design document for the whole field.</p>
+</section>

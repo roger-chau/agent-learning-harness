@@ -72,4 +72,5 @@
 <li>If each thread needs 128 registers: only $512$ fit.</li>
 </ul>
 <p>So there is a trade-off at the heart of GPU tuning. Using more registers per thread can make each thread faster, through more ILP and more data kept close, but it leaves fewer threads to hide latency. The fraction of the maximum threads that are actually resident is called <strong>occupancy</strong>, and Part 2 builds an occupancy calculator from first principles. Part 6 shows that the compiler's register allocator is quietly deciding this trade-off for you.</p>
+<div class="callout companion"><b>Companion reading</b>Hennessy &amp; Patterson (7th ed.), <strong>Chapter 3</strong> (Instruction-Level Parallelism) covers out-of-order execution and multithreading on CPUs, including simultaneous multithreading; <strong>Chapter 4</strong> introduces the GPU's multithreaded SIMD processor.</div>
 </section>

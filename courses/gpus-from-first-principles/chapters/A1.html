@@ -1,0 +1,44 @@
+<div class="paper-ref">
+<div class="k">Project A · Imaging kernels · Milestone 1 of 3</div>
+Project A grows across Parts 1 and 2. In this milestone the kernels must be <strong>correct</strong>, with <strong>clean control flow</strong>. In A2 you'll make their memory access fully coalesced, and in A3 bandwidth-optimal with shared memory. Keep your code: each milestone starts from the last.
+</div>
+
+<h2>What you're building</h2>
+<p>A small image pipeline, the kind that sits at the front of camera and vision systems: <strong>RGB → grayscale → blur → edge magnitude</strong>.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 640 110" role="img" aria-label="Pipeline: RGB image to grayscale to horizontal blur to vertical blur to Sobel edges">
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-arrowhead" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+  <rect class="d-box saffron" x="6" y="30" width="96" height="46" rx="8"/><text class="d-label" x="54" y="51" text-anchor="middle">RGB</text><text class="d-mono" x="54" y="67" text-anchor="middle">u8 × 3</text>
+  <line class="d-arrow" x1="104" y1="53" x2="128" y2="53"/>
+  <rect class="d-box teal" x="130" y="30" width="110" height="46" rx="8"/><text class="d-label" x="185" y="51" text-anchor="middle">grayscale</text><text class="d-mono" x="185" y="67" text-anchor="middle">f32</text>
+  <line class="d-arrow" x1="242" y1="53" x2="266" y2="53"/>
+  <rect class="d-box indigo" x="268" y="30" width="110" height="46" rx="8"/><text class="d-label" x="323" y="51" text-anchor="middle">blur (rows)</text><text class="d-mono" x="323" y="67" text-anchor="middle">1 4 6 4 1</text>
+  <line class="d-arrow" x1="380" y1="53" x2="404" y2="53"/>
+  <rect class="d-box indigo" x="406" y="30" width="110" height="46" rx="8"/><text class="d-label" x="461" y="51" text-anchor="middle">blur (cols)</text><text class="d-mono" x="461" y="67" text-anchor="middle">1 4 6 4 1</text>
+  <line class="d-arrow" x1="518" y1="53" x2="542" y2="53"/>
+  <rect class="d-box rose" x="544" y="30" width="90" height="46" rx="8"/><text class="d-label" x="589" y="51" text-anchor="middle">Sobel</text><text class="d-mono" x="589" y="67" text-anchor="middle">|∇|</text>
+</svg>
+<figcaption>Four kernel launches. Each stage reads the previous stage's output buffer.</figcaption>
+</figure>
+
+<h3>The kernels</h3>
+<p>All images are row-major, <code>w</code> wide and <code>h</code> tall. The input is a <code>u8</code> RGB buffer (3 bytes per pixel); every other buffer is <code>f32</code> with one value per pixel.</p>
+<ol>
+<li><code>grayscale(rgb, gray, w, h)</code>: $\text{gray} = 0.299R + 0.587G + 0.114B$.</li>
+<li><code>blurH(src, dst, w, h)</code>: horizontal 5-tap Gaussian, weights $\tfrac{1}{16}[1, 4, 6, 4, 1]$ over $x-2 \ldots x+2$.</li>
+<li><code>blurV(src, dst, w, h)</code>: the same along columns ($y-2 \ldots y+2$). Doing rows then columns equals a full 5×5 Gaussian at a fraction of the work: that's what <em>separable</em> means.</li>
+<li><code>sobel(src, dst, w, h)</code>: edge magnitude $\sqrt{g_x^2 + g_y^2}$, where $g_x$ and $g_y$ use the 3×3 Sobel kernels
+$g_x: \begin{bmatrix}-1&0&1\\-2&0&2\\-1&0&1\end{bmatrix}$ and $g_y: \begin{bmatrix}-1&-2&-1\\0&0&0\\1&2&1\end{bmatrix}$ (rows top to bottom, $y-1$ to $y+1$).</li>
+</ol>
+<p><strong>Borders:</strong> wherever a filter reads outside the image, use <strong>clamp-to-edge</strong>: coordinates are clamped into $[0, w-1]$ and $[0, h-1]$.</p>
+<p>Finally, <code>runPipeline(rgb, w, h)</code> allocates the buffers it needs, runs the four kernels in order with 2D grids, and returns</p>
+<pre><code>{ gray, blurred, edges, stats: [grayStats, blurHStats, blurVStats, sobelStats] }</code></pre>
+<p>where <code>gray</code>, <code>blurred</code> (after both blur passes) and <code>edges</code> are the <code>f32</code> buffers, and <code>stats</code> are the four launch results in order.</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li><strong>Correctness:</strong> every output pixel matches a reference implementation, on several image sizes including ones that aren't multiples of your block size, and a 1×1 image.</li>
+<li><strong>Clean control flow:</strong> any warp that lies entirely inside the image (every one of its lanes writes a pixel) must have <strong>zero divergent branches</strong>. Only warps that hang off the right or bottom edge may diverge, on the bounds guard. A border-handling <code>if</code> splits warps along the left and top edges too, and won't pass. Chapter 1.5's clamp is the tool.</li>
+</ul>
+<p>You don't need to optimise memory access yet; A2 is about that. Use <code>show(...)</code> to look at every stage. Debugging image code by eye is a real skill.</p>

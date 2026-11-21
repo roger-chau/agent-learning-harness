@@ -172,7 +172,7 @@
   }
 
   // ---------- Course overview ----------
-  const TYPE_LABEL = { chapter: "chapter", milestone: "milestone", checkpoint: "checkpoint" };
+  const TYPE_LABEL = { chapter: "chapter", milestone: "milestone", checkpoint: "checkpoint", paper: "paper" };
 
   async function renderCourse(slug) {
     setNav("courses");
@@ -199,7 +199,7 @@
               <div class="stat"><div class="k">Parts</div><div class="v">${s.parts}</div></div>
               <div class="stat"><div class="k">Chapters</div><div class="v">${s.chapters}</div></div>
               <div class="stat"><div class="k">Projects</div><div class="v">${s.projects}</div></div>
-              <div class="stat"><div class="k">Quizzes</div><div class="v">${s.quizzes}</div></div>
+              <div class="stat"><div class="k">Papers</div><div class="v">${s.papers}</div></div>
             </div>
             <div class="progress-bar" aria-label="Progress"><i style="width:${p.ready ? (100 * p.complete) / p.ready : 0}%"></i></div>
             <p class="muted small">${p.complete} of ${p.ready} written items complete · ${s.written} of ${s.chapters} chapters written so far</p>
@@ -226,15 +226,15 @@
           <div class="parts">
             ${c.parts.map((part) => `
               <div class="part">
-                <div class="part-head"><span class="part-n">Part ${part.n}</span><h3>${esc(part.title)}</h3><p>${esc(part.summary)}</p></div>
+                <div class="part-head"><span class="part-n">Part ${part.n}</span><h3>${esc(part.title)}</h3><p>${esc(part.summary)}</p>${part.hp ? `<p class="hp"><span>H&amp;P 7e</span> ${esc(part.hp)}</p>` : ""}</div>
                 <div class="stack">
                   ${part.items.map((it) => {
                     const n = it.type === "chapter" ? ++chapterNo : null;
                     const icon = it.state === "complete" ? CHECK : it.state === "open" ? "" : LOCK;
-                    const tone = it.state === "complete" ? "t-mint" : it.state === "open" ? "t-indigo" : it.type === "milestone" ? "t-saffron" : "t-empty";
+                    const tone = it.state === "complete" ? "t-mint" : it.state === "open" ? "t-indigo" : it.type === "milestone" ? "t-saffron" : it.type === "paper" ? "t-rose" : "t-empty";
                     const tag = it.state === "planned" ? "coming soon" : it.state === "locked" ? "locked" : TYPE_LABEL[it.type];
                     const label = it.type === "chapter" ? `${it.id.replace("-", ".")}  ${it.title}` : it.title;
-                    const inner = `<span class="n">${it.type === "chapter" ? pad(n) : it.type === "milestone" ? "◆" : "✓"}</span><span class="name">${esc(label)}</span><span class="tag">${icon} ${esc(tag)}</span>`;
+                    const inner = `<span class="n">${it.type === "chapter" ? pad(n) : it.type === "milestone" ? "◆" : it.type === "paper" ? "¶" : "✓"}</span><span class="name">${esc(label)}</span><span class="tag">${icon} ${esc(tag)}</span>`;
                     return it.state === "open" || it.state === "complete"
                       ? `<a class="block ${tone} link" href="#/c/${slug}/${it.id}">${inner}</a>`
                       : `<div class="block ${tone}" title="${it.state === "locked" ? `Complete ${esc(it.blocked_by)} first` : "Not written yet"}">${inner}</div>`;
@@ -260,7 +260,7 @@
     }
     Object.assign(reader, { slug, item: it, course: c });
     const chNum = it.type === "chapter" ? it.id.replace("-", ".") : null;
-    const kicker = it.type === "chapter" ? `Part ${it.part.n} · Chapter ${chNum}` : it.type === "milestone" ? `Part ${it.part.n} · Project milestone` : `Part ${it.part.n} · Checkpoint`;
+    const kicker = it.type === "chapter" ? `Part ${it.part.n} · Chapter ${chNum}` : it.type === "milestone" ? `Part ${it.part.n} · Project milestone` : it.type === "paper" ? `Part ${it.part.n} · Paper` : `Part ${it.part.n} · Checkpoint`;
 
     main.innerHTML = `
       <div class="reader container">
@@ -284,6 +284,7 @@
             <p class="eyebrow">${esc(kicker)}</p>
             <h1 class="ch-title">${esc(it.title)}</h1>
             ${it.summary ? `<p class="ch-sub">${esc(it.summary)}</p>` : ""}
+            ${it.part.hp && it.type === "chapter" ? `<p class="hp"><span>H&amp;P 7e</span> ${esc(it.part.hp)}</p>` : ""}
             ${it.blocks.length ? `<div class="stack ch-chain">${it.blocks.map(([name, tag], i) =>
               `<a class="block ${i === 0 ? "" : i === 4 ? "t-saffron" : "t-indigo"} link" href="#b${i + 1}" data-jump="b${i + 1}">
                 <span class="n">${pad(i + 1)}</span><span class="name">${esc(name)}</span><span class="tag">${esc(tag)}</span></a>`).join("")}</div>` : ""}

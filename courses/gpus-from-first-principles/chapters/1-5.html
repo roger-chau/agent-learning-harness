@@ -1,0 +1,82 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Divergent branches cost the sum of both paths. Even branches that <em>don't</em> diverge aren't free: they're extra instructions, and they split the code into pieces the compiler finds harder to schedule. For a short conditional like "if negative, use zero", a branch is a heavy tool for a light job.</p>
+<p>Is there a way to make a decision without changing the flow of control at all?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>Predication: compute both answers, then pick one per lane.</strong> Instead of "if p, run A, else run B", every lane runs A and B, and a <em>select</em> instruction keeps A's result where the predicate <code>p</code> is true and B's where it's false. There's no branch, so there's nothing to diverge.</p>
+<div data-gw="warp-exec" data-preset="predicated"></div>
+<p>Compare this with the divergent version in Chapter 1.4. Same logic, and here every issued instruction runs on all 32 lanes, so SIMD efficiency is 100%. The price is that every lane executes both sides. Hardware supports this directly: GPU instructions can carry a <em>predicate register</em> that turns them off per lane, and there are select instructions (<code>SEL</code>, <code>FSEL</code> in NVIDIA's machine code) that pick between two registers.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: when predication wins</h2>
+<p>Compare the costs of an if/else with paths of $a$ and $b$ instructions, plus a few instructions of overhead for the branch itself:</p>
+<table>
+<tr><th>Strategy</th><th>Cost when the warp diverges</th><th>Cost when it doesn't</th></tr>
+<tr><td>branch</td><td>$a + b$ + overhead</td><td>$a$ or $b$ + overhead</td></tr>
+<tr><td>predicate</td><td>$a + b$ + 1 select</td><td>$a + b$ + 1 select</td></tr>
+</table>
+<p>So predication wins when both sides are short, and when divergence is likely. Branching wins when the sides are long and the warp usually agrees. Compilers make this choice automatically for small bodies (<em>if-conversion</em>), usually turning a ternary or a tiny <code>if</code> into a select.</p>
+<h3>Branch-free idioms</h3>
+<p>Many conditionals are really arithmetic in disguise:</p>
+<table>
+<tr><th>Instead of</th><th>Write</th></tr>
+<tr><td><code>if (v &lt; 0) v = 0;</code></td><td><code>v = Math.max(v, 0)</code></td></tr>
+<tr><td><code>if (i &lt; 0) i = 0; if (i &gt; n-1) i = n-1;</code></td><td><code>i = Math.min(Math.max(i, 0), n - 1)</code> (clamp)</td></tr>
+<tr><td><code>if (p) s += v;</code></td><td><code>s += p ? v : 0</code></td></tr>
+<tr><td><code>if (v &lt; 0) v = -v;</code></td><td><code>v = Math.abs(v)</code></td></tr>
+</table>
+<p>The clamp deserves special attention. Image filters read neighbours, and at the image border the neighbours don't exist. The branchy fix ("if this is a border pixel, do something else") makes every warp along the edge diverge. The branch-free fix <strong>clamps the coordinate</strong>: reading pixel $\text{clamp}(x-1, 0, W-1)$ simply re-reads the edge pixel at the border. That's "clamp-to-edge" border handling, and milestone A1 depends on it.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>In our simulator, <code>if</code>, <code>while</code> and <code>for</code> are branches and are checked for divergence. Ternaries and <code>Math.min</code>/<code>Math.max</code> are treated as predicated selects. That's a fair model of what a GPU compiler does with short expressions. Real compilers decide for themselves, though: a ternary whose sides call long functions will usually become a branch, and a tiny <code>if</code> will usually become a select. The only way to know for sure is to read the generated machine code, which Part 6 teaches you to do.</p>
+<p>Try it: the kernel below handles image borders two ways. Run it and compare the divergence counts.</p>
+<div data-gw="playground" data-title="borders.js" data-key="1-5-borders"><script type="text/plain">
+// 3-tap horizontal average over a W x H single-channel image.
+function branchy(src, dst, W, H) {
+  const x = blockIdx.x * blockDim.x + threadIdx.x;
+  const y = blockIdx.y * blockDim.y + threadIdx.y;
+  if (x < W && y < H) {
+    let l, r;
+    if (x === 0) l = src[y * W + x]; else l = src[y * W + x - 1];
+    if (x === W - 1) r = src[y * W + x]; else r = src[y * W + x + 1];
+    dst[y * W + x] = (l + src[y * W + x] + r) / 3;
+  }
+}
+
+function clamped(src, dst, W, H) {
+  const x = blockIdx.x * blockDim.x + threadIdx.x;
+  const y = blockIdx.y * blockDim.y + threadIdx.y;
+  if (x < W && y < H) {
+    const xl = Math.max(x - 1, 0), xr = Math.min(x + 1, W - 1);
+    dst[y * W + x] = (src[y * W + xl] + src[y * W + x] + src[y * W + xr]) / 3;
+  }
+}
+
+function main() {
+  const W = 64, H = 64;
+  const src = gpu.from(Array.from({ length: W * H }, (_, i) => i % 7));
+  const a = gpu.alloc(W * H), b = gpu.alloc(W * H);
+  const cfg = { grid: { x: 2, y: 8 }, block: { x: 32, y: 8 } };
+  print("branchy:"); table(gpu.launch(branchy, cfg, src, a, W, H));
+  print("clamped:"); table(gpu.launch(clamped, cfg, src, b, W, H));
+  print("same result:", a.toArray().every((v, i) => v === b.data[i]));
+}
+</script></div>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Predication isn't free.</strong> Both sides always execute, so predicating a long or expensive branch can be slower than diverging, especially when most warps would have agreed anyway.</li>
+<li><strong>Side effects.</strong> Predicated memory operations are safe on GPUs: a load that's turned off doesn't fault. But computing both sides means doing both sides' arithmetic, and that matters when one side is rare and expensive.</li>
+<li><strong>Uniform branches are cheap.</strong> If a condition depends only on uniform values (kernel arguments, <code>blockIdx</code>), every lane agrees, and the branch costs just a couple of instructions. Don't contort such code to avoid it.</li>
+<li><strong>Rule of thumb.</strong> Short and data-dependent: predicate. Long but warp-uniform: branch. Long and data-dependent: restructure the data so warps agree (1.4).</li>
+</ul>
+<div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Appendix H</strong> (Hardware and Software for VLIW and EPIC) covers predication as a general compiler technique, including if-conversion. GPUs inherited the idea.</div>
+</section>

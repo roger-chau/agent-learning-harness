@@ -49,9 +49,15 @@ self.onmessage = async (e) => {
   const { mode, code, exerciseUrl, exerciseId } = e.data;
   const gpu = new GPUSim.Device();
   const print = (...a) => out(a.map(fmt).join(" "));
+  const show = (buf, w, h, opts = {}) => {
+    const data = buf && buf.data ? buf.data : buf;
+    const channels = opts.channels || (data.length >= w * h * 3 ? 3 : 1);
+    const rgba = GPUSim.toRGBA(data, w, h, channels, opts.min ?? null, opts.max ?? null);
+    self.postMessage({ type: "image", w, h, rgba, label: opts.label || "" }, [rgba.buffer]);
+  };
   try {
     if (exerciseUrl) importScripts(exerciseUrl);
-    const fns = gpu.compile(code, { print, gpu, table, console: { log: print } });
+    const fns = gpu.compile(code, { print, gpu, table, show, console: { log: print } });
 
     if (mode === "run") {
       if (typeof fns.main === "function") {
@@ -70,6 +76,7 @@ self.onmessage = async (e) => {
       gpu,
       print,
       table,
+      show,
       fn(name) {
         const f = fns[name];
         if (typeof f !== "function") throw new Error(`Define a function named ${name}(...)`);

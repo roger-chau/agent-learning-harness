@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single",
+     "prompt": "In a warp, 10 lanes take a <code>then</code> path of 20 instructions and 22 lanes take an <code>else</code> path of 5 instructions. Roughly how many instruction issues does the if/else cost the warp?",
+     "options": ["5", "20", "25", "640"],
+     "answer": 2, "explanation": "Divergent paths are serialised: 20 + 5 = 25 issues."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "Same situation: what is the SIMD efficiency of the if/else part, as a percentage? (Useful lane-slots divided by 32 × issues.)",
+     "unit": "%", "answer": 38.75, "tolerance": 0.5,
+     "explanation": "Useful = 10 × 20 + 22 × 5 = 310; issued = 32 × 25 = 800; 310/800 = 38.75%."},
+    {"id": "q3", "type": "multi",
+     "prompt": "With blocks of 128 threads, which conditions cause divergence in at least one warp?",
+     "options": ["if (threadIdx.x % 4 == 0)", "if (threadIdx.x < 64)", "if (threadIdx.x < 48)", "if (blockIdx.x % 2 == 0)"],
+     "answer": [0, 2], "explanation": "%4 splits every warp. <64 aligns with warp boundaries (warps 0–1 true, 2–3 false). <48 splits warp 1 (lanes 0–15 true, 16–31 false). blockIdx is uniform across the whole block."},
+    {"id": "q4", "type": "numeric",
+     "prompt": "In a warp, 31 lanes loop 4 times and one lane loops 64 times. How many times does the warp execute the loop body?",
+     "unit": "times", "answer": 64, "tolerance": 0,
+     "explanation": "The warp runs until its last lane finishes: 64."},
+    {"id": "q5", "type": "single",
+     "prompt": "Where do diverged lanes classically reconverge?",
+     "options": ["At the end of the kernel", "At the branch's immediate post-dominator, the first point every path must pass through", "At the next __syncthreads()", "They never reconverge"],
+     "answer": 1, "explanation": "The reconvergence stack uses the immediate post-dominator."},
+    {"id": "q6", "type": "single",
+     "prompt": "What changed with Volta's independent thread scheduling?",
+     "options": ["Divergent paths now run in parallel at no cost", "Threads have their own program counters, so diverged paths can interleave, and code must not assume implicit warp lockstep", "Warps became 64 wide", "Branches are no longer allowed"],
+     "answer": 1, "explanation": "Divergence still costs both paths, but the scheduling is more flexible, and warp-synchronous code needs __syncwarp()."}
+  ]
+}

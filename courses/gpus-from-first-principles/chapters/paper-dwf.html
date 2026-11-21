@@ -1,0 +1,46 @@
+<div class="paper-ref">
+<div class="k">The paper</div>
+<b>W. W. L. Fung, I. Sham, G. Yuan, T. M. Aamodt. "Dynamic Warp Formation and Scheduling for Efficient GPU Control Flow."</b> <em>40th IEEE/ACM International Symposium on Microarchitecture (MICRO)</em>, 2007.
+<br><a href="https://scholar.google.com/scholar?q=Dynamic+Warp+Formation+and+Scheduling+for+Efficient+GPU+Control+Flow" target="_blank" rel="noopener noreferrer">Find it on Google Scholar</a> · Follow-up: Fung &amp; Aamodt, "Thread Block Compaction for Efficient SIMT Control Flow", HPCA 2011.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>Chapter 1.4 showed the cost of divergence: when lanes of a warp disagree at a branch, the warp runs each path with some lanes masked off, and SIMD efficiency drops. The standard hardware, a reconvergence stack that reconverges at the immediate post-dominator (the paper calls it PDOM), is correct and simple. But on control-heavy programs a large share of lanes can sit idle.</p>
+<p>The paper's observation: at any moment, an SM holds <em>many</em> warps. If warp 1 has lanes 0–15 on path A and warp 2 has lanes 16–31 on path A, then between them they have a full warp's worth of threads that want the same instruction. They just happen to be in different warps.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Regroup threads into new warps on the fly, by the instruction they want next.</strong> After a divergent branch, instead of each warp limping along with a partial mask, the hardware forms <em>new</em> warps out of threads from different warps that are at the same program counter. Fewer, fuller warps do the same work.</p>
+<p>The catch is the register file. A thread's registers live in a specific <strong>lane</strong> of the SM's register file: thread 5 of any warp keeps its registers in lane 5's bank. Moving a thread to a different lane would mean moving its registers, which is far too expensive. So regrouping is <strong>lane-aware</strong>: a new warp can take at most one thread per lane. Two threads that both live in lane 5 can never be in the same warp.</p>
+<p>That gives a clean way to count. If, after a branch, path A has $a_\ell$ threads in lane $\ell$ (gathered from all the warps), then path A needs at least $\max_\ell a_\ell$ warps. If the A-threads all sit in the same few lanes, regrouping can't help much. If they're spread evenly across lanes, it can pack them almost perfectly.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ol class="reading">
+<li><strong>Introduction and the divergence background.</strong> Read closely. Find their description of the PDOM reconvergence stack and compare it with Chapter 1.4.</li>
+<li><strong>The dynamic warp formation mechanism.</strong> Read closely. Look for the register-file constraint (why threads must stay in their home lane) and how threads are matched by program counter.</li>
+<li><strong>Hardware implementation.</strong> Skim for the overall structure. Note that the extra hardware (tables matching PCs, warp pools) isn't free, and the paper estimates its cost.</li>
+<li><strong>Issue / scheduling policies.</strong> Read the motivation for each policy. The key insight is that <em>which</em> warps you run first decides how many threads end up waiting at the same PC to be regrouped.</li>
+<li><strong>Evaluation.</strong> Read the methodology (a cycle-level GPU simulator running divergent benchmarks) and look at how SIMD efficiency and speedup are reported. Note which benchmarks gain and which don't, and why.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>In the exercise you'll build a small model of the idea. Each warp is a list of 32 path labels, <code>"A"</code> or <code>"B"</code>, saying which side of a branch each lane takes. Path A costs $c_A$ instructions and path B costs $c_B$. You'll compute SIMD efficiency under three policies:</p>
+<ul>
+<li><strong>PDOM:</strong> each warp runs path A if any of its lanes need it, then path B if any need it.</li>
+<li><strong>Ideal regrouping:</strong> pool all A-threads into $\lceil n_A/32 \rceil$ warps and all B-threads into $\lceil n_B/32 \rceil$, ignoring lanes.</li>
+<li><strong>Lane-aware regrouping:</strong> path A needs $\max_\ell a_\ell$ warps, as above, and likewise for B.</li>
+</ul>
+<p>Useful work is the same in every case: $n_A c_A + n_B c_B$ lane-slots. Efficiency is useful work divided by $32 \times$ the instructions issued. The gap between ideal and lane-aware is exactly the cost of the register-file constraint the paper had to design around.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>The same authors' follow-up, <em>Thread Block Compaction</em> (HPCA 2011), identified problems with regrouping across a whole SM. Regrouped warps mix threads from different parts of the data, so their memory accesses coalesce worse. And some threads can wait a long time to be regrouped. Compacting only <em>within</em> a thread block and synchronising at branches kept most of the benefit with fewer side effects.</p>
+<p>Mainstream GPUs didn't adopt general dynamic warp formation, but the idea of <strong>regrouping threads by the work they're about to do</strong> is alive. NVIDIA's <em>Shader Execution Reordering</em> (Ada generation, for ray tracing) lets software ask the hardware to regroup threads by which shader they'll run next. And in software, the standard fix for data-dependent divergence is the same idea done with data: sort or bin work items so similar ones land in the same warp, which is what you'll build with Part 3's primitives.</p>
+</section>

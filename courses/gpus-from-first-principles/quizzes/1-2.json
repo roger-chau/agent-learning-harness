@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric",
+     "prompt": "An image is 1280×720 and blocks are 32×8 threads. How many blocks does the grid need in total?",
+     "unit": "blocks", "answer": 3600, "tolerance": 0,
+     "explanation": "⌈1280/32⌉ = 40 by ⌈720/8⌉ = 90, so 40 × 90 = 3,600 blocks (no overhang: both divide exactly)."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "Blocks are 16×16 and the thread has blockIdx = (3, 2) and threadIdx = (5, 9). What is its global y coordinate?",
+     "unit": "", "answer": 41, "tolerance": 0,
+     "explanation": "y = 2 × 16 + 9 = 41. (x would be 3 × 16 + 5 = 53.)"},
+    {"id": "q3", "type": "numeric",
+     "prompt": "An RGB image is 640 pixels wide, row-major, 3 bytes per pixel. At what byte index is the green channel (c = 1) of pixel (x = 10, y = 2)?",
+     "unit": "", "answer": 3871, "tolerance": 0,
+     "explanation": "(2 × 640 + 10) × 3 + 1 = 1290 × 3 + 1 = 3,871."},
+    {"id": "q4", "type": "single",
+     "prompt": "Why does a 2D kernel need <code>if (x &lt; width &amp;&amp; y &lt; height)</code>?",
+     "options": ["To make memory accesses coalesced", "Because the grid is rounded up to whole blocks in each dimension, so some threads fall outside the image", "To avoid divergence", "Because threadIdx can be negative"],
+     "answer": 1, "explanation": "Rounding up in x and y creates threads past the right and bottom edges."},
+    {"id": "q5", "type": "multi",
+     "prompt": "Which are advantages of a grid-stride loop?",
+     "options": ["Correct for any n with any grid size", "Launch size can match the machine instead of the data", "Per-thread setup is paid once per thread, not per element", "It removes the need for coalesced memory access"],
+     "answer": [0, 1, 2], "explanation": "Access pattern still matters. Grid-stride loops keep neighbouring threads on neighbouring elements, which helps, but they don't make coalescing irrelevant."},
+    {"id": "q6", "type": "single",
+     "prompt": "In a grid-stride loop with 4 blocks of 256 threads, which elements does the thread with global index 5 process?",
+     "options": ["5, 6, 7, …", "5, 261, 517, …", "5, 1029, 2053, …", "5, 10, 15, …"],
+     "answer": 2, "explanation": "The stride is the total thread count, 4 × 256 = 1,024, so 5, 1029, 2053, …"}
+  ]
+}

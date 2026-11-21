@@ -1,0 +1,29 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "single",
+     "prompt": "What does predication do with an if/else?",
+     "options": ["Runs only the side each lane needs", "Runs both sides on every lane and selects each lane's result with a predicate", "Moves the branch to the CPU", "Splits the warp in two"],
+     "answer": 1, "explanation": "No control flow, so nothing to diverge. The cost is executing both sides."},
+    {"id": "q2", "type": "numeric",
+     "prompt": "Both sides of an if/else are 4 instructions. Branching costs 3 extra instructions; predication costs 1 select. If the warp diverges, how many issues does predication save compared with branching?",
+     "unit": "issues", "answer": 2, "tolerance": 0,
+     "explanation": "Branching: 4 + 4 + 3 = 11. Predication: 4 + 4 + 1 = 9. Saves 2."},
+    {"id": "q3", "type": "single",
+     "prompt": "Same paths, but every warp agrees (no divergence). Which is cheaper?",
+     "options": ["Predication (9 issues)", "Branching (4 + 3 = 7 issues)", "They're equal", "Neither works"],
+     "answer": 1, "explanation": "Without divergence a branch runs only one side: 7 < 9."},
+    {"id": "q4", "type": "single",
+     "prompt": "Which is a branch-free way to read the left neighbour of pixel x with clamp-to-edge borders?",
+     "options": ["if (x > 0) v = src[x-1]; else v = src[x];", "v = src[Math.max(x - 1, 0)]", "v = src[x - 1]", "v = src[(x - 1) % W]"],
+     "answer": 1, "explanation": "Clamping the index removes the branch. (x − 1) % W is wrong in JavaScript and C for x = 0, and it wraps around rather than clamping."},
+    {"id": "q5", "type": "multi",
+     "prompt": "When is branching usually better than predication?",
+     "options": ["Both sides are long and warps usually agree", "Both sides are one or two instructions", "The condition depends only on blockIdx or kernel arguments", "Lanes disagree about half the time and both sides are short"],
+     "answer": [0, 2], "explanation": "Long, uniform branches skip work cheaply; uniform conditions never diverge. Short, frequently divergent conditionals favour predication."},
+    {"id": "q6", "type": "single",
+     "prompt": "What compiler transformation turns a small if/else into predicated code?",
+     "options": ["Loop unrolling", "If-conversion", "Inlining", "Register spilling"],
+     "answer": 1, "explanation": "If-conversion replaces control dependence with data dependence (predicates and selects)."}
+  ]
+}

@@ -29,7 +29,8 @@ def test_catalog_and_course(client):
     states = {i["id"]: i["state"] for p in c["parts"] for i in p["items"]}
     assert states["0-1"] == "open"
     assert states["0-2"] == "locked"
-    assert states["1-1"] == "planned"
+    assert states["1-1"] == "locked"
+    assert states["2-1"] == "planned"
 
 
 def test_course_content_is_consistent():
@@ -104,4 +105,5 @@ def test_numeric_tolerance():
 def test_unlock_all_env(client, monkeypatch):
     monkeypatch.setenv("GROUNDWORK_UNLOCK", "1")
     assert client.get(f"/api/courses/{SLUG}/items/0-4").status_code == 200
-    assert client.get(f"/api/courses/{SLUG}/items/1-1").status_code == 403  # planned stays closed
+    assert client.get(f"/api/courses/{SLUG}/items/1-1").status_code == 200
+    assert client.get(f"/api/courses/{SLUG}/items/2-1").status_code == 403  # planned stays closed
