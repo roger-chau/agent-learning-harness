@@ -1,0 +1,24 @@
+<div class="paper-ref">
+<div class="k">Paper project · TPU</div>
+Build a weight-stationary systolic array, cycle by cycle, and find out what keeps it busy.
+</div>
+
+<h2>The machine</h2>
+<p>An array of $K \times N$ cells computes $Y = X \cdot W$ for an $M \times K$ matrix $X$ and a $K \times N$ matrix $W$. Cell $(i, j)$, in row $i$ and column $j$, holds weight $W_{ij}$. Each cycle, every cell:</p>
+<ol>
+<li>takes an activation from its left neighbour (row $i$'s left edge is fed from $X$) and passes it right next cycle;</li>
+<li>takes a partial sum from the cell above (row 0 receives 0), adds activation × weight, and passes the result down next cycle.</li>
+</ol>
+<p>Row $i$ is fed $X_{mi}$ at cycle $m + i$: the <strong>skew</strong> lines activations up with the partial sums coming down. So the activation $X_{mi}$ and the partial sum for output $(m, j)$ both reach cell $(i, j)$ at cycle $m + i + j$. $Y_{mj}$ leaves the bottom of column $j$ at the end of cycle $m + (K - 1) + j$.</p>
+<div class="eq">$$\text{cycles} = M + K + N - 2$$</div>
+<div data-gw="systolic"></div>
+<p>Your <code>busy</code> trace should match the "cells busy now" readout cycle for cycle.</p>
+
+<h2>Build, part 1: the array</h2>
+<p><code>systolic(X, W, M, K, N)</code> simulates it cycle by cycle, with registers for each cell's activation and partial sum, and returns <code>{ Y, cycles, busy }</code>. <code>Y</code> is a flat M×N array, and <code>busy[t]</code> is the number of cells doing a useful MAC at cycle <code>t</code>. Model the registers explicitly: a formula for <code>Y</code> won't produce the right <code>busy</code> trace.</p>
+
+<h2>Build, part 2: a TPU-sized problem</h2>
+<p>Real matrices are bigger than the array. <code>tpuMatmul(X, W, M, K, N, S, overlap)</code> runs an $M \times K$ by $K \times N$ product on an $S \times S$ array ($K$ and $N$ multiples of $S$), one $S \times S$ weight tile at a time, accumulating partial results for each $K$ tile. Loading a weight tile takes $S$ cycles. With <code>overlap</code> false, each tile costs $S$ (load) $+ M + 2S - 2$ cycles. With <code>overlap</code> true, the next tile's weights shift in during the current tile's work (the TPU double-buffers its weights), so only the first load shows. Return <code>{ Y, cycles, utilisation }</code>, where utilisation is useful MACs / (cycles × S²).</p>
+
+<h2>Then think</h2>
+<p>Your simulator is fine up to arrays of a few dozen cells a side. For the TPU's real size, use the cycle formula your tests have confirmed: work out utilisation for $S = 256$ with $M = 1$, then $M = 256$, then $M = 4096$. $M$ is the batch size, and that one number is the paper's latency-vs-throughput tension. The write-up asks you to set this against your GEMM kernels and tensor cores.</p>

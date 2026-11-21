@@ -1,0 +1,21 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric", "prompt": "How many FP32-lane warp FMA instructions would it take to do the work of one 16×16×16 <code>__mma_sync</code>?", "unit": "", "answer": 128, "tolerance": 0,
+     "explanation": "4,096 FMAs / 32 lanes = 128."},
+    {"id": "q2", "type": "single", "prompt": "Why do tensor cores accumulate in FP32 rather than FP16?",
+     "options": ["FP32 is faster", "Long FP16 sums stop growing once the running total's spacing exceeds the addends (2048 + 1 = 2048)", "FP16 can't represent negatives", "To save registers"], "answer": 1,
+     "explanation": "Swamping: an FP16 accumulator loses small addends."},
+    {"id": "q3", "type": "single", "prompt": "BF16 vs FP16: what does BF16 trade?",
+     "options": ["Mantissa bits for exponent range (FP32's range, less precision)", "Range for precision", "Nothing; they're the same", "Sign bit for a mantissa bit"], "answer": 0,
+     "explanation": "8 exponent bits like FP32, 7 mantissa bits."},
+    {"id": "q4", "type": "numeric", "prompt": "Error budget for an FP16-input GEMM with n = 512, |A| ≤ 1, |B| ≤ 2 (n · maxA · maxB · 2 · 2⁻¹¹)?", "unit": "", "answer": 1, "tolerance": 0.001,
+     "explanation": "512 · 1 · 2 · 2 / 2048 = 1."},
+    {"id": "q5", "type": "single", "prompt": "A tiled FP32 GEMM was compute-bound. After switching it to tensor cores, what is the most likely new limiter?",
+     "options": ["FP32 compute", "Memory latency or bandwidth: the math got much faster, the loads didn't", "Branch divergence", "Register spills"], "answer": 1,
+     "explanation": "That's why tensor-core kernels need deep pipelines."},
+    {"id": "q6", "type": "single", "prompt": "In the simulator's layout, which lane holds C[7][3]?",
+     "options": ["Lane 7", "Lane 14", "Lane 15", "Lane 3"], "answer": 1,
+     "explanation": "Row 7 → lanes 14 and 15; columns 0–7 → the even lane, 14."}
+  ]
+}

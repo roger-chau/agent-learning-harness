@@ -1,0 +1,44 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>A register-tiled kernel spends most of its issue slots on FMAs, and what's left is moving data: global loads into shared memory, shared loads into registers, the barrier, and waiting. Two kinds of waste remain. First, too many instructions move the data: one 4-byte load per value. Second, the math stops while a tile loads: the loop is <em>load, sync, compute, sync</em>, so the compute units idle during every load.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: wider loads</h2>
+<p><strong>Move 16 bytes per instruction instead of 4.</strong> A vector load (<code>LDG.128</code> on NVIDIA, <code>float4</code> in CUDA) reads 4 consecutive floats in one instruction. A warp of vector loads touches 512 contiguous bytes, which is still fully coalesced, using a quarter of the instructions.</p>
+<pre><code>const v = ldg4(A, i);       // A[i..i+3], one instruction (i must be a multiple of 4)
+stg4(sB, j, v);             // and one store</code></pre>
+<p>The catch is <strong>alignment</strong>: the address must be a multiple of 16 bytes, so row lengths and tile offsets must be multiples of 4 floats. Real libraries carry separate code paths for "aligned" and "not aligned" problem sizes for this reason.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: double buffering</h2>
+<p><strong>Load tile $k+1$ while computing on tile $k$.</strong> Allocate two shared-memory stages. Each iteration issues the global loads for the next stage <em>first</em>, then does the math on the current one. The loads are in flight during the math, so their latency is hidden by work the warp already has.</p>
+<pre><code>load stage 0;  __syncthreads();
+for (k0 = 0; k0 &lt; n; k0 += BK) {
+  if (k0 + BK &lt; n) load stage (cur ^ 1) from k0 + BK;    // in flight...
+  compute on stage cur;                                 // ...while this runs
+  __syncthreads();  cur ^= 1;
+}</code></pre>
+<p>It costs twice the shared memory, and one barrier per iteration instead of two. In Little's-law terms (Chapter 0.3), each warp now has two requests' worth of independent work in flight instead of one.</p>
+<p><strong>How the simulator sees it.</strong> The simulator runs each warp's code in program order and can't detect overlap, so you <em>declare</em> it, the same way you declare <code>registers</code>: <code>launch(k, { ..., ilp: 2 })</code> says each warp keeps two independent requests in flight. Only declare it if your loop really issues the next stage's loads before the current stage's math. A declared <code>ilp</code> your code doesn't have is a lie the hardware won't tell for you.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: asynchronous copies</h2>
+<p>Double buffering through registers still costs instructions: global to register, then register to shared. Newer GPUs move the copy out of the thread's hands entirely:</p>
+<ul>
+<li><strong>Ampere: <code>cp.async</code></strong> copies global memory straight into shared memory, without passing through registers. The thread issues it, carries on, and later waits on a group of copies. This makes 3- and 4-stage pipelines practical.</li>
+<li><strong>Hopper: the Tensor Memory Accelerator (TMA).</strong> One thread describes a whole 2-D tile (base, strides, box size), and a hardware unit copies it, signalling completion through a barrier in shared memory (an <em>mbarrier</em>). Warps can then specialise: a producer warp feeds TMA, and consumer warps only do math.</li>
+</ul>
+<p>The shape of the idea doesn't change from double buffering: a ring of shared-memory stages, with copy and compute running at the same time.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>How many stages? Enough to cover latency, and no more: each stage costs shared memory that could have bought bigger tiles or more resident blocks. CUTLASS kernels commonly use 3–5 stages on Ampere and Hopper.</li>
+<li>A compute-bound kernel gains little from double buffering, since it is already waiting on the math, not on memory. Measure what limits you first (<code>limitedBy</code>), then pick the fix.</li>
+<li>Next chapter, tensor cores make the math 8× faster here (more on real hardware), and suddenly memory and latency are the limit again. That's when this chapter pays off.</li>
+</ul>
+</section>

@@ -1,0 +1,46 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Your best SGEMM is limited by FP32 compute: the lanes are doing an FMA almost every cycle. There is no more to win from data movement. The only way past the FP32 roof is a unit that does more multiply-adds per instruction. Deep learning made that worthwhile, since neural networks are mostly GEMMs and tolerate lower precision. Since Volta (2017), every NVIDIA datacenter GPU has had <strong>tensor cores</strong>.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p><strong>A tensor core does a whole small matrix multiply as one warp instruction.</strong> In the simulator, one <code>__mma_sync</code> does $C_{16\times16} \mathrel{+}= A_{16\times16} \cdot B_{16\times16}$: 4,096 FMAs from one instruction, where the FP32 lanes would need 128 warp-level FMA instructions.</p>
+<pre><code>// sA: 16x16 tile of A, row-major, row stride lda.  sB: 16x16 tile of B, row stride ldb.
+acc = __mma_sync(sA, aOffset, lda, sB, bOffset, ldb, acc);   // all 32 lanes, together</code></pre>
+<p>The 256 results are spread across the warp as a <strong>fragment</strong>: lane $l$ holds 8 accumulators, row $l \gg 1$, columns $(l \mathbin{\&} 1) \cdot 8$ to $+7$. Each lane passes in its own 8 and gets its 8 back. Real hardware uses messier layouts (<code>mma.m16n8k16</code> spreads rows over lane groups), but the idea is the same: the warp collectively owns the tile, and no single thread owns the whole result.</p>
+<p>On GW-1, tensor cores give 256 FMAs per SM per cycle against 32 for the FP32 lanes: <strong>8× the roof</strong>. On an H100, dense FP16 tensor throughput is roughly 15× FP32.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: what the precision costs</h2>
+<p>The catch is the inputs: tensor cores read <strong>FP16</strong> (or BF16, TF32, FP8). FP16 has a 10-bit mantissa, so rounding an input to FP16 changes it by up to $2^{-11}$ relative. That's fine for inputs, but deadly for an accumulator:</p>
+<div class="eq">$$\text{in FP16: } 2048 + 1 = 2048$$</div>
+<p>Above 2048 the spacing between FP16 numbers is 2, so adding 1 rounds back down. A long dot product accumulated in FP16 stops growing. That's why tensor cores <strong>accumulate in FP32</strong>: FP16 products, FP32 sums. This is <em>mixed precision</em>.</p>
+<table>
+<tr><th>Format</th><th>Exponent bits</th><th>Mantissa bits</th><th>Relative rounding</th><th>Used for</th></tr>
+<tr><td>FP32</td><td>8</td><td>23</td><td>$2^{-24}$</td><td>Accumulators, reference</td></tr>
+<tr><td>TF32</td><td>8</td><td>10</td><td>$2^{-11}$</td><td>"FP32" GEMMs on tensor cores</td></tr>
+<tr><td>FP16</td><td>5</td><td>10</td><td>$2^{-11}$</td><td>Inference, training with loss scaling</td></tr>
+<tr><td>BF16</td><td>8</td><td>7</td><td>$2^{-8}$</td><td>Training (FP32's range, no scaling)</td></tr>
+<tr><td>FP8 (E4M3)</td><td>4</td><td>3</td><td>$2^{-4}$</td><td>Hopper/Blackwell training and inference</td></tr>
+</table>
+<p>A worst-case error budget for an FP16-input GEMM: each of the $n$ products has inputs off by up to $2^{-11}$ relative each, so</p>
+<div class="eq">$$|C - C_{\text{exact}}| \lesssim n \cdot \max|A| \cdot \max|B| \cdot 2 \cdot 2^{-11}$$</div>
+<p>In practice errors partly cancel, and you'll see far less. A test that checks against an FP32 reference with tolerance <code>1e-3</code> will fail, and should be replaced with a budget like this one.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: memory is the limit again</h2>
+<p>Put tensor cores in a tiled kernel and the math gets 8× faster, while the loads stay as they were. A kernel that was compute-bound in FP32 is suddenly waiting on memory latency again. This is where Chapter 4.4 pays off: double buffering, and on real hardware <code>cp.async</code> and TMA pipelines. On Hopper, a <em>warpgroup</em> MMA (<code>wgmma</code>) takes its operands straight from shared memory, and the kernel's job becomes keeping that unit fed.</p>
+<p>Modern GEMM performance work is mostly that: feeding a matrix unit that's faster than everything around it. It's also why Part 5 measures the memory system so carefully.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>You rarely write <code>mma</code> by hand. CUTLASS, cuBLAS, Triton (Part 7) and compilers (Part 6 onwards) generate it. You still need to know its shape, its fragment layout and its precision, to read the generated code and to debug numerical problems.</li>
+<li>Training in FP16 needs <strong>loss scaling</strong> (the Mixed Precision Training paper, Part 8) to keep small gradients from flushing to zero. BF16 avoids that with a wider exponent.</li>
+<li>Peak tensor throughput is quoted for dense matrices; "2:4 structured sparsity" figures are double that and rarely achieved in practice.</li>
+</ul>
+</section>

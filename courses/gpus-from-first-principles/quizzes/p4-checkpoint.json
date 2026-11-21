@@ -1,0 +1,31 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "c1", "type": "numeric", "prompt": "An n×n SGEMM with n = 1024 does how many FLOPs, in GFLOP? (2n³)", "unit": "GFLOP", "answer": 2.147, "tolerance": 0.01,
+     "explanation": "2 · 1024³ ≈ 2.147 × 10⁹."},
+    {"id": "c2", "type": "single", "prompt": "Why is a naive GEMM slow despite GEMM's high arithmetic intensity?",
+     "options": ["GEMM is memory-bound by nature", "It re-reads A and B from memory for every output, so the reuse the intensity promises never happens", "It has branch divergence", "It uses too many registers"], "answer": 1,
+     "explanation": "Intensity is a property of the problem; reuse is a property of the code."},
+    {"id": "c3", "type": "numeric", "prompt": "A 32×32 shared tile cuts global loads per FMA by what factor, compared with naive (ideal caching aside)?", "unit": "×", "answer": 32, "tolerance": 0,
+     "explanation": "Each loaded value is reused T = 32 times."},
+    {"id": "c4", "type": "single", "prompt": "Your tiled kernel is limited by instruction issue, and only about a third of its instructions are FMAs. The next step?",
+     "options": ["Bigger shared tiles", "Register tiling: each thread computes an outer product from register-held values", "More blocks", "Double buffering"], "answer": 1,
+     "explanation": "The shared loads per FMA are what's left to remove."},
+    {"id": "c5", "type": "numeric", "prompt": "Shared loads per FMA for an 8×8 thread tile (one load per value)?", "unit": "", "answer": 0.25, "tolerance": 0,
+     "explanation": "(8 + 8) / 64."},
+    {"id": "c6", "type": "single", "prompt": "When does double buffering pay off most?",
+     "options": ["When the kernel is FP32-compute-bound", "When the kernel waits on memory latency between tiles, e.g. after switching to tensor cores", "Always equally", "Only with atomics"], "answer": 1,
+     "explanation": "It hides latency; it can't speed up math that's already saturated."},
+    {"id": "c7", "type": "single", "prompt": "A tensor-core GEMM fails an FP32 test at tolerance 1e-3 for n = 512. Most likely cause?",
+     "options": ["A bug in the tiling, for certain", "Expected FP16 input rounding: compare against an error budget like n · max|A| · max|B| · 2 · 2⁻¹¹", "FP32 accumulation", "Bank conflicts"], "answer": 1,
+     "explanation": "Lower-precision inputs need a tolerance that reflects them; check the budget before assuming a bug."},
+    {"id": "c8", "type": "numeric", "prompt": "Batch-1 decode with FP32 weights: FLOPs per weight byte?", "unit": "FLOP/B", "answer": 0.5, "tolerance": 0,
+     "explanation": "2 FLOPs per 4-byte weight. Far left of any GPU's ridge point."},
+    {"id": "c9", "type": "single", "prompt": "In the TPU's weight-stationary systolic array, what fixes the latency of producing one output row?",
+     "options": ["The DDR3 bandwidth", "The array's dimensions: data takes about K + N cycles to cross it, whatever the batch", "The clock rate only", "The Unified Buffer"], "answer": 1,
+     "explanation": "Fill and drain cost M + K + N − 2 cycles; small batches pay mostly for fill and drain."},
+    {"id": "c10", "type": "multi", "prompt": "Which change the GW-1 FP32 ridge point (3 FLOP/B) for a GEMV layer?",
+     "options": ["Using tensor cores (8× the compute roof)", "Storing weights in FP16 (halves the bytes)", "Batching (more FLOPs per weight byte)", "Adding more blocks"], "answer": [0],
+     "explanation": "Only the machine's roof moves the ridge. FP16 weights and batching move the layer's intensity, not the ridge. Blocks change neither."}
+  ]
+}

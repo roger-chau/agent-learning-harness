@@ -1,0 +1,47 @@
+<div class="paper-ref">
+<div class="k">The work</div>
+<b>N. P. Jouppi et al. "In-Datacenter Performance Analysis of a Tensor Processing Unit."</b> ISCA 2017.
+<br><a href="https://scholar.google.com/scholar?q=In-Datacenter+Performance+Analysis+of+a+Tensor+Processing+Unit" target="_blank" rel="noopener noreferrer">Find it on Google Scholar</a> · About 12 pages, very readable, and written by architects for architects. It's also the case study at the end of H&amp;P Chapter 7.
+</div>
+
+<section class="blk" data-n="01">
+<h2>The problem</h2>
+<p>Around 2013, Google projected that if users ran voice search for a few minutes a day, serving the neural networks on CPUs would mean doubling its datacenters. Inference has to meet a tight <strong>latency</strong> limit (the paper's applications had 99th-percentile deadlines around 7 ms), and at that scale the cost that matters is performance per watt and per dollar, not peak speed. GPUs of the day were built for throughput at large batch sizes, which fights a latency limit. Google built a custom chip in about 15 months.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The key idea</h2>
+<p><strong>Spend the silicon on one enormous matrix unit, and make it a systolic array so it needs almost no data movement.</strong> The TPU's Matrix Multiply Unit is a 256 × 256 grid of 8-bit multiply-accumulate cells: 65,536 MACs at 700 MHz, 92 tera-operations per second.</p>
+<p>A <em>systolic array</em> pumps data rhythmically through a grid of identical cells, like blood through a heart. In the TPU's <strong>weight-stationary</strong> design:</p>
+<ul>
+<li>each cell holds one weight $w_{ij}$, loaded once;</li>
+<li>activations enter from the left, skewed by one cycle per row, and move one cell right each cycle;</li>
+<li>partial sums move one cell down each cycle, each cell adding its $x \cdot w$;</li>
+<li>finished dot products leave the bottom edge.</li>
+</ul>
+<div data-gw="systolic"></div>
+<p>Step through it. Each colour is one row of $X$. Count the cycles in which the array is only partly full: that fill-and-drain cost is why batch size matters so much.</p>
+<p>Every value read from memory is used 256 times as it crosses the array, and cells talk only to neighbours: no register files, no caches, no crossbars. That's the whole trick, and it's GEMM data reuse (Chapter 4.2) made physical.</p>
+<div class="eq">$$\text{Peak} = 256 \times 256 \times 2 \times 0.7\,\text{GHz} \approx 92\ \text{TOPS}$$</div>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading guide</h2>
+<ul>
+<li><strong>The architecture section.</strong> The block diagram: Unified Buffer (24 MiB of activations), Weight FIFO fed from 8 GiB of DDR3 at 34 GB/s, the Matrix Unit, 4 MiB of accumulators. The TPU is a coprocessor on PCIe: the host sends it CISC-style instructions.</li>
+<li><strong>The roofline figures.</strong> The most important figures. Operational intensity here is MACs per byte of <em>weights</em> read, and the TPU's ridge point is around 1,350. Four of the six production workloads (the MLPs and LSTMs) sit far left of it: <strong>memory-bound</strong>, limited by the 34 GB/s DDR3, not by the 92 TOPS.</li>
+<li><strong>The latency vs. batch size table.</strong> Larger batches raise intensity, but the latency deadline caps the batch. This tension is why the CPU and GPU did badly on the latency-limited workloads.</li>
+<li><strong>The section on alternative TPU designs</strong>, which asks what would have helped. The answer is memory bandwidth: with GDDR5, the TPU would have been about 3× faster on average.</li>
+<li><strong>"Fallacies and pitfalls".</strong> Short, opinionated, quotable in interviews.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Reproduce it</h2>
+<p>Do the paper's roofline arithmetic. For a fully connected layer with 8-bit weights and batch size $B$, each weight byte read from DRAM is used in $B$ MACs, so its intensity is $B$ MACs per weight byte. That gives the batch size where a layer stops being memory-bound. The paper project after this chapter builds the array itself, cycle by cycle.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>What happened next</h2>
+<p>The paper's verdict, that memory bandwidth was the limit, shaped what followed. TPU v2 (2017) added HBM, bfloat16 (a format Google introduced) and training support; later generations scaled to pods of thousands of chips with custom interconnects. GPUs answered the same year: Volta's tensor cores (Chapter 4.5) are small matrix units inside each SM. Today every serious AI accelerator, GPU or not, is built around matrix units and fights the same battle this paper describes: keeping them fed.</p>
+</section>

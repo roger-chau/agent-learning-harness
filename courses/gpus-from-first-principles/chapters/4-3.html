@@ -26,6 +26,8 @@ for (let k = 0; k &lt; 16; k++) {
 <tr><td>4×4</td><td>16</td><td>0.5</td><td>32×32</td></tr>
 <tr><td>8×8</td><td>64</td><td>0.25</td><td>64×64</td></tr>
 </table>
+<p>Try it: grow the thread tile and watch shared loads fall and registers rise. Then grow the block tile until the 256×256 problem no longer has enough blocks for 16 SMs.</p>
+<div data-gw="gemm-tiles"></div>
 <p>Bigger thread tiles cut instructions but cost <strong>registers</strong>: 64 accumulators, plus the loaded values, plus addresses, is easily 100+ registers per thread. That means fewer resident warps (Chapter 2.6), and Volkov's point (Part 2's paper) applies: that's fine, as long as each warp has plenty of independent work. A thread with 64 independent FMAs per $k$ step has ILP to spare.</p>
 <p>They also cost <strong>parallelism</strong>: bigger block tiles mean fewer blocks. On a 256×256 matrix, 64×64 tiles give 16 blocks, exactly one per GW-1 SM. On anything smaller, part of the GPU idles. Real libraries pick tile shapes per problem size for this reason.</p>
 </section>

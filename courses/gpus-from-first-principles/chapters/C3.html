@@ -1,0 +1,16 @@
+<div class="paper-ref">
+<div class="k">Project C · GEMM · Milestone 3 of 5</div>
+Optimise toward the roof, one measured step at a time, and keep a log.
+</div>
+
+<h2>Build: a fast SGEMM</h2>
+<p>Write <code>gemmFast(A, B, C, n)</code> and <code>runFast(A, B, C, n)</code>. Start from your C2 kernel and apply what Chapters 4.3 and 4.4 offer: bigger thread tiles, vector loads for the global-to-shared copies, conflict-free shared reads, double buffering if the limiter calls for it. <code>n</code> is a multiple of 64.</p>
+<p>Declare <code>registers</code> honestly in your launch config. A thread holding 64 accumulators doesn't fit in 32 registers. If you declare <code>ilp</code>, your loop must really overlap loads with math.</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li>Correct on 64×64 and 256×256.</li>
+<li><strong>≥ 60% of FP32 peak</strong> on 256×256.</li>
+<li>An <strong>optimisation log</strong>: the write-up below. Performance engineers keep one for every kernel. It's how you remember why the code looks the way it does, and it's what you'll talk through in interviews.</li>
+</ul>
+<p>Make one change at a time and measure each. Record what <code>limitedBy</code> said before and after every change.</p>

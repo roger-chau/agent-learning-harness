@@ -1,0 +1,21 @@
+<div class="scenario-brief">
+<div class="k">Scenario · LLM decode</div>
+<b>A small language model is too slow at generating text, and the team wants to know why, and what batching would buy.</b>
+<dl>
+<dt>Context</dt><dd>While generating, a transformer produces one token at a time, and each token runs every layer's projections as a matrix-<em>vector</em> product: $y = W x$. You're given one such projection: $W$ is 512 × 512 FP32, row-major (row <code>o</code> holds the weights of output <code>o</code>). Serving many users at once means <code>batch</code> independent vectors share the same $W$.</dd>
+<dt>Inputs</dt><dd><code>W</code> (512·512 floats), <code>X</code> (<code>batch</code> × 512, row-major: one vector per row), <code>Y</code> (<code>batch</code> × 512, output). <code>batch</code> is between 1 and 8.</dd>
+<dt>Goal</dt><dd><strong>batch 1 in ≤ 4,000 cycles</strong> and <strong>batch 8 in ≤ 11,000 cycles</strong> in total, with $Y$ within 1e-4 relative error. Stretch: batch 8 in ≤ 7,000 cycles.</dd>
+<dt>Interface</dt><dd><code>decode(W, X, Y, batch)</code> returns an array of the stats of every launch it made.</dd>
+</dl>
+</div>
+
+<h2>Before you write code</h2>
+<p>Estimate the floors. How long does it take just to read $W$ once from DRAM at 512 GB/s? How many FMAs does batch 8 need, and how long do they take at 1,536 GFLOP/s? Compute the arithmetic intensity (FLOPs per byte of weights) for batch 1 and batch 8, and place both on the GW-1 roofline. One of them is on the other side of the ridge, and that changes what you should optimise.</p>
+
+<h2>Things that will bite</h2>
+<ul>
+<li>Splitting a row's dot product across a warp means a reduction at the end. Count what it costs when a warp holds many sums.</li>
+<li>$X$ is small, but if every warp reads all of it, that's a lot of L2 traffic. Who should read which part of $X$, and how often?</li>
+<li>The L2 is 256 KB and $W$ is 1 MB. Reading $W$ once per vector costs $8\times$ as much as reading it once.</li>
+</ul>
+<p>There's no single right design. Measure, read <code>limitedBy</code>, and explain your choices in the write-up.</p>

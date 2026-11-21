@@ -853,6 +853,162 @@
     render();
   };
 
+  // Weight-stationary systolic array: activations enter skewed from the left, partial sums flow down.
+  C["systolic"] = (el) => {
+    const s = shell(el, {
+      title: "A weight-stationary systolic array",
+      transport: true,
+      controls: [
+        { key: "M", label: "Rows of X (batch)", min: 1, max: 8, value: 4 },
+        { key: "K", label: "Array rows (K)", min: 2, max: 6, value: 4 },
+        { key: "N", label: "Array columns (N)", min: 2, max: 6, value: 4 },
+      ],
+      readouts: [
+        { key: "cyc", label: "Cycle" },
+        { key: "busy", label: "Cells busy now" },
+        { key: "util", label: "Utilisation so far" },
+        { key: "total", label: "Total cycles" },
+      ],
+    });
+    const hue = ["--indigo", "--saffron", "--mint-ink", "--rose-ink"];
+    let t = -1, timer = 0;
+    const total = () => s.vals.M + s.vals.K + s.vals.N - 2;
+    function draw() {
+      const { M, K, N } = s.vals;
+      const { ctx, w, h } = s.size(Math.max(230, K * 44 + 90));
+      ctx.clearRect(0, 0, w, h);
+      const cell = Math.min(44, (h - 80) / K, (w - 150) / N), gx = 110, gy = 24;
+      ctx.font = `11px ${css("--font-mono")}`;
+      let busy = 0;
+      // queue of activations waiting at each row's left edge
+      for (let i = 0; i < K; i++) {
+        for (let m = 0; m < M; m++) {
+          const enter = m + i; // cycle at which X[m][i] enters column 0
+          const off = enter - t;
+          if (off <= 0) continue;
+          const x = gx - 8 - off * 22, y = gy + i * cell + cell / 2;
+          if (x < 4) continue;
+          ctx.fillStyle = css(hue[m % 4]); ctx.globalAlpha = 0.85;
+          roundRect(ctx, x - 9, y - 8, 18, 16, 4); ctx.fill(); ctx.globalAlpha = 1;
+          ctx.fillStyle = css("--bg"); ctx.textAlign = "center"; ctx.fillText(`${m}`, x, y + 4); ctx.textAlign = "left";
+        }
+      }
+      for (let i = 0; i < K; i++) for (let j = 0; j < N; j++) {
+        const x = gx + j * cell, y = gy + i * cell, m = t - i - j, on = t >= 0 && m >= 0 && m < M;
+        if (on) busy++;
+        ctx.fillStyle = on ? css(hue[m % 4]) : css("--surface-3");
+        ctx.globalAlpha = on ? 0.9 : 1; roundRect(ctx, x + 2, y + 2, cell - 4, cell - 4, 6); ctx.fill(); ctx.globalAlpha = 1;
+        ctx.strokeStyle = css("--rule-strong"); roundRect(ctx, x + 2, y + 2, cell - 4, cell - 4, 6); ctx.stroke();
+        ctx.fillStyle = on ? css("--bg") : css("--muted"); ctx.textAlign = "center";
+        ctx.fillText(on ? `x${m}·w` : `w${i}${j}`, x + cell / 2, y + cell / 2 + 4); ctx.textAlign = "left";
+      }
+      // outputs leaving the bottom edge (shown for a few cycles)
+      ctx.textAlign = "center";
+      for (let j = 0; j < N; j++) for (let m = 0; m < M; m++) {
+        const out = m + K - 1 + j; // last cycle this output spends in the array
+        if (t >= out && t - out < 3) {
+          ctx.fillStyle = css(hue[m % 4]);
+          ctx.fillText(`y${m},${j}`, gx + j * cell + cell / 2, gy + K * cell + 14 + (t - out) * 12);
+        }
+      }
+      ctx.textAlign = "left";
+      ctx.fillStyle = css("--muted"); ctx.font = `11px ${css("--font-ui")}`;
+      ctx.fillText("X rows enter →", 6, 14);
+      ctx.fillText("↓ partial sums", gx + N * cell + 8, gy + 14);
+      let usedSoFar = 0;
+      for (let c = 0; c <= t; c++) for (let i = 0; i < K; i++) for (let j = 0; j < N; j++) { const m = c - i - j; if (m >= 0 && m < M) usedSoFar++; }
+      s.setReadout("cyc", t < 0 ? "–" : `${t + 1}`);
+      s.setReadout("busy", `${busy} / ${K * N}`);
+      s.setReadout("util", t < 0 ? "–" : `${Math.round((100 * usedSoFar) / ((t + 1) * K * N))}%`);
+      s.setReadout("total", `${total()}`);
+      el.querySelector(".sim-clock").textContent = `cycle ${Math.max(0, t + 1)}/${total()}`;
+    }
+    const playBtn = el.querySelector('[data-t="play"]');
+    const stop = () => { clearInterval(timer); timer = 0; playBtn.textContent = "▶ Play"; };
+    const play = () => {
+      if (t >= total() - 1) t = -1;
+      playBtn.textContent = "❚❚ Pause";
+      timer = setInterval(() => { if (t >= total() - 1) { stop(); return; } t++; draw(); }, reduced() ? 1200 : 650);
+    };
+    el.querySelector(".sim-transport").addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.t === "play") timer ? stop() : play();
+      if (b.dataset.t === "step") { stop(); t = Math.min(total() - 1, t + 1); draw(); }
+      if (b.dataset.t === "reset") { stop(); t = -1; draw(); }
+    });
+    onInput(el, s, () => { stop(); t = -1; draw(); });
+    whenVisible(el, () => {}, stop);
+    window.addEventListener("resize", draw);
+    draw();
+  };
+
+  // GEMM tiling explorer: block tile and thread tile sizes versus loads, registers, threads and blocks.
+  C["gemm-tiles"] = (el) => {
+    const s = shell(el, {
+      title: "Block tiles and thread tiles for a 256×256 GEMM",
+      controls: [
+        { key: "bm", label: "Block tile (BM × BM)", min: 3, max: 7, value: 5 },
+        { key: "rt", label: "Thread tile (r × r)", min: 0, max: 3, value: 2 },
+      ],
+      readouts: [
+        { key: "glob", label: "Global loads / FMA" },
+        { key: "shl", label: "Shared loads / FMA" },
+        { key: "fma", label: "FMA share (scalar loads)" },
+        { key: "thr", label: "Threads / block" },
+        { key: "regs", label: "≈ Registers / thread" },
+        { key: "blk", label: "Blocks (16 SMs)" },
+      ],
+    });
+    const n = 256;
+    const showVals = () => {
+      el.querySelector('[data-o="bm"]').textContent = `${2 ** s.vals.bm}`;
+      el.querySelector('[data-o="rt"]').textContent = `${2 ** s.vals.rt}`;
+    };
+    function draw() {
+      showVals();
+      const BM = 2 ** s.vals.bm, r = Math.min(2 ** s.vals.rt, BM);
+      const cw = s.canvas.parentElement.clientWidth;
+      const { ctx, w, h } = s.size(Math.min(280, (cw - 40) / 2 + 44));
+      ctx.clearRect(0, 0, w, h);
+      const side = Math.min(h - 44, (w - 40) / 2), x0 = 12, y0 = 24, x1 = x0 + side + 28;
+      const thr = (BM / r) ** 2, blocks = (n / BM) ** 2, regs = r * r + 2 * r + 16;
+      ctx.font = `11px ${css("--font-ui")}`; ctx.fillStyle = css("--muted");
+      ctx.fillText(`C: ${blocks} block tiles`, x0, 14);
+      ctx.fillText(`1 block: ${thr} threads`, x1, 14);
+      // C with block grid
+      ctx.fillStyle = css("--surface-3"); ctx.fillRect(x0, y0, side, side);
+      const bs = side * BM / n;
+      ctx.fillStyle = css("--indigo-soft"); ctx.fillRect(x0, y0, bs, bs);
+      ctx.strokeStyle = css("--indigo"); ctx.lineWidth = 1.5; ctx.strokeRect(x0, y0, bs, bs); ctx.lineWidth = 1;
+      if (bs >= 4) {
+        ctx.strokeStyle = css("--rule"); ctx.beginPath();
+        for (let k = bs; k < side - 0.5; k += bs) { ctx.moveTo(x0 + k, y0); ctx.lineTo(x0 + k, y0 + side); ctx.moveTo(x0, y0 + k); ctx.lineTo(x0 + side, y0 + k); }
+        ctx.stroke();
+      }
+      // zoomed block with thread tiles
+      ctx.fillStyle = css("--indigo-soft"); ctx.fillRect(x1, y0, side, side);
+      const ts = side * r / BM;
+      ctx.fillStyle = css("--saffron"); ctx.globalAlpha = 0.8; ctx.fillRect(x1, y0, ts, ts); ctx.globalAlpha = 1;
+      if (ts >= 3) {
+        ctx.strokeStyle = css("--indigo-line"); ctx.beginPath();
+        for (let k = ts; k < side - 0.5; k += ts) { ctx.moveTo(x1 + k, y0); ctx.lineTo(x1 + k, y0 + side); ctx.moveTo(x1, y0 + k); ctx.lineTo(x1 + side, y0 + k); }
+        ctx.stroke();
+      }
+      ctx.strokeStyle = css("--indigo"); ctx.strokeRect(x1, y0, side, side);
+      ctx.fillStyle = css("--muted"); ctx.fillText(`thread 0: ${r}×${r} outputs`, x1, y0 + side + 14);
+      const fmaShare = (r * r) / (r * r + 2 * r);
+      s.setReadout("glob", (2 / BM).toFixed(3));
+      s.setReadout("shl", (2 / r).toFixed(2));
+      s.setReadout("fma", `${Math.round(100 * fmaShare)}%`);
+      s.setReadout("thr", thr > 1024 ? `${thr} (too many)` : thr < 32 ? `${thr} (< 1 warp)` : `${thr}`);
+      s.setReadout("regs", regs > 255 ? `${regs} (spills)` : `${regs}`);
+      s.setReadout("blk", blocks < 16 ? `${blocks} (SMs idle)` : `${blocks}`);
+    }
+    onInput(el, s, draw);
+    window.addEventListener("resize", draw);
+    draw();
+  };
+
   function mount(root) {
     root.querySelectorAll("[data-gw]").forEach((el) => {
       const fn = C[el.dataset.gw];

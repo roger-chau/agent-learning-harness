@@ -1057,68 +1057,205 @@
      "type": "chapter",
      "id": "4-1",
      "title": "Naive GEMM and why it's slow",
-     "summary": "",
-     "status": "planned"
+     "summary": "Counting FLOPs and bytes, and why one-output-per-thread code can't use GEMM's reuse.",
+     "exercises": [
+      "4-1-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "everything is a GEMM"
+      ],
+      [
+       "The smallest idea",
+       "one thread per output"
+      ],
+      [
+       "Add one block",
+       "GEMM's intensity is high, but naive code wastes it"
+      ],
+      [
+       "The whole machine",
+       "what the hardware sees"
+      ],
+      [
+       "Reality",
+       "what libraries do"
+      ]
+     ]
     },
     {
      "type": "chapter",
      "id": "4-2",
      "title": "Tiling into shared memory",
-     "summary": "",
-     "status": "planned"
+     "summary": "Loading tiles once and reusing them from shared memory, and the instruction ceiling that's left.",
+     "exercises": [
+      "4-2-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "every value read n times"
+      ],
+      [
+       "The smallest idea",
+       "load once, reuse T times"
+      ],
+      [
+       "Add one block",
+       "what tiling buys, and what it doesn't"
+      ],
+      [
+       "The whole machine",
+       "the tiled loop"
+      ],
+      [
+       "Reality",
+       "tile sizes in practice"
+      ]
+     ]
     },
     {
      "type": "milestone",
      "id": "C1",
      "title": "Milestone C1: Tiled SGEMM",
-     "summary": "Shared-memory tiled matrix multiply.",
+     "summary": "Shared-memory tiled matrix multiply, with fewer bytes per FMA than naive.",
      "project": "C",
-     "status": "planned"
+     "exercises": [
+      "C1-a"
+     ]
     },
     {
      "type": "chapter",
      "id": "4-3",
-     "title": "Register tiling and thread coarsening",
-     "summary": "",
-     "status": "planned"
+     "title": "Register tiling",
+     "summary": "Thread tiles as outer products from registers: fewer loads per FMA, at the cost of registers and blocks.",
+     "exercises": [
+      "4-3-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "one FMA in three"
+      ],
+      [
+       "The smallest idea",
+       "outer products in registers"
+      ],
+      [
+       "Add one block",
+       "the costs of a bigger thread tile"
+      ],
+      [
+       "The whole machine",
+       "the GEMM hierarchy"
+      ],
+      [
+       "Reality",
+       "tiles, spills and unrolling"
+      ]
+     ]
     },
     {
      "type": "milestone",
      "id": "C2",
-     "title": "Milestone C2: 50% of roofline",
-     "summary": "Register tiling and coarsening.",
+     "title": "Milestone C2: Register-tiled SGEMM",
+     "summary": "Register tiling past 40% of the FP32 peak.",
      "project": "C",
-     "status": "planned"
+     "exercises": [
+      "C2-a"
+     ]
     },
     {
      "type": "chapter",
      "id": "4-4",
      "title": "Vectorised loads, double buffering, async copies",
-     "summary": "",
-     "status": "planned"
+     "summary": "Fewer instructions per byte, and overlapping the next tile's loads with this tile's math.",
+     "exercises": [
+      "4-4-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "idle math, busy loads"
+      ],
+      [
+       "The smallest idea",
+       "wider loads"
+      ],
+      [
+       "Add one block",
+       "double buffering"
+      ],
+      [
+       "The whole machine",
+       "asynchronous copies"
+      ],
+      [
+       "Reality",
+       "how many stages"
+      ]
+     ]
     },
     {
      "type": "milestone",
      "id": "C3",
-     "title": "Milestone C3: 70% of roofline",
-     "summary": "With an optimisation log.",
+     "title": "Milestone C3: 60% of peak",
+     "summary": "A fast SGEMM, with an optimisation log.",
      "project": "C",
-     "status": "planned"
+     "exercises": [
+      "C3-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "List each change you made, in order, with the cycles and limitedBy before and after.",
+       "Which change bought the most, and why that one (in terms of instructions, bytes or latency)?",
+       "Which change didn't help, or made things worse, and what did that teach you about the limiter at that point?",
+       "What would you try next on a real GPU at a larger n, and what would you measure first?"
+      ]
+     }
     },
     {
      "type": "chapter",
      "id": "4-5",
      "title": "Tensor cores and mixed precision",
-     "summary": "",
-     "status": "planned"
+     "summary": "Matrix units, fragments, FP16 inputs with FP32 accumulation, and error budgets.",
+     "exercises": [
+      "4-5-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "past the FP32 roof"
+      ],
+      [
+       "The smallest idea",
+       "a matrix multiply per instruction"
+      ],
+      [
+       "Add one block",
+       "what the precision costs"
+      ],
+      [
+       "The whole machine",
+       "memory is the limit again"
+      ],
+      [
+       "Reality",
+       "libraries, loss scaling, sparsity"
+      ]
+     ]
     },
     {
      "type": "milestone",
      "id": "C4",
      "title": "Milestone C4: Tensor cores",
-     "summary": "FP16/BF16 path with an error budget.",
+     "summary": "An FP16-input, FP32-accumulate tensor-core GEMM at 2× the FP32 roof, checked against an error budget.",
      "project": "C",
-     "status": "planned"
+     "exercises": [
+      "C4-a"
+     ]
     },
     {
      "type": "paper",
@@ -1147,7 +1284,9 @@
        "in industry"
       ]
      ],
-     "status": "planned"
+     "exercises": [
+      "paper-tpu-a"
+     ]
     },
     {
      "type": "milestone",
@@ -1155,14 +1294,43 @@
      "title": "Paper project: a systolic array",
      "summary": "Simulate a weight-stationary systolic array and compare it with your GEMM and tensor cores.",
      "project": "Papers",
-     "status": "planned"
+     "exercises": [
+      "PP-tpu-a",
+      "PP-tpu-b"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "What utilisation does a 256×256 array reach at batch 1, 256 and 4096, and what does that say about latency-limited inference?",
+       "Compare the array with your C3 and C4 kernels: where does each get its data reuse, and what does each spend on moving data?",
+       "Why does a systolic array need no register file or cache between cells, and what flexibility does it give up for that?",
+       "If you were designing the next TPU after reading the paper, what would you change first, and why?"
+      ]
+     }
+    },
+    {
+     "type": "scenario",
+     "id": "scenario-4",
+     "title": "Scenario: LLM decode",
+     "summary": "Make one transformer projection fast at batch 1 and at batch 8, and explain why they need different designs.",
+     "exercises": [
+      "scenario-4-a"
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "What are the FLOPs per weight byte at batch 1 and batch 8, and where does each sit relative to the GW-1 ridge point?",
+       "Where does the time go in your batch-8 design (limitedBy, and which instructions or bytes)?",
+       "What changes with FP16 or INT8 weights, and with tensor cores (an 8× higher compute roof)?",
+       "Requests arrive one at a time with a latency target. How would you choose the batch size, and what would you measure?"
+      ]
+     }
     },
     {
      "type": "checkpoint",
      "id": "p4-checkpoint",
      "title": "Part 4 checkpoint",
-     "summary": "Cumulative quiz across the Part.",
-     "status": "planned"
+     "summary": "Cumulative quiz across the Part."
     }
    ],
    "hp": "Ch 7 · Ch 4"

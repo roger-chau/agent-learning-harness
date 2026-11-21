@@ -38,9 +38,9 @@ Every Part also has a **real-world scenario**: an open-ended brief (e.g. "this p
 
 ### Project C: GEMM, naive to tensor cores
 - **C1** (after 4.2): shared-memory tiled SGEMM.
-- **C2** (after 4.3): register tiling and thread coarsening. Gate: at least 50% of the simulated roofline.
-- **C3** (after 4.4): vectorised loads and double buffering. Gate: at least 70% of the simulated roofline, with an optimisation log recording each change, the metric it moved, and why.
-- **C4** (after Part 4): a tensor-core path in FP16/BF16 with FP32 accumulation, and a numerical error budget.
+- **C2** (after 4.3): register tiling and thread coarsening. Gate: at least 40% of the simulated FP32 peak.
+- **C3** (after 4.4): bigger thread tiles and vectorised loads. Gate: at least 60% of the simulated FP32 peak, with an optimisation log recording each change, the metric it moved, and why.
+- **C4** (after 4.5): a tensor-core path with FP16 inputs and FP32 accumulation, double buffered. Gate: at least 2× the FP32 peak, within a numerical error budget.
 - **C5** (after Part 6): read the generated code for your inner loop, hand-schedule it in the simulator's PTX-like ISA, and beat the baseline compiler in cycles. Explain each transformation as a compiler concept.
 
 ## Companion: Hennessy & Patterson, 7th edition

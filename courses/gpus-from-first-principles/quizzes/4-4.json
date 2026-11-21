@@ -1,0 +1,21 @@
+{
+  "pass": 0.8,
+  "questions": [
+    {"id": "q1", "type": "numeric", "prompt": "A block of 128 threads copies a 64×32 float tile with 16-byte vector loads. How many load instructions does each warp issue?", "unit": "", "answer": 4, "tolerance": 0,
+     "explanation": "2048 floats / (128 threads × 4) = 4 passes; each warp issues one instruction per pass."},
+    {"id": "q2", "type": "single", "prompt": "What does a 16-byte vector load require of its address?",
+     "options": ["Nothing", "A multiple of 16 bytes", "A multiple of 128 bytes", "That it's in shared memory"], "answer": 1,
+     "explanation": "Vector accesses must be naturally aligned."},
+    {"id": "q3", "type": "single", "prompt": "In a double-buffered loop, what must happen before the math on stage <em>cur</em>?",
+     "options": ["A __syncthreads() after the math", "Issuing the global loads for the next stage", "Zeroing the other stage", "Nothing; the order doesn't matter"], "answer": 1,
+     "explanation": "The next loads must already be in flight, or there's nothing to overlap."},
+    {"id": "q4", "type": "single", "prompt": "A kernel's <code>limitedBy</code> is \"FP32 compute\". What will double buffering most likely gain?",
+     "options": ["About 2×", "Little: it hides memory latency, and memory isn't the limit", "It always halves time", "It removes bank conflicts"], "answer": 1,
+     "explanation": "Pick the fix that matches the limiter."},
+    {"id": "q5", "type": "multi", "prompt": "What do <code>cp.async</code> and TMA have in common?",
+     "options": ["Global to shared copies that don't pass through registers", "The thread can keep working while the copy is in flight", "They need warp divergence", "Completion is waited on explicitly (a group wait or a barrier)"], "answer": [0, 1, 3],
+     "explanation": "Both are asynchronous copies into shared memory with an explicit wait."},
+    {"id": "q6", "type": "numeric", "prompt": "With 96 KB of shared memory per block, how many stages of a 128×128×32 tile pipeline (FP32 A and B) fit?", "unit": "", "answer": 3, "tolerance": 0,
+     "explanation": "Each stage is 4 × (128·32 + 32·128) = 32 KB; 96 / 32 = 3."}
+  ]
+}

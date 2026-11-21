@@ -1,0 +1,16 @@
+<div class="paper-ref">
+<div class="k">Project C · GEMM · Milestone 4 of 5</div>
+Go through the FP32 roof with tensor cores.
+</div>
+
+<h2>Build: a tensor-core GEMM</h2>
+<p>Write <code>gemmTC(A, B, C, n)</code> and <code>runTC(A, B, C, n)</code>. Use <code>__mma_sync</code> for the math, with tiles staged through shared memory. <code>n</code> is a multiple of 64. A good starting shape: 4 warps per block, a 32×32 block tile, each warp owning one 16×16 sub-tile of C.</p>
+<p>Your first version will probably run into a different limiter than C3's. Read <code>limitedBy</code>, then reach for Chapter 4.4.</p>
+
+<h2>How it's checked</h2>
+<ul>
+<li>Correct on 64×64 and 256×256 <strong>within the FP16 error budget</strong> $n \cdot \max|A| \cdot \max|B| \cdot 2 \cdot 2^{-11}$ against an exact reference. The test data is chosen so FP16 rounding actually happens.</li>
+<li>Uses tensor cores (<code>tensorOps &gt; 0</code>).</li>
+<li><strong>≥ 200% of the FP32 peak</strong> on 256×256, which no FP32 kernel can reach.</li>
+</ul>
+<p>As in C3: an <code>ilp</code> you declare must be one your loop really has.</p>
