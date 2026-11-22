@@ -5,10 +5,11 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 import anthropic
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -286,6 +287,21 @@ def mark_read(slug: str, item_id: str):
 def reset_course(slug: str):
     _course(slug)
     progress.reset_course(slug)
+    return {"ok": True}
+
+
+@app.get("/api/progress/export")
+def export_progress():
+    return {"groundwork": "progress", "version": 1, "exported_at": datetime.now(timezone.utc).isoformat(),
+            "file": str(progress.path), "progress": progress.export()}
+
+
+@app.post("/api/progress/import")
+def import_progress(body: dict = Body(...)):
+    try:
+        progress.restore(body.get("progress") if "progress" in body else body)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     return {"ok": True}
 
 

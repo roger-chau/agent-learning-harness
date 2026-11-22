@@ -179,3 +179,29 @@ def test_lab_submission(client, monkeypatch):
     client.post(base + "/lab", json=slow)
     assert client.get(base).json()["lab_record"]["passed"]
     assert client.post(f"/api/courses/{SLUG}/items/0-1/lab", json=good).status_code == 404
+
+
+def test_progress_export_import_roundtrip(client, tmp_path):
+    client.post("/api/courses/gpus-from-first-principles/items/0-1/read")
+    exp = client.get("/api/progress/export").json()
+    assert exp["groundwork"] == "progress" and "courses" in exp["progress"]
+    # wipe, then restore from the export (as the UI does, with drafts alongside)
+    client.post("/api/courses/gpus-from-first-principles/reset")
+    r = client.post("/api/progress/import", json={**exp, "drafts": {"gw-ex-x": "code"}})
+    assert r.status_code == 200
+    assert client.get("/api/progress/export").json()["progress"]["courses"] == exp["progress"]["courses"]
+    assert client.post("/api/progress/import", json={"nope": 1}).status_code == 400
+
+
+def test_progress_default_path_and_daily_backup(tmp_path, monkeypatch):
+    from learnharness import progress as pmod
+    monkeypatch.delenv("GROUNDWORK_DATA", raising=False)
+    monkeypatch.setattr(pmod.Path, "home", lambda: tmp_path)
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "progress.json").write_text('{"courses": {"x": {"items": {}}}, "qa": {}}')
+    p = pmod.Progress()
+    assert p.path == tmp_path / ".groundwork" / "progress.json"
+    assert "x" in p.data["courses"]  # migrated from the old location
+    p.save()
+    assert list((tmp_path / ".groundwork" / "backups").glob("progress-*.json"))

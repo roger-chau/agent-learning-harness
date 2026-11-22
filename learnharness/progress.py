@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,9 +26,28 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def default_path() -> Path:
+    """Where progress lives: $GROUNDWORK_DATA if set, else ~/.groundwork/progress.json, the same
+    file whichever folder the server is started from. A progress file from older versions
+    (data/progress.json, relative to the start folder or the repository) is copied over once."""
+    env = os.environ.get("GROUNDWORK_DATA")
+    if env:
+        return Path(env)
+    home = Path.home() / ".groundwork" / "progress.json"
+    if not home.exists():
+        for old in (Path("data/progress.json"), Path(__file__).resolve().parent.parent / "data" / "progress.json"):
+            if old.exists():
+                home.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(old, home)
+                break
+    return home
+
+
 class Progress:
+    BACKUPS_KEPT = 14
+
     def __init__(self, path: str | os.PathLike | None = None):
-        self.path = Path(path or os.environ.get("GROUNDWORK_DATA", "data/progress.json"))
+        self.path = Path(path) if path else default_path()
         self._lock = threading.RLock()
         self.data = {"courses": {}, "qa": {}}
         if self.path.exists():
@@ -37,9 +57,38 @@ class Progress:
     def save(self) -> None:
         with self._lock:
             self.path.parent.mkdir(parents=True, exist_ok=True)
+            self._daily_backup()
             tmp = self.path.with_suffix(".tmp")
             tmp.write_text(json.dumps(self.data, indent=1))
-            tmp.replace(self.path)
+            tmp.replace(self.path)  # atomic: a crash mid-write never leaves a half-written file
+
+    def _daily_backup(self) -> None:
+        """Before the first save of each day, keep a copy of yesterday's file (last 14 days)."""
+        if not self.path.exists():
+            return
+        bdir = self.path.parent / "backups"
+        target = bdir / f"{self.path.stem}-{datetime.now().date().isoformat()}.json"
+        if target.exists():
+            return
+        bdir.mkdir(exist_ok=True)
+        shutil.copy2(self.path, target)
+        for old in sorted(bdir.glob(f"{self.path.stem}-*.json"))[:-self.BACKUPS_KEPT]:
+            old.unlink()
+
+    # ---- export / import ------------------------------------------------------
+    def export(self) -> dict:
+        with self._lock:
+            return json.loads(json.dumps(self.data))
+
+    def restore(self, data: dict) -> None:
+        if not isinstance(data, dict) or not isinstance(data.get("courses"), dict):
+            raise ValueError("not a Groundwork progress file")
+        with self._lock:
+            if self.path.exists():  # keep what was there, in case the restore was a mistake
+                self.path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(self.path, self.path.with_name(f"{self.path.stem}-before-restore.json"))
+            self.data = {"courses": data["courses"], "qa": data.get("qa") or {}}
+            self.save()
 
     def _item(self, slug: str, item_id: str) -> dict:
         c = self.data["courses"].setdefault(slug, {"items": {}})

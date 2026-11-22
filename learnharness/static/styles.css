@@ -627,3 +627,8 @@ svg .d-arrowhead { fill: var(--muted); }
 .lab-targets th, .lab-targets td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); }
 .lab-targets tr.met td:last-child { color: var(--mint-ink); font-weight: 600; }
 .lab-targets tr.missed td:last-child { color: var(--rose-ink); font-weight: 600; }
+
+/* Backup / restore line on the course page */
+.save-note { margin-top: 14px; font-size: .86rem; color: var(--muted); }
+.linkish { background: none; border: 0; padding: 0; font: inherit; color: var(--indigo-ink); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.linkish:hover { color: var(--ink); }

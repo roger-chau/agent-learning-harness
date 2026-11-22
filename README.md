@@ -25,7 +25,7 @@ Then open http://127.0.0.1:8765. Use `groundwork --port 9000` for another port, 
 | `ANTHROPIC_API_KEY` | none | Key for the Ask panel. An `ant auth login` profile also works. |
 | `GROUNDWORK_MODEL` | `claude-opus-5-5` | Model for the Ask panel. |
 | `GROUNDWORK_EFFORT` | `medium` | Thinking effort for the Ask panel. |
-| `GROUNDWORK_DATA` | `data/progress.json` | Where your progress is stored. |
+| `GROUNDWORK_DATA` | `~/.groundwork/progress.json` | Where your progress is stored (the same file whichever folder you start from; daily backups go to `backups/` beside it, last 14 kept). The course page also has "Download a backup" / "Restore", which include your exercise code drafts. |
 | `GROUNDWORK_UNLOCK` | `1` | Every chapter is unlocked. Set to `0` (or run `groundwork --locked`) so each item unlocks only when the ones before it are complete. |
 
 ## How it's built

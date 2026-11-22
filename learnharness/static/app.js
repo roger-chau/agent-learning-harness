@@ -195,6 +195,10 @@
             <div class="btn-row">
               ${p.next ? `<a class="btn btn-primary" href="#/c/${slug}/${p.next}">${p.complete ? "Continue" : "Start the course"} ${ARROW}</a>` : `<span class="pill">All written chapters complete</span>`}
             </div>
+            <p class="save-note">Progress saves automatically on this computer.
+              <button type="button" class="linkish" id="pg-export">Download a backup</button> ·
+              <button type="button" class="linkish" id="pg-import">Restore from a backup</button>
+              <input type="file" id="pg-file" accept="application/json,.json" hidden></p>
           </div>
           <div class="stack-card lifted">
             <div class="stats big">
@@ -246,6 +250,7 @@
           </div>
         </div>
       </section>`;
+    setupBackup();
   }
 
   // ---------- Reader ----------
@@ -740,6 +745,38 @@ make submit     # record the results here (Groundwork must be running)</code></p
     main.innerHTML = `<div class="container" style="padding:64px 16px;max-width:720px">
       <div class="empty-card"><strong>${locked ? `${LOCK} Locked` : "Couldn't load this page"}</strong>${esc(err.message)}
       ${slug ? `<p style="margin-top:16px"><a class="btn btn-ghost btn-sm" href="#/c/${slug}">Back to the course</a></p>` : ""}</div></div>`;
+  }
+
+  // ---------- Backup and restore ----------
+  // A backup holds the server-side progress (checkmarks, problems, quizzes, labs, write-ups) and
+  // the browser-side drafts (exercise code and unsent write-ups), so it moves everything to a new
+  // machine or browser.
+  function setupBackup() {
+    const ex = $("#pg-export"), im = $("#pg-import"), file = $("#pg-file");
+    if (!ex) return;
+    ex.addEventListener("click", async () => {
+      const server = await api("/api/progress/export");
+      const drafts = {};
+      try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith("gw-")) drafts[k] = localStorage.getItem(k); } } catch (e) {}
+      const blob = new Blob([JSON.stringify({ ...server, drafts }, null, 1)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `groundwork-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+    im.addEventListener("click", () => file.click());
+    file.addEventListener("change", async () => {
+      const f = file.files[0];
+      if (!f) return;
+      let data;
+      try { data = JSON.parse(await f.text()); } catch (e) { alert("That file isn't a Groundwork backup."); return; }
+      if (!confirm("Replace your current progress with this backup? (The current progress is kept as a copy next to the progress file.)")) return;
+      try { await api("/api/progress/import", { method: "POST", body: JSON.stringify(data) }); }
+      catch (e) { alert(`Restore failed: ${e.message}`); return; }
+      try { Object.entries(data.drafts || {}).forEach(([k, v]) => { if (k.startsWith("gw-")) localStorage.setItem(k, v); }); } catch (e) {}
+      route();
+    });
   }
 
   // ---------- Router ----------
