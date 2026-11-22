@@ -1,0 +1,581 @@
+{
+ "minutes": 180,
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "q1",
+   "level": 2,
+   "title": "From counters to a diagnosis",
+   "statement": "<p>A kernel: 1.2 ms, DRAM SOL 91%, L2 SOL 55%, issue SOL 40% (FMA share 15%), coalescing 25%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Diagnosis?",
+     "options": [
+      "Latency-bound",
+      "DRAM-bound with wasted sectors",
+      "Compute-bound",
+      "Launch-bound"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Estimated new time, if coalescing cuts DRAM traffic 4× and issue work is unchanged, in ms?",
+     "answer": 0.48,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>DRAM is saturated, and 75% of the bytes are wasted: fix coalescing first. If DRAM traffic falls 4×, the time bound falls to 0.3 ms, until issue (40% of 1.2 ms ≈ 0.48 ms) takes over: the estimate is max(0.3, 0.48) = 0.48 ms, now issue-bound.</p>"
+  },
+  {
+   "id": "q2",
+   "level": 2,
+   "title": "Waves",
+   "statement": "<p>A 132-SM GPU, 2 resident blocks per SM. A grid of 300 equal blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Waves?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Efficiency, in %?",
+     "answer": 56.81818181818182,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>2 waves, the second with 36 blocks: 300/528 = 57%. 264 blocks (or 528) would fit exactly; finer blocks or Stream-K remove the tail.</p>"
+  },
+  {
+   "id": "q3",
+   "level": 2,
+   "title": "Timing honestly",
+   "statement": "<p>Runs in µs: 230, 41, 40, 40, 39, 40, 95, 40, 41, 40.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Median?",
+     "answer": 40,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Mean?",
+     "answer": 64.6,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Median 40 µs; the mean (64.6) is dominated by the cold first run and one interrupted run. Report median or min after warm-up.</p>"
+  },
+  {
+   "id": "q4",
+   "level": 2,
+   "title": "Register pressure",
+   "statement": "<p>256-thread blocks; registers allocated per warp in units of 256; 65,536 per SM; 64-warp limit.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Occupancy at 72 registers, in %?",
+     "answer": 37.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Most registers per thread that still allow 4 blocks?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>72 × 32 = 2,304 → 28 warps → 3 blocks: 37.5%. 4 blocks need ≤ 2,048 per warp: 64 registers.</p>"
+  },
+  {
+   "id": "q5",
+   "level": 2,
+   "title": "Scheduling",
+   "statement": "<p>One warp, in-order issue, latencies: ld.global 400, fma 4. Code: <code>ld a; ld b; c = fma(a); d = fma(b); e = fma(c, d)</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Finish cycle as written?",
+     "answer": 409,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>ld a at 0, ld b at 1 (ready 401); c at 400 (a ready), d at 401, e waits for d (405): done at 409. The loads were already hoisted; the remaining time is latency.</p>"
+  },
+  {
+   "id": "q6",
+   "level": 2,
+   "title": "Loop legality",
+   "statement": "<p><code>for i: for j: a[i][j] = a[i][j−1] + a[i−1][j]</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Distance vectors?",
+     "options": [
+      "(0,1) and (1,0)",
+      "(1,1)",
+      "(0,−1)"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Is interchanging i and j legal?",
+     "options": [
+      "Yes: (0,1) ↔ (1,0) stay lexicographically positive",
+      "No"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Can the inner loop run in parallel as written?",
+     "options": [
+      "Yes",
+      "No: j carries a dependence (0,1)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Distances (0, 1) and (1, 0); interchange maps them to (1, 0) and (0, 1): legal. Neither loop is parallel as is; anti-diagonals (wavefronts) are.</p>"
+  },
+  {
+   "id": "q7",
+   "level": 2,
+   "title": "Max live",
+   "statement": "<p><code>a = ld; b = ld; c = a + b; d = c * a; e = d + b; f = e * c</code>; f is the result.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum values live at once (counting the one being defined)?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>At d's definition, a (used for the last time), b, c and d are live: 4; at e's, b, c, d and e: 4. Elsewhere 3. So 4 registers.</p>"
+  },
+  {
+   "id": "q8",
+   "level": 2,
+   "title": "Online softmax",
+   "statement": "<p>Scores 3, 1, 4 processed one at a time with running (m, s).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Final s?",
+     "answer": 1.4176665095393064,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Softmax of the 4?",
+     "answer": 0.7053845126982411,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>m = 4, s = $e^{-1} + e^{-3} + 1 = 1.4177$, softmax(4) = 0.7054.</p>"
+  },
+  {
+   "id": "q9",
+   "level": 2,
+   "title": "Attention memory",
+   "statement": "<p>Training attention, 16 heads, N = 4,096, d = 64, batch 4, FP16.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "GiB to store P for one layer?",
+     "answer": 2.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "GiB for Q, K, V and O together?",
+     "answer": 0.125,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>P: 2 GiB; Q, K, V, O: 0.125 GiB. FlashAttention keeps the second and recomputes the first.</p>"
+  },
+  {
+   "id": "q10",
+   "level": 2,
+   "title": "Streams",
+   "statement": "<p>Upload 6 ms, compute 9 ms, download 3 ms; 2 copy engines; many chunks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Serial, in ms?",
+     "answer": 18,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Pipelined, ideally, in ms?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "With a single copy engine, ideally?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Serial 18; pipelined max(6, 9, 3) = 9; with one copy engine the copies total 9 ms and still fit behind 9 ms of compute: 9.</p>"
+  },
+  {
+   "id": "q11",
+   "level": 2,
+   "title": "Numerics",
+   "statement": "<p>FP32 has 24 significand bits.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Smallest positive integer n such that n + 1 rounds to n in FP32?",
+     "answer": 16777216,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Summing 10⁸ ones in a sequential FP32 loop gives…",
+     "options": [
+      "10⁸",
+      "16,777,216",
+      "inf"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [],
+   "solution": "<p>$2^{24} = 16{,}777{,}216$: above it, the spacing is 2, and +1 ties to even. The loop sticks there.</p>"
+  },
+  {
+   "id": "q12",
+   "level": 2,
+   "title": "Portability",
+   "statement": "<p>Code runs on 64-wide wavefronts.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which are bugs?",
+     "options": [
+      "<code>lane = threadIdx.x &amp; 31</code>",
+      "<code>__ballot_sync</code> result stored in a 32-bit int",
+      "<code>warps = blockDim.x / warpSize</code>",
+      "shuffle reduction starting at offset 16"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Hard-coded 31, 32-bit masks and a 16-offset start all assume 32 lanes; using warpSize is correct.</p>"
+  },
+  {
+   "id": "q13",
+   "level": 2,
+   "title": "Power",
+   "statement": "<p>Dynamic power ∝ f³. A compute-bound kernel at f₀ uses 240 W dynamic + 60 W static and takes 10 ms.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Energy at f₀, in J?",
+     "answer": 3.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Energy at 0.8 f₀, in J?",
+     "answer": 2.286,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>(a) 300 W × 10 ms = 3.0 J. (b) (122.9 + 60) W × 12.5 ms = 2.29 J: slower but cheaper.</p>"
+  },
+  {
+   "id": "q14",
+   "level": 3,
+   "title": "Design: a fused kernel",
+   "statement": "<p>Fuse <code>y = LayerNorm(x + r)</code> for 8192 × 1024 FP16 tensors (x, r in; y and h = x + r out) on a 1 TB/s GPU.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum DRAM bytes?",
+     "answer": 67108864,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time bound, in µs?",
+     "answer": 67.108864,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Best mapping?",
+     "options": [
+      "One thread per row",
+      "One warp per row, values in registers, two-pass statistics",
+      "One block per element"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Read x and r, write h and y: 4 × 16 MiB = 64 MiB, 67 µs. A warp per row holds 32 FP16 values per lane, computes mean and variance from registers, and writes once.</p>"
+  },
+  {
+   "id": "q15",
+   "level": 2,
+   "title": "Scan traffic",
+   "statement": "<p>Exclusive scan of $2^{26}$ ints at 1 TB/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Single-pass time bound, in ms?",
+     "answer": 0.536870912,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Three-phase (3n accesses) bound, in ms?",
+     "answer": 0.805306368,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>0.537 versus 0.805 ms.</p>"
+  },
+  {
+   "id": "q16",
+   "level": 2,
+   "title": "Radix sort",
+   "statement": "<p>Sort $2^{25}$ 32-bit keys with 32-bit values using 8-bit digits, Onesweep-style (one histogram pass over keys, then each digit pass reads and writes keys and values once).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes moved?",
+     "answer": 2281701376,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time at 1 TB/s, in ms?",
+     "answer": 2.281701376,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>4n + 4 × 2 × 8n = 68n bytes = 2.12 GiB; 2.28 ms.</p>"
+  },
+  {
+   "id": "q17",
+   "level": 2,
+   "title": "Tensor-core tiles",
+   "statement": "<p>A GPU with a 300 FLOP/byte FP16 tensor ridge. A tiled GEMM's DRAM intensity with FP16 inputs is about T/2 for T × T block tiles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Smallest power-of-two T that is compute-bound?",
+     "answer": 1024,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Is that practical per block?",
+     "options": [
+      "Yes",
+      "No: such tiles don't fit on chip; L2 reuse across blocks (rasterisation) supplies the rest"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [],
+   "solution": "<p>T/2 &gt; 300 → T &gt; 600 → 1024, far too big for one SM. Real kernels use 128–256 tiles and rely on L2 hits across concurrently running blocks to raise the effective DRAM intensity.</p>"
+  },
+  {
+   "id": "q18",
+   "level": 1,
+   "title": "Benchmarking protocol",
+   "statement": "<p>Comparing two attention kernels.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which belong in the protocol?",
+     "options": [
+      "Warm-up runs",
+      "Interleaved repetitions",
+      "Report clocks and power state",
+      "Flush L2 if production inputs arrive cold",
+      "Report the fastest single run only"
+     ],
+     "answer": [
+      0,
+      1,
+      2,
+      3
+     ]
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Everything except cherry-picking.</p>"
+  },
+  {
+   "id": "q19",
+   "level": 3,
+   "title": "Little's law and ILP",
+   "statement": "<p>A GPU needs 270 KB in flight. A kernel runs 512 warps GPU-wide with 4-byte loads, one per lane.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes in flight with one load per warp?",
+     "answer": 65536,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Loads in flight per warp needed?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Cheapest way to get them?",
+     "options": [
+      "Double the blocks",
+      "float4 loads plus unrolling by 2 (8× the bytes per warp)",
+      "Bigger L2"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [],
+   "solution": "<p>65,536 bytes; ⌈270,000/65,536⌉ = 5 loads per warp; float4 (4×) and a 2× unroll give 8×, enough without more warps.</p>"
+  },
+  {
+   "id": "q20",
+   "level": 2,
+   "title": "Compiler pipeline",
+   "statement": "<p>Where does each happen?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Physical register allocation",
+     "options": [
+      "NVVM",
+      "ptxas",
+      "front end"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "FMA contraction of a*b + c",
+     "options": [
+      "middle end (visible in PTX)",
+      "only in hardware"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "JIT for a GPU newer than the build",
+     "options": [
+      "driver compiles PTX",
+      "impossible"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>ptxas allocates; contraction appears in PTX; the driver JITs PTX for newer GPUs.</p>"
+  }
+ ]
+}

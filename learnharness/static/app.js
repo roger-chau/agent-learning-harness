@@ -174,7 +174,7 @@
   }
 
   // ---------- Course overview ----------
-  const TYPE_LABEL = { chapter: "chapter", milestone: "milestone", checkpoint: "checkpoint", paper: "paper", scenario: "scenario", lab: "GPU lab" };
+  const TYPE_LABEL = { chapter: "chapter", milestone: "milestone", checkpoint: "checkpoint", paper: "paper", scenario: "scenario", lab: "GPU lab", exam: "exam" };
 
   async function renderCourse(slug) {
     setNav("courses");
@@ -273,7 +273,7 @@
     window.scrollTo(0, 0);
     Object.assign(reader, { slug, item: it, course: c });
     const chNum = it.type === "chapter" ? it.id.replace("-", ".") : null;
-    const kicker = it.type === "chapter" ? `Part ${it.part.n} · Chapter ${chNum}` : it.type === "milestone" ? `Part ${it.part.n} · Project milestone` : it.type === "paper" ? `Part ${it.part.n} · Paper` : it.type === "scenario" ? `Part ${it.part.n} · Real-world scenario` : it.type === "lab" ? `Part ${it.part.n} · Real-GPU lab` : `Part ${it.part.n} · Checkpoint`;
+    const kicker = it.type === "chapter" ? `Part ${it.part.n} · Chapter ${chNum}` : it.type === "milestone" ? `Part ${it.part.n} · Project milestone` : it.type === "paper" ? `Part ${it.part.n} · Paper` : it.type === "scenario" ? `Part ${it.part.n} · Real-world scenario` : it.type === "lab" ? `Part ${it.part.n} · Real-GPU lab` : it.type === "exam" ? `Part ${it.part.n} · Timed exam` : `Part ${it.part.n} · Checkpoint`;
 
     main.innerHTML = `
       <div class="reader container">
@@ -330,16 +330,17 @@ make submit     # record the results here (Groundwork must be running)</code></p
           ${it.quiz ? `<section class="practice" id="quiz-sec"><p class="eyebrow">Check yourself</p><h2>${it.type === "checkpoint" ? "Checkpoint quiz" : "Quiz"}</h2>
             <p class="muted">Pass mark ${Math.round(it.quiz.pass * 100)}%. Retake it as many times as you like; explanations appear for questions you get right.</p>
             <form id="quiz" class="quiz"></form></section>` : ""}
+          ${it.exam ? `<section class="practice exam" id="exam-sec"><p class="eyebrow">Exam</p><h2>${esc(it.title)}</h2><div id="exam"></div></section>` : ""}
           <div class="gate" id="gate"></div>
         </article>
       </div>
-      <button class="ask-fab" id="ask-open" type="button" aria-haspopup="dialog">Ask a question</button>
-      <aside class="ask" id="ask" aria-label="Ask a question" hidden>
+      ${it.exam ? "" : `<button class="ask-fab" id="ask-open" type="button" aria-haspopup="dialog">Ask a question</button>`}
+      ${it.exam ? "" : `<aside class="ask" id="ask" aria-label="Ask a question" hidden>
         <div class="ask-head"><div><b>Ask</b><span class="muted"> · knows this chapter · hints, not solutions</span></div>
           <div><button class="term-btn" id="ask-clear" type="button">Clear</button><button class="icon-btn small" id="ask-close" type="button" aria-label="Close">✕</button></div></div>
         <div class="ask-thread" id="ask-thread"></div>
         <form class="ask-form" id="ask-form"><textarea id="ask-input" rows="2" placeholder="Ask anything about this chapter…" aria-label="Question"></textarea><button class="btn btn-primary btn-sm" type="submit">Ask</button></form>
-      </aside>`;
+      </aside>`}`;
 
     const body = $("#ch-body");
     setupReadBar();
@@ -357,9 +358,9 @@ make submit     # record the results here (Groundwork must be running)</code></p
     if (it.lab) setupLab(slug, it);
     renderQuiz(slug, it);
     renderGate(it.state, it);
-    setupAsk(slug, it);
+    if (it.exam) setupExam(slug, it); else setupAsk(slug, it);
     if (it.writeup) setupWriteup(slug, it);
-    if (!it.exercises.length && !it.quiz && it.state.state === "open") {
+    if (!it.exam && !it.exercises.length && !it.quiz && it.state.state === "open") {
       api(`/api/courses/${slug}/items/${it.id}/read`, { method: "POST" }).then((r) => renderGate(r.state, it)).catch(() => {});
     }
   }
@@ -670,6 +671,108 @@ make submit     # record the results here (Groundwork must be running)</code></p
   }
 
   // ---------- Ask panel ----------
+  // ---------- Exams ----------
+  // Timed, closed-book: problems appear only when an attempt starts, with no hints and no Ask
+  // panel. Answers are kept in this browser while you work (a reload doesn't lose them) and
+  // graded on the server when you submit, or automatically when time runs out.
+  let examTimer = null;
+  function stopExamTimer() { if (examTimer) { clearInterval(examTimer); examTimer = null; } }
+  const fmtClock = (s) => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return `${h ? h + ":" : ""}${String(m).padStart(h ? 2 : 1, "0")}:${String(x).padStart(2, "0")}`; };
+  function partInput(q, name) {
+    if (q.type === "single") return q.options.map((o, i) => `<label class="opt"><input type="radio" name="${name}" value="${i}"> <span>${o}</span></label>`).join("");
+    if (q.type === "multi") return q.options.map((o, i) => `<label class="opt"><input type="checkbox" name="${name}" value="${i}"> <span>${o}</span></label>`).join("");
+    return `<div class="num"><input class="field" name="${name}" inputmode="decimal" autocomplete="off" placeholder="Answer">${q.unit ? `<span class="muted">${esc(q.unit)}</span>` : ""}</div>`;
+  }
+  function setupExam(slug, it) {
+    const box = $("#exam");
+    const info = it.exam;
+    const skew = Date.now() / 1000 - info.now;  // server clock → browser clock
+    const history = () => info.attempts.length ? `<table class="lab-targets"><thead><tr><th>Attempt</th><th>Score</th><th>Result</th></tr></thead><tbody>${info.attempts.map((a, i) =>
+      `<tr><td>${i + 1} · ${new Date(a.started * 1000).toLocaleString()}</td><td>${Math.round(100 * a.score)}%${a.total ? ` (${a.correct}/${a.total})` : ""}</td><td>${a.passed ? "✓ passed" : a.expired ? "not submitted" : a.late ? "late" : "not passed"}</td></tr>`).join("")}</tbody></table>` : "";
+    const intro = () => {
+      const wait = info.next_attempt_at ? info.next_attempt_at - info.now : 0;
+      box.innerHTML = `<ul class="exam-rules">
+          <li><b>${info.count} problems</b> (${info.parts} graded parts, partial credit per part), <b>${info.minutes} minutes</b>. Pass mark ${Math.round(info.pass * 100)}%.</li>
+          <li>Closed book: no hints, no Ask panel, no worked solutions until you submit. Paper, pencil and a calculator are fine, as in any exam.</li>
+          <li>The clock starts when you press Start and keeps running if you leave the page. It submits automatically when time runs out.</li>
+          <li>One attempt every 12 hours. Your best score counts.</li></ul>
+        ${history()}
+        <div class="quiz-actions">${wait > 0 ? `<span class="muted">Next attempt opens in ${fmtClock(wait)}.</span>` : `<button class="btn btn-primary" type="button" id="exam-start">${info.attempts.length ? "Start a new attempt" : "Start the exam"}</button>`}</div>`;
+      const b = $("#exam-start");
+      if (b) b.addEventListener("click", async () => {
+        if (!info.active && !confirm(`Start the ${info.minutes}-minute exam now?`)) return;
+        try { sit(await api(`/api/courses/${slug}/items/${it.id}/exam/start`, { method: "POST" })); } catch (e) { alert(e.message); }
+      });
+    };
+    const sit = (att) => {
+      const key = `gw-exam-${slug}-${it.id}-${Math.floor(att.active.started)}`;
+      let saved = {}; try { saved = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) {}
+      box.innerHTML = `<div class="exam-clock" id="exam-clock"></div>
+        <form id="exam-form">${att.paper.map((p, k) => `
+          <div class="prob" data-pid="${esc(p.id)}">
+            <div class="prob-head"><span class="prob-n">Problem ${k + 1}</span><span class="prob-lvl">${"★".repeat(p.level || 1)}</span><b>${esc(p.title || "")}</b></div>
+            <div class="prob-stmt">${p.statement || ""}</div>
+            ${p.parts.map((q) => `<div class="pp"><div class="pp-prompt"><b>(${esc(q.id)})</b> ${q.prompt}</div>${partInput(q, `${p.id}::${q.id}`)}</div>`).join("")}
+          </div>`).join("")}
+          <div class="quiz-actions"><button class="btn btn-primary" type="submit">Submit the exam</button><span class="muted" id="exam-msg">Answers are saved in this browser as you go.</span></div>
+        </form>`;
+      typeset(box);
+      const form = $("#exam-form");
+      Object.entries(saved).forEach(([name, v]) => form.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach((el) => {
+        if (el.type === "radio" || el.type === "checkbox") el.checked = [].concat(v).map(String).includes(el.value); else el.value = v;
+      }));
+      const collect = () => {
+        const flat = {}, nested = {};
+        att.paper.forEach((p) => p.parts.forEach((q) => {
+          const name = `${p.id}::${q.id}`, els = [...form.querySelectorAll(`[name="${CSS.escape(name)}"]`)];
+          let v;
+          if (q.type === "multi") v = els.filter((e) => e.checked).map((e) => +e.value);
+          else if (q.type === "single") { const c = els.find((e) => e.checked); v = c ? +c.value : null; }
+          else v = els[0] ? els[0].value : "";
+          flat[name] = v; (nested[p.id] = nested[p.id] || {})[q.id] = v;
+        }));
+        return { flat, nested };
+      };
+      form.addEventListener("input", () => { try { localStorage.setItem(key, JSON.stringify(collect().flat)); } catch (e) {} });
+      let submitting = false;
+      const submit = async (auto) => {
+        if (submitting) return; submitting = true; stopExamTimer();
+        const { nested } = collect();
+        try {
+          const r = await api(`/api/courses/${slug}/items/${it.id}/exam/submit`, { method: "POST", body: JSON.stringify({ answers: nested }) });
+          try { localStorage.removeItem(key); } catch (e) {}
+          results(att, r, nested, auto);
+        } catch (e) { submitting = false; $("#exam-msg").textContent = `Couldn't submit: ${e.message}. Try again.`; }
+      };
+      form.addEventListener("submit", (e) => { e.preventDefault(); if (confirm("Submit your answers? You can't change them afterwards.")) submit(false); });
+      const clock = $("#exam-clock");
+      const tick = () => {
+        const left = att.active.deadline - (Date.now() / 1000 - skew);
+        clock.textContent = `Time left ${fmtClock(left)}`;
+        clock.classList.toggle("low", left < 300);
+        if (left <= 0) submit(true);
+      };
+      stopExamTimer(); tick(); examTimer = setInterval(tick, 1000);
+    };
+    const results = (att, r, mine, auto) => {
+      box.innerHTML = `<div class="exam-result ${r.passed ? "pass" : "fail"}"><b>${Math.round(100 * r.score)}%</b> · ${r.correct} of ${r.total} parts correct · ${r.passed ? "passed" : r.late ? "submitted late: not counted" : `not passed (needs ${Math.round(info.pass * 100)}%)`}${auto ? " · submitted when time ran out" : ""}</div>
+        ${att.paper.map((p, k) => { const rv = r.review.find((x) => x.id === p.id) || { parts: {}, answers: {} };
+          return `<div class="prob ${Object.values(rv.parts).every(Boolean) ? "solved" : ""}">
+            <div class="prob-head"><span class="prob-n">Problem ${k + 1}</span><b>${esc(p.title || "")}</b></div>
+            <div class="prob-stmt">${p.statement || ""}</div>
+            ${p.parts.map((q) => { const ok = rv.parts[q.id], yours = (mine[p.id] || {})[q.id], ans = rv.answers[q.id];
+              const show = (v) => q.type === "numeric" ? esc(v === "" || v == null ? "—" : v) : [].concat(v ?? []).map((i) => q.options[i] !== undefined ? q.options[i] : "—").join("; ") || "—";
+              return `<div class="pp"><div class="pp-prompt"><b>(${esc(q.id)})</b> ${q.prompt}</div><div class="muted small">${ok ? "✓" : "✗"} yours: ${show(yours)} · answer: ${q.type === "numeric" ? esc(typeof ans === "number" ? +ans.toPrecision(6) : ans) : show(ans)}</div></div>`; }).join("")}
+            <div class="prob-sol"><p class="eyebrow">Worked solution</p>${rv.solution}</div></div>`; }).join("")}
+        <div class="quiz-actions"><button class="btn btn-ghost" type="button" id="exam-back">Back to the exam page</button></div>`;
+      typeset(box);
+      $("#exam-back").addEventListener("click", () => route());
+      window.scrollTo(0, $("#exam-sec").offsetTop - 80);
+    };
+    if (info.active) api(`/api/courses/${slug}/items/${it.id}/exam/start`, { method: "POST" }).then(sit).catch((e) => { box.textContent = e.message; });
+    else intro();
+  }
+
   function setupAsk(slug, it) {
     const panel = $("#ask"), thread = $("#ask-thread"), form = $("#ask-form"), input = $("#ask-input");
     const open = () => { panel.hidden = false; $("#ask-open").hidden = true; input.focus(); thread.scrollTop = thread.scrollHeight; };
@@ -783,6 +886,7 @@ make submit     # record the results here (Groundwork must be running)</code></p
   let navSeq = 0;
   function route() {
     hideReadBar();
+    stopExamTimer();
     // Stop everything the previous page started: figure timers and animation loops, and any
     // exercise still running in a worker.
     if (window.GWComponents && window.GWComponents.unmountAll) window.GWComponents.unmountAll();

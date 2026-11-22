@@ -632,3 +632,12 @@ svg .d-arrowhead { fill: var(--muted); }
 .save-note { margin-top: 14px; font-size: .86rem; color: var(--muted); }
 .linkish { background: none; border: 0; padding: 0; font: inherit; color: var(--indigo-ink); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .linkish:hover { color: var(--ink); }
+
+/* Exams */
+.exam-rules { margin: 8px 0 18px; padding-left: 20px; color: var(--ink-2); }
+.exam-rules li { margin: 4px 0; }
+.exam-clock { position: sticky; top: 72px; z-index: 5; display: inline-block; margin-bottom: 14px; padding: 6px 12px; border-radius: 999px; font-family: var(--font-mono); font-size: .9rem; background: var(--surface-2, var(--surface)); border: 1px solid var(--rule-strong); }
+.exam-clock.low { color: var(--rose-ink, #e5484d); border-color: currentColor; }
+.exam-result { padding: 14px 16px; border-radius: var(--radius-lg, 12px); border: 1px solid var(--rule-strong); margin-bottom: 18px; }
+.exam-result.pass { border-color: var(--mint-ink); }
+.exam-result b { font-size: 1.4rem; margin-right: 6px; }

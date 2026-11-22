@@ -1,0 +1,512 @@
+{
+ "minutes": 120,
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "q1",
+   "level": 1,
+   "title": "Latency and throughput",
+   "statement": "<p>A pipeline has 6 stages of 2 ns each and accepts a new item every 2 ns.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Latency of one item, in ns?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Throughput, items per ns?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Time for 1,000 items, in ns?",
+     "answer": 2010,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Latency 12 ns; throughput one per 2 ns; 1,000 items take 12 + 999 × 2 = 2,010 ns. Throughput, not latency, dominates large jobs.</p>"
+  },
+  {
+   "id": "q2",
+   "level": 2,
+   "title": "Little's law on a new GPU",
+   "statement": "<p>A GPU has 900 GB/s of DRAM bandwidth and 500 ns of memory latency. Each warp keeps 2 requests of 128 bytes in flight.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes in flight needed for full bandwidth?",
+     "answer": 450000.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Warps needed?",
+     "answer": 1757.8125,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "If the GPU has 108 SMs, warps per SM needed?",
+     "answer": 16.276041666666668,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>450,000 bytes; /256 = 1,758 warps; 16.3 per SM, well inside 64: this GPU can saturate memory at about 25% occupancy with 2 loads per warp.</p>"
+  },
+  {
+   "id": "q3",
+   "level": 1,
+   "title": "Warps and lanes",
+   "statement": "<p>blockDim = (32, 4, 2). Thread (7, 3, 1).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Linear thread index?",
+     "answer": 231,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Warp?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Lane?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>t = 7 + 3·32 + 1·128 = 231: warp 7, lane 7. With x = 32, every warp is one row.</p>"
+  },
+  {
+   "id": "q4",
+   "level": 2,
+   "title": "Divergence cost",
+   "statement": "<p>A warp runs <code>if (lane % 4 == 0) { A } else if (lane % 2 == 0) { B } else { C }</code> then D. Costs: A 6, B 2, C 3, D 5 instructions; each test costs 1 instruction for the lanes that reach it.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Instructions issued by the warp (tests included)?",
+     "answer": 18,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "SIMD efficiency, counting only A–D as useful, in %?",
+     "answer": 47.22222222222222,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Issue slots: first test (1), A (6), second test (1, reached by 24 lanes), B (2), C (3), D (5): 18. Useful lane-slots: A runs on the 8 lanes with lane % 4 == 0 (48), B on the 8 lanes ≡ 2 mod 4 (16), C on the 16 odd lanes (48), D on all 32 (160): 272 of 576, 47.2%.</p>"
+  },
+  {
+   "id": "q5",
+   "level": 2,
+   "title": "Roofline",
+   "statement": "<p>GPU: 20 TFLOP/s FP32, 1 TB/s. Kernel: 3 FLOPs per element, reads two FP32 arrays, writes one.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ridge point, FLOP/byte?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Kernel intensity?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Attainable GFLOP/s?",
+     "answer": 250,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Ridge 20; intensity 3/12 = 0.25; attainable 0.25 × 1000 = 250 GFLOP/s: memory-bound by 80×.</p>"
+  },
+  {
+   "id": "q6",
+   "level": 2,
+   "title": "Sectors",
+   "statement": "<p>A warp reads 4-byte floats; lane ℓ reads element $3\\ell + 8$ of an aligned array.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors touched?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Efficiency, in %?",
+     "answer": 33.333333333333336,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Bytes 32 + 12ℓ for ℓ = 0..31: 32 to 404, sectors 1 through 12: 12 sectors, 33.3%.</p>"
+  },
+  {
+   "id": "q7",
+   "level": 2,
+   "title": "Bank conflicts",
+   "statement": "<p>A warp reads <code>tile[ℓ * 24]</code> (4-byte words, 32 banks).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Conflict degree?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Smallest padded stride ≥ 24 that is conflict-free?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>gcd(24, 32) = 8 passes. Any odd stride is conflict-free: 25.</p>"
+  },
+  {
+   "id": "q8",
+   "level": 2,
+   "title": "Occupancy",
+   "statement": "<p>GW-1 rules (64 warps, 16 blocks, 65,536 registers in 256-register chunks per warp, 64 KB shared in 256-byte chunks). 128-thread blocks, 48 registers, 12 KB shared memory.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Resident warps?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Limiter?",
+     "options": [
+      "warps",
+      "blocks",
+      "registers",
+      "shared memory"
+     ],
+     "answer": 3
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Warps allow 16 blocks; registers: 1,536 per warp → 42 warps → 10 blocks; shared: 64/12 = 5 blocks. Shared memory binds: 5 blocks, 20 warps (31.25%).</p>"
+  },
+  {
+   "id": "q9",
+   "level": 2,
+   "title": "Reduction",
+   "statement": "<p>A 512-thread block reduces with sequential addressing in shared memory down to 32 values, then one warp finishes with shuffles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Shared-memory rounds (with a barrier each) before the warp step?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Shuffle steps?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>512 → 256 → 128 → 64 → 32: 4 rounds; then 5 shuffle steps for 32 values.</p>"
+  },
+  {
+   "id": "q10",
+   "level": 1,
+   "title": "Scan",
+   "statement": "<p>Exclusive scan of [4, 0, 2, 7, 1, 3].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Element 3?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Element 5?",
+     "answer": 14,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>[0, 4, 4, 6, 13, 14].</p>"
+  },
+  {
+   "id": "q11",
+   "level": 2,
+   "title": "Histogram contention",
+   "statement": "<p>A warp's 32 lanes hold values 0, 0, …, 0 (20 lanes), 5 (6 lanes), 9 (6 lanes).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Serialisation of a plain atomicAdd?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Atomics with warp aggregation?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>20 lanes on one bin: 20 serialised updates. Aggregated: one per distinct value, 3.</p>"
+  },
+  {
+   "id": "q12",
+   "level": 2,
+   "title": "Memory ordering",
+   "statement": "<p>Block A writes data then a flag; block B polls the flag then reads data.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "What's required?",
+     "options": [
+      "A device-scope fence (or release) between A's two writes",
+      "volatile/atomic (acquire) flag reads in B",
+      "__syncthreads() in A",
+      "A grid-wide barrier"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Release on the producer, acquire on the consumer. __syncthreads only orders within a block; a grid barrier isn't needed (and isn't available in ordinary launches).</p>"
+  },
+  {
+   "id": "q13",
+   "level": 2,
+   "title": "GEMM bounds",
+   "statement": "<p>Square FP32 GEMM, n = 2048, on the GPU from Problem 5 (20 TFLOP/s, 1 TB/s).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Time at peak compute, in ms?",
+     "answer": 0.8589934592,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Best-case DRAM time (A, B read once, C written once), in ms?",
+     "answer": 0.050331648,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "DRAM time with 32 × 32 shared tiles and no L2 reuse (A, B read n/32 times), in ms?",
+     "answer": 2.164260864,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [],
+   "solution": "<p>(a) 0.859 ms. (b) 0.050 ms. (c) 2.164 ms: about 2.5× the compute time, so 32 × 32 tiles leave the kernel memory-bound; bigger tiles (or L2 reuse between blocks) are needed.</p>"
+  },
+  {
+   "id": "q14",
+   "level": 2,
+   "title": "Register tiling",
+   "statement": "<p>A thread computes a 4 × 8 tile of C.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Shared loads per FMA (scalar loads)?",
+     "answer": 0.375,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Accumulator registers?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>(4 + 8)/32 = 0.375 loads per FMA, 32 accumulators.</p>"
+  },
+  {
+   "id": "q15",
+   "level": 2,
+   "title": "Pipelining",
+   "statement": "<p>Each K-step's math takes 150 cycles; a tile load takes 700 cycles of latency.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum stages for full overlap?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>(s − 1) × 150 ≥ 700 → s − 1 ≥ 4.67 → s = 6.</p>"
+  },
+  {
+   "id": "q16",
+   "level": 3,
+   "title": "Tensor cores and precision",
+   "statement": "<p>FP16 inputs with entries $k/32$ for integers $|k| \\le 32$, FP32 accumulation, K = 4096.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Are all products exact in FP32?",
+     "options": [
+      "Yes",
+      "No"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Largest possible |partial sum|?",
+     "answer": 4096,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Are all partial sums exact in FP32?",
+     "options": [
+      "Yes: they're multiples of 2⁻¹⁰ below 2¹², needing at most 22 bits",
+      "No"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Products are multiples of $2^{-10}$ with magnitude ≤ 1; sums are multiples of $2^{-10}$ with magnitude ≤ 4096 = $2^{12}$: at most 22 significant bits, inside FP32's 24. Every summation order gives the same, exact result, so a test can demand bit equality.</p>"
+  },
+  {
+   "id": "q17",
+   "level": 1,
+   "title": "Choose the fix",
+   "statement": "<p>Match each symptom to the first fix.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Stride-32 global reads in a transpose",
+     "options": [
+      "Shared-memory staging",
+      "More registers",
+      "Tensor cores"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "32-way bank conflicts reading tile columns",
+     "options": [
+      "Pad rows to 33 (or swizzle)",
+      "Bigger blocks",
+      "float4 global loads"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Tiled GEMM stuck at a third of peak, issue-bound",
+     "options": [
+      "Register tiling",
+      "Coalescing",
+      "Fewer blocks"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [],
+   "solution": "<p>Staging, padding, register tiling: each fix follows from the specific bottleneck.</p>"
+  }
+ ]
+}

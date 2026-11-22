@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -138,7 +139,73 @@ def get_item(slug: str, item_id: str):
         "lab": {"dir": it.get("dir"), "targets": it.get("targets", []), "cloud": it.get("cloud", False)} if it["type"] == "lab" else None,
         "lab_record": progress.lab(slug, item_id) if it["type"] == "lab" else None,
         "writeup_text": progress.writeup(slug, item_id),
+        "exam": _exam_info(slug, item_id) if it["type"] == "exam" else None,
     }
+
+
+# ---------- Exams ----------
+EXAM_GRACE_S = 120          # submissions this late still count (network, a slow click)
+EXAM_RETAKE_S = 12 * 3600   # a new attempt opens 12 hours after the last one
+
+
+def _exam_info(slug: str, item_id: str) -> dict:
+    ex = content.exam(slug, item_id) or {"problems": []}
+    rec = progress.exam(slug, item_id)
+    now = time.time()
+    active = rec["active"]
+    if active and now > active["deadline"] + EXAM_GRACE_S:
+        progress.exam_finish(slug, item_id, {"started": active["started"], "submitted": None, "score": 0.0,
+                                             "passed": False, "late": True, "expired": True})
+        rec = progress.exam(slug, item_id); active = None
+    last = rec["attempts"][-1] if rec["attempts"] else None
+    next_at = (last["started"] + EXAM_RETAKE_S) if last and not active else None
+    return {"minutes": ex.get("minutes", 60), "pass": ex.get("pass", 0.7), "count": len(ex["problems"]),
+            "parts": sum(len(p["parts"]) for p in ex["problems"]), "active": active, "now": now,
+            "attempts": rec["attempts"], "next_attempt_at": next_at if next_at and next_at > now else None,
+            "best": max((a["score"] for a in rec["attempts"]), default=None)}
+
+
+@app.post("/api/courses/{slug}/items/{item_id}/exam/start")
+def exam_start(slug: str, item_id: str):
+    it = _item(slug, item_id)
+    if it["type"] != "exam":
+        raise HTTPException(404, "not an exam")
+    _require_open(slug, item_id)
+    ex = content.exam(slug, item_id)
+    if not ex:
+        raise HTTPException(404, "exam paper missing")
+    info = _exam_info(slug, item_id)
+    active = info["active"]
+    if not active:
+        if info["next_attempt_at"]:
+            raise HTTPException(409, "retake not open yet")
+        now = time.time()
+        active = progress.exam_start(slug, item_id, now, now + 60 * ex.get("minutes", 60))
+    return {"active": active, "now": time.time(), "paper": content.exam_paper(ex)}
+
+
+class ExamIn(BaseModel):
+    answers: dict
+
+
+@app.post("/api/courses/{slug}/items/{item_id}/exam/submit")
+def exam_submit(slug: str, item_id: str, body: ExamIn):
+    it = _item(slug, item_id)
+    if it["type"] != "exam":
+        raise HTTPException(404, "not an exam")
+    ex = content.exam(slug, item_id)
+    active = progress.exam(slug, item_id)["active"]
+    if not active:
+        raise HTTPException(409, "no attempt in progress")
+    now = time.time()
+    late = now > active["deadline"] + EXAM_GRACE_S
+    g = content.grade_exam(ex, body.answers)
+    passed = (not late) and g["score"] >= ex.get("pass", 0.7) - 1e-9
+    progress.exam_finish(slug, item_id, {"started": active["started"], "submitted": now, "score": g["score"],
+                                         "correct": g["correct"], "total": g["total"], "passed": passed, "late": late})
+    review = [{"id": pr["id"], "parts": g["parts"][pr["id"]], "solution": pr.get("solution", ""),
+               "answers": {q["id"]: q["answer"] for q in pr["parts"]}} for pr in ex["problems"]]
+    return {"score": g["score"], "correct": g["correct"], "total": g["total"], "passed": passed, "late": late, "review": review}
 
 
 class QuizIn(BaseModel):
@@ -321,6 +388,8 @@ class AskIn(BaseModel):
 
 @app.post("/api/courses/{slug}/items/{item_id}/ask")
 async def ask(slug: str, item_id: str, body: AskIn):
+    if _item(slug, item_id)["type"] == "exam":
+        raise HTTPException(403, "The Ask panel is closed during exams.")
     c = _course(slug)
     it = _item(slug, item_id)
     _require_open(slug, item_id)

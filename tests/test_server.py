@@ -205,3 +205,41 @@ def test_progress_default_path_and_daily_backup(tmp_path, monkeypatch):
     assert "x" in p.data["courses"]  # migrated from the old location
     p.save()
     assert list((tmp_path / ".groundwork" / "backups").glob("progress-*.json"))
+
+
+def test_exam_flow(client, monkeypatch):
+    monkeypatch.setenv("GROUNDWORK_UNLOCK", "1")
+    base = "/api/courses/gpus-from-first-principles/items/midterm"
+    it = client.get(base).json()
+    assert it["type"] == "exam" and it["problems"] is None and it["exam"]["count"] >= 10
+    assert it["exam"]["active"] is None
+    # the Ask panel is closed during exams
+    assert client.post(base + "/ask", json={"question": "hi"}).status_code == 403
+    r = client.post(base + "/exam/start").json()
+    paper = r["paper"]
+    assert paper and all("answer" not in q for p in paper for q in p["parts"])
+    assert all(not p.get("hints") and "solution" not in p for p in paper)
+    # starting again resumes the same attempt
+    assert client.post(base + "/exam/start").json()["active"] == r["active"]
+    # answer everything correctly from the server-side file
+    from learnharness import content
+    ex = content.exam("gpus-from-first-principles", "midterm")
+    answers = {p["id"]: {q["id"]: q["answer"] for q in p["parts"]} for p in ex["problems"]}
+    res = client.post(base + "/exam/submit", json={"answers": answers}).json()
+    assert res["score"] == 1.0 and res["passed"] and res["review"][0]["solution"]
+    st = client.get(base).json()
+    assert st["state"]["state"] == "complete"
+    # retake is closed for 12 hours; submitting without an attempt fails
+    assert client.post(base + "/exam/start").status_code == 409
+    assert client.post(base + "/exam/submit", json={"answers": {}}).status_code == 409
+
+
+def test_exam_partial_credit_and_late(client, monkeypatch):
+    monkeypatch.setenv("GROUNDWORK_UNLOCK", "1")
+    base = "/api/courses/gpus-from-first-principles/items/final"
+    from learnharness import server
+    client.post(base + "/exam/start")
+    real = server.time.time
+    monkeypatch.setattr(server.time, "time", lambda: real() + 4 * 3600)  # far past the deadline
+    res = client.post(base + "/exam/submit", json={"answers": {}}).json()
+    assert res["late"] and not res["passed"] and res["score"] == 0.0

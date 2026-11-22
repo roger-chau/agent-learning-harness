@@ -132,6 +132,31 @@ def problems(slug: str, item_id: str) -> dict | None:
     return json.loads(p.read_text()) if p.exists() else None
 
 
+def exam(slug: str, item_id: str) -> dict | None:
+    """Exam problems live in exams/<id>.json, in the problem-set format, plus
+    {"minutes": ..., "pass": ...}. They're never sent with the item: only when an attempt starts."""
+    p = ROOT / _safe(slug) / "exams" / f"{_safe(item_id)}.json"
+    return json.loads(p.read_text()) if p.exists() else None
+
+
+def exam_paper(ex: dict) -> list[dict]:
+    """What a candidate sees during an attempt: statements and parts, no hints, answers or solutions."""
+    hide = ("answer", "tolerance", "explanation")
+    return [{"id": pr["id"], "level": pr.get("level", 1), "title": pr.get("title", ""), "statement": pr.get("statement", ""),
+             "parts": [{k: v for k, v in part.items() if k not in hide} for part in pr["parts"]]}
+            for pr in ex["problems"]]
+
+
+def grade_exam(ex: dict, answers: dict) -> dict:
+    """Partial credit: every part is worth the same."""
+    per, got, total = {}, 0, 0
+    for pr in ex["problems"]:
+        g = grade_problem(pr, answers.get(pr["id"]) or {})
+        per[pr["id"]] = g["parts"]
+        got += sum(g["parts"].values()); total += len(g["parts"])
+    return {"parts": per, "score": got / total if total else 0.0, "correct": got, "total": total}
+
+
 def public_problems(ps: dict | None) -> dict | None:
     """Problem set without answers or worked solutions (hints are public)."""
     if not ps:
@@ -186,6 +211,8 @@ def estimate(slug: str, it: dict) -> dict:
     practice += round(wu.get("min_words", 150) / 10) if wu else 0
     if it.get("type") == "lab":
         practice += int(it.get("hours", 2) * 60)
+    if it.get("type") == "exam":
+        practice += (exam(slug, it["id"]) or {}).get("minutes", 60)
     return {"reading": reading, "practice": practice, "words": words}
 
 

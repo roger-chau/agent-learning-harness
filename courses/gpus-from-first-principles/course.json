@@ -1839,6 +1839,22 @@
      "id": "p4-checkpoint",
      "title": "Part 4 checkpoint",
      "summary": "Cumulative quiz across the Part."
+    },
+    {
+     "type": "exam",
+     "id": "midterm",
+     "title": "Midterm exam: Parts 0–4",
+     "summary": "Two hours, closed book, 17 new problems on everything up to tensor cores.",
+     "blocks": [
+      [
+       "What it covers",
+       "Parts 0–4"
+      ],
+      [
+       "How to prepare",
+       "practise without hints"
+      ]
+     ]
     }
    ],
    "hp": "Ch 7 · Ch 4"
@@ -3252,6 +3268,22 @@
      "id": "p9-checkpoint",
      "title": "Final checkpoint",
      "summary": "Cumulative quiz across the whole course."
+    },
+    {
+     "type": "exam",
+     "id": "final",
+     "title": "Final exam",
+     "summary": "Three hours, closed book, cumulative, with emphasis on Parts 5–9 and design problems.",
+     "blocks": [
+      [
+       "What it covers",
+       "the whole course"
+      ],
+      [
+       "How to prepare",
+       "after the midterm"
+      ]
+     ]
     }
    ],
    "hp": "App J"

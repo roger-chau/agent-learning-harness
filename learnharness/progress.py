@@ -75,6 +75,27 @@ class Progress:
         for old in sorted(bdir.glob(f"{self.path.stem}-*.json"))[:-self.BACKUPS_KEPT]:
             old.unlink()
 
+    # ---- exams ---------------------------------------------------------------
+    def exam(self, slug: str, item_id: str) -> dict:
+        rec = self.data["courses"].get(slug, {}).get("items", {}).get(item_id, {})
+        return json.loads(json.dumps(rec.get("exam") or {"active": None, "attempts": []}))
+
+    def exam_start(self, slug: str, item_id: str, started: float, deadline: float) -> dict:
+        with self._lock:
+            ex = self._item(slug, item_id).setdefault("exam", {"active": None, "attempts": []})
+            ex["active"] = {"started": started, "deadline": deadline}
+            self.save()
+            return dict(ex["active"])
+
+    def exam_finish(self, slug: str, item_id: str, attempt: dict) -> None:
+        with self._lock:
+            ex = self._item(slug, item_id).setdefault("exam", {"active": None, "attempts": []})
+            ex["active"] = None
+            ex["attempts"].append(attempt)
+            if attempt.get("passed") and not self._item(slug, item_id).get("completed_at"):
+                self._item(slug, item_id)["completed_at"] = _now()
+            self.save()
+
     # ---- export / import ------------------------------------------------------
     def export(self) -> dict:
         with self._lock:
@@ -99,6 +120,8 @@ class Progress:
         if it["status"] != "ready":
             return False
         rec = self.data["courses"].get(slug, {}).get("items", {}).get(it["id"]) or {}
+        if it["type"] == "exam":
+            return any(a.get("passed") for a in (rec.get("exam") or {}).get("attempts", []))
         wu = it.get("writeup")
         if not it["exercises"] and not it["has_quiz"] and not wu and it["type"] != "lab":
             return bool(rec.get("read"))  # nothing to pass: reading it is enough
