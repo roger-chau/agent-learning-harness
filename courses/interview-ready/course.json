@@ -1118,13 +1118,13 @@
    "id": "p8",
    "n": 8,
    "title": "Advanced data structures and algorithms",
-   "summary": "Segment and Fenwick trees, strings (KMP, rolling hash), bits, maths.",
+   "summary": "Segment and Fenwick trees; strings (KMP, Z, rolling hash); bit manipulation; and maths that replaces algorithms: counting and combinatorics, modular arithmetic, fast exponentiation and matrix powers, number theory.",
    "items": [
     {
      "type": "chapter",
      "id": "8-1",
      "title": "Advanced data structures and algorithms",
-     "summary": "Segment and Fenwick trees, strings (KMP, rolling hash), bits, maths.",
+     "summary": "Segment and Fenwick trees; strings (KMP, Z, rolling hash); bit manipulation; and maths that replaces algorithms: counting and combinatorics, modular arithmetic, fast exponentiation and matrix powers, number theory.",
      "status": "planned"
     }
    ]
