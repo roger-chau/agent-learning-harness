@@ -19,6 +19,7 @@ other GPUs. Set `GW_PEAK_GBS` if the reported peak bandwidth looks wrong for you
 | L0-hello | 0 | Vector add, copy bandwidth, pointer-chase latency, Little's law |
 | L1-warps | 1 | Divergence costs; grayscale and blur |
 | L2-memory | 2 | Sectors, transpose and bank conflicts, AoS vs SoA, Nsight counters |
+| L3-primitives | 3 | Reduction, scan and histogram against CUB |
 
 `common/gw.h` is the shared harness: error checking, device info, event timing with warm-up
 and median, exactness checks, and `results.json`.

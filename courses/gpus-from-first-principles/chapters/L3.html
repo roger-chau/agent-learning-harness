@@ -1,0 +1,38 @@
+<section class="blk" data-n="01">
+<h2>Why this lab</h2>
+<p>Reduction, scan and histogram are the building blocks of everything from sorting to sparse algebra to ML frameworks, and they're the classic GPU interview questions. NVIDIA's CUB library implements them about as well as anyone can. Here you write your own and measure them against CUB on your card. Getting within a factor of two of a world-class library with code you understand line by line is a real portfolio result.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>What to do</h2>
+<p>Open <code>labs/L3-primitives/l3.cu</code>. Implement the <code>TODO</code> functions:</p>
+<ul>
+<li><strong>A0, A.</strong> <code>block_sum</code> (shuffles within a warp, shared memory across warps; Chapter 3.1), then <code>reduce_partial</code>: a grid-stride loop with <code>float4</code> loads and a tail for n not divisible by 4. It's launched twice: once over the data, once over the per-block partials.</li>
+<li><strong>B0–B3.</strong> <code>block_exclusive_scan</code> (warp scans with <code>__shfl_up_sync</code>, then a scan of the warp totals), and the three phases: tile sums, an exclusive scan of the tile sums (there are 16,384 of them: more than one block's worth, so walk them in chunks with a running carry), and the per-tile scan plus offset.</li>
+<li><strong>C.</strong> <code>hist_private</code>: a 256-bin histogram per block in shared memory, merged with one global atomic per bin. The data is skewed (60% zeros), which is what makes the given global-atomic version slow.</li>
+</ul>
+<p>Checks are exact: the reduction's inputs are exactly representable, so the float sum must match to the bit; the scan and histogram are integers.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Predict, then measure</h2>
+<ul>
+<li>The reduction reads 256 MiB and does almost no arithmetic: what fraction of peak bandwidth should it reach? (Compare with Lab 0's copy, which also writes.)</li>
+<li>The three-phase scan reads the input twice and writes it once; CUB's single-pass decoupled look-back (Part 3's paper) reads once and writes once. What's the best ratio you can expect?</li>
+<li>Shared-memory atomics on a 60%-zero input still collide within a warp. How much faster than global atomics do you expect privatisation to be?</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Going further</h2>
+<ul>
+<li>Implement the scan as a single pass with decoupled look-back (milestone B2 did it in the simulator). This is how CUB does it, and the hardest kernel so far: watch for the memory-ordering issues from Chapter 3.4 (<code>__threadfence()</code>, <code>volatile</code> or atomic flag reads).</li>
+<li>Histogram: give each <em>warp</em> its own sub-histogram in shared memory, and compare.</li>
+<li>Run <code>make ncu</code> on CUB's scan and on yours. What does CUB do that you don't?</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Passing</h2>
+<p>All results exact; the reduction at least 80% of peak bandwidth; your scan at least 40% of CUB's speed; the private histogram at least 2× faster than global atomics. The report compares your predictions with the measurements, and explains the gap to CUB.</p>
+</section>

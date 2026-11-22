@@ -1255,6 +1255,65 @@
      }
     },
     {
+     "type": "lab",
+     "id": "L3",
+     "title": "Lab 3: Primitives against CUB",
+     "summary": "Your reduction, scan and histogram on real hardware, measured against NVIDIA's CUB.",
+     "dir": "labs/L3-primitives",
+     "hours": 4,
+     "blocks": [
+      [
+       "Why this lab",
+       "the classic interview kernels"
+      ],
+      [
+       "What to do",
+       "reduce, scan, histogram"
+      ],
+      [
+       "Predict, then measure",
+       "bandwidth and passes"
+      ],
+      [
+       "Going further",
+       "decoupled look-back"
+      ],
+      [
+       "Passing",
+       "targets and report"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "reduce_pct",
+       "op": ">=",
+       "value": 80,
+       "label": "Reduction, % of peak bandwidth"
+      },
+      {
+       "metric": "scan_vs_cub_pct",
+       "op": ">=",
+       "value": 40,
+       "label": "Scan, % of CUB's speed"
+      },
+      {
+       "metric": "hist_speedup",
+       "op": ">=",
+       "value": 2,
+       "label": "Private histogram / global atomics speedup"
+      }
+     ],
+     "writeup": {
+      "min_words": 200,
+      "prompts": [
+       "Your predictions for each primitive next to the measurements.",
+       "Where does your scan lose to CUB? Count passes over memory and use the profiler.",
+       "How did skew affect the histogram, and what would you try next?",
+       "Which of these kernels would you show in an interview, and what would you say about it?"
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p3-checkpoint",
      "title": "Part 3 checkpoint",
