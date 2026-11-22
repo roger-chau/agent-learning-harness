@@ -195,25 +195,58 @@ def asset_path(slug: str, kind: str, rel: str) -> Path:
     return target
 
 
+EXERCISE_MIN = {"chapter": 30, "scenario": 60, "paper": 45, "milestone": 120, "checkpoint": 30}
+
+
 def estimate(slug: str, it: dict) -> dict:
-    """Rough time estimates in minutes: reading (technical prose at ~180 wpm, plus time per
-    displayed equation and code block) and practice (exercises, problems by level, quiz, write-up)."""
+    """Time estimates in minutes, calibrated for careful study rather than skimming:
+    reading  technical prose at ~130 words/min, +0.75 min per displayed equation or code block,
+             +90 min for a paper chapter (reading the paper itself);
+    assigned the "Required" readings listed in the chapter (textbook sections, papers), 45 min each;
+    practice problems by level (5/10/20), exercises by kind (chapter drill 30 min, milestone 2 h,
+             paper project 3 h, capstone 10 h), quiz 10 min, write-up words/10, labs' hours, exam length."""
     html = chapter_html(slug, it["id"])
     words = len(plain_text(html).split())
     eqs = html.count('class="eq"') + html.count("<pre>")
-    reading = max(1, round(words / 180 + eqs * 0.5))
+    reading = max(1, round(words / 130 + eqs * 0.75))
+    if it.get("type") == "paper":
+        reading += 90
+    assigned = 45 * html.count("<strong>Required:</strong>")
     ps = problems(slug, it["id"]) or {"problems": []}
     per_level = {1: 5, 2: 10, 3: 20}
     practice = sum(per_level.get(p.get("level", 1), 5) for p in ps["problems"])
-    practice += 25 * len(it.get("exercises", []))
-    practice += 8 if it.get("has_quiz") else 0
+    per_ex = EXERCISE_MIN.get(it.get("type"), 30)
+    if it["id"].startswith("PP-"):
+        per_ex = 180
+    if it["id"] == "capstone":
+        per_ex = 600
+    practice += per_ex * len(it.get("exercises", []))
+    practice += (20 if it.get("type") == "checkpoint" else 10) if it.get("has_quiz") else 0
     wu = it.get("writeup")
     practice += round(wu.get("min_words", 150) / 10) if wu else 0
     if it.get("type") == "lab":
         practice += int(it.get("hours", 2) * 60)
     if it.get("type") == "exam":
         practice += (exam(slug, it["id"]) or {}).get("minutes", 60)
-    return {"reading": reading, "practice": practice, "words": words}
+    return {"reading": reading, "assigned": assigned, "practice": practice, "words": words,
+            "total": reading + assigned + practice}
+
+
+_hours_cache: dict = {}
+
+
+def part_hours(slug: str) -> dict:
+    """Estimated hours per Part (ready items only). Cached for a minute: it reads every chapter."""
+    import time
+    hit = _hours_cache.get(slug)
+    if hit and time.time() - hit[0] < 60:
+        return hit[1]
+    out = {}
+    for part in course(slug)["parts"]:
+        mins = sum(estimate(slug, it)["total"] for it in part["items"] if it.get("status", "ready") == "ready")
+        out[part["id"]] = round(mins / 60, 1)
+    _hours_cache[slug] = (time.time(), out)
+    return out
 
 
 def plain_text(html: str) -> str:

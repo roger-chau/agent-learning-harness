@@ -104,14 +104,16 @@ def get_course(slug: str):
     c = _course(slug)
     states = progress.states(slug)
     parts = []
+    hours = content.part_hours(slug)
     for p in c["parts"]:
-        parts.append({k: v for k, v in p.items() if k != "items"} | {
+        parts.append({k: v for k, v in p.items() if k != "items"} | {"hours": hours.get(p["id"]),
             "items": [{k: it[k] for k in ("id", "type", "title", "status", "exercises", "has_quiz", "has_problems")}
                       | {"summary": it.get("summary", ""), "project": it.get("project")}
                       | states[it["id"]] for it in p["items"]]
         })
     return {k: v for k, v in c.items() if k not in ("parts", "order")} | {
-        "parts": parts, "stats": _course_stats(c), "progress": progress.summary(slug)}
+        "parts": parts, "stats": _course_stats(c), "progress": progress.summary(slug),
+        "hours": round(sum(h for h in hours.values() if h), 0)}
 
 
 @app.get("/api/courses/{slug}/items/{item_id}")

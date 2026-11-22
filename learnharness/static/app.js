@@ -208,7 +208,7 @@
               <div class="stat"><div class="k">Papers</div><div class="v">${s.papers}</div></div>
             </div>
             <div class="progress-bar" aria-label="Progress"><i style="width:${p.ready ? (100 * p.complete) / p.ready : 0}%"></i></div>
-            <p class="muted small">${p.complete} of ${p.ready} written items complete · ${s.written} of ${s.chapters} chapters written so far</p>
+            <p class="muted small">${p.complete} of ${p.ready} written items complete${c.hours ? ` · about ${c.hours} hours of study in all (reading, assigned readings, problems, exercises, labs and exams)` : ""}</p>
             <div class="companions">
               <div class="k">Companions</div>
               ${c.companions.map((x) => `<div class="comp"><b>${esc(x.title)}</b> <span class="muted">${esc(x.by)}</span></div>`).join("")}
@@ -232,7 +232,7 @@
           <div class="parts">
             ${c.parts.map((part) => `
               <div class="part">
-                <div class="part-head"><span class="part-n">Part ${part.n}</span><h3>${esc(part.title)}</h3><p>${esc(part.summary)}</p>${part.hp ? `<p class="hp"><span>H&amp;P 7e</span> ${esc(part.hp)}</p>` : ""}</div>
+                <div class="part-head"><span class="part-n">Part ${part.n}${part.hours ? ` · about ${Math.round(part.hours)} h` : ""}</span><h3>${esc(part.title)}</h3><p>${esc(part.summary)}</p>${part.hp ? `<p class="hp"><span>H&amp;P 7e</span> ${esc(part.hp)}</p>` : ""}</div>
                 <div class="stack">
                   ${part.items.map((it) => {
                     const n = it.type === "chapter" ? ++chapterNo : null;
@@ -297,7 +297,7 @@
             <p class="eyebrow">${esc(kicker)}</p>
             <h1 class="ch-title">${esc(it.title)}</h1>
             ${it.summary ? `<p class="ch-sub">${esc(it.summary)}</p>` : ""}
-            ${it.estimate ? `<p class="ch-meta"><span title="Reading time">${CLOCK} ${it.estimate.reading} min read</span>${it.estimate.practice ? `<span title="Exercises, problems and quiz">${PENCIL} about ${fmtMins(it.estimate.practice)} of practice</span>` : ""}${it.problems ? `<span>${it.problems.problems.length} problems</span>` : ""}${it.exercises.length ? `<span>${it.exercises.length} coding ${it.exercises.length > 1 ? "exercises" : "exercise"}</span>` : ""}</p>` : ""}
+            ${it.estimate ? `<p class="ch-meta"><span title="Reading time">${CLOCK} ${it.estimate.reading} min read</span>${it.estimate.assigned ? `<span title="Required textbook sections and papers listed under Readings">${CLOCK} about ${fmtMins(it.estimate.assigned)} of assigned reading</span>` : ""}${it.estimate.practice ? `<span title="Exercises, problems and quiz">${PENCIL} about ${fmtMins(it.estimate.practice)} of practice</span>` : ""}${it.problems ? `<span>${it.problems.problems.length} problems</span>` : ""}${it.exercises.length ? `<span>${it.exercises.length} coding ${it.exercises.length > 1 ? "exercises" : "exercise"}</span>` : ""}</p>` : ""}
             ${it.part.hp && it.type === "chapter" ? `<p class="hp"><span>H&amp;P 7e</span> ${esc(it.part.hp)}</p>` : ""}
             ${it.blocks.length ? `<div class="stack ch-chain">${it.blocks.map(([name, tag], i) =>
               `<a class="block ${i === 0 ? "" : i === 4 ? "t-saffron" : "t-indigo"} link" href="#b${i + 1}" data-jump="b${i + 1}">
