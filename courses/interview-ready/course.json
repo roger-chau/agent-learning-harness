@@ -764,6 +764,22 @@
      "id": "p4-checkpoint",
      "title": "Part 4 checkpoint",
      "summary": "Graphs: model the problem and choose the search."
+    },
+    {
+     "type": "exam",
+     "id": "oa-1",
+     "title": "Mock online assessment 1: Parts 1–4",
+     "summary": "90 minutes, three unseen coding problems, partial credit per hidden test.",
+     "blocks": [
+      [
+       "What this is",
+       "Parts 1–4, three problems"
+      ],
+      [
+       "How to run a timed assessment",
+       "plan, order, partial credit"
+      ]
+     ]
     }
    ]
   },
@@ -1458,6 +1474,22 @@
      "id": "p8-checkpoint",
      "title": "Part 8 checkpoint",
      "summary": "Advanced structures, strings, bits and maths: recognise the tool."
+    },
+    {
+     "type": "exam",
+     "id": "oa-2",
+     "title": "Mock online assessment 2: Track A",
+     "summary": "90 minutes, three unseen coding problems across all of Parts 1–8.",
+     "blocks": [
+      [
+       "What this is",
+       "all of Track A, three problems"
+      ],
+      [
+       "How to run a timed assessment",
+       "plan, order, partial credit"
+      ]
+     ]
     }
    ]
   },

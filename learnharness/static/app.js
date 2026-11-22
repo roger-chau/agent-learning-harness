@@ -777,8 +777,8 @@ make submit     # record the results here (Groundwork must be running)</code></p
     const intro = () => {
       const wait = info.next_attempt_at ? info.next_attempt_at - info.now : 0;
       box.innerHTML = `<ul class="exam-rules">
-          <li><b>${info.count} problems</b> (${info.parts} graded parts, partial credit per part), <b>${info.minutes} minutes</b>. Pass mark ${Math.round(info.pass * 100)}%.</li>
-          <li>Closed book: no hints, no Ask panel, no worked solutions until you submit. Paper, pencil and a calculator are fine, as in any exam.</li>
+          <li>${info.coding ? `<b>${info.coding} coding problem${info.coding > 1 ? "s" : ""}</b> (each worth ${info.coding_weight} parts, scored by the share of hidden tests passed)${info.count ? " and " : ", "}` : ""}${info.count ? `<b>${info.count} problems</b> (${info.parts} graded parts, partial credit per part), ` : ""}<b>${info.minutes} minutes</b>. Pass mark ${Math.round(info.pass * 100)}%.</li>
+          <li>Closed book: no hints, no Ask panel, no worked solutions until you submit.${info.coding ? " You can run each coding problem's sample tests as often as you like; the hidden tests run only when you submit, as on a real online assessment." : " Paper, pencil and a calculator are fine, as in any exam."}</li>
           <li>The clock starts when you press Start and keeps running if you leave the page. It submits automatically when time runs out.</li>
           <li>One attempt every 12 hours. Your best score counts.</li></ul>
         ${history()}
@@ -792,8 +792,19 @@ make submit     # record the results here (Groundwork must be running)</code></p
     const sit = (att) => {
       const key = `gw-exam-${slug}-${it.id}-${Math.floor(att.active.started)}`;
       let saved = {}; try { saved = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) {}
+      const coding = att.coding || [];
+      const ckey = (pid, l) => `${key}::code::${pid}::${l}`;
       box.innerHTML = `<div class="exam-clock" id="exam-clock"></div>
-        <form id="exam-form">${att.paper.map((p, k) => `
+        <form id="exam-form">${coding.map((p, k) => `
+          <div class="prob code-prob" data-cpid="${esc(p.id)}">
+            <div class="prob-head"><span class="prob-n">Coding ${k + 1}</span><b>${esc(p.title)}</b></div>
+            <div class="prob-stmt">${p.statement}</div>
+            ${p.samples.length ? `<div class="samples">${p.samples.map((s, i) => `<div class="sample"><span class="muted small">Example ${i + 1}</span><code>${s.args ? "input " + show(s.args) : "ops " + show(s.ops)}</code><code>output ${show(s.expected)}</code></div>`).join("")}</div>` : ""}
+            <div class="code-bar"><select class="field code-lang">${p.langs.map((l) => `<option value="${l}">${LANG_NAME[l]}</option>`).join("")}</select>
+              <button class="btn btn-ghost btn-sm" type="button" data-act="run">Run samples</button></div>
+            <textarea class="code-ed" spellcheck="false" autocapitalize="off" autocomplete="off" rows="14"></textarea>
+            <div class="code-out"></div>
+          </div>`).join("")}${att.paper.map((p, k) => `
           <div class="prob" data-pid="${esc(p.id)}">
             <div class="prob-head"><span class="prob-n">Problem ${k + 1}</span><span class="prob-lvl">${"★".repeat(p.level || 1)}</span><b>${esc(p.title || "")}</b></div>
             <div class="prob-stmt">${p.statement || ""}</div>
@@ -803,6 +814,26 @@ make submit     # record the results here (Groundwork must be running)</code></p
         </form>`;
       typeset(box);
       const form = $("#exam-form");
+      const codeState = {};
+      box.querySelectorAll(".code-prob[data-cpid]").forEach((el) => {
+        const p = coding.find((x) => x.id === el.dataset.cpid);
+        const ed = el.querySelector(".code-ed"), sel = el.querySelector(".code-lang"), out = el.querySelector(".code-out");
+        let l0 = null; try { l0 = localStorage.getItem(`${key}::lang::${p.id}`); } catch (e) {}
+        if (l0 && p.langs.includes(l0)) sel.value = l0;
+        const load = () => { let v = null; try { v = localStorage.getItem(ckey(p.id, sel.value)); } catch (e) {} ed.value = v ?? p.starter[sel.value]; codeState[p.id] = { lang: sel.value, code: ed.value }; };
+        load();
+        sel.addEventListener("change", () => { try { localStorage.setItem(`${key}::lang::${p.id}`, sel.value); } catch (e) {} load(); });
+        ed.addEventListener("input", (e) => { e.stopPropagation(); codeState[p.id] = { lang: sel.value, code: ed.value }; try { localStorage.setItem(ckey(p.id, sel.value), ed.value); } catch (er) {} });
+        ed.addEventListener("keydown", (e) => { if (e.key === "Tab") { e.preventDefault(); const a = ed.selectionStart; ed.setRangeText("    ", a, ed.selectionEnd, "end"); ed.dispatchEvent(new Event("input")); } });
+        el.querySelector('[data-act="run"]').addEventListener("click", async (e) => {
+          const b = e.currentTarget; b.disabled = true; out.innerHTML = `<p class="muted">Running the samples…</p>`;
+          try {
+            const r = await api(`/api/courses/${slug}/items/${it.id}/exam/run`, { method: "POST", body: JSON.stringify({ pid: p.id, lang: sel.value, code: ed.value }) });
+            out.innerHTML = r.compile_error ? `<pre class="code-err">${esc(r.compile_error)}</pre>` : r.results.map((x, i) => `<div class="case ${x.pass ? "ok" : "bad"}">${x.pass ? "✓" : "✗"} Example ${i + 1}${x.ms != null ? ` · ${x.ms} ms` : ""}${x.pass ? "" : `<br><span class="muted small">expected ${show(x.expected)}${x.error ? ` · <b>${esc(x.error)}</b>` : ` · got ${show(x.got)}`}</span>`}</div>`).join("") || `<p class="muted">No sample cases.</p>`;
+          } catch (err) { out.innerHTML = `<p class="muted">${esc(err.message)}</p>`; }
+          b.disabled = false;
+        });
+      });
       Object.entries(saved).forEach(([name, v]) => form.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach((el) => {
         if (el.type === "radio" || el.type === "checkbox") el.checked = [].concat(v).map(String).includes(el.value); else el.value = v;
       }));
@@ -824,7 +855,8 @@ make submit     # record the results here (Groundwork must be running)</code></p
         if (submitting) return; submitting = true; stopExamTimer();
         const { nested } = collect();
         try {
-          const r = await api(`/api/courses/${slug}/items/${it.id}/exam/submit`, { method: "POST", body: JSON.stringify({ answers: nested }) });
+          if (coding.length) $("#exam-msg").textContent = "Running the hidden tests…";
+          const r = await api(`/api/courses/${slug}/items/${it.id}/exam/submit`, { method: "POST", body: JSON.stringify({ answers: nested, code: codeState }) });
           try { localStorage.removeItem(key); } catch (e) {}
           results(att, r, nested, auto);
         } catch (e) { submitting = false; $("#exam-msg").textContent = `Couldn't submit: ${e.message}. Try again.`; }
@@ -840,7 +872,13 @@ make submit     # record the results here (Groundwork must be running)</code></p
       stopExamTimer(); tick(); examTimer = setInterval(tick, 1000);
     };
     const results = (att, r, mine, auto) => {
-      box.innerHTML = `<div class="exam-result ${r.passed ? "pass" : "fail"}"><b>${Math.round(100 * r.score)}%</b> · ${r.correct} of ${r.total} parts correct · ${r.passed ? "passed" : r.late ? "submitted late: not counted" : `not passed (needs ${Math.round(info.pass * 100)}%)`}${auto ? " · submitted when time ran out" : ""}</div>
+      const cr = r.coding || {};
+      box.innerHTML = `<div class="exam-result ${r.passed ? "pass" : "fail"}"><b>${Math.round(100 * r.score)}%</b> · ${r.correct} of ${r.total} points · ${r.passed ? "passed" : r.late ? "submitted late: not counted" : `not passed (needs ${Math.round(info.pass * 100)}%)`}${auto ? " · submitted when time ran out" : ""}</div>
+        ${(att.coding || []).map((p, k) => { const c = cr[p.id] || { passed: 0, total: 0 }; const sol = c.solution || {}; const code = sol[c.lang] || sol.python || "";
+          return `<div class="prob ${c.total && c.passed === c.total ? "solved" : ""}">
+            <div class="prob-head"><span class="prob-n">Coding ${k + 1}</span><b>${esc(p.title)}</b><span class="prob-status">${c.skipped ? "not attempted" : `${c.passed} / ${c.total} hidden tests${c.lang ? " · " + LANG_NAME[c.lang] : ""}`}</span></div>
+            ${c.compile_error ? `<pre class="code-err">${esc(c.compile_error)}</pre>` : ""}
+            ${sol.explanation || code ? `<div class="prob-sol"><p class="eyebrow">Worked solution</p>${sol.explanation || ""}${code ? `<pre class="code-sol"><code>${esc(code)}</code></pre>` : ""}</div>` : ""}</div>`; }).join("")}
         ${att.paper.map((p, k) => { const rv = r.review.find((x) => x.id === p.id) || { parts: {}, answers: {} };
           return `<div class="prob ${Object.values(rv.parts).every(Boolean) ? "solved" : ""}">
             <div class="prob-head"><span class="prob-n">Problem ${k + 1}</span><b>${esc(p.title || "")}</b></div>

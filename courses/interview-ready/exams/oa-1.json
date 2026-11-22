@@ -1,0 +1,11 @@
+{
+ "minutes": 90,
+ "pass": 0.6,
+ "coding_weight": 4,
+ "problems": [],
+ "coding": [
+  "oa-group-ones-circular",
+  "oa-kth-pair-distance",
+  "oa-largest-island"
+ ]
+}

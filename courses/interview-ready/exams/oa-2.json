@@ -1,0 +1,11 @@
+{
+ "minutes": 90,
+ "pass": 0.6,
+ "coding_weight": 4,
+ "problems": [],
+ "coding": [
+  "oa-max-events",
+  "oa-longest-increasing-path",
+  "oa-job-scheduling"
+ ]
+}

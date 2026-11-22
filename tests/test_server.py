@@ -276,3 +276,30 @@ def test_course_coding_ids_unique_and_present():
         assert not dups, f"{course.name}: coding ids used twice: {dups}"
         missing = [x for x in ids if not (course / "coding" / f"{x}.json").exists()]
         assert not missing, f"{course.name}: missing coding files: {missing}"
+
+
+def test_coding_exam_flow(client, monkeypatch):
+    monkeypatch.setenv("GROUNDWORK_UNLOCK", "1")
+    from learnharness import content
+    base = "/api/courses/interview-ready/items/oa-1"
+    it = client.get(base).json()
+    assert it["type"] == "exam" and it["exam"]["coding"] == 3
+    r = client.post(base + "/exam/start").json()
+    assert len(r["coding"]) == 3 and r["paper"] == []
+    assert all("hints" not in p and "solution" not in p for p in r["coding"])
+    ex = content.exam("interview-ready", "oa-1")
+    sols = {pid: content.coding("interview-ready", pid)["solution"]["python"] for pid in ex["coding"]}
+    first = ex["coding"][0]
+    # sample runs work during the attempt; unknown problems don't
+    run = client.post(base + "/exam/run", json={"pid": first, "lang": "python", "code": sols[first]}).json()
+    assert run["results"] and all(x["pass"] for x in run["results"])
+    assert client.post(base + "/exam/run", json={"pid": "two-sum", "lang": "python", "code": "x"}).status_code == 404
+    # one problem fully right, one wrong, one blank: 4 + 0 + 0 of 12 points
+    code = {first: {"lang": "python", "code": sols[first]}, ex["coding"][1]: {"lang": "python", "code": "def smallest_distance_pair(nums, k):\n    return 0\n"}}
+    res = client.post(base + "/exam/submit", json={"answers": {}, "code": code}).json()
+    c1 = res["coding"][first]
+    assert c1["passed"] == c1["total"] and res["coding"][ex["coding"][2]]["skipped"]
+    assert 4 / 12 - 1e-9 <= res["score"] < 0.6 and not res["passed"]
+    assert c1["solution"]["explanation"]
+    # sample runs are refused once the attempt is over
+    assert client.post(base + "/exam/run", json={"pid": first, "lang": "python", "code": sols[first]}).status_code == 409

@@ -160,17 +160,32 @@ def exam_paper(ex: dict) -> list[dict]:
     hide = ("answer", "tolerance", "explanation")
     return [{"id": pr["id"], "level": pr.get("level", 1), "title": pr.get("title", ""), "statement": pr.get("statement", ""),
              "parts": [{k: v for k, v in part.items() if k not in hide} for part in pr["parts"]]}
-            for pr in ex["problems"]]
+            for pr in ex.get("problems", [])]
 
 
-def grade_exam(ex: dict, answers: dict) -> dict:
-    """Partial credit: every part is worth the same."""
-    per, got, total = {}, 0, 0
-    for pr in ex["problems"]:
+def exam_coding(slug: str, ex: dict) -> list[dict]:
+    """Coding problems on an exam (online-assessment style): public view without hints."""
+    out = []
+    for pid in ex.get("coding", []):
+        pr = coding(slug, pid)
+        if pr:
+            out.append({k: v for k, v in public_coding(pr).items() if k != "hints"})
+    return out
+
+
+def grade_exam(ex: dict, answers: dict, coding_scores: dict | None = None) -> dict:
+    """Partial credit: every part is worth the same, and each coding problem is worth
+    `coding_weight` parts (default 4), scaled by the fraction of its tests passed."""
+    per, got, total = {}, 0.0, 0.0
+    for pr in ex.get("problems", []):
         g = grade_problem(pr, answers.get(pr["id"]) or {})
         per[pr["id"]] = g["parts"]
         got += sum(g["parts"].values()); total += len(g["parts"])
-    return {"parts": per, "score": got / total if total else 0.0, "correct": got, "total": total}
+    w = ex.get("coding_weight", 4)
+    for pid in ex.get("coding", []):
+        frac = (coding_scores or {}).get(pid, 0.0)
+        got += w * frac; total += w
+    return {"parts": per, "score": got / total if total else 0.0, "correct": round(got, 2), "total": total}
 
 
 def public_problems(ps: dict | None) -> dict | None:

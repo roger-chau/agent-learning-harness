@@ -220,8 +220,9 @@ def _exam_info(slug: str, item_id: str) -> dict:
         rec = progress.exam(slug, item_id); active = None
     last = rec["attempts"][-1] if rec["attempts"] else None
     next_at = (last["started"] + EXAM_RETAKE_S) if last and not active else None
-    return {"minutes": ex.get("minutes", 60), "pass": ex.get("pass", 0.7), "count": len(ex["problems"]),
-            "parts": sum(len(p["parts"]) for p in ex["problems"]), "active": active, "now": now,
+    return {"minutes": ex.get("minutes", 60), "pass": ex.get("pass", 0.7), "count": len(ex.get("problems", [])),
+            "parts": sum(len(p["parts"]) for p in ex.get("problems", [])), "coding": len(ex.get("coding", [])),
+            "coding_weight": ex.get("coding_weight", 4), "active": active, "now": now,
             "attempts": rec["attempts"], "next_attempt_at": next_at if next_at and next_at > now else None,
             "best": max((a["score"] for a in rec["attempts"]), default=None)}
 
@@ -242,15 +243,16 @@ def exam_start(slug: str, item_id: str):
             raise HTTPException(409, "retake not open yet")
         now = time.time()
         active = progress.exam_start(slug, item_id, now, now + 60 * ex.get("minutes", 60))
-    return {"active": active, "now": time.time(), "paper": content.exam_paper(ex)}
+    return {"active": active, "now": time.time(), "paper": content.exam_paper(ex), "coding": content.exam_coding(slug, ex)}
 
 
 class ExamIn(BaseModel):
     answers: dict
+    code: dict | None = None
 
 
 @app.post("/api/courses/{slug}/items/{item_id}/exam/submit")
-def exam_submit(slug: str, item_id: str, body: ExamIn):
+async def exam_submit(slug: str, item_id: str, body: ExamIn):
     it = _item(slug, item_id)
     if it["type"] != "exam":
         raise HTTPException(404, "not an exam")
@@ -260,13 +262,61 @@ def exam_submit(slug: str, item_id: str, body: ExamIn):
         raise HTTPException(409, "no attempt in progress")
     now = time.time()
     late = now > active["deadline"] + EXAM_GRACE_S
-    g = content.grade_exam(ex, body.answers)
+    code_results, coding_scores = {}, {}
+    for pid in ex.get("coding", []):
+        sub = (body.code or {}).get(pid) or {}
+        pr = content.coding(slug, pid)
+        lang, src = sub.get("lang"), sub.get("code") or ""
+        if not pr or lang not in ("python", "cpp") or not (pr.get("entry") or {}).get(lang) or not src.strip():
+            code_results[pid] = {"passed": 0, "total": len(pr["tests"]) if pr else 0, "skipped": True}
+            coding_scores[pid] = 0.0
+            continue
+        try:
+            res = await asyncio.to_thread(runner.run, pr, lang, src, pr["tests"])
+        except ValueError as e:
+            res = {"compile_error": str(e), "results": []}
+        passed = 0 if res.get("compile_error") else sum(1 for r in res["results"] if r["pass"])
+        code_results[pid] = {"passed": passed, "total": len(pr["tests"]), "lang": lang, "compile_error": res.get("compile_error"),
+                             "solution": pr.get("solution", {})}
+        coding_scores[pid] = passed / len(pr["tests"]) if pr["tests"] else 0.0
+    g = content.grade_exam(ex, body.answers, coding_scores)
     passed = (not late) and g["score"] >= ex.get("pass", 0.7) - 1e-9
     progress.exam_finish(slug, item_id, {"started": active["started"], "submitted": now, "score": g["score"],
                                          "correct": g["correct"], "total": g["total"], "passed": passed, "late": late})
     review = [{"id": pr["id"], "parts": g["parts"][pr["id"]], "solution": pr.get("solution", ""),
-               "answers": {q["id"]: q["answer"] for q in pr["parts"]}} for pr in ex["problems"]]
-    return {"score": g["score"], "correct": g["correct"], "total": g["total"], "passed": passed, "late": late, "review": review}
+               "answers": {q["id"]: q["answer"] for q in pr["parts"]}} for pr in ex.get("problems", [])]
+    return {"score": g["score"], "correct": g["correct"], "total": g["total"], "passed": passed, "late": late, "review": review,
+            "coding": code_results}
+
+
+class ExamRunIn(BaseModel):
+    pid: str
+    lang: str
+    code: str
+
+
+@app.post("/api/courses/{slug}/items/{item_id}/exam/run")
+async def exam_run(slug: str, item_id: str, body: ExamRunIn):
+    """Run the SAMPLE tests of an exam coding problem during an active attempt."""
+    it = _item(slug, item_id)
+    if it["type"] != "exam":
+        raise HTTPException(404, "not an exam")
+    ex = content.exam(slug, item_id) or {}
+    info = _exam_info(slug, item_id)
+    if not info["active"] or time.time() > info["active"]["deadline"] + EXAM_GRACE_S:
+        raise HTTPException(409, "no attempt in progress")
+    if body.pid not in ex.get("coding", []):
+        raise HTTPException(404, "no such problem on this exam")
+    pr = content.coding(slug, body.pid)
+    if body.lang not in ("python", "cpp") or not (pr.get("entry") or {}).get(body.lang):
+        raise HTTPException(400, "language not available for this problem")
+    tests = [t for t in pr["tests"] if t.get("sample")]
+    try:
+        res = await asyncio.to_thread(runner.run, pr, body.lang, body.code, tests)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"compile_error": res.get("compile_error"),
+            "results": [r | {"args": t.get("args", t.get("ops")), "expected": t["expected"]} for r, t in zip(res["results"], tests)]}
 
 
 class QuizIn(BaseModel):
