@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"You're long a delta-hedged option: when do you make money?", "what is implied volatility?", "why is there a volatility smile?", "explain gamma scalping". These separate people who memorised Black–Scholes from people who could run an options book.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: a delta-hedged option is a bet on realised vs implied volatility</h2>
+<p>Hedging a long option every Δt, your P&amp;L per step is about</p>
+<p style="text-align:center">½ Γ S² (realised move² − σ_implied² Δt)</p>
+<p>Gamma pays you when the stock moves more than implied; theta charges you the implied amount each day. Over the option's life, a long option position that's delta-hedged earns roughly ½ΓS²(σ²_realised − σ²_implied) integrated over time. That's why options traders talk in volatility, not price.</p>
+<ul>
+<li><strong>Implied volatility:</strong> the σ that makes Black–Scholes match the market price. It's a quoting convention: options are priced in vol.</li>
+<li><strong>The smile / skew:</strong> implied vol varies with strike. Equity index puts carry higher vol (crash risk, demand for protection); this reflects fat tails and jumps that Black–Scholes ignores.</li>
+<li><strong>Term structure:</strong> implied vol varies with maturity, often spiking before events (earnings).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Daily breakeven move for a long ATM option:  σ_implied / √252  (e.g. 16% vol → 1% per day)
+Hedged P&amp;L over a step:   ½ Γ S² [(ΔS/S)² − σ²_implied Δt]
+Vega P&amp;L:   vega × Δσ_implied
+"Rule of 16": annual vol ÷ 16 ≈ daily move (√256 = 16)</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: gamma scalping a long straddle</h2>
+<ol>
+<li><strong>Setup:</strong> long an ATM straddle at 20% implied vol, delta-hedged, S = 100. Breakeven daily move ≈ 20%/16 = 1.25%.</li>
+<li><strong>Day 1:</strong> the stock moves +2%. Delta rises (gamma), so you sell shares to rebalance, locking in profit from the move.</li>
+<li><strong>Day 2:</strong> −2%. Delta falls, so you buy back shares lower. Selling high and buying low is the gamma scalp.</li>
+<li><strong>Net:</strong> moves of 2% exceed the 1.25% breakeven, so the scalping profits beat the theta paid. You're effectively long realised vol at 20% and it realised about 32%.</li>
+<li><strong>Risks:</strong> realised vol below implied (theta wins), implied vol falling (vega loss on the remaining position), discrete-hedging noise, transaction costs.</li>
+</ol>
+<p>The habit: <strong>translate any options position into \"long or short realised vol, long or short implied vol, and at what levels\"</strong>.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>\"Options are cheap because the price is low\"</strong> is meaningless; compare implied vol with your forecast of realised vol.</li>
+<li><strong>Selling options</strong> earns the volatility risk premium most of the time and loses big in crashes (Part 14.2's doubling-strategy lesson again).</li>
+<li><strong>Sticky strike vs sticky delta:</strong> how the smile moves with spot changes the true delta.</li>
+<li><strong>Local and stochastic volatility models</strong> (Dupire, Heston) fit the smile; know they exist and why.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Euan Sinclair, <em>Volatility Trading</em>, chapters 2–5 (hedging P&amp;L, implied vs realised).</li>
+<li>* Hull, chapter 20 (volatility smiles).</li>
+<li>Simulate delta hedging a call daily under realised vol 15% vs implied 20%; plot the P&amp;L distribution.</li>
+<li>Natenberg, <em>Option Volatility and Pricing</em>: the classic trader's view.</li>
+</ul>
+</section>

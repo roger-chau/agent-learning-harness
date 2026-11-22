@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A delta-hedged long option profits when…",
+   "options": [
+    "realised vol > implied vol",
+    "the stock rises",
+    "time passes"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Rule of 16: 16% vol ≈",
+   "options": [
+    "1% per day",
+    "16% per day",
+    "4% per day"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Implied volatility is…",
+   "options": [
+    "the σ that matches the market price",
+    "historical vol",
+    "a forecast always"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "The equity skew reflects…",
+   "options": [
+    "crash risk and protection demand",
+    "nothing",
+    "interest rates"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Gamma scalping means…",
+   "options": [
+    "rebalancing delta to sell high and buy low",
+    "selling options",
+    "buying stock only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -1,0 +1,55 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Price an option in a one-step binomial model", "why doesn't the real-world probability matter?", "what's risk-neutral pricing?", "price an American put". The binomial model contains all of derivatives pricing in miniature: replication, no-arbitrage, risk-neutral probabilities and backward induction.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: replicate, and the price is forced</h2>
+<p>A stock at S goes to Su or Sd. An option pays V_u or V_d. Hold Δ shares and B in bonds so the portfolio matches the option in both states:</p>
+<p style="text-align:center">Δ = (V_u − V_d)/(Su − Sd), and the price is ΔS + B</p>
+<p>Any other price is an arbitrage. Rearranged, the price is e^{−rΔt}[q V_u + (1 − q) V_d] with <strong>q = (e^{rΔt} − d)/(u − d)</strong>, the <em>risk-neutral probability</em>. The real probability of an up move never appears: it's already in the stock price, and the option is priced <em>relative</em> to the stock.</p>
+<p>Multi-step trees apply this backward from expiry. American options take max(exercise, continuation) at each node: the judged problem. As the steps shrink, the CRR tree converges to Black–Scholes.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>One step:    q = (e^{rΔt} − d)/(u − d)      (needs d &lt; e^{rΔt} &lt; u: no-arbitrage)
+             V = e^{−rΔt} [q V_u + (1 − q) V_d]
+             Δ = (V_u − V_d) / (S u − S d)
+CRR tree:    u = e^{σ√Δt}, d = 1/u;  backward induction;  American: max(payoff now, continuation)
+Put–call parity (European, no dividends):   C − P = S − K e^{−rT}</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: one-step call</h2>
+<p><em>S = 100 goes to 120 or 80 in one year; r = 0; call with K = 100.</em></p>
+<ol>
+<li><strong>Payoffs:</strong> V_u = 20, V_d = 0.</li>
+<li><strong>Replicate:</strong> Δ = (20 − 0)/(120 − 80) = 0.5 shares; at the bottom 0.5 × 80 = 40 must be offset to pay 0, so B = −40. Price = 0.5 × 100 − 40 = 10.</li>
+<li><strong>Risk-neutral check:</strong> q = (1 − 0.8)/(1.2 − 0.8) = 0.5, so V = 0.5 × 20 = 10 ✓.</li>
+<li><strong>Real-world probability</strong> of the up move (say 90%) doesn't change the price. If you sold the call for more than 10 and replicated, you'd lock in the difference whatever happens.</li>
+<li><strong>Put via parity:</strong> P = C − S + K = 10 − 100 + 100 = 10 (r = 0).</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Using real probabilities</strong> to price is the most common conceptual error.</li>
+<li><strong>Early exercise:</strong> American calls on non-dividend stocks are never exercised early; American puts sometimes are (deep in the money, positive rates).</li>
+<li><strong>Dividends</strong> make early exercise of calls possible (just before the ex-dividend date).</li>
+<li><strong>Tree convergence</strong> oscillates with odd/even steps; averaging adjacent step counts helps.</li>
+<li><strong>Arbitrage checks:</strong> a call can't be worth more than the stock or less than max(S − Ke^{−rT}, 0).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* John Hull, <em>Options, Futures, and Other Derivatives</em>, chapters 13 (binomial trees) and 11 (option bounds and parity).</li>
+<li>* Shreve, <em>Stochastic Calculus for Finance I</em>, chapter 1.</li>
+<li>Code the CRR tree (the judged problem) and plot its price against n for a European call, compared with Black–Scholes.</li>
+<li>Prove put–call parity with a no-arbitrage portfolio argument, out loud.</li>
+</ul>
+</section>

@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "(dW)² =",
+   "options": [
+    "dt",
+    "0",
+    "dW"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "E[∫ f dW] =",
+   "options": [
+    "0",
+    "∫ f dt",
+    "f"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "GBM median vs mean:",
+   "options": [
+    "median lower by e^{−σ²T/2}",
+    "equal",
+    "median higher"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "E[W_t⁴] =",
+   "options": [
+    "3t²",
+    "t²",
+    "t⁴"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Itô's lemma adds the term…",
+   "options": [
+    "½ b² f'' dt",
+    "f' dt",
+    "nothing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

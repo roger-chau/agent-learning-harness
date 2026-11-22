@@ -1,0 +1,221 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "ATM rule",
+   "statement": "<p>S = 100, σ = 25%, T = 0.25, r ≈ 0.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Approximate ATM call (0.4·S·σ√T)?",
+     "answer": 5.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Exact (r = 0)?",
+     "answer": 4.983533805849433,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "φ(0) ≈ 0.4."
+   ],
+   "solution": "<p>5.0 vs 4.984.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "d₁ and d₂",
+   "statement": "<p>S = K = 100, T = 1, r = 5%, σ = 20%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "d₁?",
+     "answer": 0.35000000000000003,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "d₂?",
+     "answer": 0.15000000000000002,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Delta N(d₁)?",
+     "answer": 0.6368306511756191,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "(0 + 0.07)/0.2."
+   ],
+   "solution": "<p>d₁ = 0.35, d₂ = 0.15, delta ≈ 0.6368.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Digital",
+   "statement": "<p>Same parameters; a digital call pays $1 if S_T &gt; 100.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Price (e^{−rT}N(d₂))?",
+     "answer": 0.5323248154537634,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "N(d₂) is the risk-neutral ITM probability."
+   ],
+   "solution": "<p>≈ 0.5323.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Vega and gamma",
+   "statement": "<p>Same parameters.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Vega per 1 vol point (Sφ(d₁)√T / 100)?",
+     "answer": 0.3752403469169379,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Gamma (φ(d₁)/(Sσ√T))?",
+     "answer": 0.018762017345846895,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Formulas in the chapter."
+   ],
+   "solution": "<p>Vega ≈ 0.3752 per point; gamma ≈ 0.0188.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Put delta",
+   "statement": "<p>Same parameters, put.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Put delta (N(d₁) − 1)?",
+     "answer": -0.3631693488243809,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Put price?",
+     "answer": 5.573526022256971,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Parity in delta."
+   ],
+   "solution": "<p>-0.3632; 5.5735.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Gamma near expiry",
+   "statement": "<p>An ATM option with S = 100, σ = 20%: compare T = 1 year and T = 1 day (1/252).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Gamma ratio Γ(1 day)/Γ(1 year) (≈ √(T₁/T₂), r = 0)?",
+     "answer": 15.874507866387544,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Γ ∝ 1/√T at the money."
+   ],
+   "solution": "<p>About 16× larger. Pin risk near expiry.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Theta–gamma",
+   "statement": "<p>r = 0, ATM, S = 100, σ = 20%, Γ = 0.02.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Theta per year (−½σ²S²Γ)?",
+     "answer": -4.0,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Per trading day (÷ 252)?",
+     "answer": -0.015873015873015872,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Θ + ½σ²S²Γ = 0 when r = 0."
+   ],
+   "solution": "<p>−4 per year, about −0.016 per day: gamma is paid for with theta.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Delta vs probability",
+   "statement": "<p>For the 1-year ATM call above.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Delta?",
+     "answer": 0.6368306511756191,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Risk-neutral P(ITM) = N(d₂)?",
+     "answer": 0.5596176923702425,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "They differ by σ√T in the argument."
+   ],
+   "solution": "<p>0.637 vs 0.560: close but not equal.</p>"
+  }
+ ]
+}

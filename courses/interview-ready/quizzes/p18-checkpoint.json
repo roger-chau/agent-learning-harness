@@ -1,0 +1,101 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "d(W²) =",
+   "options": [
+    "2W dW + dt",
+    "2W dW",
+    "dt"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "GBM log-drift:",
+   "options": [
+    "μ − σ²/2",
+    "μ",
+    "σ"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "One-step price uses…",
+   "options": [
+    "risk-neutral q",
+    "real p",
+    "1/2 always"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "C − P =",
+   "options": [
+    "S − Ke^{−rT}",
+    "0",
+    "K − S"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "ATM call approx:",
+   "options": [
+    "0.4 S σ√T",
+    "S σ",
+    "S/2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Delta of a call:",
+   "options": [
+    "N(d₁)",
+    "N(d₂)",
+    "1"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Long hedged option makes money if…",
+   "options": [
+    "realised > implied",
+    "implied > realised",
+    "always"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "American put vs European put:",
+   "options": [
+    "worth at least as much",
+    "less",
+    "equal always"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

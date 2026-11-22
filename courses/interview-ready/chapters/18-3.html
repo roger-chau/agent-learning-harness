@@ -1,0 +1,60 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Write down Black–Scholes", "what's the delta of an at-the-money call?", "which Greek is largest near expiry?", "price a digital option". Black–Scholes is the shared vocabulary of every options desk; interviews test both the formula and the intuition behind each term.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: hedge away the randomness, and what's left earns the risk-free rate</h2>
+<p>A call hedged with −Δ shares is instantaneously riskless (Itô: the dW terms cancel when Δ = ∂V/∂S), so it must earn r. That gives the PDE ∂V/∂t + ½σ²S²∂²V/∂S² + rS∂V/∂S − rV = 0, solved for a European call by</p>
+<p style="text-align:center">C = S N(d₁) − K e^{−rT} N(d₂),  d₁ = [ln(S/K) + (r + σ²/2)T] / (σ√T),  d₂ = d₁ − σ√T</p>
+<p>Reading the terms: N(d₂) is the risk-neutral probability of finishing in the money; S N(d₁) is the present value of receiving the stock if it does. A <strong>digital call</strong> (pays 1 if S_T &gt; K) is therefore worth e^{−rT}N(d₂).</p>
+<table>
+<tr><th>Greek</th><th>Call</th><th>Meaning</th></tr>
+<tr><td>Delta Δ = ∂C/∂S</td><td>N(d₁)</td><td>hedge ratio; ≈ ½ at the money</td></tr>
+<tr><td>Gamma Γ</td><td>φ(d₁)/(Sσ√T)</td><td>how fast delta changes; largest at the money near expiry</td></tr>
+<tr><td>Vega</td><td>Sφ(d₁)√T</td><td>sensitivity to volatility; largest at the money, long-dated</td></tr>
+<tr><td>Theta</td><td>negative for long options</td><td>time decay; pays for gamma</td></tr>
+<tr><td>Rho</td><td>KTe^{−rT}N(d₂)</td><td>sensitivity to rates</td></tr>
+</table>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>At the money, r ≈ 0:   C ≈ P ≈ 0.4 · S · σ√T        (since φ(0) = 1/√(2π) ≈ 0.4)
+Put:                   P = K e^{−rT} N(−d₂) − S N(−d₁)     (or by parity)
+Theta–gamma:           Θ + ½ σ² S² Γ = r(V − S Δ)    (r ≈ 0: Θ ≈ −½σ²S²Γ)
+Delta of a put:        N(d₁) − 1</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "quick, price an ATM one-year call, S = 100, σ = 20%"</h2>
+<ol>
+<li><strong>Rule of thumb</strong> (r ≈ 0): 0.4 × 100 × 0.2 × 1 = 8.</li>
+<li><strong>With r = 5%:</strong> the forward is higher, so the call is worth more. The exact value is ≈ 10.45 (the judged problem's first test).</li>
+<li><strong>Delta:</strong> d₁ = (0 + 0.07)/0.2 = 0.35, N(0.35) ≈ 0.64. Above ½ because of the drift from the rate and the σ²/2 term.</li>
+<li><strong>A sanity bound:</strong> C ≥ S − Ke^{−rT} = 100 − 95.1 = 4.9 ✓, and C ≤ S ✓.</li>
+<li><strong>Vol sensitivity:</strong> vega = 100 × φ(0.35) × 1 ≈ 37.5, so +1 vol point (0.01) adds about $0.375.</li>
+</ol>
+<p>The habit: <strong>rule of thumb first, then bounds, then the exact formula</strong>. On a desk the first two are what you use in real time.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Units:</strong> σ annualised and T in years; vega quoted per 1 vol point (÷ 100).</li>
+<li><strong>Delta isn't the probability of exercise</strong> (that's N(d₂) under Q), though they're close for short-dated options.</li>
+<li><strong>Gamma near expiry</strong> blows up at the money: a hedging nightmare (pin risk).</li>
+<li><strong>Black–Scholes assumptions</strong> (constant σ, continuous hedging, no jumps, lognormal returns) all fail in practice; the market corrects with the volatility smile (18.4).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Hull, chapters 15 (Black–Scholes–Merton) and 19 (the Greeks).</li>
+<li>* Paul Wilmott, <em>Paul Wilmott Introduces Quantitative Finance</em>, chapters 6–7.</li>
+<li>Implement the Greeks; verify each by finite differences against the judged price function.</li>
+<li>Memorise the ATM approximation and the Greek shapes (delta S-curve, gamma and vega humps).</li>
+</ul>
+</section>

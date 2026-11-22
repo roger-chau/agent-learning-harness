@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Quant researcher and derivatives-desk interviews ask: "What is E[W_t²]?", "apply Itô's lemma to W_t³", "what's the distribution of S_T under geometric Brownian motion?", "why is the median of a stock price below its mean?". You need fluent mechanics, not measure theory: Brownian motion's key properties and Itô's lemma as a tool.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: (dW)² = dt</h2>
+<p><strong>Brownian motion</strong> W: W₀ = 0, independent increments, W_t − W_s ~ N(0, t − s), continuous paths. It's the limit of a scaled random walk (Part 14.2). Its paths are so rough that the sum of squared increments over [0, t] converges to t (the <em>quadratic variation</em>). In calculus terms, (dW)² = dt, while dW·dt = 0 and (dt)² = 0.</p>
+<p><strong>Itô's lemma</strong> is the Taylor expansion that keeps that second-order term. For f(t, X_t) with dX = a dt + b dW:</p>
+<p style="text-align:center">df = (∂f/∂t + a ∂f/∂x + ½ b² ∂²f/∂x²) dt + b ∂f/∂x dW</p>
+<ul>
+<li>d(W²) = 2W dW + dt, so E[W_t²] = t (Itô integrals have mean zero).</li>
+<li><strong>GBM:</strong> dS = μS dt + σS dW. Apply Itô to ln S: d ln S = (μ − σ²/2) dt + σ dW, so S_T = S₀ exp((μ − σ²/2)T + σW_T): lognormal.</li>
+<li>E[S_T] = S₀e^{μT}, but the median is S₀e^{(μ − σ²/2)T}, lower. Volatility drags compounded growth: the "volatility tax" σ²/2.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Itô multiplication table:   dW·dW = dt,   dW·dt = 0,   dt·dt = 0
+Itô integral:               E[∫ f dW] = 0,   Var[∫ f dW] = ∫ E[f²] dt     (Itô isometry)
+GBM solution:               S_T = S₀ · exp((μ − σ²/2) T + σ √T Z),   Z ~ N(0, 1)
+Useful moments:             E[e^{σW_t}] = e^{σ²t/2},   E[W_t⁴] = 3t²</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "compute E[W_t³] and E[∫₀ᵗ W_s dW_s]"</h2>
+<ol>
+<li><strong>E[W_t³]:</strong> W_t ~ N(0, t), which is symmetric, so all odd moments are 0. No calculus needed: say the symmetry argument first.</li>
+<li><strong>Itô route as a check:</strong> d(W³) = 3W² dW + 3W dt. Taking expectations, dE[W³] = 3E[W] dt = 0. ✓</li>
+<li><strong>E[∫ W dW]:</strong> an Itô integral of an adapted integrand has mean 0.</li>
+<li><strong>Closed form:</strong> from d(W²) = 2W dW + dt, ∫₀ᵗ W dW = (W_t² − t)/2, with mean (t − t)/2 = 0 ✓. Ordinary calculus would say W_t²/2; the −t/2 is the Itô correction.</li>
+<li><strong>Variance of that integral (Itô isometry):</strong> ∫₀ᵗ E[W_s²] ds = t²/2.</li>
+</ol>
+<p>The habit: <strong>try symmetry and known distributions first, Itô second, and use each to check the other</strong>.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Forgetting the ½σ² term</strong> is the classic mistake (and it's why log returns and arithmetic returns differ).</li>
+<li><strong>Brownian motion isn't differentiable</strong>: dW/dt doesn't exist; work with dW.</li>
+<li><strong>Reflection principle:</strong> P(max_{s≤t} W_s ≥ a) = 2P(W_t ≥ a). It prices barrier options and answers hitting questions.</li>
+<li><strong>Brownian bridge:</strong> conditioned on W_T, the intermediate values are Gaussian with reduced variance (used in Monte Carlo path refinement).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Steven Shreve, <em>Stochastic Calculus for Finance II</em>, chapters 3–4 (Brownian motion, Itô).</li>
+<li>* Green book, chapter 5 (stochastic processes and calculus questions).</li>
+<li>Simulate 10,000 GBM paths; compare the sample mean and median of S_T with the formulas.</li>
+<li>Derive d(e^{σW_t}) with Itô and verify E[e^{σW_t}] = e^{σ²t/2}.</li>
+</ul>
+</section>

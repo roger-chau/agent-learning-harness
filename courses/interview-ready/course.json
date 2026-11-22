@@ -2796,14 +2796,147 @@
    "id": "p18",
    "n": 18,
    "title": "Stochastic calculus and pricing",
-   "summary": "Brownian motion, Itô, Black–Scholes, Greeks, binomial trees.",
+   "summary": "Brownian motion and Itô, replication and risk-neutral pricing, Black–Scholes and the Greeks, and volatility trading.",
    "items": [
     {
      "type": "chapter",
      "id": "18-1",
-     "title": "Stochastic calculus and pricing",
-     "summary": "Brownian motion, Itô, Black–Scholes, Greeks, binomial trees.",
-     "status": "planned"
+     "title": "Brownian motion and Itô's lemma",
+     "summary": "(dW)² = dt; Itô as second-order Taylor; GBM and the volatility drag.",
+     "blocks": [
+      [
+       "The signal",
+       "E[W²], Itô, GBM"
+      ],
+      [
+       "The core idea",
+       "quadratic variation"
+      ],
+      [
+       "The invariant and template",
+       "the Itô table"
+      ],
+      [
+       "A thinking trace",
+       "E[W³], ∫W dW"
+      ],
+      [
+       "Traps and variations",
+       "σ²/2, reflection"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "18-2",
+     "title": "Replication and the binomial model",
+     "summary": "No-arbitrage forces the price; risk-neutral q; trees and American exercise.",
+     "coding": [
+      "american-put-binomial"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "price this option"
+      ],
+      [
+       "The core idea",
+       "replication"
+      ],
+      [
+       "The invariant and template",
+       "q, Δ, parity"
+      ],
+      [
+       "A thinking trace",
+       "one-step call"
+      ],
+      [
+       "Traps and variations",
+       "real probabilities, early exercise"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "18-3",
+     "title": "Black–Scholes and the Greeks",
+     "summary": "The hedging argument, the formula, N(d₂), digitals, and each Greek's meaning.",
+     "coding": [
+      "black-scholes"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "write down BS"
+      ],
+      [
+       "The core idea",
+       "hedge, earn r"
+      ],
+      [
+       "The invariant and template",
+       "ATM rule, parity, theta–gamma"
+      ],
+      [
+       "A thinking trace",
+       "quick ATM call"
+      ],
+      [
+       "Traps and variations",
+       "units, delta ≠ probability"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "18-4",
+     "title": "Hedging and volatility",
+     "summary": "Delta-hedged options trade realised vs implied vol; smiles; gamma scalping.",
+     "blocks": [
+      [
+       "The signal",
+       "when do you make money?"
+      ],
+      [
+       "The core idea",
+       "realised vs implied"
+      ],
+      [
+       "The invariant and template",
+       "breakevens, rule of 16"
+      ],
+      [
+       "A thinking trace",
+       "gamma scalping"
+      ],
+      [
+       "Traps and variations",
+       "premium, skew dynamics"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p18-checkpoint",
+     "title": "Part 18 checkpoint",
+     "summary": "Stochastic calculus and pricing."
     }
    ]
   },

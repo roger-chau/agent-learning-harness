@@ -1,0 +1,206 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Moments",
+   "statement": "<p>Brownian motion W.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "E[W_t²] at t = 3?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "E[W_t⁴] at t = 2?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "E[W_t³]?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": "100%"
+    }
+   ],
+   "hints": [
+    "N(0, t) moments: t, 3t², odd = 0."
+   ],
+   "solution": "<p>3; 3·4 = 12; 0.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Itô",
+   "statement": "<p>Apply Itô's lemma.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "d(W²) =",
+     "options": [
+      "2W dW + dt",
+      "2W dW",
+      "W dW + dt"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "∫₀ᵗ W dW =",
+     "options": [
+      "(W_t² − t)/2",
+      "W_t²/2",
+      "t/2"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Keep the ½f''·dt term."
+   ],
+   "solution": "<p>The extra dt is the Itô correction.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "GBM",
+   "statement": "<p>S₀ = 100, μ = 10%, σ = 40%, T = 1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "E[S_T]?",
+     "answer": 110.51709180756477,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Median S_T?",
+     "answer": 102.02013400267558,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Median uses μ − σ²/2."
+   ],
+   "solution": "<p>110.5 vs 102.0: volatility drags the median.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Exponential moment",
+   "statement": "<p>σ = 0.3, t = 2.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "E[e^{σW_t}]?",
+     "answer": 1.0941742837052104,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "e^{σ²t/2}."
+   ],
+   "solution": "<p>e^{0.09} ≈ 1.094.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Itô isometry",
+   "statement": "<p>Var[∫₀ᵗ W_s dW_s].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "At t = 2?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "∫ E[W_s²] ds = t²/2."
+   ],
+   "solution": "<p>4/2 = 2.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Reflection",
+   "statement": "<p>Standard Brownian motion, t = 1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(max_{s≤1} W_s ≥ 1) = 2P(W₁ ≥ 1)?",
+     "answer": 0.31731050786291415,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Reflect paths at the first hitting time."
+   ],
+   "solution": "<p>2 × 0.1587 ≈ 0.3173.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Volatility drag",
+   "statement": "<p>A strategy with arithmetic mean return 10%/yr and volatility 30%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Approximate compound growth rate (μ − σ²/2)?",
+     "answer": 0.05500000000000001,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "σ²/2 = 4.5%."
+   ],
+   "solution": "<p>About 5.5% per year: volatility costs compounded growth.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Product rule",
+   "statement": "<p>X = W_t, Y = t·W_t.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "d(tW_t) =",
+     "options": [
+      "W dt + t dW",
+      "W dt + t dW + dt",
+      "t dW"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "d(tW) has no second-order term since dt·dW = 0."
+   ],
+   "solution": "<p>Ordinary product rule here: the cross term vanishes.</p>"
+  }
+ ]
+}

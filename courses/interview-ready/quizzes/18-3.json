@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Call delta:",
+   "options": [
+    "N(d₁)",
+    "N(d₂)",
+    "d₁"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Digital call price:",
+   "options": [
+    "e^{−rT}N(d₂)",
+    "N(d₁)",
+    "S N(d₁)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "ATM call with r ≈ 0:",
+   "options": [
+    "≈ 0.4 S σ√T",
+    "≈ S σ",
+    "≈ S/2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Gamma is largest…",
+   "options": [
+    "at the money near expiry",
+    "deep ITM",
+    "long-dated OTM"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Long options have…",
+   "options": [
+    "negative theta",
+    "positive theta",
+    "no theta"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

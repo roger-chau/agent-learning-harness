@@ -1,0 +1,218 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "One step",
+   "statement": "<p>S = 100 → 120 or 80, r = 0, call K = 100.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "q?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Call price?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Hedge Δ?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Replicate."
+   ],
+   "solution": "<p>q = ½, price 10, Δ = ½.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Parity",
+   "statement": "<p>S = 100, K = 100, r = 0, call = 10.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Put price?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With r = 5%, T = 1, call = 10.45: put?",
+     "answer": 5.572942450071409,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "C − P = S − Ke^{−rT}."
+   ],
+   "solution": "<p>10; 10.45 − 4.88 ≈ 5.57.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Interest",
+   "statement": "<p>One step, S = 100 → 125 or 80, r = 5% (Δt = 1, continuous), put K = 100.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "q?",
+     "answer": 0.5583802141689425,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Put price?",
+     "answer": 8.40163469448411,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "V_d = 20."
+   ],
+   "solution": "<p>q ≈ 0.5584; put ≈ 8.402.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Real probabilities",
+   "statement": "<p>In the first problem the true P(up) = 0.9.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Call price?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Replication doesn't use it."
+   ],
+   "solution": "<p>Still 10.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "American vs European",
+   "statement": "<p>S = 36, K = 40, T = 1, r = 6%, σ = 20%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "European put (Black–Scholes)?",
+     "answer": 3.84430779159684,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "American put (CRR, 500 steps)?",
+     "answer": 4.48637477750599,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Early-exercise premium."
+   ],
+   "solution": "<p>3.844 vs 4.486.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "No-arbitrage",
+   "statement": "<p>One step with u = 1.1, d = 0.95, e^{rΔt} = 1.12.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Is the model arbitrage-free?",
+     "options": [
+      "No: the bond beats the stock in every state",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Need d < e^{rΔt} < u."
+   ],
+   "solution": "<p>1.12 &gt; 1.1: short the stock, buy the bond.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "American call",
+   "statement": "<p>A non-dividend American call.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Optimal to exercise early?",
+     "options": [
+      "Never",
+      "When deep in the money",
+      "At expiry minus one day"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "C ≥ S − Ke^{−rT} > S − K."
+   ],
+   "solution": "<p>The call is worth more alive than exercised, so it equals the European price.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Bounds",
+   "statement": "<p>S = 50, K = 45, r = 4%, T = 1 (no dividends).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Lower bound on the call (S − Ke^{−rT})?",
+     "answer": 6.764475238145458,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Upper bound?",
+     "answer": 50,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Arbitrage bounds."
+   ],
+   "solution": "<p>≈ 6.76 and 50.</p>"
+  }
+ ]
+}

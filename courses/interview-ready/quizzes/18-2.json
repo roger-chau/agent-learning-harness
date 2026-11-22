@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Option prices depend on…",
+   "options": [
+    "risk-neutral, not real, probabilities",
+    "real probabilities",
+    "investor preferences"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "q =",
+   "options": [
+    "(e^{rΔt} − d)/(u − d)",
+    "1/2",
+    "(u − 1)/(u − d)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Put–call parity:",
+   "options": [
+    "C − P = S − Ke^{−rT}",
+    "C = P",
+    "C + P = S"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "American put vs European:",
+   "options": [
+    "≥",
+    "≤",
+    "="
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Non-dividend American call early exercise:",
+   "options": [
+    "never optimal",
+    "sometimes",
+    "always"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}
