@@ -1,0 +1,233 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Greedy or not?",
+   "statement": "<p>Which are solved correctly by an obvious greedy?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "Coin change with coins {1, 5, 10, 25}",
+      "Coin change with coins {1, 3, 4}",
+      "0/1 knapsack by value per weight",
+      "Maximum non-overlapping intervals by earliest end"
+     ],
+     "answer": [
+      0,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Try 6 with {1, 3, 4}."
+   ],
+   "solution": "<p>{1, 3, 4} makes 6 as 4 + 1 + 1 greedily, versus 3 + 3. Density greedy fails 0/1 knapsack (it works for fractional knapsack).</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Jumps",
+   "statement": "<p>nums = [3, 1, 4, 1, 1, 2, 1, 1].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum jumps?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Layer 0: {0}; layer 1: indices 1–3; layer 2: up to 6; …"
+   ],
+   "solution": "<p>Layers end at 0, 3, 6 and 7, so 3 jumps (for example 0 → 2 → 5 → 7).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Gas station",
+   "statement": "<p>gas [4, 1, 5, 2, 3], cost [3, 3, 2, 4, 2].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Total surplus Σ(gas − cost)?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Start index?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Differences: 1, −2, 3, −2, 1."
+   ],
+   "solution": "<p>The tank goes negative at index 1, so restart at 2: 3, 1, 2, then wrap: 3, 1 ≥ 0. Start 2.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Proof styles",
+   "statement": "<p>Match the proof style.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Jump game II:",
+     "options": [
+      "greedy stays ahead",
+      "exchange argument",
+      "bound and construct"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Earliest end first:",
+     "options": [
+      "exchange argument",
+      "greedy stays ahead",
+      "bound and construct"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Task scheduler:",
+     "options": [
+      "bound and construct",
+      "exchange argument",
+      "greedy stays ahead"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "What does each proof compare?"
+   ],
+   "solution": "<p>Reach after d jumps; swapping the first interval; a lower bound matched by a schedule.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Candy",
+   "statement": "<p>Minimum candies.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "ratings [1, 3, 4, 5, 2]?",
+     "answer": 11,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "ratings [2, 1, 2, 1, 2]?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Left pass, right pass, take the max."
+   ],
+   "solution": "<p>[1, 3, 4, 5, 2]: 1 2 3 4 1 = 11. [2, 1, 2, 1, 2]: 2 1 2 1 2 = 8.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Elimination",
+   "statement": "<p>In gas station, starting at s you run dry before reaching j + 1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which starts can you rule out?",
+     "options": [
+      "every start in [s, j]",
+      "only s",
+      "none"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "You arrived at each with tank ≥ 0."
+   ],
+   "solution": "<p>Starting later, with an empty tank, is no better than arriving there with a non-negative tank, so the whole range fails.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Verify a greedy",
+   "statement": "<p>In an online assessment your greedy passes the samples but you can't prove it.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best use of 10 minutes?",
+     "options": [
+      "Write a brute force and compare on random small inputs",
+      "Submit and hope",
+      "Rewrite in another language"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Stress testing."
+   ],
+   "solution": "<p>A brute-force check on thousands of tiny cases finds most greedy counterexamples in seconds.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Largest number",
+   "statement": "<p>Arrange [3, 30, 34, 5, 9] to form the largest number.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Answer?",
+     "options": [
+      "9534330",
+      "9534303",
+      "9533430"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Comparator?",
+     "options": [
+      "a before b iff a + b > b + a (as strings)",
+      "numeric descending",
+      "length then value"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Compare \"3\" + \"30\" with \"30\" + \"3\"."
+   ],
+   "solution": "<p>\"330\" &gt; \"303\", so 3 comes before 30: 9 5 34 3 30 → 9534330. The comparator is transitive, which is what makes the sort valid.</p>"
+  }
+ ]
+}

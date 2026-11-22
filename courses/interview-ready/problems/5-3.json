@@ -1,0 +1,259 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Sort by what?",
+   "statement": "<p>Choose the sort key.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Merge overlapping intervals:",
+     "options": [
+      "start",
+      "end",
+      "length"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Keep the most non-overlapping intervals:",
+     "options": [
+      "end",
+      "start",
+      "length"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Merging grows from the left; selecting leaves the most room."
+   ],
+   "solution": "<p>Start for merging; end for selection.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Merge",
+   "statement": "<p>Intervals [[1, 4], [0, 2], [3, 5], [7, 9], [8, 8], [10, 12]] (closed).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of merged intervals?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "First merged interval?",
+     "options": [
+      "[0, 5]",
+      "[0, 4]",
+      "[1, 5]"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Sort: [0, 2], [1, 4], [3, 5], …"
+   ],
+   "solution": "<p>[[0, 5], [7, 9], [10, 12]].</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Break the greedy",
+   "statement": "<p>Intervals [[1, 100], [2, 3], [4, 5], [3, 4], [5, 9]] (touching is allowed).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Kept by the earliest-start greedy?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Kept by the earliest-end greedy (optimal)?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Minimum removals?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Earliest start grabs [1, 100]."
+   ],
+   "solution": "<p>Earliest start keeps only [1, 100]. Earliest end keeps [2, 3], [3, 4], [4, 5], [5, 9]: 4, so remove 1.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Exchange argument",
+   "statement": "<p>Proving earliest end first.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "The key step:",
+     "options": [
+      "Replace the optimal solution's first interval with the earliest-ending one; it ends no later, so nothing else conflicts",
+      "Sorting is optimal",
+      "The intervals are disjoint"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Swap, don't lose."
+   ],
+   "solution": "<p>Each swap keeps the count, so some optimal solution agrees with the greedy at every step.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Car pooling",
+   "statement": "<p>Trips [passengers, from, to]: [[2, 1, 5], [3, 3, 7], [4, 6, 9]].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Peak load?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Capacity 6 enough?",
+     "options": [
+      "No",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Events: +2@1, +3@3, −2@5, +4@6, −3@7, −4@9."
+   ],
+   "solution": "<p>Loads: 2 from t = 1, 5 from t = 3, 3 from t = 5, 7 from t = 6 to 7, then 4. The peak is 7 &gt; 6.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Half-open ends",
+   "statement": "<p>Do [1, 2] and [2, 3] conflict?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "In merge intervals (closed)?",
+     "options": [
+      "yes: they merge into [1, 3]",
+      "no"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "In non-overlapping intervals?",
+     "options": [
+      "no: both can be kept",
+      "yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Read the statement."
+   ],
+   "solution": "<p>Different problems, different conventions, so ≤ versus &lt; matters.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Difference array",
+   "statement": "<p>Positions 0…10⁶, 10⁵ ranges, each adding a value to a range.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Cost with a difference array?",
+     "options": [
+      "O(n + range)",
+      "O(n · length)",
+      "O(n log n)"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "When would sorting the events be better?",
+     "options": [
+      "When coordinates are huge or sparse (e.g. up to 10⁹)",
+      "Never",
+      "Always"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Allocate the range, or sort the event points."
+   ],
+   "solution": "<p>A difference array needs a dense coordinate range; otherwise sort the events (or compress the coordinates).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Partition labels",
+   "statement": "<p>s = \"abacdcbefge\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Part sizes?",
+     "options": [
+      "[7, 4]",
+      "[3, 4, 4]",
+      "[11]"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "This is merging which intervals?",
+     "options": [
+      "each letter's [first, last] occurrence",
+      "the words",
+      "the vowels"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "last(a) = 2, last(b) = 6, …"
+   ],
+   "solution": "<p>a…c…b spans indices 0–6 (b last at 6); then e f g e spans 7–10: [7, 4].</p>"
+  }
+ ]
+}

@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A running median uses…",
+   "options": [
+    "a max-heap for the lower half and a min-heap for the upper",
+    "one heap",
+    "a stack"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "\"Unlock, then choose\" means…",
+   "options": [
+    "sweep availability with a pointer, choose the best with a heap",
+    "sort by value only",
+    "BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Meeting rooms equals…",
+   "options": [
+    "the maximum number of simultaneously active intervals",
+    "the number of meetings",
+    "the longest meeting"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Optimality via a lower bound plus a construction is…",
+   "options": [
+    "the bound-and-construct proof",
+    "DP",
+    "brute force"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Heaps can't efficiently…",
+   "options": [
+    "delete an arbitrary element (without lazy deletion)",
+    "find the min",
+    "insert"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

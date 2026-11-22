@@ -1,0 +1,64 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A greedy is justified by…",
+   "options": [
+    "a proof: exchange, stays ahead, or bound and construct",
+    "passing samples",
+    "intuition"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Coin change with {1, 3, 4} for 6:",
+   "options": [
+    "greedy fails (4 + 1 + 1 vs 3 + 3)",
+    "greedy works"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Jump game II is…",
+   "options": [
+    "BFS over contiguous layers",
+    "DP over pairs",
+    "a heap problem"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Candy uses…",
+   "options": [
+    "two passes, one constraint direction each",
+    "a heap",
+    "sorting"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "If you can't prove a greedy in an OA…",
+   "options": [
+    "stress-test it against a brute force",
+    "submit",
+    "give up"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

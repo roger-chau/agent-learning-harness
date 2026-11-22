@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "After sorting by start, a new interval can overlap…",
+   "options": [
+    "only the last merged interval",
+    "any earlier interval",
+    "none"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "The maximum number of non-overlapping intervals:",
+   "options": [
+    "sort by end, take greedily",
+    "sort by start",
+    "sort by length"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Counting simultaneous intervals:",
+   "options": [
+    "+1/−1 events and a running sum",
+    "nested loops",
+    "union-find"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Insert into an already sorted, disjoint list should cost…",
+   "options": [
+    "O(n)",
+    "O(n log n)",
+    "O(n²)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Weighted interval scheduling needs…",
+   "options": [
+    "DP",
+    "the same greedy",
+    "a heap only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

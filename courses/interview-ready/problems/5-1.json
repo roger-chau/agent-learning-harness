@@ -1,0 +1,258 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Which heap?",
+   "statement": "<p>Keeping the k largest elements of a stream.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Heap type?",
+     "options": [
+      "min-heap of size k",
+      "max-heap of size k",
+      "max-heap of everything"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "After the stream, the top is…",
+     "options": [
+      "the k-th largest",
+      "the largest",
+      "the median"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "What do you evict?"
+   ],
+   "solution": "<p>The top of a size-k min-heap is the weakest survivor: the one to evict, and at the end the k-th largest.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Trace",
+   "statement": "<p>Stream [7, 2, 9, 4, 9, 1], k = 3, min-heap of size k.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer (3rd largest)?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Heap size after processing the 4th element?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Sorted descending: 9, 9, 7, …"
+   ],
+   "solution": "<p>The three largest are 9, 9, 7, so the answer is 7 (duplicates count).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Costs",
+   "statement": "<p>n = 10⁶ items, k = 10.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Size-k heap: n · log₂ k operations, in millions (log₂ 10 ≈ 3.3)?",
+     "answer": 3.3,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Full sort: n · log₂ n, in millions (log₂ 10⁶ ≈ 20)?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "Compare the log factors."
+   ],
+   "solution": "<p>About 3.3M versus 20M, and the heap version works on a stream with O(k) memory.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Top-k frequent",
+   "statement": "<p>nums = [3, 1, 3, 2, 2, 4, 3, 1], k = 2, ties broken by smaller value.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Answer?",
+     "options": [
+      "[3, 1]",
+      "[3, 2]",
+      "[1, 2]"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "The O(n) selection method?",
+     "options": [
+      "bucket by count (counts ≤ n)",
+      "sort",
+      "BST"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Counts: 3×3, 1×2, 2×2, 4×1."
+   ],
+   "solution": "<p>3 appears three times; 1 and 2 tie at two, and 1 is smaller, so the answer is [3, 1].</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "heapify",
+   "statement": "<p>Building a heap from n known items.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "heapify costs…",
+     "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(log n)"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Then k pops cost…",
+     "options": [
+      "O(k log n)",
+      "O(k)",
+      "O(n)"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Sift-down from the bottom: most nodes are near the leaves."
+   ],
+   "solution": "<p>The sum over levels of (nodes × height) is O(n). Heapify-then-pop is O(n + k log n).</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "C++ direction",
+   "statement": "<p><code>priority_queue&lt;int&gt; pq;</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "pq.top() returns…",
+     "options": [
+      "the largest",
+      "the smallest"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "A min-heap is declared as…",
+     "options": [
+      "priority_queue<int, vector<int>, greater<int>>",
+      "priority_queue<int, less<int>>",
+      "set<int>"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "C++ defaults to a max-heap; Python to a min-heap."
+   ],
+   "solution": "<p>Opposite defaults across languages are a classic source of bugs.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Merge cost",
+   "statement": "<p>Merging k = 1,000 sorted lists with N = 10⁶ elements in total, using a frontier heap.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Heap operations, about N · log₂ k, in millions (log₂ 1000 ≈ 10)?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Maximum heap size?",
+     "answer": 1000,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "One push and one pop per element."
+   ],
+   "solution": "<p>N log k ≈ 10⁷; the heap never holds more than one element per list.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Smallest pair sums",
+   "statement": "<p>Find the k smallest a[i] + b[j] for sorted a and b.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Pushing both (i + 1, j) and (i, j + 1) after each pop…",
+     "options": [
+      "can push the same pair twice; use a visited set, or push (i + 1, j) only when j = 0",
+      "is fine",
+      "skips pairs"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Total cost?",
+     "options": [
+      "O(k log k)",
+      "O(nm)",
+      "O(k²)"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "(1, 1) is reachable from (0, 1) and from (1, 0)."
+   ],
+   "solution": "<p>A frontier over an implicit sorted matrix. Avoid duplicates by construction or with a visited set.</p>"
+  }
+ ]
+}

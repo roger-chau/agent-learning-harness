@@ -1,0 +1,64 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "To keep the k largest, use…",
+   "options": [
+    "a min-heap of size k",
+    "a max-heap of size k",
+    "a sorted array"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Merging k sorted lists of N elements costs…",
+   "options": [
+    "O(N log k)",
+    "O(Nk)",
+    "O(N log N)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Python heapq is a…",
+   "options": [
+    "min-heap",
+    "max-heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Quickselect's average cost is…",
+   "options": [
+    "O(n)",
+    "O(n log n)",
+    "O(log n)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "k-th smallest in a sorted matrix can also be found by…",
+   "options": [
+    "binary search on the value with a staircase count",
+    "DFS",
+    "hashing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

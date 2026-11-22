@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>A greedy algorithm makes the locally best choice and never reconsiders. Suspect one when the problem is an optimisation over a sequence or set, the constraints are large (n up to 10⁵ rules out O(n²) DP), and there's a natural "best next move" (farthest reach, earliest end, most profitable, largest count). But greedy is the technique most often <em>wrongly</em> applied in interviews. The signal to use it is not "it feels right". It's "I can prove it".</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: three ways to prove a greedy</h2>
+<ol>
+<li><strong>Exchange argument:</strong> take any optimal solution that differs from the greedy one at the first point, and show you can swap in the greedy choice without making it worse. Repeat until they agree. Earliest end first, IPO and Kruskal are proved this way.</li>
+<li><strong>Greedy stays ahead:</strong> show by induction that after each step, the greedy's partial solution is at least as good as any other, by some measure. Jump game II is proved this way: after d jumps, greedy reaches at least as far as anything else.</li>
+<li><strong>Bound and construct:</strong> prove a lower bound that no solution can beat, then show the greedy achieves it. The task scheduler and candy are proved this way.</li>
+</ol>
+<p>A greedy is also often a <strong>compressed BFS or DP</strong>: when the DP's best choice is always the same, the table collapses to a few variables. Seeing the greedy as "the DP where the transition is obvious" is another route to a proof.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<p>There's no single template, but there is a fixed workflow:</p>
+<ol>
+<li>Write the brute force or DP. Know the correct answer on small cases.</li>
+<li>List two or three candidate greedy rules.</li>
+<li>Try to break each with a 3–4 element example. Discard the broken ones.</li>
+<li>Prove the survivor (exchange, stays-ahead, or bound-and-construct).</li>
+<li>State the invariant your loop maintains, e.g. "end is the farthest index reachable in jumps jumps".</li>
+<li>If you have time, check the greedy against the brute force on random small inputs. In an online assessment, this is a superpower.</li>
+</ol>
+<pre><code># Jump game II as BFS over contiguous layers
+jumps = end = far = 0
+for i in range(len(a) - 1):
+    far = max(far, i + a[i])        # the next layer's right edge
+    if i == end:                    # finished scanning the current layer
+        jumps += 1; end = far</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: gas station</h2>
+<ol>
+<li><strong>Brute force:</strong> try every start and simulate the circuit: O(n²). Correct, and a baseline.</li>
+<li><strong>Feasibility first:</strong> if total gas &lt; total cost, no start works, since you can't create fuel. Is the converse true? Claim: if total ≥ 0, some start works. Proof: take the start just after the index where the prefix sum of gas − cost is smallest; every partial sum from there is ≥ 0.</li>
+<li><strong>Find the wasted work in the brute force.</strong> Start at s and first run dry arriving at j + 1. Could any start k in (s, j] work? You reached k from s with tank ≥ 0, and still failed before j + 1. Starting at k with an empty tank is no better. So skip all of them: the next candidate is j + 1.</li>
+<li><strong>One pass:</strong> keep a running tank; on a negative, reset the start to i + 1 and the tank to 0. Return the start if total ≥ 0.</li>
+<li><strong>Test:</strong> a single station, all-zero costs, and the answer being the last index.</li>
+</ol>
+<p>The move here is <strong>"a failure eliminates a whole range of candidates"</strong>. It's the same reasoning that makes KMP and the two-pointer techniques linear.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Greedy failures to know by heart:</strong> coin change with coins {1, 3, 4} for 6 (greedy 4 + 1 + 1, optimal 3 + 3); 0/1 knapsack by value density; weighted interval scheduling; longest path. These need DP.</li>
+<li><strong>Jump game I</strong> (can you reach the end?): keep the farthest reach; fail if i ever exceeds it.</li>
+<li><strong>Two-pass greedies</strong> (candy, trapping rain water): split the constraints by direction.</li>
+<li><strong>Sorting-based greedies:</strong> "largest number from digits" uses the comparator a + b &gt; b + a, and you must justify that it's transitive. "Boats to save people" sorts and pairs the heaviest with the lightest.</li>
+<li><strong>Huffman coding:</strong> repeatedly merge the two smallest, using a heap. Its exchange argument is a classic; minimum cost to connect sticks is the same algorithm.</li>
+<li><strong>Online-assessment tip:</strong> if a greedy passes the samples but you can't prove it, write the brute force and compare on 1,000 random small cases before submitting.</li>
+</ul>
+</section>

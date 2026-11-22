@@ -1,0 +1,113 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "k largest of a stream:",
+   "options": [
+    "size-k min-heap",
+    "sort",
+    "BST"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Running median:",
+   "options": [
+    "two heaps",
+    "one heap",
+    "a stack"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Merge k sorted lists:",
+   "options": [
+    "frontier heap",
+    "concatenate and sort",
+    "BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Minimum meeting rooms:",
+   "options": [
+    "heap of end times / event sweep",
+    "DP",
+    "union-find"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Merge overlapping intervals:",
+   "options": [
+    "sort by start, sweep",
+    "sort by end",
+    "heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Most non-overlapping intervals:",
+   "options": [
+    "sort by end, greedy",
+    "sort by start",
+    "DP only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Is a load ever over capacity?",
+   "options": [
+    "events / difference array",
+    "nested loops",
+    "heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Gas station start:",
+   "options": [
+    "one pass; a failure eliminates a range",
+    "try all starts",
+    "DP"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q9",
+   "type": "single",
+   "prompt": "Coin change with arbitrary coins:",
+   "options": [
+    "DP, not greedy",
+    "greedy by largest coin",
+    "heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -1,0 +1,262 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Two heaps",
+   "statement": "<p>Running median with lo (max-heap) and hi (min-heap).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which invariants hold after every insertion?",
+     "options": [
+      "max(lo) ≤ min(hi)",
+      "len(lo) − len(hi) ∈ {0, 1}",
+      "both heaps are sorted arrays",
+      "lo holds the even positions"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    }
+   ],
+   "hints": [
+    "Order and balance."
+   ],
+   "solution": "<p>Order between the halves, and balance in size; the median is at the tops.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Medians",
+   "statement": "<p>Insert [5, 15, 1, 3, 8] one at a time.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Median after 2 insertions?",
+     "answer": 10.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "After 4?",
+     "answer": 4.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "After 5?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Sort the prefix."
+   ],
+   "solution": "<p>10.0, then 4.0 (from 1 3 5 15), then 5 (from 1 3 5 8 15).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Rooms",
+   "statement": "<p>Meetings (half-open) [[0, 30], [5, 10], [15, 20], [10, 15], [25, 35]].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Rooms needed?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "In the event sweep, at equal times…",
+     "options": [
+      "process ends before starts",
+      "starts before ends",
+      "the order doesn't matter"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "[5, 10) and [10, 15) don't overlap."
+   ],
+   "solution": "<p>At most 2 meetings run at once (for example [0, 30) with [5, 10) or [25, 35)). Ends first makes back-to-back meetings share a room.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Task scheduler",
+   "statement": "<p>Tasks AAABBBCC, n = 2.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "m (max count)?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "k (tasks tied at m)?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "(m − 1)(n + 1) + k versus len."
+   ],
+   "solution": "<p>(3 − 1)(3) + 2 = 8 = len, so there's no idle time: ABC ABC AB. Answer 8.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Idle time",
+   "statement": "<p>Tasks AAAA B, n = 3.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 13,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Idle units?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "A _ _ _ A _ _ _ A _ _ _ A."
+   ],
+   "solution": "<p>(4 − 1)(4) + 1 = 13 slots for 5 tasks: 8 idle.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "IPO",
+   "statement": "<p>k = 2, w = 1, profits [5, 3, 8, 2], capital [0, 1, 6, 2].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Final capital?",
+     "answer": 14,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why is the greedy safe?",
+     "options": [
+      "Capital never decreases, so taking the best affordable project only expands later options",
+      "Profits are sorted",
+      "k is small"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Affordable at w = 1: profits 5 and 3."
+   ],
+   "solution": "<p>Take 5 (w = 6), then 8 becomes affordable: w = 14.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Sliding median",
+   "statement": "<p>Median of every window of size k over an array.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why do plain heaps struggle?",
+     "options": [
+      "They can't delete an arbitrary element (the one leaving the window) efficiently",
+      "They're too slow to insert",
+      "Medians need sorting"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "The fix?",
+     "options": [
+      "Lazy deletion: record pending removals and discard them when they reach a top",
+      "Rebuild the heaps each step",
+      "Use a stack"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Which element leaves?"
+   ],
+   "solution": "<p>Lazy deletion keeps O(log n) per step, as long as you balance by <em>valid</em> sizes. A sorted container is the simpler alternative.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Course schedule III",
+   "statement": "<p>Courses (duration, deadline); take as many as possible, one at a time, each finishing by its deadline.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Algorithm?",
+     "options": [
+      "Sort by deadline; take each; if over the deadline, drop the longest taken (max-heap)",
+      "Sort by duration only",
+      "DP over all subsets"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why drop the longest?",
+     "options": [
+      "It frees the most time, leaving the count unchanged",
+      "It's the oldest",
+      "Randomly"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Exchange argument on what to sacrifice."
+   ],
+   "solution": "<p>Dropping the longest keeps the count and minimises the time used, which dominates any other choice of the same count.</p>"
+  }
+ ]
+}

@@ -707,14 +707,149 @@
    "id": "p5",
    "n": 5,
    "title": "Heaps, intervals and greedy",
-   "summary": "Top-k, two heaps, k-way merge, sweep lines, exchange-argument greedy.",
+   "summary": "Heaps for the best remaining option, two heaps and scheduling, interval sweeps, and greedy algorithms you can prove.",
    "items": [
     {
      "type": "chapter",
      "id": "5-1",
-     "title": "Heaps, intervals and greedy",
-     "summary": "Top-k, two heaps, k-way merge, sweep lines, exchange-argument greedy.",
-     "status": "planned"
+     "title": "Heaps and top-k",
+     "summary": "Keep the best k by evicting the worst; k-way merge; selection by position or by value.",
+     "coding": [
+      "kth-largest",
+      "top-k-frequent",
+      "k-closest-points",
+      "kth-smallest-matrix"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "the k best, merge k"
+      ],
+      [
+       "The core idea",
+       "the heap holds what you evict"
+      ],
+      [
+       "The invariant and template",
+       "size-k heap, frontier"
+      ],
+      [
+       "A thinking trace",
+       "k-th smallest in a sorted matrix"
+      ],
+      [
+       "Traps and variations",
+       "ties, heapify, quickselect"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "5-2",
+     "title": "Two heaps and scheduling",
+     "summary": "Running medians; unlock candidates by time, choose by a heap; bound-and-construct proofs.",
+     "coding": [
+      "median-finder",
+      "meeting-rooms-ii",
+      "task-scheduler",
+      "ipo"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "boundaries and availability"
+      ],
+      [
+       "The core idea",
+       "two halves; unlock, then choose"
+      ],
+      [
+       "The invariant and template",
+       "median, sweep + heap"
+      ],
+      [
+       "A thinking trace",
+       "task scheduler"
+      ],
+      [
+       "Traps and variations",
+       "lazy deletion, deadlines"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "5-3",
+     "title": "Intervals and sweeps",
+     "summary": "Sort by start to merge, by end to select; events and difference arrays for overlaps.",
+     "coding": [
+      "merge-intervals",
+      "insert-interval",
+      "non-overlapping-intervals",
+      "car-pooling"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "ranges"
+      ],
+      [
+       "The core idea",
+       "only the last one matters"
+      ],
+      [
+       "The invariant and template",
+       "merge, sweep, select"
+      ],
+      [
+       "A thinking trace",
+       "non-overlapping intervals"
+      ],
+      [
+       "Traps and variations",
+       "endpoints, arrows, weights"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "5-4",
+     "title": "Greedy and exchange arguments",
+     "summary": "Propose rules, break them with tiny examples, prove the survivor.",
+     "coding": [
+      "jump-game-ii",
+      "gas-station",
+      "partition-labels",
+      "candy"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "a natural best move"
+      ],
+      [
+       "The core idea",
+       "three proof styles"
+      ],
+      [
+       "The invariant and template",
+       "the greedy workflow"
+      ],
+      [
+       "A thinking trace",
+       "gas station"
+      ],
+      [
+       "Traps and variations",
+       "known failures, stress tests"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p5-checkpoint",
+     "title": "Part 5 checkpoint",
+     "summary": "Heaps, intervals and greedy: choose and justify."
     }
    ]
   },

@@ -1,0 +1,61 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Inputs are ranges [start, end]: meetings, bookings, trips, ranges of a number line, letter spans. The questions are: merge them, insert one, find the maximum overlap, choose the most non-overlapping ones, or check a capacity. Almost always the first move is to <strong>sort</strong>, by start or by end, and the choice between them is the actual decision.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: sort, then only the last one matters</h2>
+<p>After sorting by start, a new interval can overlap only the most recent merged interval. Anything earlier ended before that one began, or was merged into it. That turns merging into one linear sweep.</p>
+<p>For counting overlaps, <strong>turn intervals into events</strong>: +1 at each start and −1 at each end. Sort the events, and the running sum is the number of active intervals at any moment. With small integer coordinates, a difference array does the same in O(n + range). The maximum of the running sum answers "how many rooms", "is capacity ever exceeded" and "the busiest time".</p>
+<p>For <strong>selecting</strong> non-overlapping intervals, sort by <em>end</em>. The interval that finishes first leaves the most room for everything else.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code># Merge (sort by start). Invariant: out is disjoint; only out[-1] can touch what's left.
+out = []
+for s, e in sorted(iv):
+    if out and s &lt;= out[-1][1]: out[-1][1] = max(out[-1][1], e)
+    else: out.append([s, e])
+
+# Sweep (events). Ends before starts at equal times, for half-open intervals.
+ev = sorted([(s, +1) for s, _ in iv] + [(e, -1) for _, e in iv])
+cur = best = 0
+for _, d in ev:
+    cur += d; best = max(best, cur)
+
+# Select the most non-overlapping (sort by end).
+end, keep = -inf, 0
+for s, e in sorted(iv, key=lambda x: x[1]):
+    if s &gt;= end: keep += 1; end = e</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: non-overlapping intervals</h2>
+<ol>
+<li><strong>Reframe:</strong> "remove the fewest" is the same as "keep the most". Complements often turn awkward objectives into standard ones.</li>
+<li><strong>Brute force:</strong> try all subsets, O(2ⁿ). Or DP after sorting, O(n²). Both are correct; is there a greedy?</li>
+<li><strong>Propose greedy candidates, then attack them:</strong>
+  <ul>
+  <li>Earliest start first? [1, 100], [2, 3], [4, 5]: it picks [1, 100] and keeps 1, but 2 is possible. ✗</li>
+  <li>Shortest first? [1, 5], [4, 7], [6, 10]: it picks [4, 7] and keeps 1, but 2 is possible. ✗</li>
+  <li>Earliest end first? No counterexample comes to mind, so try to prove it.</li>
+  </ul></li>
+<li><strong>Exchange argument:</strong> take any optimal selection O and its first interval o₁. Let g₁ be the interval with the earliest end. Since end(g₁) ≤ end(o₁), replacing o₁ with g₁ conflicts with nothing else in O. So some optimal solution starts with g₁. Remove g₁ and everything overlapping it, and repeat. Induction finishes the proof.</li>
+<li><strong>Code it:</strong> sort by end, keep greedily, and the answer is n − kept. O(n log n).</li>
+</ol>
+<p>This is the core greedy workflow: <strong>list candidate rules, break the wrong ones with tiny counterexamples, then prove the survivor with an exchange argument</strong>. Interviewers want the counterexamples as much as the answer.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Containment:</strong> merging [1, 10] with [2, 3] must keep end 10, so use max(), not the new end.</li>
+<li><strong>Open or closed endpoints:</strong> do [1, 2] and [2, 3] overlap? Merge intervals says yes, and non-overlapping intervals says no. Read the statement, and use ≤ or &lt; deliberately.</li>
+<li><strong>Already sorted input:</strong> insert interval should be O(n), not a re-sort.</li>
+<li><strong>Minimum arrows to burst balloons</strong> = the maximum number of non-overlapping intervals (closed endpoints). It's the same greedy.</li>
+<li><strong>Interval intersection of two sorted lists:</strong> two pointers; advance whichever interval ends first.</li>
+<li><strong>Employee free time / gaps:</strong> merge everything, then report the gaps between consecutive merged intervals.</li>
+<li><strong>Weighted interval scheduling</strong> (each interval has a value): greedy fails. Sort by end, then DP with binary search for the last compatible interval, O(n log n). That's Part 6.</li>
+</ul>
+</section>

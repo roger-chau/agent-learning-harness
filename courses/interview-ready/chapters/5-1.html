@@ -1,0 +1,61 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"The k largest / smallest / most frequent / closest", "the k-th something", "merge k sorted things", "repeatedly take the best remaining option". A heap gives the extreme element in O(1) and updates in O(log n). It sits between "sort everything" (O(n log n), more than you need) and "scan for the max each time" (O(n) per query).</p>
+<table>
+<tr><th>Question</th><th>Tool</th><th>Cost</th></tr>
+<tr><td>the k best of n, once</td><td>size-k heap, or quickselect / nth_element</td><td>O(n log k) / O(n) average</td></tr>
+<tr><td>the k best of a stream</td><td>size-k heap</td><td>O(log k) per item</td></tr>
+<tr><td>merge k sorted lists or rows</td><td>a heap of k frontier elements</td><td>O(N log k)</td></tr>
+<tr><td>the k-th smallest over a sorted structure</td><td>k-way merge, or binary search on the value</td><td>O(k log k) / O(n log range)</td></tr>
+</table>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: the heap holds what you might evict</h2>
+<p>To keep the k <em>largest</em> items, use a <strong>min</strong>-heap of size k. That's backwards to most people at first. The heap's top is the weakest of your current top k: the one a new arrival must beat, and the one you throw away when it does. Once the stream ends, the top is the k-th largest.</p>
+<p>For merging, the heap holds a <strong>frontier</strong>: the next unconsumed element from each source. Popping the minimum and pushing its successor keeps the frontier exact. That one idea gives merging k lists, the k-th smallest in a sorted matrix, the k smallest pair sums, and Dijkstra (whose frontier is the tentative distances).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>import heapq
+# top-k largest. Invariant: h holds the k largest seen so far; h[0] is the k-th largest.
+h = []
+for x in stream:
+    if len(h) &lt; k: heapq.heappush(h, x)
+    elif x &gt; h[0]: heapq.heapreplace(h, x)
+
+# k-way merge. Invariant: h holds the smallest unconsumed element of every source.
+h = [(src[0], i, 0) for i, src in enumerate(sources) if src]
+heapq.heapify(h)
+while h:
+    v, i, j = heapq.heappop(h)
+    emit(v)
+    if j + 1 &lt; len(sources[i]):
+        heapq.heappush(h, (sources[i][j + 1], i, j + 1))</code></pre>
+<p>Python's heapq is a min-heap: negate the keys for a max-heap, and use tuples for (key, tie-breaker, payload) so you never compare payloads. In C++, <code>priority_queue</code> is a <em>max</em>-heap by default. Write <code>priority_queue&lt;T, vector&lt;T&gt;, greater&lt;T&gt;&gt;</code> for a min-heap. Getting the direction backwards in C++ is the most common heap bug.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: k-th smallest in a sorted matrix</h2>
+<ol>
+<li><strong>Clarify:</strong> rows and columns are sorted, so the matrix is not globally sorted ([[1, 5], [2, 6]]). Duplicates count.</li>
+<li><strong>Brute force:</strong> flatten and sort, O(n² log n). That ignores all the structure.</li>
+<li><strong>View 1, a merge:</strong> the rows are n sorted lists. A k-way merge pops the k-th element after k − 1 pops: O(k log n). That's good when k is small.</li>
+<li><strong>View 2, binary search on the answer:</strong> "how many elements are ≤ x?" is monotone in x and can be counted in O(n) with a staircase walk from the bottom-left (move up while the value is too big, add the column index + 1). Search for the smallest x with count ≥ k: O(n log(max − min)). That's good when k is near n².</li>
+<li><strong>Choose by the constraints</strong>, and say why. Offering both views shows range: one uses the rows, the other uses the order of values.</li>
+</ol>
+<p>The habit: <strong>one structure, two orderings</strong>. Many "k-th" problems can be attacked by position (merge or select) or by value (binary search plus counting). Try both.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Ties and determinism:</strong> ask how ties break, and encode the rule in the key tuple.</li>
+<li><strong>Floating distances:</strong> compare squared integer distances; never take square roots.</li>
+<li><strong>heapify is O(n),</strong> not O(n log n). If you have all the data, heapify and pop k times for O(n + k log n).</li>
+<li><strong>Quickselect</strong> is O(n) on average, but O(n²) with bad pivots: randomise. C++ <code>nth_element</code> is introselect, worst-case safe. Mention it when n is large and k is about n/2.</li>
+<li><strong>Bucket sort by count:</strong> frequencies are at most n, so top-k-frequent is O(n) with buckets.</li>
+<li><strong>Find the k pairs with the smallest sums:</strong> a frontier heap over the implicit matrix a[i] + b[j], pushing (i, j + 1), plus (i + 1, j) only when j = 0, so no pair is pushed twice.</li>
+</ul>
+</section>

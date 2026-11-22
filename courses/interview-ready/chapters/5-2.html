@@ -1,0 +1,59 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Two shapes of heap problem beyond top-k:</p>
+<ul>
+<li><strong>Two heaps:</strong> you need the boundary between a lower and an upper group as items arrive: running medians, percentiles, "balance two sets".</li>
+<li><strong>Scheduling:</strong> things become available over time (meetings start, projects become affordable, cooldowns expire) and at each moment you want the best available one. That's a pointer (or event sweep) over time for <em>availability</em>, plus a heap for <em>choice</em>.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p><strong>Two heaps</strong> keep a sorted list split in half without sorting it. A max-heap holds the lower half and a min-heap the upper half. The invariants are: every lower element ≤ every upper element, and the sizes differ by at most one. The median lives at one or both tops, giving O(log n) insertion and O(1) query.</p>
+<p><strong>Unlock, then choose.</strong> Sort candidates by when they become available, sweep a pointer forward, push the newly available ones into a heap keyed by how good they are, and pop the best. Correctness is an exchange argument: choosing the best available option now never leaves you worse off later. Check that this holds. In IPO it does, because capital only grows. In weighted interval scheduling it doesn't, and you need DP.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code># Running median. lo is a max-heap (negated), hi a min-heap; len(lo) == len(hi) or len(hi) + 1.
+def add(x):
+    heapq.heappush(lo, -x)
+    heapq.heappush(hi, -heapq.heappop(lo))     # the largest of lo moves up: order fixed
+    if len(hi) &gt; len(lo):
+        heapq.heappush(lo, -heapq.heappop(hi)) # sizes fixed
+def median():
+    return -lo[0] if len(lo) &gt; len(hi) else (-lo[0] + hi[0]) / 2
+
+# Unlock, then choose.
+cands.sort(key=available_at); i = 0
+for step in steps:
+    while i &lt; len(cands) and cands[i].available_at &lt;= now:
+        heapq.heappush(h, (-cands[i].value, i)); i += 1
+    if h: take(heapq.heappop(h))</code></pre>
+<p>Meeting rooms is the same skeleton with time as the sweep and a heap of <em>end times</em>: the room that frees earliest is the only one worth checking.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: task scheduler</h2>
+<ol>
+<li><strong>Clarify:</strong> tasks can run in any order; the same letter needs n units between runs; idle units are allowed. We want the minimum total length.</li>
+<li><strong>Simulate first:</strong> at each time, run the most frequent task that isn't cooling down. A max-heap of counts plus a queue of cooling tasks gives O(T log 26). It's correct and acceptable.</li>
+<li><strong>Find the structure:</strong> what really forces idle time? The most frequent task, with m copies, needs m − 1 gaps of at least n between its occurrences. So the schedule has m − 1 "frames" of length n + 1, plus a final partial frame.</li>
+<li><strong>Lower bound 1:</strong> (m − 1)(n + 1) + k, where k is the number of tasks tied at m (they all appear in the last frame). <strong>Lower bound 2:</strong> the number of tasks, since each takes a unit.</li>
+<li><strong>Achievability:</strong> fill the frames column-wise with the remaining tasks in decreasing frequency. If they don't fit, the extra tasks extend frames without any idle time, giving exactly len(tasks).</li>
+<li><strong>Answer:</strong> max of the two bounds, in O(T).</li>
+</ol>
+<p>The method: <strong>simulate to get a correct answer, then find the bottleneck that forces the cost, prove a lower bound, and show it's achievable</strong>. "Lower bound plus construction" is how quant and systems interviewers like to see optimality argued.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Two-heap insertion order:</strong> pushing x straight into the wrong heap breaks the "lower ≤ upper" invariant. Always route through one heap and rebalance.</li>
+<li><strong>Sliding-window median:</strong> heaps can't delete arbitrary items. Use lazy deletion (a hash map of pending removals, discarded when they surface at a top) or a sorted container.</li>
+<li><strong>Interval tie rules:</strong> [1, 5] and [5, 10] share a room or not, depending on whether intervals are open at the end. Encode the rule in the sort (ends before starts) or in the comparison (≤ versus &lt;).</li>
+<li><strong>Greedy needs a reason:</strong> "most profitable affordable project" works because capital never decreases. With costs that consume capital, it may not.</li>
+<li><strong>Course schedule III</strong> (maximum courses before their deadlines): sort by deadline, take each course, and when over time drop the longest taken one. That's a max-heap of durations, and the exchange argument is that dropping the longest frees the most time.</li>
+<li><strong>Reorganise string</strong> (no two adjacent letters equal): possible iff the maximum count ≤ ⌈n/2⌉. Build it with a heap, or fill the even indices first.</li>
+</ul>
+</section>
