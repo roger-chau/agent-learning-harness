@@ -1,0 +1,240 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Weights",
+   "statement": "<p>A 7B-parameter model.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "BF16 weight size (GB)?",
+     "answer": 14,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "INT4 weight size (GB)?",
+     "answer": 3.5,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "bytes per param."
+   ],
+   "solution": "<p>2 bytes vs 0.5 bytes per parameter.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Batch-1 decode",
+   "statement": "<p>7B in BF16 on an H100 (3.35 TB/s).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "ms per token (weights only)?",
+     "answer": 4.17910447761194,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "tokens/s?",
+     "answer": 239.28571428571428,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "bytes / bandwidth."
+   ],
+   "solution": "<p>About 4.2 ms and 240 tokens/s, an upper bound that ignores the KV and overheads.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "KV cache",
+   "statement": "<p>32 layers, d_head 128, BF16.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "KB per token with 32 KV heads (MHA)?",
+     "answer": 512.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "KB per token with 8 KV heads (GQA)?",
+     "answer": 128.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "GB for one 4,096-token MHA sequence?",
+     "answer": 2.0,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "2 × L × H_kv × d × bytes."
+   ],
+   "solution": "<p>512 KB vs 128 KB per token; 2 GiB per 4k-token sequence with MHA.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Max batch",
+   "statement": "<p>80 GB H100, 14 GB weights, 6 GB overhead, MHA KV at 0.5 MB/token, 4,096-token contexts.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sequences that fit?",
+     "answer": 27,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With GQA (4× smaller KV)?",
+     "answer": 111,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "(80 − 20) GB / 2 GB."
+   ],
+   "solution": "<p>About 27–30 vs about 110. GQA's whole point is serving batch size.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Prefill",
+   "statement": "<p>A 2,000-token prompt into a 7B model; achieved 400 TFLOP/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Prefill FLOPs (TFLOP)?",
+     "answer": 28.0,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time (ms)?",
+     "answer": 70.0,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "2P per token."
+   ],
+   "solution": "<p>28 TFLOP → 70 ms.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Crossover",
+   "statement": "<p>H100: 989 TFLOP/s, 3.35 TB/s, BF16 weights (2 bytes/param, 2 FLOPs/param/token).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Machine balance (FLOPs per byte)?",
+     "answer": 295.2238805970149,
+     "unit": "",
+     "tolerance": "3%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Decode batch where weight-bound compute ≈ memory time (balance × 2 bytes / 2 FLOPs)?",
+     "answer": 295.2238805970149,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "Per decode step, each 2-byte weight is read once and used for B multiply-adds (2B FLOPs): intensity ≈ B FLOPs/byte."
+   ],
+   "solution": "<p>About 295: below that batch, BF16 decode is memory-bound (ignoring the KV reads, which push it further).</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Quantisation",
+   "statement": "<p>Switching weights from BF16 to INT4 for batch-1 decode.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ideal speed-up?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why less in practice?",
+     "options": [
+      "dequantisation overhead, KV reads not shrunk, kernel efficiency",
+      "INT4 is slower to read",
+      "compute-bound"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Bytes moved."
+   ],
+   "solution": "<p>Up to 4× fewer weight bytes; real gains are often 2–3×.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Speculative decoding",
+   "statement": "<p>A draft proposes k = 4 tokens; on average 3 are accepted. The big model's verification pass costs about one decode step; the draft costs 10% of a step per token.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Big-model steps per output token (≈ 1 / (3 + 1))?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Approximate speed-up ((3 + 1) / (1 + 0.4))?",
+     "answer": 2.857142857142857,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "Each verification yields accepted + 1 tokens."
+   ],
+   "solution": "<p>About 2.9×, if the acceptance rate holds.</p>"
+  }
+ ]
+}

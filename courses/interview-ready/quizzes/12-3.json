@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Training FLOPs ≈",
+   "options": [
+    "6 × params × tokens",
+    "2 × params",
+    "params²"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Mixed-precision Adam needs about…",
+   "options": [
+    "16 bytes/param",
+    "2 bytes/param",
+    "4 bytes/param"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "ZeRO/FSDP shards…",
+   "options": [
+    "optimizer state, gradients, weights",
+    "the batch only",
+    "layers"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Tensor parallelism belongs…",
+   "options": [
+    "within a node",
+    "across datacentres",
+    "anywhere"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Pipeline bubbles shrink with…",
+   "options": [
+    "more micro-batches",
+    "more stages",
+    "smaller models"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

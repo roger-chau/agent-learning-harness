@@ -1929,14 +1929,141 @@
    "id": "p12",
    "n": 12,
    "title": "ML systems design",
-   "summary": "LLM serving, training parallelism, GPU cluster scheduling.",
+   "summary": "LLM inference from first principles, LLM serving design, training parallelism, and GPU cluster scheduling.",
    "items": [
     {
      "type": "chapter",
      "id": "12-1",
-     "title": "ML systems design",
-     "summary": "LLM serving, training parallelism, GPU cluster scheduling.",
-     "status": "planned"
+     "title": "LLM inference from first principles",
+     "summary": "Prefill is compute-bound, decode is memory-bound; KV cache sizing; batching.",
+     "blocks": [
+      [
+       "The signal",
+       "why is generation slow?"
+      ],
+      [
+       "The core idea",
+       "prefill vs decode"
+      ],
+      [
+       "The invariant and template",
+       "the inference envelope"
+      ],
+      [
+       "A thinking trace",
+       "users per H100"
+      ],
+      [
+       "Traps and variations",
+       "quantisation, speculation, TP"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "12-2",
+     "title": "Designing LLM serving",
+     "summary": "Continuous batching, paged KV, TTFT/TPOT SLOs, chunked and disaggregated prefill.",
+     "blocks": [
+      [
+       "The signal",
+       "serve N requests/min"
+      ],
+      [
+       "The core idea",
+       "the scheduler packs KV memory"
+      ],
+      [
+       "The invariant and template",
+       "serving architecture"
+      ],
+      [
+       "A thinking trace",
+       "meeting a TTFT SLO"
+      ],
+      [
+       "Traps and variations",
+       "HOL blocking, fairness, cold starts"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "12-3",
+     "title": "Training at scale",
+     "summary": "6PT FLOPs, 16 bytes/param, data/ZeRO/tensor/pipeline parallelism, all-reduce cost.",
+     "blocks": [
+      [
+       "The signal",
+       "train a 70B model"
+      ],
+      [
+       "The core idea",
+       "memory, FLOPs, bytes"
+      ],
+      [
+       "The invariant and template",
+       "training envelopes"
+      ],
+      [
+       "A thinking trace",
+       "a 7B pre-training plan"
+      ],
+      [
+       "Traps and variations",
+       "activations, stragglers, MoE"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "12-4",
+     "title": "GPU cluster scheduling",
+     "summary": "Gang scheduling, topology, fragmentation, failures; allocation × goodput × MFU.",
+     "blocks": [
+      [
+       "The signal",
+       "10,000 shared GPUs"
+      ],
+      [
+       "The core idea",
+       "gangs, topology, failures"
+      ],
+      [
+       "The invariant and template",
+       "what to measure"
+      ],
+      [
+       "A thinking trace",
+       "big jobs waiting"
+      ],
+      [
+       "Traps and variations",
+       "checkpoints, power, mixing"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p12-checkpoint",
+     "title": "Part 12 checkpoint",
+     "summary": "ML systems: inference, serving, training and clusters."
     }
    ]
   },

@@ -1,0 +1,61 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Why is LLM generation slow?", "how many concurrent users fit on one GPU?", "what does the KV cache cost?", "why does batching help decode but not prefill?". ML-infra and GPU-performance interviews (inference teams at labs and clouds, and the GPU roles you're aiming for) expect you to derive these from first principles: parameters, bytes, FLOPs, bandwidth. It's the roofline model from the GPU course, Part 2, applied to transformers.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: prefill is compute-bound, decode is memory-bound</h2>
+<p>A decoder-only transformer with P parameters does about <strong>2P FLOPs per token</strong> in the forward pass (one multiply-add per weight).</p>
+<ul>
+<li><strong>Prefill</strong> processes the whole prompt in parallel: big matrix multiplies, high arithmetic intensity, so it's <strong>compute-bound</strong>. Time ≈ 2P × prompt_tokens / (achieved FLOP/s). This sets the <em>time to first token</em> (TTFT).</li>
+<li><strong>Decode</strong> generates one token at a time per sequence. Each step must read <em>every weight</em> (and that sequence's KV cache) from HBM to do only 2P FLOPs per sequence, so at batch size 1 it's <strong>bandwidth-bound</strong>: time per token ≈ (weight bytes + KV bytes) / HBM bandwidth. This sets the <em>time per output token</em> (TPOT).</li>
+<li><strong>Batching</strong> decode reuses each weight read across B sequences: B× the FLOPs for nearly the same bytes, so throughput grows almost linearly in B until either compute saturates or the KV caches fill memory.</li>
+</ul>
+<p><strong>KV cache:</strong> each layer stores the keys and values of every previous token, 2 × layers × kv_heads × head_dim × bytes per token. Grouped-query attention (fewer KV heads) shrinks it; for long contexts it can exceed the weights' size. It's usually what limits batch size.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: the inference envelope</h2>
+<pre><code>weights_bytes   = P × bytes_per_param                 (2 for BF16, 1 for INT8/FP8, 0.5 for INT4)
+kv_per_token    = 2 × L × n_kv_heads × d_head × bytes
+decode_step     ≈ max( (weights_bytes + B × ctx × kv_per_token) / HBM_bw ,  2P × B / FLOPs )
+prefill_time    ≈ 2P × prompt_tokens / (MFU × peak_FLOPs)
+max_batch       ≈ (HBM − weights − activations) / (ctx × kv_per_token)
+crossover batch ≈ peak_FLOPs / HBM_bw / 2 × bytes_per_param     (above it, decode turns compute-bound)</code></pre>
+<p>For an H100 (989 TFLOP/s dense BF16, 3.35 TB/s): FLOPs/byte ≈ 295, so BF16 decode stays memory-bound until the batch is in the hundreds.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: how many users can one H100 serve with a 7B model?</h2>
+<ol>
+<li><strong>Weights:</strong> 7 × 10⁹ × 2 bytes = 14 GB in BF16.</li>
+<li><strong>Batch-1 decode:</strong> 14 GB / 3.35 TB/s ≈ 4.2 ms per token, about 240 tokens/s for one user. Fast for one user, a waste of the GPU's compute.</li>
+<li><strong>KV cache</strong> (Llama-2-7B shape: 32 layers, 32 KV heads, d_head 128, BF16): 2 × 32 × 32 × 128 × 2 = 512 KB per token. At a 4,096-token context that's 2 GB per sequence.</li>
+<li><strong>Memory budget:</strong> 80 GB − 14 GB weights − ~6 GB activations and overhead ≈ 60 GB for KV, so about 30 sequences at full context.</li>
+<li><strong>Decode step at B = 30:</strong> it reads 14 GB of weights + 30 × (avg ctx 2,048 × 0.5 MB ≈ 1 GB) = 44 GB → ~13 ms per step, giving 30 tokens per 13 ms ≈ 2,300 tokens/s total, about 75 tokens/s per user.</li>
+<li><strong>Levers:</strong> GQA (Llama-3-8B has 8 KV heads, 4× less KV), FP8/INT4 weights and KV, paged KV allocation (no fragmentation), shorter contexts or eviction. Each one raises the batch, and with it the throughput.</li>
+</ol>
+<p>The habit: <strong>bytes moved per token over bandwidth, and KV bytes per sequence into memory</strong>. Those two numbers answer most inference questions.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>"More FLOPs = faster decode"</strong> is wrong at small batch: decode speed tracks HBM bandwidth.</li>
+<li><strong>Quantisation</strong> helps decode roughly in proportion to the bytes saved (INT4 weights ≈ 4× fewer bytes), if the kernels are efficient.</li>
+<li><strong>Speculative decoding:</strong> a small draft model proposes k tokens and the big model verifies them in one batched forward pass. It converts memory-bound sequential steps into one compute-heavier step, and helps when the acceptance rate is high.</li>
+<li><strong>Attention cost</strong> grows with context: decode reads the whole KV cache every step (O(context) bytes per token); prefill attention is O(n²) compute, hence FlashAttention-style tiling (the GPU course, Part 7).</li>
+<li><strong>Tensor parallelism</strong> splits weights over GPUs to cut per-GPU bytes (faster decode) at the cost of an all-reduce per layer.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Kipply's blog, "Transformer Inference Arithmetic": the source of most of these envelopes.</li>
+<li>* Kwon et al., "Efficient Memory Management for LLM Serving with PagedAttention" (vLLM, SOSP 2023).</li>
+<li>Leviathan et al., "Fast Inference from Transformers via Speculative Decoding" (ICML 2023).</li>
+<li>The GPU course, Parts 2 (roofline) and 7 (attention and FlashAttention), for the kernel-level view.</li>
+</ul>
+</section>

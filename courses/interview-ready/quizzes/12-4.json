@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Distributed training jobs need…",
+   "options": [
+    "gang scheduling",
+    "one GPU at a time",
+    "no scheduling"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Fragmentation is fixed by…",
+   "options": [
+    "bin-packing / reservations with backfill",
+    "more small jobs",
+    "nothing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Effective cluster efficiency is…",
+   "options": [
+    "allocation × goodput × MFU",
+    "allocation only",
+    "MFU only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Checkpoint interval (Young/Daly):",
+   "options": [
+    "√(2 · C · MTBF)",
+    "MTBF/2",
+    "C × MTBF"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "TP groups should be placed…",
+   "options": [
+    "within a node",
+    "across nodes",
+    "randomly"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

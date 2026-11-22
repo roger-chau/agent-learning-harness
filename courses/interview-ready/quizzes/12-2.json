@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Continuous batching admits work…",
+   "options": [
+    "every step",
+    "per batch",
+    "per hour"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "TTFT is mostly…",
+   "options": [
+    "queueing + prefill",
+    "decode",
+    "network"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Paged KV cache avoids…",
+   "options": [
+    "fragmentation",
+    "FLOPs",
+    "quantisation"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Long prompts stalling decode is fixed by…",
+   "options": [
+    "chunked/disaggregated prefill",
+    "bigger GPUs only",
+    "smaller batches"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Prefix caching helps when…",
+   "options": [
+    "requests share long prefixes",
+    "outputs are long",
+    "batch is 1"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

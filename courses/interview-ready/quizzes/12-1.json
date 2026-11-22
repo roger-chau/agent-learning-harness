@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Decode at small batch is bound by…",
+   "options": [
+    "HBM bandwidth",
+    "FLOPs",
+    "PCIe"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Forward FLOPs per token ≈",
+   "options": [
+    "2P",
+    "6P",
+    "P²"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "The KV cache per token is",
+   "options": [
+    "2 × layers × KV heads × head dim × bytes",
+    "P × 2",
+    "the vocabulary size"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "GQA mainly increases…",
+   "options": [
+    "the max batch (less KV memory)",
+    "accuracy",
+    "prefill speed"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Batching decode helps because…",
+   "options": [
+    "each weight read is reused across sequences",
+    "prompts get shorter",
+    "FLOPs drop"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

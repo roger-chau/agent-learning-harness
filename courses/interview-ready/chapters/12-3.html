@@ -1,0 +1,63 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"How would you train a 70B model?", "what's ZeRO?", "why does this job get 30% MFU?", "how much memory does Adam need?", "estimate the training time". The core skill is a memory and communication budget per GPU for each parallelism strategy.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: memory per parameter, FLOPs per token, bytes per step</h2>
+<p><strong>Training FLOPs ≈ 6 × P × tokens</strong> (2 forward + 4 backward per parameter per token). <strong>Mixed-precision Adam memory ≈ 16 bytes per parameter</strong>: BF16 weights (2) + BF16 gradients (2) + FP32 master weights (4) + Adam m and v (4 + 4). Activations come on top, reduced by activation checkpointing (recompute in the backward pass).</p>
+<table>
+<tr><th>Parallelism</th><th>Splits</th><th>Communication</th><th>When</th></tr>
+<tr><td>Data (DP)</td><td>the batch</td><td>all-reduce gradients each step</td><td>the model fits on one GPU</td></tr>
+<tr><td>ZeRO / FSDP</td><td>optimizer state, gradients, then weights across DP ranks</td><td>reduce-scatter + all-gather (~1.5× DP traffic at stage 3)</td><td>16 bytes/param doesn't fit</td></tr>
+<tr><td>Tensor (TP)</td><td>each matmul across GPUs</td><td>all-reduce per layer (latency-critical)</td><td>within a node (NVLink)</td></tr>
+<tr><td>Pipeline (PP)</td><td>layers into stages</td><td>activations between stages; bubbles</td><td>across nodes, very deep models</td></tr>
+<tr><td>Sequence / context</td><td>the sequence dimension</td><td>attention communication</td><td>long contexts</td></tr>
+</table>
+<p>Real large jobs use <strong>3D/4D parallelism</strong>: TP inside a node, PP across a few nodes, DP/FSDP across the rest.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: training envelopes</h2>
+<pre><code>train_FLOPs      = 6 · P · T
+time             = train_FLOPs / (N_gpus · MFU · peak)
+state_bytes      = 16 · P                          (÷ N with ZeRO-3/FSDP)
+ring all-reduce  : each GPU sends/receives 2·(n−1)/n · S bytes  → time ≈ 2·S / link_bw for large n
+pipeline bubble  ≈ (p − 1) / (m + p − 1)           (p stages, m micro-batches)
+MFU              = achieved model FLOPs / peak     (good: 40–55% on H100-class at scale)</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: plan a 7B pre-training run</h2>
+<ol>
+<li><strong>Compute:</strong> 6 × 7 × 10⁹ × 2 × 10¹² tokens = 8.4 × 10²² FLOPs.</li>
+<li><strong>Time:</strong> on 1,024 H100s at 40% MFU: 8.4 × 10²² / (1,024 × 0.4 × 989 × 10¹²) ≈ 2.1 × 10⁵ s ≈ 2.4 days.</li>
+<li><strong>Memory:</strong> 16 × 7 × 10⁹ = 112 GB of state, which doesn't fit in 80 GB. Use FSDP/ZeRO-3 across 8 GPUs → 14 GB per GPU for state, leaving room for activations (with checkpointing).</li>
+<li><strong>Communication:</strong> gradients are 14 GB in BF16. A ring all-reduce over 8 GPUs moves 2 × 7/8 × 14 GB ≈ 24.5 GB per GPU, about 55 ms at ~450 GB/s NVLink per direction. Across nodes (~50 GB/s per GPU on 400 Gb/s InfiniBand) it's 10× slower, so overlap communication with the backward pass and use hierarchical reduction.</li>
+<li><strong>Parallel layout:</strong> a 7B model doesn't need TP or PP. Use FSDP within nodes and data parallelism across 128 nodes; the global batch is ~4M tokens.</li>
+<li><strong>Failure planning:</strong> at 1,024 GPUs, expect failures within hours to days. Checkpoint regularly (asynchronously, to fast storage) and automate restarts.</li>
+</ol>
+<p>The habit: <strong>FLOPs for time, 16 bytes/param for memory, 2S/bw for communication</strong>. Then pick the least-communicating parallelism that fits.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Activations dominate</strong> at long sequence lengths: recompute (checkpointing), or use sequence parallelism.</li>
+<li><strong>Small per-GPU batches</strong> lower MFU (kernels become inefficient). There's tension between global batch size (convergence) and per-GPU efficiency.</li>
+<li><strong>Stragglers:</strong> synchronous training runs at the speed of the slowest GPU. Monitor per-rank step times.</li>
+<li><strong>MoE models:</strong> parameter count ≠ FLOPs per token (only the active experts compute); expert parallelism adds all-to-all communication.</li>
+<li><strong>Numerics:</strong> BF16 range vs FP16 overflow; loss scaling for FP16; FP8 training needs per-tensor scaling.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Rajbhandari et al., "ZeRO: Memory Optimizations Toward Training Trillion Parameter Models" (SC 2020).</li>
+<li>* Narayanan et al., "Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM" (SC 2021).</li>
+<li>The "Ultra-Scale Playbook" (Hugging Face, 2025): a practical tour of every parallelism with measurements.</li>
+<li>Kaplan et al. / Hoffmann et al. (Chinchilla) scaling-law papers for choosing P and T.</li>
+</ul>
+</section>

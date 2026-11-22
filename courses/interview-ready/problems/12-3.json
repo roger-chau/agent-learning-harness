@@ -1,0 +1,211 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Memory per parameter",
+   "statement": "<p>Mixed-precision Adam.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes per parameter?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "State for 7B (GB)?",
+     "answer": 112,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "2 + 2 + 4 + 4 + 4."
+   ],
+   "solution": "<p>BF16 weights and grads, FP32 master, m and v.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Training FLOPs",
+   "statement": "<p>7B parameters, 2 × 10¹² tokens.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Total FLOPs (×10²²)?",
+     "answer": 8.399999999999999,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "6PT."
+   ],
+   "solution": "<p>8.4 × 10²².</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Wall time",
+   "statement": "<p>1,024 H100s at 40% MFU.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Days?",
+     "answer": 2.3999892919334904,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "FLOPs / (N × MFU × peak)."
+   ],
+   "solution": "<p>About 2.4 days.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "ZeRO-3",
+   "statement": "<p>112 GB of state sharded over 8 GPUs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "GB per GPU?",
+     "answer": 14,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Extra communication?",
+     "options": [
+      "all-gather weights before use, reduce-scatter gradients (~1.5× DP traffic)",
+      "none",
+      "10×"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Sharded state must be gathered when needed."
+   ],
+   "solution": "<p>Memory for communication.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "All-reduce",
+   "statement": "<p>Ring all-reduce of 14 GB over 8 GPUs at 450 GB/s per direction.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes sent per GPU (GB)?",
+     "answer": 24.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time (ms)?",
+     "answer": 54.44444444444444,
+     "unit": "",
+     "tolerance": "3%"
+    }
+   ],
+   "hints": [
+    "2(n − 1)/n × S."
+   ],
+   "solution": "<p>24.5 GB, ~54 ms. Overlap it with the backward pass.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Pipeline bubble",
+   "statement": "<p>p = 8 pipeline stages.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bubble fraction with m = 8 micro-batches?",
+     "answer": 0.4666666666666667,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With m = 64?",
+     "answer": 0.09859154929577464,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "(p − 1)/(m + p − 1)."
+   ],
+   "solution": "<p>47% vs 10%: more micro-batches shrink the bubble.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Where to put TP",
+   "statement": "<p>Tensor parallelism all-reduces every layer.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best placed…",
+     "options": [
+      "within a node over NVLink",
+      "across racks",
+      "anywhere"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Frequent, latency-critical communication."
+   ],
+   "solution": "<p>Intra-node bandwidth is ~10× inter-node bandwidth.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "MFU",
+   "statement": "<p>A 7B model trains at 3,000 tokens/s per H100.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Achieved TFLOP/s (6P × tokens/s)?",
+     "answer": 126.0,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "MFU (%)?",
+     "answer": 12.740141557128412,
+     "unit": "",
+     "tolerance": "3%"
+    }
+   ],
+   "hints": [
+    "Model FLOPs only."
+   ],
+   "solution": "<p>126 TFLOP/s ≈ 13% MFU, well below the 40–50% that's achievable. Investigate batch size, kernels and communication overlap.</p>"
+  }
+ ]
+}

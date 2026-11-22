@@ -1,0 +1,63 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Design an LLM serving system for 10,000 requests per minute with a 500 ms time-to-first-token SLO", "how would you schedule requests on GPUs?", "how do you autoscale?". It's system design (Part 11) where the bottleneck is GPU memory and the scheduler is the product.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: the scheduler is a bin-packer for KV memory</h2>
+<p><strong>Static batching</strong> waits for a batch, runs it to completion, and wastes slots as short sequences finish early. <strong>Continuous (in-flight) batching</strong> admits new requests into the running batch at every decode step and evicts finished ones, keeping the GPU full. The constraint at each step is that the total KV memory of the running sequences must fit.</p>
+<ul>
+<li><strong>Paged KV cache:</strong> allocate KV in fixed-size blocks (like OS pages, Part 10), so there's no fragmentation from unknown output lengths, and blocks can be shared (prefix caching for common system prompts).</li>
+<li><strong>SLOs:</strong> TTFT (prefill latency plus queueing) and TPOT (decode step time). Large batches raise throughput but stretch TPOT; long prefills stall everyone's decode.</li>
+<li><strong>Chunked prefill</strong> splits long prompts into chunks interleaved with decode steps, bounding the decode stall. <strong>Disaggregated serving</strong> runs prefill and decode on different GPU pools, since they have different bottlenecks, and ships the KV cache between them.</li>
+<li><strong>Routing:</strong> send requests sharing a prefix to the same replica (cache hits), balance by queue depth and free KV memory, and keep separate pools per model and adapter.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: serving architecture</h2>
+<pre><code>clients ─▶ API gateway (auth, rate limit, request size limits)
+        ─▶ router (model, prefix affinity, load: queue depth + free KV blocks)
+        ─▶ replica: scheduler loop every step:
+              1. retire finished sequences, free their KV blocks
+              2. admit waiting requests while KV blocks remain (priority / fairness)
+              3. run one fused step: chunked prefill for new + one decode token for running
+        ─▶ stream tokens back (SSE / gRPC streaming)
+autoscaler: target = f(queue depth, TTFT p95, KV utilisation); scale replicas, not batch size</code></pre>
+<p>Invariant: Σ KV blocks of running sequences ≤ pool size, with headroom reserved so running sequences can grow. If exhausted, pre-empt (swap the KV to CPU memory or recompute it later) rather than OOM.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: meeting a TTFT SLO under load</h2>
+<ol>
+<li><strong>Load:</strong> 10,000 requests/min ≈ 170/s; prompts average 1,000 tokens, outputs 300; model 70B in BF16 over 8×H100 with tensor parallelism.</li>
+<li><strong>Prefill demand:</strong> 170 × 1,000 × 2 × 70 × 10⁹ ≈ 2.4 × 10¹⁶ FLOP/s. One 8-GPU replica at ~40% MFU gives 8 × 0.4 × 989 × 10¹² ≈ 3.2 × 10¹⁵ FLOP/s, so about 7.5 replicas just for prefill.</li>
+<li><strong>Decode demand:</strong> 170 × 300 = 51,000 tokens/s. Per replica, the weights are 140 GB, read at 8 × 3.35 TB/s ≈ 27 TB/s, so a step takes ~5 ms plus KV reads, ~10 ms in practice at a large batch. With a batch of 128 that's ~12,800 tokens/s per replica, so about 4 replicas.</li>
+<li><strong>Interference:</strong> on shared replicas, long prefills stall decode steps and blow the TPOT. Use chunked prefill, or disaggregate, e.g. 8 prefill replicas and 4–5 decode replicas sized separately.</li>
+<li><strong>Queueing:</strong> keep utilisation ≤ ~70% (queueing delay grows sharply near saturation), so ~12 prefill-side and ~6 decode-side replicas with autoscaling on TTFT p95.</li>
+<li><strong>Cheaper levers first:</strong> prefix caching for shared system prompts (prefill work saved), FP8 (≈2× on both phases), a smaller model for easy requests (routing by difficulty).</li>
+</ol>
+<p>The habit: <strong>size prefill by FLOPs and decode by bytes, separately, then add queueing headroom</strong>.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Unknown output lengths</strong> make KV demand unpredictable: reserve headroom, or pre-empt.</li>
+<li><strong>Head-of-line blocking:</strong> one 100k-token prompt can stall a replica, so cap prompt sizes per tier or route long prompts to a dedicated pool.</li>
+<li><strong>Fairness:</strong> per-tenant token budgets; priority classes for interactive vs batch traffic.</li>
+<li><strong>Cold starts:</strong> loading 140 GB of weights takes minutes, so keep warm pools and load from local NVMe or peer GPUs.</li>
+<li><strong>Metrics:</strong> TTFT and TPOT percentiles, tokens/s per GPU, KV utilisation, pre-emption rate, prefix-cache hit rate.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Yu et al., "Orca: A Distributed Serving System for Transformer-Based Generative Models" (OSDI 2022): continuous batching.</li>
+<li>* Zhong et al., "DistServe" (OSDI 2024) and Patel et al., "Splitwise" (ISCA 2024): disaggregated prefill/decode.</li>
+<li>Agrawal et al., "Sarathi-Serve" (OSDI 2024): chunked prefills.</li>
+<li>Read the vLLM scheduler source (core/scheduler.py) and map it onto the loop above.</li>
+</ul>
+</section>

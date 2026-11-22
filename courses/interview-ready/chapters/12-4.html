@@ -1,0 +1,59 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Design a scheduler for a 10,000-GPU cluster shared by research and production", "why is our cluster at 45% utilisation?", "how do you place a 512-GPU job?". GPU clusters cost tens of millions a year, so utilisation and failure handling are business problems, and these questions come up for infra and performance roles.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: gang scheduling under topology and failure constraints</h2>
+<ul>
+<li><strong>Gang scheduling:</strong> a distributed training job needs <em>all</em> its GPUs at once, and partial allocation deadlocks. The scheduler reserves capacity until the whole gang fits, which fragments the cluster.</li>
+<li><strong>Topology awareness:</strong> communication-heavy jobs need GPUs within one NVLink domain (node), then the same leaf switch / rail. A bad placement can halve throughput.</li>
+<li><strong>Fragmentation:</strong> many small jobs scattered over nodes leave no whole nodes for big jobs. Pack small jobs together; consider defragmenting by pre-emption.</li>
+<li><strong>Priorities and quotas:</strong> production inference and scheduled training get guarantees; research gets fair-share quotas and borrows idle capacity, pre-emptible with checkpoint-and-requeue.</li>
+<li><strong>Failures are routine:</strong> GPU/HBM errors, NVLink and network flaps, host failures. Health-check nodes (burn-in tests, DCGM), cordon bad hardware, and restart jobs from checkpoints automatically.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: what to measure</h2>
+<pre><code>allocation rate   = GPUs allocated / GPUs healthy          (scheduler quality)
+utilisation       = SM-active time / allocated time          (job efficiency, from DCGM)
+goodput           = useful training progress / wall time     (lost to failures, restarts, stragglers)
+MFU               = achieved FLOPs / peak                    (kernel and parallelism efficiency)
+effective cluster efficiency ≈ allocation × goodput × MFU</code></pre>
+<p>A cluster can be "100% allocated" and still deliver 25% of its FLOPs: 0.9 allocation × 0.7 goodput × 0.4 MFU ≈ 25%. Each factor has different owners and fixes.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "our big jobs wait for days, yet utilisation looks fine"</h2>
+<ol>
+<li><strong>Measure the queue:</strong> jobs needing ≥ 256 GPUs wait about 3 days; small jobs start in minutes. Allocation is 92%.</li>
+<li><strong>Diagnose fragmentation:</strong> free GPUs are scattered (1–3 per node across many nodes), so no 32 whole nodes are free at once. The large job can't start, and small jobs keep backfilling the holes.</li>
+<li><strong>Policy fixes:</strong> (a) bin-pack small jobs onto as few nodes as possible; (b) <em>reservation with backfill</em>: reserve nodes for the big job as they drain, and let only small jobs that finish before the reservation time backfill; (c) a separate partition for whole-node jobs.</li>
+<li><strong>Pre-emption:</strong> checkpointing research jobs can be pre-empted to assemble a gang. That needs reliable checkpoint and requeue machinery and a fairness policy.</li>
+<li><strong>Verify:</strong> track the wait time by job size, fragmentation (the distribution of free GPUs per node), and big-job throughput before and after.</li>
+</ol>
+<p>The habit: <strong>a single utilisation number hides the queueing story</strong>. Break metrics down by job size and resource shape.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Checkpoint cost:</strong> saving 1 TB of state every 30 minutes needs fast parallel storage. Use async checkpoints (snapshot to host memory, write in the background).</li>
+<li><strong>Optimal checkpoint interval</strong> (Young/Daly): about √(2 × checkpoint_time × MTBF).</li>
+<li><strong>Inference vs training on one cluster:</strong> inference needs latency guarantees and diurnal scaling; let training soak up the night-time slack.</li>
+<li><strong>Heterogeneous GPUs</strong> (A100s and H100s): schedule by job sensitivity to memory and bandwidth.</li>
+<li><strong>Power and cooling</strong> limits can cap a cluster below its nominal size. Power-aware scheduling exists at the largest sites.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Jeon et al., "Analysis of Large-Scale Multi-Tenant GPU Clusters for DNN Training Workloads" (Microsoft Philly, ATC 2019).</li>
+<li>* Hu et al., "Characterization of Large Language Model Development in the Datacenter" (NSDI 2024).</li>
+<li>Meta's "Llama 3 Herd of Models" paper, section on infrastructure (failure statistics over a 54-day run).</li>
+<li>Slurm documentation on backfill scheduling; Kubernetes Kueue / Volcano gang scheduling.</li>
+</ul>
+</section>

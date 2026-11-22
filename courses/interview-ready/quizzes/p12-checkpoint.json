@@ -1,0 +1,101 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Decode at batch 1 is limited by…",
+   "options": [
+    "HBM bandwidth",
+    "FLOPs",
+    "CPU"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "KV cache limits…",
+   "options": [
+    "the batch size",
+    "the vocabulary",
+    "prefill"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Continuous batching improves…",
+   "options": [
+    "utilisation with variable lengths",
+    "model accuracy",
+    "FLOPs"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Size prefill by…, decode by…",
+   "options": [
+    "FLOPs; bytes",
+    "bytes; FLOPs",
+    "both by FLOPs"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Adam mixed-precision state:",
+   "options": [
+    "16 bytes/param",
+    "4 bytes/param",
+    "32 bytes/param"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Training FLOPs:",
+   "options": [
+    "6PT",
+    "2PT",
+    "PT²"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Ring all-reduce bytes per GPU:",
+   "options": [
+    "2(n − 1)/n × S",
+    "S",
+    "n × S"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Big jobs waiting despite high allocation:",
+   "options": [
+    "fragmentation",
+    "too few jobs",
+    "MFU"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

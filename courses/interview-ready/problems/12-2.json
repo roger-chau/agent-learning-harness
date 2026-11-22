@@ -1,0 +1,231 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Batching",
+   "statement": "<p>Static vs continuous batching.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Continuous batching admits new requests…",
+     "options": [
+      "at every decode step as slots free",
+      "only between batches",
+      "never"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Main benefit?",
+     "options": [
+      "higher GPU utilisation with variable output lengths",
+      "lower FLOPs",
+      "smaller weights"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Finished sequences free slots."
+   ],
+   "solution": "<p>No idle slots waiting for the longest sequence.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "SLO names",
+   "statement": "<p>Match.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Time to first token is dominated by…",
+     "options": [
+      "queueing + prefill",
+      "decode steps",
+      "network only"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Time per output token is dominated by…",
+     "options": [
+      "decode step time",
+      "prefill",
+      "tokenisation"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Two phases."
+   ],
+   "solution": "<p>TTFT ↔ prefill, TPOT ↔ decode.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Prefill sizing",
+   "statement": "<p>170 requests/s × 1,000 prompt tokens, 70B model.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Prefill FLOP/s needed (×10¹⁶)?",
+     "answer": 2.38,
+     "unit": "",
+     "tolerance": "3%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "8×H100 replicas at 40% MFU (≈)?",
+     "answer": 7.520222446916077,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "2P × tokens/s."
+   ],
+   "solution": "<p>About 2.4 × 10¹⁶ FLOP/s, so about 7.5 replicas before queueing headroom.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Decode sizing",
+   "statement": "<p>51,000 output tokens/s; each replica sustains ~12,800 tokens/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Replicas (≈)?",
+     "answer": 3.984375,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With 70% target utilisation?",
+     "answer": 5.6919642857142865,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "Divide, then add headroom."
+   ],
+   "solution": "<p>4 → about 6.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Paged KV",
+   "statement": "<p>Why allocate the KV cache in fixed blocks?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "no fragmentation from unknown output lengths",
+      "blocks can be shared across requests with a common prefix",
+      "it reduces FLOPs",
+      "sequences can grow without contiguous reallocation"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "OS paging analogy."
+   ],
+   "solution": "<p>Same benefits as virtual memory pages.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Interference",
+   "statement": "<p>A replica running decode for 64 users receives a 30,000-token prompt.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Without chunking, what happens to the 64 users?",
+     "options": [
+      "their next tokens stall for the whole prefill",
+      "nothing",
+      "they get faster"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "chunked prefill, or disaggregated prefill pools",
+      "bigger batch",
+      "disable KV cache"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "One fused step at a time."
+   ],
+   "solution": "<p>Chunking bounds each step's prefill work.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Prefix caching",
+   "statement": "<p>Every request starts with the same 2,000-token system prompt; user parts average 200 tokens.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Prefill work saved by prefix caching (%)?",
+     "answer": 90.9090909090909,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Compute only the uncached suffix."
+   ],
+   "solution": "<p>About 91% of prefill FLOPs. Route same-prefix requests to the same replica.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Queueing",
+   "statement": "<p>An M/M/1-style server: the mean wait grows like ρ/(1 − ρ).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Factor at ρ = 0.9 relative to ρ = 0.5?",
+     "answer": 9.0,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "9 vs 1."
+   ],
+   "solution": "<p>9× longer queues, which is why SLO-bound services run at ~60–70% utilisation.</p>"
+  }
+ ]
+}

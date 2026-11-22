@@ -1,0 +1,209 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Gang scheduling",
+   "statement": "<p>A 256-GPU training job.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why can't it start with 200 GPUs and grow?",
+     "options": [
+      "synchronous training needs all ranks at once",
+      "licences",
+      "it can"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "All-or-nothing."
+   ],
+   "solution": "<p>Collective communication needs every rank.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Efficiency",
+   "statement": "<p>Allocation 0.9, goodput 0.7, MFU 0.4.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Effective efficiency (%)?",
+     "answer": 25.2,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Multiply."
+   ],
+   "solution": "<p>About 25%.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Fragmentation",
+   "statement": "<p>1,000 8-GPU nodes; 900 GPUs are free, spread as 1 free GPU on each of 900 nodes.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Whole free nodes?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Can a 64-GPU (8-node) job start?",
+     "options": [
+      "No",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Shape matters."
+   ],
+   "solution": "<p>Plenty of free GPUs, no usable gang. Bin-pack small jobs.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Checkpoint interval",
+   "statement": "<p>Checkpoint takes 5 minutes; MTBF of the job is 10 hours.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Young/Daly interval √(2 × C × MTBF) in minutes?",
+     "answer": 77.45966692414834,
+     "unit": "",
+     "tolerance": "3%"
+    }
+   ],
+   "hints": [
+    "√(2 · 5 · 600)."
+   ],
+   "solution": "<p>About 77 minutes.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Failures at scale",
+   "statement": "<p>Each GPU has a 0.1% chance of failing per day; a job uses 2,048 GPUs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Probability of at least one failure per day (%)?",
+     "answer": 87.11394778462946,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "1 − 0.999²⁰⁴⁸."
+   ],
+   "solution": "<p>About 87%: plan for daily interruptions.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Backfill",
+   "statement": "<p>A big job's reservation starts in 6 hours; a small job needs 8 GPUs for 4 hours.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Can it backfill into the reserved nodes?",
+     "options": [
+      "Yes: it finishes before the reservation",
+      "No"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "A job estimated at 10 hours?",
+     "options": [
+      "No: it would delay the reservation",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Finish before the reservation."
+   ],
+   "solution": "<p>That's why runtime estimates matter.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Topology",
+   "statement": "<p>A TP-8 job placed across 8 different nodes instead of one node.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Likely effect?",
+     "options": [
+      "much slower: per-layer all-reduces go over the network instead of NVLink",
+      "same",
+      "faster"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Bandwidth hierarchy."
+   ],
+   "solution": "<p>Topology-aware placement keeps TP groups inside nodes.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Async checkpoint",
+   "statement": "<p>1 TB of state; shared storage writes at 10 GB/s; copying the state to host RAM takes 20 s; checkpoints every 60 minutes.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Training pause per checkpoint with synchronous writes (s)?",
+     "answer": 100.0,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Pause with async (snapshot to host, write in background) (s)?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Training time saved per day (minutes)?",
+     "answer": 32.0,
+     "unit": "",
+     "tolerance": "3%"
+    }
+   ],
+   "hints": [
+    "Sync: bytes / storage bandwidth. Async: only the snapshot blocks."
+   ],
+   "solution": "<p>100 s vs 20 s per checkpoint; 24 checkpoints a day saves 32 minutes of cluster time, and enables more frequent checkpoints (less work lost per failure).</p>"
+  }
+ ]
+}
