@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Binary search on the answer needs…",
+   "options": [
+    "a monotone feasibility check",
+    "sorted input",
+    "a heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "\"Minimise the maximum\" suggests…",
+   "options": [
+    "binary search on the answer",
+    "DFS",
+    "hashing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Typical cost?",
+   "options": [
+    "O(check × log range)",
+    "O(n²)",
+    "O(1)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "For real-valued answers…",
+   "options": [
+    "iterate a fixed number of times",
+    "use integers only",
+    "impossible"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Shipping packages and split array largest sum are…",
+   "options": [
+    "the same algorithm",
+    "unrelated",
+    "DP only"
+   ],
+   "answer": 0,
+   "explanation": "Recognise equivalences."
+  }
+ ]
+}

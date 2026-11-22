@@ -1,0 +1,47 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Sorted data (or data sorted in pieces: rotated arrays, matrices sorted row by row), and a question about <strong>where</strong> something is or would be. More generally: any <strong>monotone predicate</strong> over indices, false…false true…true, where you want the boundary. That's O(log n) instead of O(n).</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: one template, no off-by-one errors</h2>
+<p>Binary search is famous for being easy to get subtly wrong. The cure is to never write it from scratch: always find <strong>the first index where a monotone predicate is true</strong>, with a half-open range and an explicit invariant:</p>
+<pre><code>lo, hi = 0, n                 # invariant: answer ∈ [lo, hi]; everything &lt; lo is false, everything ≥ hi is true
+while lo &lt; hi:
+    mid = (lo + hi) // 2      # lo ≤ mid &lt; hi
+    if pred(mid): hi = mid    # mid might be the answer
+    else: lo = mid + 1        # mid is false, so the answer is after it
+return lo                     # n if the predicate is never true</code></pre>
+<p>Every binary-search question becomes: <strong>what's the predicate?</strong> "First index with a[i] ≥ x" (lower bound), "first with a[i] &gt; x" (upper bound; count of x = upper − lower), "first index ≤ the last element" (minimum of a rotated array), "first day the condition holds".</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: disguised sorted arrays</h2>
+<ul>
+<li><strong>Rotated arrays:</strong> one half of [lo, hi] is always sorted; decide whether the target lies in it.</li>
+<li><strong>Matrices</strong> sorted row-major: a virtual array, index k at (k // cols, k % cols). Matrices sorted by rows and columns separately (but not row-major): start at the top-right corner and step left or down: O(r + c), a "staircase" search.</li>
+<li><strong>Peak finding:</strong> the predicate a[i] &gt; a[i + 1] isn't monotone globally, but it tells you which side has a peak, which is enough.</li>
+<li><strong>Infinite or unknown size:</strong> double the bound until the predicate is true, then binary-search inside (exponential search).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: minimum of a rotated array</h2>
+<ol>
+<li><strong>Example:</strong> [4, 5, 6, 7, 0, 1, 2]. The minimum is where the order "breaks".</li>
+<li><strong>Find a predicate:</strong> compare each element with the last one, 2: [F, F, F, F, T, T, T] for "a[i] ≤ a[n−1]". It's monotone, and its first true is the minimum. (Comparing with the first element fails when the array isn't rotated at all: check that case.)</li>
+<li><strong>Apply the template</strong>, with pred(mid) = a[mid] ≤ a[n − 1] (equivalently a[mid] ≤ a[hi] inside the loop).</li>
+<li><strong>Tests:</strong> not rotated, rotated by one, two elements, one element.</li>
+</ol>
+<p>The skill being trained: <strong>turn the question into a monotone predicate</strong>; the template does the rest.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Overflow</strong> in C++/Java: mid = lo + (hi − lo) / 2.</li>
+<li><strong>Infinite loops</strong> come from <code>lo = mid</code> with <code>mid = (lo + hi) // 2</code>; the template never assigns lo = mid.</li>
+<li><strong>Duplicates</strong> break the rotated-array trick (with [1, 1, 1, 0, 1] you can't tell which half is sorted): the worst case becomes O(n); say so.</li>
+<li>Python's <code>bisect_left</code> and <code>bisect_right</code> and C++'s <code>lower_bound</code> / <code>upper_bound</code> are this template; use them when allowed, but be able to write it.</li>
+</ul>
+</section>

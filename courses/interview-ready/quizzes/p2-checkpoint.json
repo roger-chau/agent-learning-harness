@@ -1,0 +1,101 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Matching nested brackets:",
+   "options": [
+    "stack",
+    "queue",
+    "heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Next greater element for every index:",
+   "options": [
+    "monotonic stack",
+    "binary search",
+    "prefix sums"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "First index with a[i] ≥ x:",
+   "options": [
+    "lower-bound binary search",
+    "two pointers",
+    "stack"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Least capacity to finish within D days:",
+   "options": [
+    "binary search on the answer",
+    "monotonic stack",
+    "union-find"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Sum over all subarrays of their minimum:",
+   "options": [
+    "contribution + monotonic stack",
+    "binary search",
+    "heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Minimum of a rotated array:",
+   "options": [
+    "binary search with predicate a[i] ≤ a[last]",
+    "linear scan only",
+    "sorting"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Largest rectangle in a histogram:",
+   "options": [
+    "monotonic stack",
+    "DP over pairs",
+    "binary search"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Median of two sorted arrays in O(log):",
+   "options": [
+    "binary search on a partition",
+    "merge",
+    "heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

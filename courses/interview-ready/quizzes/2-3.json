@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "The template finds…",
+   "options": [
+    "the first index where a monotone predicate is true",
+    "any equal element",
+    "the middle"
+   ],
+   "answer": 0,
+   "explanation": "lo, hi = 0, n."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "When the predicate is true at mid…",
+   "options": [
+    "hi = mid",
+    "hi = mid − 1",
+    "lo = mid"
+   ],
+   "answer": 0,
+   "explanation": "mid may be the answer."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Count of x in a sorted array?",
+   "options": [
+    "upper_bound(x) − lower_bound(x)",
+    "lower_bound(x)",
+    "n"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Rotated sorted array: at each step…",
+   "options": [
+    "one half is sorted",
+    "both halves are sorted",
+    "neither"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Duplicates in a rotated array make the worst case…",
+   "options": [
+    "O(n)",
+    "O(log n)",
+    "O(1)"
+   ],
+   "answer": 0,
+   "explanation": "Can't tell which half is sorted."
+  }
+ ]
+}

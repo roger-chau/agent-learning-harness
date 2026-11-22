@@ -1,0 +1,43 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Find the <strong>minimum</strong> X such that something is possible" or "the <strong>maximum</strong> Y such that…", especially <strong>minimise the maximum</strong> or maximise the minimum, with a large numeric answer range (speeds, capacities, distances, times). If checking a single candidate answer is easy (often a greedy pass) and feasibility is monotone in the answer, binary-search the answer.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p>Swap the optimisation for a decision problem. "What's the least capacity that ships everything in D days?" is hard; "can capacity C ship everything in D days?" is a greedy O(n) check. If capacity C works, any C′ &gt; C works too: the predicate "C is feasible" is monotone in C. So the answer is the first true of a monotone predicate over the answer range, and Chapter 2.3's template finds it in O(log(range)) checks.</p>
+<p>Cost: O(check × log(range)). For a range up to 10⁹ that's 30 checks.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>lo, hi = smallest_possible, largest_possible   # hi must be feasible
+while lo &lt; hi:
+    mid = (lo + hi) // 2
+    if feasible(mid): hi = mid
+    else: lo = mid + 1
+return lo</code></pre>
+<p>Three decisions, in order: (1) the answer range: a bound you can prove is infeasible-or-minimal (often max(element)) and one certainly feasible (often the sum); (2) the check, usually greedy, with a short argument why greedy is right for a fixed candidate; (3) confirm monotonicity in one sentence.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: split array largest sum</h2>
+<ol>
+<li><strong>Problem:</strong> split into k contiguous parts minimising the largest part's sum.</li>
+<li><strong>First idea:</strong> DP over (position, parts): O(k n²). Correct, and worth saying.</li>
+<li><strong>Signal:</strong> "minimise the maximum". Fix a cap S: can we split into at most k parts each ≤ S? Greedily extend each part until the next element would exceed S. Greedy is right because ending a part earlier never helps later parts.</li>
+<li><strong>Monotone:</strong> a larger S needs no more parts.</li>
+<li><strong>Range:</strong> S ∈ [max(nums), sum(nums)]: below max, some element can't fit; at sum, one part suffices.</li>
+<li><strong>Cost:</strong> O(n log sum). And notice it's the shipping problem with different words: recognising equivalent problems is the payoff of pattern training.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Real-valued answers</strong> (minimise a maximum distance): binary-search on floats for a fixed number of iterations (e.g. 100) instead of while lo &lt; hi.</li>
+<li><strong>Maximise the minimum</strong> (aggressive cows, magnetic balls): search for the last feasible value, or negate the predicate.</li>
+<li><strong>Median of two sorted arrays</strong>: binary search on a <em>partition</em> rather than a value, the same "guess and check which direction" logic.</li>
+<li><strong>k-th smallest</strong> in a sorted matrix or of pairwise distances: binary-search the value and count elements ≤ it.</li>
+</ul>
+</section>

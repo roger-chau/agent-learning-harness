@@ -1,0 +1,43 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>A stack is the right tool when the <strong>most recent unfinished thing must be finished first</strong>: matching brackets, nested structures (expressions, encodings, directory paths, HTML tags), undo histories, and depth-first search done by hand. If you find yourself writing "go back to the last place where…", it's a stack.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p>Push when something opens; pop when it closes, and check the pop matches. At any moment the stack holds <strong>exactly the open, unresolved items, innermost on top</strong>. That single invariant solves bracket matching, expression evaluation and decoding. For nesting with state (decode-string's partial results and repeat counts), push a <em>frame</em>: everything you need to resume the outer level when the inner one ends. That's precisely what a call stack does for recursion, which is why every stack algorithm can be written recursively and vice versa.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>stack = []                      # invariant: unresolved openers / frames, innermost on top
+for token in input:
+    if opens(token): stack.append(frame_for(token))
+    elif closes(token):
+        if not stack or not matches(stack[-1], token): return invalid
+        frame = stack.pop(); combine frame with the finished inner result
+    else: extend the current (innermost) result
+return result if not stack else invalid</code></pre>
+<p>Two checks people forget: popping from an empty stack (a closer with no opener) and a non-empty stack at the end (an opener never closed).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: decode string</h2>
+<ol>
+<li><strong>Example:</strong> <code>3[a2[c]]</code>. By hand: I find the innermost bracket, expand it (<code>cc</code>), then expand the outer (<code>acc</code> × 3). Innermost first: a stack.</li>
+<li><strong>Brute force:</strong> repeatedly find an innermost <code>k[…]</code> with a regex and replace it: correct, but O(n²) or worse in rescanning.</li>
+<li><strong>Bottleneck:</strong> rescanning the string after each expansion.</li>
+<li><strong>Transformation:</strong> scan once; on <code>[</code> push the frame (text before it, repeat count) and start a fresh current string; on <code>]</code> pop and set current = saved + current × k.</li>
+<li><strong>Edge cases:</strong> multi-digit counts (<code>10[x]</code>: accumulate digits), letters after a bracket (<code>2[a]bc</code>), nesting several deep.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Operand order</strong> in RPN: pop b first, then a, and compute a − b, a / b.</li>
+<li><strong>Truncating division:</strong> Python's <code>//</code> floors (−7 // 2 = −4); most problems want truncation toward zero: <code>int(a / b)</code>.</li>
+<li><strong>Infix expressions</strong> (calculator problems): two stacks (operands and operators) with precedence, or recursive descent; the shunting-yard algorithm converts to RPN.</li>
+<li><strong>Stacks with extra queries</strong> (min-stack): store per-element auxiliary data that summarises everything below it, so pops never need recomputation.</li>
+</ul>
+</section>

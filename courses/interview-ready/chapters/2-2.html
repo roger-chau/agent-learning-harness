@@ -1,0 +1,43 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"For each element, find the <strong>next (or previous) greater (or smaller)</strong> element" and anything reducible to it: days until warmer, stock spans, the largest rectangle under a histogram, trapped water, sums over subarray minima. The brute force scans forward from each element, O(n²). A monotonic stack does all of them in one O(n) pass.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p>Keep a stack of indices still <strong>waiting</strong> for their answer. If you're looking for the next greater element, the waiting values are non-increasing from bottom to top: a larger value would already have answered everything smaller beneath it. When a new element arrives, it is the answer for every waiting element smaller than it, which sit together at the top: pop them, record the answer, then push the new element.</p>
+<p>The O(n) proof is amortised: every index is pushed once and popped at most once, however long any single <code>while</code> loop runs.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>st = []                       # invariant: indices awaiting an answer, values monotone bottom→top
+for i, x in enumerate(a):
+    while st and a[st[-1]] &lt; x:   # x answers everything smaller on top
+        j = st.pop(); answer[j] = i   # or x, or i − j, …
+    st.append(i)
+# indices still on the stack have no answer</code></pre>
+<p>Four variants differ only in the comparison and direction: next greater (pop on <code>&lt;</code>), next smaller (pop on <code>&gt;</code>), previous ones (read the answer from the stack top <em>after</em> popping, before pushing), and ties (<code>&lt;</code> versus <code>&lt;=</code> decides whether equal elements answer each other).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: sum of subarray minimums</h2>
+<ol>
+<li><strong>Brute force:</strong> every subarray, its minimum: O(n²) with a running min. Too slow for n = 3 × 10⁴ in Python, and the classic follow-up asks for O(n).</li>
+<li><strong>Change the question</strong> (Chapter 0.3's meta-move): instead of "what is each subarray's minimum?", ask "<em>for how many subarrays is a[i] the minimum?</em>" and sum a[i] × count.</li>
+<li><strong>Count:</strong> a[i] is the minimum of subarrays that start after the previous smaller element and end before the next smaller one: left[i] × right[i] choices.</li>
+<li><strong>Ties:</strong> with equal values, a subarray would be counted for both. Use "previous strictly smaller" on one side and "next smaller or equal" on the other, so each subarray's minimum is attributed to exactly one index.</li>
+<li><strong>Both distances</strong> come from monotonic-stack passes: O(n).</li>
+</ol>
+<p>The contribution technique, plus the next/previous-smaller primitive, solves a family of "sum over all subarrays" problems.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Store indices, not values</strong>: you usually need distances, and values are recoverable.</li>
+<li><strong>Sentinels</strong> simplify endings: append a 0 to a histogram so every bar gets popped; walk a circular array twice.</li>
+<li><strong>Largest rectangle</strong> is the template with a twist: a popped bar's rectangle spans from its recorded start to the current index, and the new bar inherits the leftmost popped start.</li>
+<li><strong>Monotonic deque</strong> (Chapter 1.4) is the same idea when elements also expire from the front.</li>
+</ul>
+</section>

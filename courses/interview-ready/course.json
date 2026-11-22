@@ -256,15 +256,150 @@
   {
    "id": "p2",
    "n": 2,
-   "title": "Stacks, queues and binary search",
-   "summary": "Monotonic stacks, parsing with stacks, binary search on indices and on the answer.",
+   "title": "Stacks and binary search",
+   "summary": "Stacks for nesting, monotonic stacks for next-greater questions, binary search on indices and on the answer.",
    "items": [
     {
      "type": "chapter",
      "id": "2-1",
-     "title": "Stacks, queues and binary search",
-     "summary": "Monotonic stacks, parsing with stacks, binary search on indices and on the answer.",
-     "status": "planned"
+     "title": "Stacks",
+     "summary": "The most recent unfinished thing finishes first: brackets, expressions, nested decoding, stack design.",
+     "coding": [
+      "valid-parentheses",
+      "evaluate-rpn",
+      "min-stack",
+      "decode-string"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "innermost first"
+      ],
+      [
+       "The core idea",
+       "frames"
+      ],
+      [
+       "The invariant and template",
+       "push open, pop close"
+      ],
+      [
+       "A thinking trace",
+       "decode string"
+      ],
+      [
+       "Traps and variations",
+       "order, truncation, calculators"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "2-2",
+     "title": "Monotonic stacks",
+     "summary": "Next and previous greater or smaller in O(n), and the contribution technique.",
+     "coding": [
+      "daily-temperatures",
+      "next-greater-circular",
+      "largest-rectangle-histogram",
+      "sum-subarray-minimums"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "next greater, previous smaller"
+      ],
+      [
+       "The core idea",
+       "waiting elements"
+      ],
+      [
+       "The invariant and template",
+       "the four variants"
+      ],
+      [
+       "A thinking trace",
+       "sum of subarray minimums"
+      ],
+      [
+       "Traps and variations",
+       "indices, sentinels, ties"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "2-3",
+     "title": "Binary search on indices",
+     "summary": "One template for every boundary: the first true of a monotone predicate.",
+     "coding": [
+      "search-insert",
+      "search-rotated",
+      "find-min-rotated",
+      "search-2d-matrix"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "monotone predicates"
+      ],
+      [
+       "The core idea",
+       "first true, half-open"
+      ],
+      [
+       "The invariant and template",
+       "disguised sorted arrays"
+      ],
+      [
+       "A thinking trace",
+       "minimum of a rotated array"
+      ],
+      [
+       "Traps and variations",
+       "overflow, loops, duplicates"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "2-4",
+     "title": "Binary search on the answer",
+     "summary": "Turn \"minimise the maximum\" into a monotone yes/no check.",
+     "coding": [
+      "koko-bananas",
+      "ship-capacity",
+      "split-array-largest-sum",
+      "median-two-sorted"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "min-max, max-min"
+      ],
+      [
+       "The core idea",
+       "decide instead of optimise"
+      ],
+      [
+       "The invariant and template",
+       "range, check, monotone"
+      ],
+      [
+       "A thinking trace",
+       "split array largest sum"
+      ],
+      [
+       "Traps and variations",
+       "floats, max-min, partitions"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p2-checkpoint",
+     "title": "Part 2 checkpoint",
+     "summary": "Stacks and binary search: signals and proofs."
     }
    ]
   },

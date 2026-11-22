@@ -1,0 +1,222 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Stack depth",
+   "statement": "<p>Checking <code>{[()()]}</code> with a stack.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum stack size?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Stack size after reading the first 5 characters <code>{[()(</code>?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Push openers, pop on closers."
+   ],
+   "solution": "<p>{ [ ( → 3; ) pops → 2; ( → 3.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Evaluate RPN",
+   "statement": "<p>Tokens [\"5\", \"1\", \"2\", \"+\", \"4\", \"*\", \"+\", \"3\", \"-\"].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Value?",
+     "answer": 14,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "5 + (1 + 2)·4 − 3."
+   ],
+   "solution": "<p>5 + 12 − 3 = 14.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Truncation",
+   "statement": "<p>RPN [\"-7\", \"2\", \"/\"] with truncation toward zero.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Correct result?",
+     "answer": -3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "What Python's // gives?",
+     "answer": -4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Floor versus truncate."
+   ],
+   "solution": "<p>−3.5 truncates to −3; floors to −4.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Invalid inputs",
+   "statement": "<p>Which strings does a correct checker reject?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "\"(]\"",
+      "\"(()\"",
+      "\"())\"",
+      "\"\""
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Mismatch, leftover opener, closer with nothing open."
+   ],
+   "solution": "<p>The empty string is valid.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Min-stack trace",
+   "statement": "<p>push 5, push 3, push 7, push 3, pop, get_min, pop, get_min, pop, get_min.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "First get_min?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Second?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Third?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Track the mins stack: 5, 3, 3, 3."
+   ],
+   "solution": "<p>After the pops the mins stack top is 3, then 3, then 5.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Decode length",
+   "statement": "<p>Length of the decoded <code>2[a3[bc]]</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Length?",
+     "answer": 14,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Inner: 6; with a: 7; times 2."
+   ],
+   "solution": "<p>\"abcbcbc\" twice: 14.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Recursion ↔ stack",
+   "statement": "<p>Iterative DFS with an explicit stack versus recursive DFS.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why convert recursion to an explicit stack in Python?",
+     "options": [
+      "Speed only",
+      "Recursion depth limits (about 1,000) and stack overflow on deep inputs",
+      "Correctness"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Depth."
+   ],
+   "solution": "<p>Deep inputs (long paths, deep nesting) overflow the call stack; an explicit stack lives on the heap.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Simplify a path",
+   "statement": "<p>Unix path <code>/a/./b/../../c/</code> simplified with a stack of directory names.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Result?",
+     "options": [
+      "/c",
+      "/a/c",
+      "/a/b/c"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "What does \"..\" do to the stack?",
+     "options": [
+      "push",
+      "pop if non-empty",
+      "clear"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Split on /; skip '' and '.'."
+   ],
+   "solution": "<p>Push a, b; '..' pops b; '..' pops a; push c → /c.</p>"
+  }
+ ]
+}

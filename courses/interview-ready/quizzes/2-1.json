@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A stack fits when…",
+   "options": [
+    "the most recent unfinished item must finish first",
+    "you need the minimum",
+    "data is sorted"
+   ],
+   "answer": 0,
+   "explanation": "LIFO nesting."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Two checks a bracket matcher needs?",
+   "options": [
+    "Pop from empty, and non-empty at the end",
+    "Sorting and hashing",
+    "None"
+   ],
+   "answer": 0,
+   "explanation": "Unmatched closers and openers."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "RPN operand order: on '−', compute…",
+   "options": [
+    "first popped − second popped",
+    "second popped − first popped",
+    "either"
+   ],
+   "answer": 1,
+   "explanation": "a − b where b was popped first."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Min-stack is O(1) because…",
+   "options": [
+    "each entry stores the min of everything below it",
+    "it sorts",
+    "it uses a heap"
+   ],
+   "answer": 0,
+   "explanation": "Auxiliary per-element summary."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "A frame on a stack holds…",
+   "options": [
+    "everything needed to resume the outer level",
+    "only the character",
+    "the answer"
+   ],
+   "answer": 0,
+   "explanation": "Like a call stack."
+  }
+ ]
+}

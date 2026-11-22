@@ -1,0 +1,238 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Daily temperatures",
+   "statement": "<p>t = [70, 71, 69, 68, 72, 70].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer at index 2?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Answer at index 5?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Next warmer day."
+   ],
+   "solution": "<p>Answers [1, 3, 2, 1, 0, 0].</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Stack contents",
+   "statement": "<p>Same input, next-greater stack of indices (values non-increasing).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Stack size just before processing index 4 (72)?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Pops caused by 72?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "After 71 pops 70; then 69, 68 push."
+   ],
+   "solution": "<p>Before 72 the stack holds indices 1, 2, 3 (71, 69, 68); 72 pops all three.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Amortised",
+   "statement": "<p>n = 10⁵ elements.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum total pushes?",
+     "answer": 100000.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Maximum total pops?",
+     "answer": 100000.0,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each index once."
+   ],
+   "solution": "<p>At most n each: O(n) total even though one while loop can pop many.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Largest rectangle",
+   "statement": "<p>h = [2, 1, 5, 6, 2, 3].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Which bar is the shortest in the best rectangle?",
+     "options": [
+      "5 (spanning 5 and 6)",
+      "1",
+      "2"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Bars 5 and 6, width 2, height 5."
+   ],
+   "solution": "<p>10: height 5 across the bars 5 and 6.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Contribution counting",
+   "statement": "<p>a = [3, 1, 2, 4]: for each element, the number of subarrays in which it's the minimum (ties: previous strictly smaller, next smaller-or-equal).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Count for the 1?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Sum of subarray minimums?",
+     "answer": 17,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "left × right distances."
+   ],
+   "solution": "<p>The 1: left 2, right 3 → 6 subarrays. Total 3·1 + 1·6 + 2·2 + 4·1 = 17.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Ties",
+   "statement": "<p>Why break ties asymmetrically (strict on one side)?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "So subarrays whose minimum appears twice are counted once",
+      "Speed",
+      "No reason"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "[2, 2]."
+   ],
+   "solution": "<p>In [2, 2] the subarray [2, 2] has two equal minima; symmetric strict rules would count it zero times, symmetric non-strict twice.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Previous smaller",
+   "statement": "<p>For each element, the index of the previous strictly smaller element (−1 if none), for [4, 2, 5, 3, 3, 1].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "For index 3 (value 3)?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For index 4 (value 3)?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "For index 5?",
+     "answer": -1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Read the stack top after popping ≥ elements."
+   ],
+   "solution": "<p>Index 3: previous smaller is 2 at index 1; index 4: the earlier 3 isn't strictly smaller, so 1; index 5: none.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Which primitive?",
+   "statement": "<p>Stock span: for each day, the number of consecutive days up to today with price ≤ today's.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Primitive?",
+     "options": [
+      "Previous strictly greater element",
+      "Next greater",
+      "Prefix sums"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Span on the last day of [100, 80, 60, 70, 60, 75, 85]?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Span = i − (index of previous greater)."
+   ],
+   "solution": "<p>Previous greater of 85 is 100 at index 0: span 6 − 0 = 6.</p>"
+  }
+ ]
+}

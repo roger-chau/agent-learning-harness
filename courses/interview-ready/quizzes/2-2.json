@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A monotonic stack finds…",
+   "options": [
+    "next/previous greater or smaller elements",
+    "medians",
+    "shortest paths"
+   ],
+   "answer": 0,
+   "explanation": "In O(n)."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Why is it O(n)?",
+   "options": [
+    "Each index is pushed and popped at most once",
+    "The stack is small",
+    "Binary search"
+   ],
+   "answer": 0,
+   "explanation": "Amortised."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Largest rectangle: the sentinel 0 at the end…",
+   "options": [
+    "pops every remaining bar",
+    "is the answer",
+    "avoids overflow"
+   ],
+   "answer": 0,
+   "explanation": "Flushes the stack."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Sum of subarray minimums uses…",
+   "options": [
+    "contribution counting with previous/next smaller",
+    "DP over all subarrays",
+    "sorting"
+   ],
+   "answer": 0,
+   "explanation": "Change the question."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Circular next greater: walk the array…",
+   "options": [
+    "twice, pushing only in the first pass",
+    "once",
+    "backwards only"
+   ],
+   "answer": 0,
+   "explanation": "Wraparound."
+  }
+ ]
+}
