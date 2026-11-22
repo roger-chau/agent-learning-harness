@@ -1,0 +1,273 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Which tool?",
+   "statement": "<p>Match the problem to the linked-list tool.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Delete the 3rd node from the end in one pass:",
+     "options": [
+      "dummy head + gap of 3 between two pointers",
+      "reverse then delete",
+      "hash map"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Does the list contain a cycle, O(1) space?",
+     "options": [
+      "Floyd's fast/slow pointers",
+      "a hash set of nodes",
+      "sorting"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "O(1) get/put with least-recently-used eviction:",
+     "options": [
+      "hash map + doubly linked list",
+      "singly linked list only",
+      "heap"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Gap, speed ratio, or O(1) removal from the middle."
+   ],
+   "solution": "<p>Gap pointers for k-th from the end, Floyd for cycles in O(1) space, and map + doubly linked list for LRU.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Middle",
+   "statement": "<p>With <code>while fast.next and fast.next.next</code>, slow and fast both start at the head.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "For the list 1→2→3→4→5, slow ends on which value?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For 1→2→3→4→5→6?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Trace it: fast moves two per step."
+   ],
+   "solution": "<p>Odd length: the exact middle, 3. Even length: this condition stops at the <em>first</em> middle, 3. The condition <code>while fast and fast.next</code> would give 4.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Reversal order",
+   "statement": "<p>In the reversal loop, which order of assignments is correct?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "nxt = cur.next; cur.next = prev; prev = cur; cur = nxt",
+      "cur.next = prev; nxt = cur.next; prev = cur; cur = nxt",
+      "prev = cur; cur.next = prev; cur = cur.next"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Save before you overwrite."
+   ],
+   "solution": "<p>Saving <code>cur.next</code> must happen before it is overwritten; otherwise the rest of the list is lost (option 2 sets nxt = prev).</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Floyd arithmetic",
+   "statement": "<p>A list has a tail of a = 3 nodes before a cycle of length c = 5. Slow moves 1 per step and fast 2, both starting at the head.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "After how many steps do they first meet?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "After meeting, reset one pointer to the head and step both by 1. How many steps until they meet at the cycle start?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "They meet when the distance fast has gained (t) is a multiple of c and slow is in the cycle (t ≥ a)."
+   ],
+   "solution": "<p>Fast gains one node per step, so they meet at the first t ≥ a with t ≡ 0 (mod c): t = 5. Then a + b = 5 is a multiple of c, so walking a = 3 more steps from the meeting point reaches the cycle start, and the reset pointer also reaches it after a = 3 steps.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Dummy head",
+   "statement": "<p>Removing the n-th node from the end with no dummy head.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which case then needs special handling?",
+     "options": [
+      "n equals the length (removing the head)",
+      "n = 1",
+      "a list of even length"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Which node has no predecessor?"
+   ],
+   "solution": "<p>The head has no predecessor. A dummy gives it one, so the same <code>slow.next = slow.next.next</code> works.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Merge cost",
+   "statement": "<p>Merging k sorted lists with N nodes in total.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Merging them one after another into an accumulator costs…",
+     "options": [
+      "O(Nk)",
+      "O(N log k)",
+      "O(N)"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Pairwise rounds (divide and conquer) or a heap of k heads cost…",
+     "options": [
+      "O(N log k)",
+      "O(Nk)",
+      "O(k²)"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "How many times is each node touched?"
+   ],
+   "solution": "<p>Sequential merging re-walks the growing accumulator: O(Nk). Pairwise merging has log k rounds, each touching every node once: O(N log k). A heap gives the same bound.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "LRU trace",
+   "statement": "<p>An LRU cache of capacity 2: put(1, 1), put(2, 2), get(1), put(3, 3), get(2), put(4, 4), get(1), get(3), get(4). A miss returns −1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "get(2) returns?",
+     "answer": -1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "get(1) (the second one) returns?",
+     "answer": -1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "get(3) returns?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "After get(1), key 2 is least recently used."
+   ],
+   "solution": "<p>put(3) evicts 2, since 1 was just used, so get(2) = −1. put(4) evicts 1, since 3 is more recent than 1, so get(1) = −1. get(3) = 3 and get(4) = 4.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Palindrome list",
+   "statement": "<p>Check whether a singly linked list is a palindrome in O(n) time and O(1) extra space.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which steps does the standard solution use?",
+     "options": [
+      "Find the middle with fast/slow pointers",
+      "Reverse the second half",
+      "Compare the two halves node by node",
+      "Copy the values into an array"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Compose subroutines, as in reorder list."
+   ],
+   "solution": "<p>Middle, reverse, compare (and optionally reverse back to restore the input). The array copy is the O(n)-space brute force.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Reverse in k-groups",
+   "statement": "<p>Reverse 1→2→3→4→5→6→7→8 in groups of k = 3; a final group shorter than k stays as it is.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Result?",
+     "options": [
+      "3→2→1→6→5→4→7→8",
+      "3→2→1→6→5→4→8→7",
+      "8→7→6→5→4→3→2→1"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Check there are k nodes before reversing a group."
+   ],
+   "solution": "<p>Groups [1, 2, 3] and [4, 5, 6] reverse, and [7, 8] has fewer than 3 nodes so it stays.</p>"
+  }
+ ]
+}

@@ -1,0 +1,245 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "When a trie?",
+   "statement": "<p>Which problems call for a trie?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "Autocomplete: all words starting with a typed prefix",
+      "Is this exact word in a fixed set? (single lookups)",
+      "Find many dictionary words in a letter grid",
+      "Maximum XOR of two numbers in an array"
+     ],
+     "answer": [
+      0,
+      2,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Prefixes, shared exploration, bits."
+   ],
+   "solution": "<p>Exact lookups only need a hash set. Max XOR uses a binary trie.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Node count",
+   "statement": "<p>Insert app, apple, apply, apt, bat, bath into a trie (count the root as a node).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of nodes?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Nodes marked as a word end?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Count the distinct prefixes, plus the root."
+   ],
+   "solution": "<p>The distinct prefixes are a, ap, app, appl, apple, apply, apt, b, ba, bat, bath: 11, plus the root gives 12. There are 6 end markers, one per word (\"app\" is both a word and a prefix).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "search vs starts_with",
+   "statement": "<p>After inserting only \"apple\":</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "search(\"app\")?",
+     "options": [
+      "False",
+      "True"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "starts_with(\"app\")?",
+     "options": [
+      "True",
+      "False"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The end flag."
+   ],
+   "solution": "<p>The walk succeeds for \"app\", but its node isn't marked as a word end.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Cost",
+   "statement": "<p>A trie holds 10⁵ words. Query \"starts_with(p)\" with |p| = 8.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Node visits per query (at most)?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "How does this depend on the number of stored words?",
+     "options": [
+      "Not at all",
+      "Linearly",
+      "Logarithmically"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "One step per character."
+   ],
+   "solution": "<p>O(|p|), independent of the dictionary size. That independence is the point of a trie.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Memory",
+   "statement": "<p>10⁴ words of average length 10, with no shared prefixes in the worst case, stored as array-of-26 nodes with 8-byte pointers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Approximate memory in MB?",
+     "answer": 20.8,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "nodes × 26 × 8 bytes."
+   ],
+   "solution": "<p>About 10⁵ nodes × 208 bytes ≈ 20.8 MB. That's fine here, but it explains why dict or compressed (radix) nodes exist.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Wildcards",
+   "statement": "<p>Add-and-search-word with '.' matching any one letter, words of length ≤ 25, at most 2 dots per query.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "At a '.', the search…",
+     "options": [
+      "branches into every child (DFS)",
+      "fails",
+      "skips the character"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Worst-case branches explored for two dots (lowercase letters)?",
+     "answer": 676,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "26 per dot."
+   ],
+   "solution": "<p>Each dot multiplies the frontier by at most 26, so 676 paths for two dots. That's the reason for the small-dots constraint.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Max XOR",
+   "statement": "<p>A binary trie over the 5-bit numbers [3, 10, 5, 25, 2, 8]. What is the maximum XOR of a pair?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 28,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Per query, at each bit the walk…",
+     "options": [
+      "prefers the child with the opposite bit",
+      "prefers the same bit",
+      "goes left"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "5 XOR 25."
+   ],
+   "solution": "<p>5 ^ 25 = 28. Greedy from the top bit: an opposite bit there beats anything the lower bits can contribute.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Word Search II reasoning",
+   "statement": "<p>Grid 12 × 12, 3 × 10⁴ words of length ≤ 10.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What makes the per-word DFS slow?",
+     "options": [
+      "Shared prefixes are explored again for every word",
+      "The grid is too large to read",
+      "Hashing cost"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "multi",
+     "prompt": "Which refinements help the trie solution?",
+     "options": [
+      "Store the word at its end node",
+      "Remove a word once found",
+      "Prune trie branches that become empty",
+      "Sort the grid"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Invert the loops."
+   ],
+   "solution": "<p>One DFS per cell walks the trie; storing words avoids string building; removing found words and pruning dead branches stop repeated work.</p>"
+  }
+ ]
+}

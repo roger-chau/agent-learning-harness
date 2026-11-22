@@ -1,0 +1,113 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Find the middle of a list in one pass:",
+   "options": [
+    "fast and slow pointers",
+    "a hash map",
+    "reversal"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Reorder a list L0, Ln, L1, Ln−1… in O(1) space:",
+   "options": [
+    "middle + reverse + interleave",
+    "copy into an array",
+    "sort"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Detect a cycle with O(1) space:",
+   "options": [
+    "Floyd",
+    "a hash set",
+    "BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "O(1) LRU cache:",
+   "options": [
+    "hash map + doubly linked list",
+    "heap",
+    "BST"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Diameter of a binary tree in O(n):",
+   "options": [
+    "return height, record left + right",
+    "BFS from every node",
+    "DP over pairs"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Validate a BST:",
+   "options": [
+    "pass (low, high) bounds down",
+    "compare with children only",
+    "BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Values of the tree by level:",
+   "options": [
+    "BFS processing len(queue) per round",
+    "in-order",
+    "post-order"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Find many dictionary words in a grid:",
+   "options": [
+    "trie + DFS with pruning",
+    "per-word DFS",
+    "sorting"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q9",
+   "type": "single",
+   "prompt": "Lowest common ancestor in a BST, O(h):",
+   "options": [
+    "walk down until p and q split",
+    "post-order over all nodes",
+    "BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

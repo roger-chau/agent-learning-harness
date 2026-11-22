@@ -1,0 +1,67 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>The question cares about <strong>order</strong>:</p>
+<table>
+<tr><th>Words in the problem</th><th>Traversal</th></tr>
+<tr><td>level, depth, nearest to root, row, right side view, zigzag</td><td>BFS with a queue, processed level by level</td></tr>
+<tr><td>sorted, k-th smallest, BST, successor, range</td><td>in-order (left, node, right)</td></tr>
+<tr><td>copy, serialise, build from the top</td><td>pre-order (node, left, right)</td></tr>
+<tr><td>children's answers first, delete, free, heights</td><td>post-order (left, right, node)</td></tr>
+</table>
+<p>And a <strong>binary search tree</strong> appears whenever you need ordered data with O(h) search, insert, floor and ceiling. In practice that means <code>std::set</code> or <code>std::map</code> in C++, and <code>sortedcontainers</code> or bisect on a list in Python.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: the BST property is a range</h2>
+<p>The BST invariant is not "left child &lt; node &lt; right child". It is: <strong>every</strong> value in the left subtree is less than the node, and every value in the right subtree is greater. Equivalently, each node lives in an open interval inherited from its ancestors, and an in-order traversal is strictly increasing.</p>
+<p>That one sentence gives you validation (pass bounds down), search and insertion (go left or right, O(h)), k-th smallest (in-order, stop at k), the LCA in a BST (the first node whose value lies between p and q), and the inorder successor (the leftmost node of the right subtree, else the last ancestor where you went left).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code># BFS by levels: a round takes exactly the nodes present at its start.
+q = deque([root])
+while q:
+    for _ in range(len(q)):
+        n = q.popleft()
+        ...                       # the level's nodes, left to right
+        if n.left: q.append(n.left)
+        if n.right: q.append(n.right)
+
+# Iterative in-order. Invariant: the stack holds the ancestors still to visit.
+st, n = [], root
+while st or n:
+    while n:
+        st.append(n); n = n.left   # push the left spine
+    n = st.pop()
+    visit(n)
+    n = n.right</code></pre>
+<p><strong>LCA in a general binary tree:</strong> f(node) returns the p or q node found in this subtree, or None. If both children return something, this node is the split point. Otherwise pass up whichever side found something. One post-order pass, O(n).</p>
+<p><strong>Serialisation:</strong> pre-order with explicit null markers ("1,2,#,#,3,#,#") is unambiguous and rebuilds with one recursive reader. In-order alone is ambiguous, but pre-order plus in-order (with distinct values) determines the tree: the first pre-order value is the root, and its position in the in-order splits the two subtrees.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: validate a BST</h2>
+<ol>
+<li><strong>First idea:</strong> check that left.val &lt; node.val &lt; right.val at every node.</li>
+<li><strong>Attack your own idea.</strong> Before coding, look for a counterexample: [5, 4, 6, null, null, 3, 7]. Every parent/child pair is fine, but 3 sits in 5's right subtree. The local check fails.</li>
+<li><strong>Diagnose:</strong> the constraint on a node comes from <em>all</em> its ancestors, not just its parent. Information has to flow <strong>top-down</strong>.</li>
+<li><strong>Transformation:</strong> pass an interval (low, high). The left child inherits (low, val) and the right child (val, high). Each node does an O(1) check, O(n) in total.</li>
+<li><strong>Alternative proof route:</strong> the in-order sequence must be strictly increasing. Track the previous value during the traversal.</li>
+<li><strong>Test:</strong> duplicates ([1, 1] is invalid when the property is strict), values at INT_MIN and INT_MAX (so use 64-bit or None for the bounds), and the empty tree (valid).</li>
+</ol>
+<p>The transferable move is step 2: <strong>try to break your first idea with a small adversarial example before writing code.</strong> Interviewers notice it, and it saves you from debugging a wrong algorithm.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>"Balanced" is not given.</strong> O(h) is O(n) on a degenerate BST. Say so when quoting complexity.</li>
+<li><strong>LCA: BST or general tree?</strong> Ask. A BST allows the O(h) walk; a general tree needs the post-order search.</li>
+<li><strong>Zigzag order:</strong> BFS plus reversing alternate levels (or appending to the front of a deque). Don't build two stacks unless asked.</li>
+<li><strong>Vertical order:</strong> BFS carrying a column index, then sort by (column, row, value).</li>
+<li><strong>Construct from pre-order and in-order:</strong> a hash map from value to in-order index gives O(n); slicing lists gives O(n²).</li>
+<li><strong>The k-th smallest with frequent updates:</strong> augment the nodes with subtree sizes (an order-statistic tree), giving O(h) per query.</li>
+<li><strong>Morris traversal:</strong> O(1)-space in-order that temporarily threads right pointers. Know that it exists; rarely required.</li>
+</ul>
+</section>

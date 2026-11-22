@@ -1,0 +1,255 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Write the contract",
+   "statement": "<p>For \"is the tree height-balanced?\" (every node's subtree heights differ by at most 1), in O(n).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What should f(node) return?",
+     "options": [
+      "the height, or −1 if the subtree is unbalanced",
+      "True/False only",
+      "the number of nodes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Returning only a bool forces recomputing heights."
+   ],
+   "solution": "<p>Return the height with −1 as an \"unbalanced\" sentinel; the parent needs heights to check itself. A bool-only recursion calling height() at each node is O(n²) on a path-like tree.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Depth",
+   "statement": "<p>Tree in level order: <code>[1, 2, 3, 4, 5, null, null, 6, null, null, 7]</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum depth (nodes)?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Diameter (edges)?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Draw it: 4 and 5 are children of 2; 6 is under 4, 7 under 5."
+   ],
+   "solution": "<p>Depth 4 (1→2→4→6). The diameter bends at 2: the height of the 4-subtree is 2 and of the 5-subtree is 2, so 2 + 2 = 4 edges (6→4→2→5→7).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Max path sum",
+   "statement": "<p>Tree <code>[-10, 9, 20, null, null, 15, 7]</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Best downward gain returned by the node 20?",
+     "answer": 35,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 42,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "gain(20) = 20 + max(15, 7)."
+   ],
+   "solution": "<p>gain(20) = 35. Bending at 20: 15 + 20 + 7 = 42, which beats anything through −10 (9 − 10 + 35 = 34). Answer 42.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Why clamp?",
+   "statement": "<p>In max path sum, l = max(gain(left), 0).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why clamp at 0?",
+     "options": [
+      "A branch with negative gain is better omitted",
+      "To avoid overflow",
+      "Because values are positive"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why must best start at −∞, not 0?",
+     "options": [
+      "All values may be negative and the path must be non-empty",
+      "Style",
+      "Python requires it"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Try the single node [−3]."
+   ],
+   "solution": "<p>Clamping drops harmful branches. Starting at 0 would wrongly return 0 for [−3].</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Top-down or bottom-up?",
+   "statement": "<p>Classify how the information flows.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Count nodes whose value is ≥ every value on the path from the root (\"good nodes\"):",
+     "options": [
+      "top-down: pass the max so far",
+      "bottom-up: return subtree max"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Size of the largest subtree that is a BST:",
+     "options": [
+      "bottom-up: return (is_bst, min, max, size)",
+      "top-down: pass bounds only"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Does the answer depend on ancestors or on descendants?"
+   ],
+   "solution": "<p>Good nodes depend on ancestors, so pass the maximum down. The largest BST subtree depends on descendants, so return a summary tuple.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Minimum depth bug",
+   "statement": "<p><code>def min_depth(n): return 0 if not n else 1 + min(min_depth(n.left), min_depth(n.right))</code> on the tree [1, 2] (2 is the left child).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "What does the buggy code return?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Correct answer?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "The root is not a leaf: it has a child."
+   ],
+   "solution": "<p>The None right child returns 0, so the code says 1. But depth is measured to a <em>leaf</em>, and the only leaf is 2: the answer is 2. When one child is None, recurse only into the other.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Recursion depth",
+   "statement": "<p>A degenerate (path-shaped) tree with 10⁵ nodes, solved recursively in Python.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What happens with default settings?",
+     "options": [
+      "RecursionError (the limit is about 1,000)",
+      "Works fine",
+      "Infinite loop"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "sys.getrecursionlimit()."
+   ],
+   "solution": "<p>Python's default limit is 1,000. Raise it (and possibly the thread stack size), or convert to an explicit stack.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "House robber III",
+   "statement": "<p>On a tree you may not take both a node and its child. Maximise the sum taken from [3, 4, 5, 1, 3, null, 1].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "What does f(node) return?",
+     "options": [
+      "(best if node is taken, best if not taken)",
+      "the best only",
+      "the subtree size"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "A pair of states per node."
+   ],
+   "solution": "<p>f returns (take, skip). take = val + skip(l) + skip(r); skip = max(l) + max(r). Taking 4 and 5 gives 9, versus 3 + 1 + 3 + 1 = 8.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Path sum III",
+   "statement": "<p>Count downward paths (starting anywhere) whose sum equals k, in O(n).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Technique?",
+     "options": [
+      "Prefix sums along the root path with a hash map: add on entry, remove on exit",
+      "Run DFS from every node",
+      "Sort the values"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Part 1's subarray-sum-equals-k, on a tree."
+   ],
+   "solution": "<p>Running DFS from every node is O(n·h). The prefix-sum map gives O(n). Undo the map entry on the way back up, so sibling branches don't see each other's prefixes.</p>"
+  }
+ ]
+}

@@ -1,0 +1,68 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Any binary-tree question whose answer can be assembled from <strong>answers about the two subtrees</strong>: depth, size, balance, diameter, path sums, whether two trees are equal or mirrored, the subtree with the largest sum. If you can phrase it as "the answer for a node is a function of the answers for its children", it is a post-order recursion and runs in O(n).</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: the recursive contract</h2>
+<p>Don't trace recursion in your head; it doesn't scale and it wastes interview minutes. Instead write the <strong>contract</strong> in one sentence: <em>"f(node) returns ___ for the subtree rooted at node."</em> Then:</p>
+<ol>
+<li><strong>Base case:</strong> what does f(None) return? (0, True, −∞, an empty list…)</li>
+<li><strong>Leap of faith:</strong> assume f(node.left) and f(node.right) honour the contract.</li>
+<li><strong>Combine:</strong> build f(node) from those two answers and node.val.</li>
+</ol>
+<p>Two directions of information flow:</p>
+<ul>
+<li><strong>Bottom-up (return values):</strong> children summarise themselves to the parent: heights, sums, "found p".</li>
+<li><strong>Top-down (parameters):</strong> the parent passes constraints down: depth so far, the valid (low, high) range for a BST, the path sum so far.</li>
+</ul>
+<p>Many problems use both. Deciding which information flows which way is the design step.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: return one thing, record another</h2>
+<pre><code>def solve(root):
+    best = initial
+    def f(node):                 # contract: returns what the PARENT needs
+        nonlocal best
+        if node is None:
+            return base
+        l, r = f(node.left), f(node.right)
+        best = max(best, combine_through(node, l, r))   # what the QUESTION asks
+        return extend_upward(node, l, r)
+    f(root)
+    return best</code></pre>
+<p>This is the most important tree pattern in interviews. The quantity a parent can <em>use</em> is often different from the quantity the question <em>asks for</em>:</p>
+<ul>
+<li><strong>Diameter:</strong> return the height; record left + right.</li>
+<li><strong>Max path sum:</strong> return the best downward path, max(l, r) + val; record val + l + r.</li>
+<li><strong>Balanced?</strong> Return the height, or −1 as a "not balanced" sentinel. This avoids the O(n²) solution that recomputes heights at every node.</li>
+<li><strong>Longest univalue path</strong>, <strong>binary tree cameras</strong>, <strong>house robber III</strong>: the same shape, sometimes returning a tuple of states.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: maximum path sum</h2>
+<ol>
+<li><strong>Clarify:</strong> a path is any connected sequence, not necessarily through the root, and it is non-empty. Values can be negative, so the answer can be negative (a single node −3).</li>
+<li><strong>Brute force:</strong> every pair of endpoints, then walk the path: O(n²) or worse.</li>
+<li><strong>Structure:</strong> every path has a unique highest node where it "bends". So the answer is the maximum over all nodes of the best path bending there.</li>
+<li><strong>What does the parent need?</strong> A path bending at the parent can extend into this subtree only as a straight <em>downward</em> chain. So the contract is: f(node) = the best downward path sum starting at node.</li>
+<li><strong>Negatives:</strong> a branch with a negative gain is worse than no branch, so clamp: l = max(f(left), 0).</li>
+<li><strong>Record:</strong> best = max(best, val + l + r). <strong>Return:</strong> val + max(l, r).</li>
+<li><strong>Test:</strong> [−3] gives −3, so best must start at −∞, not 0. [2, −1] gives 2.</li>
+</ol>
+<p>Notice the moves: <em>find the canonical point</em> (the bend), then <em>split "what I return" from "what I record"</em>. Both recur constantly.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Null versus leaf:</strong> "root-to-leaf path sum" must check that both children are None; a node with one child is not a leaf. Minimum depth is the classic bug.</li>
+<li><strong>Recursion depth:</strong> a degenerate tree of 10⁵ nodes overflows Python's default limit of about 1,000. Mention <code>sys.setrecursionlimit</code> or an explicit stack; in C++ the default stack handles around 10⁵ frames, but not 10⁷.</li>
+<li><strong>Global state in C++:</strong> reset member or global accumulators at the start of each call; the judge may call your function many times.</li>
+<li><strong>O(n²) by recomputing:</strong> calling height() inside a recursion over all nodes. Return the height instead.</li>
+<li><strong>Two trees at once:</strong> same tree, symmetric tree and subtree-of all recurse on pairs (a, b). Symmetric compares (a.left, b.right) and (a.right, b.left).</li>
+<li><strong>Path sum III</strong> (paths downward from anywhere summing to k): prefix sums along the root-to-node path, with a hash map you add to on entry and remove from on exit. This is Part 1's prefix-sum trick on a tree.</li>
+</ul>
+</section>

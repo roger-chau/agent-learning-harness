@@ -1,0 +1,64 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>A linked list in an interview is almost never about storage. It is a test of whether you can <strong>rewire pointers without losing anything</strong>, under the constraint "O(1) extra space": reverse all or part of it, find its middle or its k-th node from the end, detect a cycle, merge, split, reorder. When the problem says "in place" or "one pass", expect one of three tools: a <strong>dummy head</strong>, <strong>fast and slow pointers</strong>, or <strong>reversal</strong>.</p>
+<p>The other family is <em>design</em>: an LRU cache or a browser history needs O(1) removal from the middle of a sequence, which only a doubly linked list plus a hash map from key to node gives you.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p>Linked-list bugs come from one mistake: <strong>overwriting a pointer before you have saved what it pointed to</strong>. The whole discipline is to draw three or four boxes, write the arrows before and after the step, and order the assignments so nothing becomes unreachable.</p>
+<p>Two tricks remove most edge cases:</p>
+<ul>
+<li><strong>The dummy head.</strong> A placeholder node before the real head means "insert before the head" and "delete the head" are ordinary operations. Return <code>dummy.next</code>.</li>
+<li><strong>Two pointers at different speeds.</strong> A gap of k nodes finds the k-th from the end in one pass; a 2:1 speed ratio finds the middle and detects cycles.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code># Reversal. Invariant: prev heads the reversed prefix, cur heads the untouched rest.
+prev, cur = None, head
+while cur:
+    nxt = cur.next      # 1. save
+    cur.next = prev     # 2. rewire
+    prev, cur = cur, nxt  # 3. advance
+return prev
+
+# Middle (first middle for even length).
+slow = fast = head
+while fast.next and fast.next.next:
+    slow, fast = slow.next, fast.next.next
+
+# Cycle (Floyd). They meet inside the cycle iff one exists.
+slow = fast = head
+while fast and fast.next:
+    slow, fast = slow.next, fast.next.next
+    if slow is fast: break</code></pre>
+<p><strong>Why Floyd finds the cycle's start.</strong> Let the tail before the cycle have length a and the cycle length c. When they meet, slow has walked a + b and fast 2(a + b), and the difference a + b is a multiple of c. So walking a more steps from the meeting point lands at the cycle start. Reset one pointer to the head, step both by one, and they meet at the start. Being able to say this argument is what separates "memorised" from "understood".</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: reorder list</h2>
+<p><em>Reorder L0 → L1 → … → Ln into L0 → Ln → L1 → Ln−1 → … in place.</em></p>
+<ol>
+<li><strong>Clarify:</strong> in place means relinking, not copying values. The empty list and one node are fine.</li>
+<li><strong>Brute force:</strong> copy nodes into an array and relink with two indices. O(n) time but O(n) space. Say it, then ask whether O(1) space is wanted. It usually is.</li>
+<li><strong>Find the bottleneck:</strong> we need to walk the back half <em>backwards</em>, and singly linked lists can't do that.</li>
+<li><strong>Transformation:</strong> if we can't walk backwards, <em>reverse the back half</em> so walking forwards does the same job. Now the problem is <strong>three subroutines you already own</strong>: find the middle, reverse from there, interleave two lists.</li>
+<li><strong>Invariant for the interleave:</strong> a and b head the remaining parts of each half; save both nexts, splice b after a, advance both.</li>
+<li><strong>Test:</strong> length 1, 2, odd and even. Make sure the first half's last node points to None, or you create a cycle.</li>
+</ol>
+<p>The habit: when a list problem looks new, ask <em>which known subroutines compose into it</em>. Palindrome list, reverse in k-groups and rotate list all decompose the same way.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Losing the rest of the list:</strong> always save <code>next</code> before rewiring.</li>
+<li><strong>Null checks on fast pointers:</strong> <code>while fast and fast.next</code> (cycle detection) versus <code>while fast.next and fast.next.next</code> (first middle). Choose the condition deliberately, then check it on lengths 1 and 2.</li>
+<li><strong>The final carry</strong> in add-two-numbers (999 + 1), and the leftover tail when merging.</li>
+<li><strong>LRU cache:</strong> a hash map from key to node plus a doubly linked list ordered by recency, with sentinel head and tail. get moves the node to the front; put inserts at the front and evicts from the back. Everything is O(1). In Python, <code>OrderedDict</code> with <code>move_to_end</code> is accepted, but be ready to build the real one.</li>
+<li><strong>Copy a list with random pointers:</strong> a hash map from old node to new node, or interleave the copies (A → A′ → B → B′) for O(1) extra space.</li>
+<li><strong>Reverse in k-groups:</strong> reversal plus a dummy head plus careful reconnection. The canonical "hard" list problem.</li>
+</ul>
+</section>

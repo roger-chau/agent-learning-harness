@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "The BST property constrains a node by…",
+   "options": [
+    "all its ancestors (a range)",
+    "its parent only",
+    "its children only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Level-by-level BFS processes…",
+   "options": [
+    "len(queue) nodes per round",
+    "one node per round",
+    "all nodes at once"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "LCA in a general binary tree, O(n):",
+   "options": [
+    "post-order: return what each subtree found",
+    "BFS only",
+    "sort the nodes"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "BST operations cost O(h), which for a degenerate tree is…",
+   "options": [
+    "O(n)",
+    "O(log n)",
+    "O(1)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "A good habit before coding a first idea:",
+   "options": [
+    "look for a small counterexample",
+    "write tests later",
+    "optimise first"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

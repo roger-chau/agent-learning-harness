@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "The most common linked-list bug is…",
+   "options": [
+    "overwriting next before saving it",
+    "using recursion",
+    "using a dummy node"
+   ],
+   "answer": 0,
+   "explanation": "Save, rewire, advance."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "A dummy head node…",
+   "options": [
+    "removes special cases for the first node",
+    "doubles memory",
+    "makes lists sorted"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Fast and slow pointers find…",
+   "options": [
+    "the middle and cycles",
+    "the maximum",
+    "duplicates"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Why does Floyd's reset step find the cycle start?",
+   "options": [
+    "a + b is a multiple of the cycle length",
+    "luck",
+    "the list is sorted"
+   ],
+   "answer": 0,
+   "explanation": "Walking a from the meeting point lands on the start."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "LRU cache in O(1) needs…",
+   "options": [
+    "a hash map and a doubly linked list",
+    "a heap",
+    "a sorted array"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

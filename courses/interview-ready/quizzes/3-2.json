@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Before writing a tree recursion, state…",
+   "options": [
+    "the contract: what f(node) returns",
+    "the traversal order of every node",
+    "the height"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Diameter: the recursion returns…, and records…",
+   "options": [
+    "height; left + right",
+    "diameter; height",
+    "size; depth"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Passing (low, high) bounds to children is…",
+   "options": [
+    "top-down information flow",
+    "bottom-up",
+    "BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "A balanced check that calls height() at every node is…",
+   "options": [
+    "O(n²) in the worst case",
+    "O(n)",
+    "O(log n)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "A leaf is a node with…",
+   "options": [
+    "no children",
+    "at most one child",
+    "no parent"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -1,0 +1,59 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Many strings and queries about <strong>prefixes</strong>: autocomplete, "does any word start with…", a dictionary with wildcard search, replacing words with their shortest root, searching a grid for many words at once, longest common prefix. Also a <strong>binary trie</strong> over the bits of integers: maximum XOR of two numbers, and XOR queries with constraints.</p>
+<p>If you'd use a hash set of words but the queries are about prefixes, or the same prefixes would be re-explored many times, reach for a trie.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: share the prefix work</h2>
+<p>A trie is a tree in which each edge is a character and each node is the prefix spelled by its path from the root. Words with a common prefix share that path, so a lookup costs O(length of the query), <strong>independent of how many words are stored</strong>. A node carries an "end of word" flag (or the word itself, or a count).</p>
+<p>The bigger idea for interviews: a trie lets <strong>one search walk many candidate words simultaneously</strong>. In Word Search II, a DFS on the grid advances through the trie at each step, so every word sharing the current prefix is checked by the same walk, and the search stops the moment the prefix isn't in the trie.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>class Trie:
+    def __init__(self):
+        self.root = {}                 # node = dict: char -> child; '$' marks a word end
+    def insert(self, w):
+        n = self.root
+        for c in w:
+            n = n.setdefault(c, {})
+        n['$'] = True
+    def _walk(self, s):                 # invariant: n is the node for s[:i]
+        n = self.root
+        for c in s:
+            if c not in n: return None
+            n = n[c]
+        return n
+    def search(self, w):      n = self._walk(w); return n is not None and '$' in n
+    def starts_with(self, p): return self._walk(p) is not None</code></pre>
+<p>In C++ use <code>struct Node { Node* ch[26] = {}; bool end = false; };</code>, which is fast and has fixed fan-out, or a pool of nodes in a vector indexed by int for cache-friendliness and easy cleanup.</p>
+<p><strong>Binary trie for max XOR:</strong> insert each number from its top bit down. To maximise x XOR y, at each bit prefer the child with the <em>opposite</em> bit. That's O(32) per query.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: Word Search II</h2>
+<ol>
+<li><strong>Clarify:</strong> grid up to 12 × 12, up to 3 × 10⁴ words of length ≤ 10, each cell used once per word, answer in any order.</li>
+<li><strong>Brute force:</strong> run the single-word grid DFS for every word: words × cells × 4 × 3<sup>L−1</sup>. With 3 × 10⁴ words that is far too slow.</li>
+<li><strong>Find the bottleneck:</strong> words sharing a prefix ("oath", "oat", "oats") redo the same grid exploration. The repeated work is exploring <em>prefixes</em>.</li>
+<li><strong>Transformation:</strong> invert the loops. Instead of "for each word, search the grid", do "search the grid once, and let a trie say which paths are still prefixes of some word". One DFS per cell, carrying the current trie node.</li>
+<li><strong>Invariant:</strong> the current grid path spells exactly the prefix of the current trie node. If the next cell's letter isn't a child, prune.</li>
+<li><strong>Refinements:</strong> store the word at its end node, so there's no string building. After finding a word, remove its marker to avoid duplicates, and delete trie branches that become empty so later searches skip them.</li>
+<li><strong>Test:</strong> a word found by two paths (report it once), a single cell, and a word that needs to reuse a cell (not allowed: mark the cell visited).</li>
+</ol>
+<p>"Invert the loops so shared work happens once" is a general optimisation move. You'll see it again in Aho–Corasick, in batching queries, and in multi-source BFS.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Memory:</strong> 26 pointers per node can be large: n words × L characters × 26 × 8 bytes. Dict-based or sorted-children nodes trade speed for space.</li>
+<li><strong>Wildcards</strong> ('.' matches any letter): at a wildcard, branch into every child. That's DFS on the trie.</li>
+<li><strong>Counting prefixes:</strong> keep a counter at each node, incremented on insert, to answer "how many words start with p" in O(|p|).</li>
+<li><strong>Deletion:</strong> decrement counters, or unmark and prune nodes on the way back up.</li>
+<li><strong>When a trie is overkill:</strong> with a static word list and only exact lookups, a hash set is simpler. For prefixes only, a sorted list plus binary search also works: every word with prefix p lies in [lower_bound(p), lower_bound(p + '{')).</li>
+<li><strong>Suffix structures</strong> (suffix tries, arrays and automata) answer substring questions. They are beyond most interviews, but knowing they exist helps in quant and systems rounds.</li>
+</ul>
+</section>

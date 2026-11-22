@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A trie lookup costs…",
+   "options": [
+    "O(length of the query)",
+    "O(number of words)",
+    "O(log n)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "search(w) differs from starts_with(w) by…",
+   "options": [
+    "checking the end-of-word flag",
+    "nothing",
+    "hashing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "In Word Search II the trie is used to…",
+   "options": [
+    "walk all candidate words at once and prune",
+    "sort the grid",
+    "count letters"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Max XOR of a pair uses…",
+   "options": [
+    "a binary trie, preferring opposite bits",
+    "sorting",
+    "a heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "For exact membership only, the simpler choice is…",
+   "options": [
+    "a hash set",
+    "a trie",
+    "a BST"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

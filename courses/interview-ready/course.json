@@ -407,14 +407,149 @@
    "id": "p3",
    "n": 3,
    "title": "Linked lists, trees and tries",
-   "summary": "Pointer manipulation, tree recursion and traversals, BSTs, LCA, serialisation, tries.",
+   "summary": "Pointer rewiring, the recursive contract, traversal order and the BST range invariant, and tries for shared prefix work.",
    "items": [
     {
      "type": "chapter",
      "id": "3-1",
-     "title": "Linked lists, trees and tries",
-     "summary": "Pointer manipulation, tree recursion and traversals, BSTs, LCA, serialisation, tries.",
-     "status": "planned"
+     "title": "Linked lists",
+     "summary": "Save, rewire, advance: dummy heads, fast and slow pointers, reversal, LRU.",
+     "coding": [
+      "reverse-list",
+      "merge-two-sorted-lists",
+      "remove-nth-from-end",
+      "reorder-list",
+      "add-two-numbers"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "in place, one pass"
+      ],
+      [
+       "The core idea",
+       "never lose a pointer"
+      ],
+      [
+       "The invariant and template",
+       "reversal, middle, Floyd"
+      ],
+      [
+       "A thinking trace",
+       "reorder list"
+      ],
+      [
+       "Traps and variations",
+       "LRU, k-groups, random pointers"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "3-2",
+     "title": "Tree recursion",
+     "summary": "State the contract, trust the recursion, and return one thing while recording another.",
+     "coding": [
+      "max-depth",
+      "invert-tree",
+      "tree-diameter",
+      "max-path-sum"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "answers from subtrees"
+      ],
+      [
+       "The core idea",
+       "the recursive contract"
+      ],
+      [
+       "The invariant and template",
+       "return one, record another"
+      ],
+      [
+       "A thinking trace",
+       "maximum path sum"
+      ],
+      [
+       "Traps and variations",
+       "leaves, depth limits, pairs"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "3-3",
+     "title": "Traversals, BSTs and LCA",
+     "summary": "Order words pick the traversal; the BST property is a range; LCA and serialisation.",
+     "coding": [
+      "level-order",
+      "right-side-view",
+      "validate-bst",
+      "kth-smallest-bst",
+      "lowest-common-ancestor"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "order words"
+      ],
+      [
+       "The core idea",
+       "the BST range"
+      ],
+      [
+       "The invariant and template",
+       "BFS, iterative in-order, LCA"
+      ],
+      [
+       "A thinking trace",
+       "validate a BST"
+      ],
+      [
+       "Traps and variations",
+       "balance, construction, successors"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "3-4",
+     "title": "Tries",
+     "summary": "Share prefix work: autocomplete, wildcard search, Word Search II and binary tries for XOR.",
+     "coding": [
+      "implement-trie",
+      "word-search-ii"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "many strings, prefixes"
+      ],
+      [
+       "The core idea",
+       "walk many words at once"
+      ],
+      [
+       "The invariant and template",
+       "insert, walk, binary trie"
+      ],
+      [
+       "A thinking trace",
+       "Word Search II"
+      ],
+      [
+       "Traps and variations",
+       "memory, wildcards, when not to"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p3-checkpoint",
+     "title": "Part 3 checkpoint",
+     "summary": "Lists, trees and tries: pick the tool and justify it."
     }
    ]
   },
