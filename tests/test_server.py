@@ -303,3 +303,26 @@ def test_coding_exam_flow(client, monkeypatch):
     assert c1["solution"]["explanation"]
     # sample runs are refused once the attempt is over
     assert client.post(base + "/exam/run", json={"pid": first, "lang": "python", "code": sols[first]}).status_code == 409
+
+
+def test_mock_interview_uses_interviewer_prompt(client, monkeypatch):
+    monkeypatch.setenv("GROUNDWORK_UNLOCK", "1")
+    from learnharness import agent as agent_mod, server as server_mod
+    seen = {}
+
+    async def fake_answer(cl, ctx, history, question, system=None):
+        seen["system"] = system
+        seen["ctx"] = ctx
+        yield {"type": "text", "text": "ok"}
+        yield {"type": "done"}
+    monkeypatch.setattr(agent_mod, "answer", fake_answer)
+    monkeypatch.setattr(server_mod, "client", lambda: None)
+    it = client.get("/api/courses/interview-ready/items/mock-quant").json()
+    assert it["mock"]["kind"] == "quant"
+    r = client.post("/api/courses/interview-ready/items/mock-quant/ask", json={"question": "start"})
+    assert r.status_code == 200 and "ok" in r.text
+    assert "MOCK INTERVIEW" in seen["system"] and "market" in seen["system"]
+    assert "Question bank" in seen["ctx"]
+    # ordinary chapters still use the default tutor prompt (system not overridden)
+    r = client.post("/api/courses/interview-ready/items/13-1/ask", json={"question": "hi"})
+    assert r.status_code == 200 and seen["system"] is None

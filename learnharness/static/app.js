@@ -337,12 +337,12 @@ make submit     # record the results here (Groundwork must be running)</code></p
           <div class="gate" id="gate"></div>
         </article>
       </div>
-      ${it.exam ? "" : `<button class="ask-fab" id="ask-open" type="button" aria-haspopup="dialog">Ask a question</button>`}
-      ${it.exam ? "" : `<aside class="ask" id="ask" aria-label="Ask a question" hidden>
-        <div class="ask-head"><div><b>Ask</b><span class="muted"> · knows this chapter · hints, not solutions</span></div>
-          <div><button class="term-btn" id="ask-clear" type="button">Clear</button><button class="icon-btn small" id="ask-close" type="button" aria-label="Close">✕</button></div></div>
+      ${it.exam ? "" : `<button class="ask-fab${it.mock ? " mock" : ""}" id="ask-open" type="button" aria-haspopup="dialog">${it.mock ? "Start the mock interview" : "Ask a question"}</button>`}
+      ${it.exam ? "" : `<aside class="ask" id="ask" aria-label="${it.mock ? "Mock interview" : "Ask a question"}" hidden>
+        <div class="ask-head"><div><b>${it.mock ? "Mock interviewer" : "Ask"}</b><span class="muted"> · ${it.mock ? `${esc(it.mock.label || "interview")} · type “start” when ready, “score me” to finish` : "knows this chapter · hints, not solutions"}</span></div>
+          <div><button class="term-btn" id="ask-clear" type="button">${it.mock ? "New interview" : "Clear"}</button><button class="icon-btn small" id="ask-close" type="button" aria-label="Close">✕</button></div></div>
         <div class="ask-thread" id="ask-thread"></div>
-        <form class="ask-form" id="ask-form"><textarea id="ask-input" rows="2" placeholder="Ask anything about this chapter…" aria-label="Question"></textarea><button class="btn btn-primary btn-sm" type="submit">Ask</button></form>
+        <form class="ask-form" id="ask-form"><textarea id="ask-input" rows="2" placeholder="${it.mock ? "Your answer… (start / score me)" : "Ask anything about this chapter…"}" aria-label="${it.mock ? "Answer" : "Question"}"></textarea><button class="btn btn-primary btn-sm" type="submit">${it.mock ? "Send" : "Ask"}</button></form>
       </aside>`}`;
 
     const body = $("#ch-body");

@@ -1,0 +1,58 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Walk me through a project on your CV": the deep dive. A senior engineer picks one item and keeps asking "why?" and "how did you know?" for 20–40 minutes. It's the round where your GPU course labs and projects pay off, provided you can explain every decision and number.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: be ready three levels deep</h2>
+<ol>
+<li><strong>Level 1, the overview (1 minute):</strong> the problem, why it mattered, what you built, and the headline result.</li>
+<li><strong>Level 2, the design (5 minutes):</strong> the architecture or algorithm, key choices and the alternatives you rejected.</li>
+<li><strong>Level 3, the depths (on demand):</strong> exact measurements and tools, the bug that took longest, the limits of your solution, what you'd do with more time, how it would scale.</li>
+</ol>
+<p>Prepare a one-page sheet per project with: a diagram you can draw in 60 seconds, five key numbers, three design decisions with alternatives, two things that went wrong, and two things you'd change.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Project:          e.g. "Tiled GEMM and FlashAttention-style kernel on an RTX 2060 Super"
+One-liner:        problem → approach → result (with a number)
+Diagram:          data flow / memory hierarchy / threads
+Key numbers:      baseline, final, peak, % of roofline, problem sizes
+Decisions:        tile sizes (why), shared vs registers, async copies, precision
+Went wrong:       bank conflicts; register spills at large tiles (how detected, how fixed)
+Limits:           what doesn't scale; where it's still memory-bound
+Next:             tensor cores / wider problem sizes / autotuning</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: surviving \"why that tile size?\"</h2>
+<ol>
+<li><strong>Weak answer:</strong> \"it was the fastest.\" Follow-up: \"why?\", and you're stuck.</li>
+<li><strong>Strong answer, from first principles:</strong> the tile was chosen so the working set (A and B tiles) fits in shared memory with room for 2 blocks per SM (occupancy); the arithmetic intensity per tile clears the ridge point of the roofline, so the kernel becomes compute-bound; and register pressure at larger tiles caused spills (seen as local-memory traffic in the profiler).</li>
+<li><strong>Evidence:</strong> \"I swept 32/64/128 and measured: 64 was best; at 128 the spills cost 20%.\"</li>
+<li><strong>Honesty about limits:</strong> \"cuBLAS still beats it by 25% at large sizes, mostly from tensor cores and better pipelining.\"</li>
+</ol>
+<p>The habit: <strong>every number on your CV should have a \"because\" and a \"how I measured it\"</strong>.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Claiming more than you did:</strong> the deep dive will find it.</li>
+<li><strong>Getting lost in detail at level 1:</strong> start high, then let the interviewer steer.</li>
+<li><strong>No diagram:</strong> draw the data flow early, since it anchors the conversation.</li>
+<li><strong>Not knowing the baseline:</strong> \"3× faster\" means nothing without \"than what, measured how\".</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Write a one-page sheet (the box below) for your strongest project, ideally a GPU course lab with your own measured numbers.</li>
+<li>* Ask the Ask panel to play a skeptical senior engineer and drill three levels into it.</li>
+<li>Prepare the same sheet for a second project.</li>
+<li>Practise drawing each project's diagram in under 60 seconds.</li>
+</ul>
+</section>

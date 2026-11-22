@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Negotiation is…",
+   "options": [
+    "expected at most firms",
+    "rude",
+    "only for seniors"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Strongest lever:",
+   "options": [
+    "a real competing offer",
+    "threats",
+    "silence"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Never…",
+   "options": [
+    "invent offers or renege",
+    "ask questions",
+    "counter"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Negotiate ___ before numbers when justified:",
+   "options": [
+    "level",
+    "start date",
+    "title wording"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Private equity should be valued…",
+   "options": [
+    "conservatively",
+    "at face value",
+    "at zero"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

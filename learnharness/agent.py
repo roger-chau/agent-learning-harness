@@ -19,12 +19,12 @@ MAX_STEPS = 6
 WEB_SEARCH = {"type": "web_search_20260209", "name": "web_search", "max_uses": 3}
 
 
-def _request_kwargs(context: str, messages: list) -> dict:
+def _request_kwargs(context: str, messages: list, system: str = SYSTEM_PROMPT) -> dict:
     return dict(
         model=MODEL,
         max_tokens=16000,
         system=[
-            {"type": "text", "text": SYSTEM_PROMPT},
+            {"type": "text", "text": system},
             {"type": "text", "text": context, "cache_control": {"type": "ephemeral"}},
         ],
         tools=[WEB_SEARCH],
@@ -53,13 +53,14 @@ def _sources(content: list) -> list[dict]:
     return out
 
 
-async def answer(client: anthropic.AsyncAnthropic, context: str, history: list, question: str) -> AsyncIterator[dict]:
+async def answer(client: anthropic.AsyncAnthropic, context: str, history: list, question: str,
+                 system: str = SYSTEM_PROMPT) -> AsyncIterator[dict]:
     """Stream an answer. `history` (API-format messages) is extended in place on success."""
     messages = history + [{"role": "user", "content": question}]
     new: list = [messages[-1]]
     for _ in range(MAX_STEPS):
         try:
-            async with client.beta.messages.stream(**_request_kwargs(context, messages)) as stream:
+            async with client.beta.messages.stream(**_request_kwargs(context, messages, system)) as stream:
                 async for event in stream:
                     if event.type == "content_block_start":
                         b = event.content_block

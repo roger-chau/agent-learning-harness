@@ -3091,14 +3091,290 @@
    "id": "p20",
    "n": 20,
    "title": "Behavioural rounds and the offer",
-   "summary": "Story bank, STAR, hard-bug stories, negotiation.",
+   "summary": "A six-story bank, project deep dives, behavioural rounds by employer type, offers and negotiation, and AI mock interviews.",
    "items": [
     {
      "type": "chapter",
      "id": "20-1",
-     "title": "Behavioural rounds and the offer",
-     "summary": "Story bank, STAR, hard-bug stories, negotiation.",
-     "status": "planned"
+     "title": "Your story bank",
+     "summary": "Six STAR stories that cover sixty questions; decisions, measurements, numbers.",
+     "writeup": {
+      "min_words": 400,
+      "prompts": [
+       "Story 1, a hard technical problem: Situation, Task, Action (your decisions and measurements), Result (numbers), Reflection.",
+       "Story 2, a failure or mistake and what you changed afterwards.",
+       "Story 3, a disagreement you handled.",
+       "Story 4, something you led or initiated.",
+       "Story 5, a deadline or trade-off under pressure.",
+       "Story 6, learning something hard quickly."
+      ]
+     },
+     "blocks": [
+      [
+       "The signal",
+       "tell me about a time…"
+      ],
+      [
+       "The core idea",
+       "six stories"
+      ],
+      [
+       "The invariant and template",
+       "the STAR card"
+      ],
+      [
+       "A thinking trace",
+       "a GPU story with numbers"
+      ],
+      [
+       "Traps and variations",
+       "we, vagueness, fake failures"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "20-2",
+     "title": "Project deep dives",
+     "summary": "Be ready three levels deep: overview, design, depths; a one-page sheet per project.",
+     "writeup": {
+      "min_words": 250,
+      "prompts": [
+       "One-liner: problem → approach → result with a number.",
+       "Five key numbers (baseline, final, peak, % of roofline, problem size) and how you measured each.",
+       "Three design decisions and the alternatives you rejected.",
+       "Two things that went wrong and how you found and fixed them.",
+       "Limits of your solution and what you'd do next."
+      ]
+     },
+     "blocks": [
+      [
+       "The signal",
+       "walk me through it"
+      ],
+      [
+       "The core idea",
+       "three levels"
+      ],
+      [
+       "The invariant and template",
+       "the project sheet"
+      ],
+      [
+       "A thinking trace",
+       "why that tile size?"
+      ],
+      [
+       "Traps and variations",
+       "over-claiming, baselines"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "20-3",
+     "title": "Behavioural rounds by employer",
+     "summary": "Same stories, different emphasis; a specific 'why us'; your questions for them.",
+     "blocks": [
+      [
+       "The signal",
+       "what each employer hears"
+      ],
+      [
+       "The core idea",
+       "emphasis by employer"
+      ],
+      [
+       "The invariant and template",
+       "a why-us answer"
+      ],
+      [
+       "A thinking trace",
+       "a time you were wrong"
+      ],
+      [
+       "Traps and variations",
+       "research, rambling, questions"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "20-4",
+     "title": "Offers and negotiation",
+     "summary": "Components, alternatives, level first, one specific counter; exploding offers.",
+     "blocks": [
+      [
+       "The signal",
+       "an offer arrives"
+      ],
+      [
+       "The core idea",
+       "information and alternatives"
+      ],
+      [
+       "The invariant and template",
+       "the conversation"
+      ],
+      [
+       "A thinking trace",
+       "an exploding offer"
+      ],
+      [
+       "Traps and variations",
+       "anchoring, equity, non-competes"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "mock-coding",
+     "title": "Mock interview: coding",
+     "summary": "A 45-minute coding round with an AI interviewer, scored against a rubric.",
+     "mock": {
+      "kind": "coding",
+      "label": "coding round"
+     },
+     "blocks": [
+      [
+       "How this works",
+       "start / score me"
+      ],
+      [
+       "Format",
+       "45 minutes"
+      ],
+      [
+       "Rubric",
+       "5 dimensions"
+      ],
+      [
+       "Question bank",
+       "10 problems"
+      ],
+      [
+       "After each mock",
+       "improve and repeat"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "mock-design",
+     "title": "Mock interview: system design",
+     "summary": "A 45-minute design round with an AI interviewer.",
+     "mock": {
+      "kind": "system-design",
+      "label": "system design round"
+     },
+     "blocks": [
+      [
+       "How this works",
+       "start / score me"
+      ],
+      [
+       "Format",
+       "45 minutes"
+      ],
+      [
+       "Rubric",
+       "5 dimensions"
+      ],
+      [
+       "Question bank",
+       "8 designs"
+      ],
+      [
+       "After each mock",
+       "improve and repeat"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "mock-quant",
+     "title": "Mock interview: quant",
+     "summary": "Probability, expected value and a live market-making exchange.",
+     "mock": {
+      "kind": "quant",
+      "label": "quant round"
+     },
+     "blocks": [
+      [
+       "How this works",
+       "start / score me"
+      ],
+      [
+       "Format",
+       "30–45 minutes"
+      ],
+      [
+       "Rubric",
+       "5 dimensions"
+      ],
+      [
+       "Question bank",
+       "10 questions"
+      ],
+      [
+       "After each mock",
+       "improve and repeat"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "mock-behavioural",
+     "title": "Mock interview: behavioural",
+     "summary": "Open questions probed for ownership, impact and judgement.",
+     "mock": {
+      "kind": "behavioural",
+      "label": "behavioural round"
+     },
+     "blocks": [
+      [
+       "How this works",
+       "start / score me"
+      ],
+      [
+       "Format",
+       "30 minutes"
+      ],
+      [
+       "Rubric",
+       "5 dimensions"
+      ],
+      [
+       "Question bank",
+       "8 questions"
+      ],
+      [
+       "After each mock",
+       "improve and repeat"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p20-checkpoint",
+     "title": "Part 20 checkpoint",
+     "summary": "Behavioural and offers: stories, deep dives and negotiation."
     }
    ]
   }

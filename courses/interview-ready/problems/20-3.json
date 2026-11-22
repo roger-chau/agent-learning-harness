@@ -1,0 +1,196 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "STAR balance",
+   "statement": "<p>A 2-minute story.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Where should most of the time go?",
+     "options": [
+      "Action: what you did and why",
+      "Situation: background",
+      "Result only"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Interviewers evaluate your actions."
+   ],
+   "solution": "<p>Brief context, most time on actions and decisions, a measured result.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Why us",
+   "statement": "<p>Which \"why us\" answer is strongest?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "naming the team's specific work and connecting it to your own measured project",
+      "\"great culture and smart people\"",
+      "\"you pay well\""
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Specific hook, connection, want."
+   ],
+   "solution": "<p>Specificity shows research and genuine fit.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "We vs I",
+   "statement": "<p>\"We sped up the pipeline 3×.\"</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best follow-up to prepare for?",
+     "options": [
+      "\"What exactly did you do?\"",
+      "\"Who is we?\" only",
+      "\"Why 3?\""
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Ownership."
+   ],
+   "solution": "<p>Have your own contribution ready, with credit to others.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Failure story",
+   "statement": "<p>Choosing a failure story.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Good properties?",
+     "options": [
+      "a real mistake with consequences",
+      "a lesson that changed your behaviour",
+      "a humble-brag (\"I care too much\")",
+      "evidence the change worked later"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Self-awareness."
+   ],
+   "solution": "<p>Real, owned, learned from, and applied.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Trading-firm emphasis",
+   "statement": "<p>What do trading firms probe in behavioural rounds?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "updating quickly when wrong",
+      "decisions under uncertainty",
+      "years of experience only",
+      "owning mistakes without defensiveness"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "The market-making mindset."
+   ],
+   "solution": "<p>The same skills as Part 16, shown in your history.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Questions to ask",
+   "statement": "<p>End of the interview: \"Any questions for me?\"</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best?",
+     "options": [
+      "\"What's the team's hardest problem right now, and how would I contribute in the first six months?\"",
+      "\"No, I'm good.\"",
+      "\"How many vacation days?\" first"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Interest and fit."
+   ],
+   "solution": "<p>Ask about the work and how success is measured.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Length",
+   "statement": "<p>Spoken behavioural answer length.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Target minutes?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": "50%"
+    }
+   ],
+   "hints": [
+    "Then stop and let them probe."
+   ],
+   "solution": "<p>About two minutes (250–300 words).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Consistency",
+   "statement": "<p>Two interviewers ask about the same project.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Risk?",
+     "options": [
+      "inconsistent numbers or roles between tellings, which interviewers compare",
+      "none",
+      "repetition is bad"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Debriefs."
+   ],
+   "solution": "<p>Keep your facts consistent; your one-page sheets help.</p>"
+  }
+ ]
+}

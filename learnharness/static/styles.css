@@ -686,3 +686,4 @@ svg .d-arrowhead { fill: var(--muted); }
 .mm-state { margin-top: 10px; }
 .mm-row label, .drill-setup label { white-space: nowrap; }
 .mm-row input.field { width: 90px; }
+.ask-fab.mock { background: var(--accent-ink); color: var(--bg); }

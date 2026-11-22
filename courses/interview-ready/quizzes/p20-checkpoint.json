@@ -1,0 +1,77 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Six prepared stories can answer…",
+   "options": [
+    "most behavioural questions",
+    "only six questions",
+    "none"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Every story needs…",
+   "options": [
+    "a decision, a measurement, a number",
+    "a joke",
+    "a villain"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Deep dives go…",
+   "options": [
+    "three levels: overview, design, depths",
+    "one level",
+    "straight to code"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "'Why us' should be…",
+   "options": [
+    "specific",
+    "generic",
+    "about pay"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "First salary number:",
+   "options": [
+    "defer or give a researched range",
+    "name low",
+    "refuse"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Exploding offer:",
+   "options": [
+    "ask for time, accelerate others",
+    "renege later",
+    "invent offers"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

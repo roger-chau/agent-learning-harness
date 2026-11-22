@@ -1,0 +1,66 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Every loop has at least one behavioural conversation, and in many it decides between two technically similar candidates: "tell me about a time you…", "your hardest bug", "a conflict with a teammate", "a project you're proud of", "a failure". Interviewers are checking ownership, judgement, communication and how you learn, and they can only judge what you <em>say</em>, so a prepared story bank isn't fakery. It's making sure your real experience comes across.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: six stories cover sixty questions</h2>
+<p>Most behavioural questions map onto a handful of themes. Prepare six stories, each rich enough to answer several themes:</p>
+<table>
+<tr><th>Story</th><th>Covers</th></tr>
+<tr><td>1. A hard technical problem you solved (ideally performance)</td><td>hardest bug, technical depth, persistence, proudest work</td></tr>
+<tr><td>2. A failure or mistake and what changed afterwards</td><td>failure, learning, ownership, feedback</td></tr>
+<tr><td>3. A disagreement you handled</td><td>conflict, influence without authority, communication</td></tr>
+<tr><td>4. Something you led or initiated</td><td>leadership, initiative, ambiguity, prioritisation</td></tr>
+<tr><td>5. A tight deadline or a trade-off under pressure</td><td>prioritisation, judgement, scope cuts, delivery</td></tr>
+<tr><td>6. Learning something hard quickly</td><td>curiosity, growth (your GPU self-study is a strong candidate)</td></tr>
+</table>
+<p>Tell each in <strong>STAR</strong> form, Situation, Task, Action, Result, with most of the time on <em>Action</em> (what <em>you</em> did and why) and a <em>measurable Result</em> (latency down 3.2×, a bug class eliminated, a team unblocked a week early). End with a short reflection: what you'd do differently.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Title:      "Halved inference latency by fixing a memory-bound kernel"
+Situation:  one or two sentences of context (team, system, stakes)
+Task:       what you were responsible for
+Action:     3–5 concrete steps YOU took, including how you decided (measurements, alternatives rejected)
+Result:     numbers + impact on people or the business
+Reflection: what you learned / would do differently
+Themes:     hard problem, ownership, data-driven
+Length:     about 2 minutes spoken (≈ 250–300 words)</code></pre>
+<p>Write your six stories in the box below (the write-up saves with your progress). Then tell each aloud to a timer and cut anything that isn't Action or Result.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: turning "I worked on GPU stuff" into a story</h2>
+<ol>
+<li><strong>Vague version:</strong> "I learned CUDA and optimised some kernels." Nothing to evaluate.</li>
+<li><strong>Find the decision points:</strong> what was slow, how you found out (profiler, roofline), what you tried first, what didn't work, what did, and why.</li>
+<li><strong>Add numbers:</strong> baseline 4 TFLOP/s, 31 TFLOP/s after shared-memory tiling, 78% of the measured peak; bank conflicts eliminated (from Nsight's shared-memory metrics).</li>
+<li><strong>Add the human element:</strong> the constraint you worked within, what you'd tell a teammate, what surprised you.</li>
+<li><strong>Result:</strong> "Taking a GEMM from 4 to 31 TFLOP/s taught me to measure before guessing. My first idea (more threads) did nothing because the kernel was memory-bound, which the roofline made obvious."</li>
+</ol>
+<p>The habit: <strong>every story needs a decision, a measurement and a number</strong>. Interviewers probe exactly those three.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>\"We\" everywhere:</strong> interviewers want your contribution. Say \"I\" for what you did, and credit others specifically.</li>
+<li><strong>No result</strong>, or results without numbers.</li>
+<li><strong>Fake failures</strong> (\"I work too hard\"). Pick a real mistake with a real lesson and a changed behaviour.</li>
+<li><strong>Badmouthing</strong> former colleagues or employers, even when justified.</li>
+<li><strong>Over-rehearsed delivery:</strong> know the beats, not a script.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Write all six stories in the box below (at least 400 words in total), then time each aloud.</li>
+<li>* Ask the course's Ask panel to review one story as a skeptical interviewer.</li>
+<li>Gayle Laakmann McDowell, <em>Cracking the Coding Interview</em>, chapter on behavioural questions (the "interview prep grid").</li>
+<li>Record yourself telling story 1; listen for filler, vagueness and missing numbers.</li>
+</ul>
+</section>

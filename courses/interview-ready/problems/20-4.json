@@ -1,0 +1,207 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Components",
+   "statement": "<p>Which are typically negotiable?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "base salary",
+      "sign-on bonus",
+      "level/title (with supporting evidence)",
+      "start date"
+     ],
+     "answer": [
+      0,
+      1,
+      2,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Most things are."
+   ],
+   "solution": "<p>All of them, to varying degrees.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "First number",
+   "statement": "<p>A recruiter asks for your salary expectations in the first call.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best response?",
+     "options": [
+      "defer politely until there's an offer, or give a well-researched range",
+      "name a low number to seem reasonable",
+      "refuse to talk"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Anchoring."
+   ],
+   "solution": "<p>Early numbers anchor the offer.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Counter",
+   "statement": "<p>How many counters, and how?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "one specific counter with a reason, then decide",
+      "many small rounds",
+      "accept immediately"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Clarity and goodwill."
+   ],
+   "solution": "<p>Specific, reasoned, once.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Exploding offer",
+   "statement": "<p>A 48-hour deadline while another process is two weeks away.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Reasonable actions?",
+     "options": [
+      "politely ask for more time",
+      "ask the other company to accelerate",
+      "invent a competing offer",
+      "accept and renege later"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    }
+   ],
+   "hints": [
+    "Honesty and reputation."
+   ],
+   "solution": "<p>Never invent offers or renege; industries are small.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Equity",
+   "statement": "<p>A $200k four-year grant at a private company valued on its last round.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Annual vesting amount on paper ($k)?",
+     "answer": 50,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "How to value it?",
+     "options": [
+      "conservatively: uncertain valuation and liquidity",
+      "at face value",
+      "as zero always"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Paper value ≠ cash."
+   ],
+   "solution": "<p>$50k/year on paper; discount it for risk and illiquidity.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Level",
+   "statement": "<p>Why negotiate level before numbers?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "level sets the whole band and future growth",
+      "titles look nice",
+      "it's easier"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Long-term value."
+   ],
+   "solution": "<p>A level change outweighs a one-off bump.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Trading bonus",
+   "statement": "<p>An offer: base $200k, target bonus \"discretionary\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best question?",
+     "options": [
+      "how bonuses are determined, and the historical range for this role",
+      "nothing",
+      "\"is it guaranteed\" only"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Variable comp dominates at trading firms."
+   ],
+   "solution": "<p>Ask about the mechanics and history; first-year guarantees are sometimes available.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Decision",
+   "statement": "<p>Two offers: A pays 15% more; B has the team and work you want most.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "How to decide?",
+     "options": [
+      "weigh the long-term trajectory (learning, team, career) and the total expected value, not just first-year comp",
+      "always take the higher number",
+      "flip a coin"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Expected value over years."
+   ],
+   "solution": "<p>Skills compound; so does a good team.</p>"
+  }
+ ]
+}

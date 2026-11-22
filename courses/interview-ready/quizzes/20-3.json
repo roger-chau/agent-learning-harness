@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "STAR's biggest section should be…",
+   "options": [
+    "Action",
+    "Situation",
+    "Task"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "A good 'why us' is…",
+   "options": [
+    "specific to the team's work and your experience",
+    "generic praise",
+    "about money"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "'We' stories should…",
+   "options": [
+    "clarify your personal contribution",
+    "never mention others",
+    "stay vague"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Trading firms value…",
+   "options": [
+    "updating when wrong",
+    "never being wrong",
+    "aggression"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "At the end, ask about…",
+   "options": [
+    "the team's hardest problems and success metrics",
+    "nothing",
+    "perks only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

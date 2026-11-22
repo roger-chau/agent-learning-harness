@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from . import runner, agent, content
 from .progress import Progress
 from .prompts import chapter_context
+from . import prompts
 
 STATIC = Path(__file__).parent / "static"
 
@@ -138,6 +139,7 @@ def get_item(slug: str, item_id: str):
         "next": order[idx + 1]["id"] if idx + 1 < len(order) else None,
         "qa": agent.transcript(progress.qa(slug, item_id)),
         "writeup": it.get("writeup"),
+        "mock": it.get("mock"),
         "lab": {"dir": it.get("dir"), "targets": it.get("targets", []), "cloud": it.get("cloud", False)} if it["type"] == "lab" else None,
         "lab_record": progress.lab(slug, item_id) if it["type"] == "lab" else None,
         "writeup_text": progress.writeup(slug, item_id),
@@ -514,7 +516,8 @@ async def ask(slug: str, item_id: str, body: AskIn):
     async def events():
         async with _ask_lock:
             try:
-                async for ev in agent.answer(client(), ctx, history, body.question.strip()):
+                kw = {"system": prompts.mock_prompt(it["mock"]["kind"])} if it.get("mock") else {}
+                async for ev in agent.answer(client(), ctx, history, body.question.strip(), **kw):
                     yield _sse(ev)
                 progress.save()
             except Exception as e:  # surface unexpected failures instead of a dead stream
