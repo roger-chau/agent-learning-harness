@@ -2893,6 +2893,65 @@
      }
     },
     {
+     "type": "lab",
+     "id": "L9",
+     "title": "Lab 9: Determinism, accuracy and clocks",
+     "summary": "A float sum that changes every run and its deterministic fix, Kahan summation, and 20 seconds of sustained load sampled with NVML.",
+     "dir": "labs/L9-reality",
+     "hours": 3,
+     "blocks": [
+      [
+       "Why this lab",
+       "where the clean model breaks"
+      ],
+      [
+       "What to do",
+       "determinism, accuracy, clocks"
+      ],
+      [
+       "Questions for the report",
+       "what each effect means for your work"
+      ],
+      [
+       "Going further",
+       "grid-independent sums, low precision, power limits"
+      ],
+      [
+       "Passing",
+       "targets and the plot"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "deterministic_vs_atomic",
+       "op": ">=",
+       "value": 0.9,
+       "label": "Deterministic sum, speed relative to atomics"
+      },
+      {
+       "metric": "deterministic_pct",
+       "op": ">=",
+       "value": 70,
+       "label": "Deterministic sum, % of peak bandwidth"
+      },
+      {
+       "metric": "kahan_improvement",
+       "op": ">=",
+       "value": 10,
+       "label": "Kahan: error reduction"
+      }
+     ],
+     "writeup": {
+      "min_words": 300,
+      "prompts": [
+       "A: the number of distinct atomic results, why they differ, and the conditions under which your deterministic sum stays bit-identical.",
+       "B: predicted and measured errors for both versions, and why Kahan costs so little here.",
+       "C: your plot of throughput, SM clock and temperature against time, and what caused any change.",
+       "The benchmarking protocol you'll use from now on, in five lines."
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p9-checkpoint",
      "title": "Final checkpoint",

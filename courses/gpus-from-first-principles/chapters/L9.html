@@ -1,0 +1,38 @@
+<section class="blk" data-n="01">
+<h2>Why this lab</h2>
+<p>The earlier labs assume a clean machine: addition is addition, the clock is the clock, and the same input gives the same output. On real hardware none of these holds exactly. Training runs that won't reproduce, a benchmark that drifts by 15% after a minute, and a "regression" that is really a warmer room are all daily problems on GPU teams. Telling them apart from real bugs is a senior skill. This lab makes each one happen on your card.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>What to do</h2>
+<p>Open <code>labs/L9-reality/l9.cu</code>.</p>
+<ul>
+<li><strong>A. Determinism.</strong> <code>sum_atomic</code> adds each block's partial sum into one float with <code>atomicAdd</code>. Run it 30 times and count the distinct answers. Then write <code>sum_partials</code> and <code>sum_finish</code>: partial sums in a fixed slot per block, added in a fixed order. You should get one answer in 30 runs, at the same speed. This is how PyTorch's deterministic mode works, and why it rules out some kernels.</li>
+<li><strong>B. Accuracy.</strong> <code>chunk_sum_plain</code> gives each thread 8,192 consecutive values near 0.1 to add up. Predict the relative error from the rounding of each addition (Chapter 9.1). Then write <code>chunk_sum_kahan</code> with compensated summation, and check in the SASS (<code>make sass</code>) that the compiler kept the compensation. With <code>--use_fast_math</code> it is allowed to remove it. Try it.</li>
+<li><strong>C. Clocks and power.</strong> Given. A compute kernel runs for 20 seconds while a host thread samples the SM clock, power and temperature through NVML every 200 ms. The results go to <code>clocks.csv</code>. Plot throughput, clock and temperature against time. Before running, read your card's base clock, boost clock and power limit (<code>nvidia-smi -q -d CLOCK,POWER</code>), and predict what happens.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Questions for the report</h2>
+<ul>
+<li>A: why do the atomic results differ, given that every block's partial is the same every run? Would your deterministic version give the same answer with a different grid size, or on a different GPU? What would it take to guarantee that?</li>
+<li>B: your predicted error against the measured one, for both versions. Why is Kahan's cost nearly zero here? Think about what bounds this kernel.</li>
+<li>C: did the clock drop, and when? Is the drop caused by power or by temperature? How should a benchmark be run so that A-against-B comparisons are fair (Chapter 5.1)?</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Going further</h2>
+<ul>
+<li>Make A deterministic <em>and</em> independent of the grid size: give each block a fixed-size slice of the data, so the reduction tree depends only on n.</li>
+<li>Sum the same data in FP16 and in BF16 (convert on the GPU) with FP32 accumulation, then with FP16 accumulation. Where does each break?</li>
+<li>Repeat C with locked clocks (<code>sudo nvidia-smi -lgc &lt;MHz&gt;</code>, if your driver allows it) and with a lower power limit (<code>-pl</code>). Measure GFLOP/s per watt at each setting.</li>
+<li>Run Lab 4's best GEMM after C's 20 seconds of warm-up, and again from cold. Report both numbers and say which one you'd publish.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Passing</h2>
+<p>The deterministic sum gives one answer in 30 runs, is accurate, runs at least 0.9× the atomic version's speed, and reaches at least 70% of peak bandwidth. Kahan summation reduces the error at least 10×. The sustained-load run completes, and the report includes the plot from <code>clocks.csv</code> with your explanation.</p>
+</section>

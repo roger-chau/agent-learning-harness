@@ -3,6 +3,21 @@
 CUDA labs that run on your own NVIDIA GPU, one per Part of *GPUs from First Principles*.
 Each lab page in Groundwork explains the goal, what to predict, and the targets.
 
+## Setup
+
+- **Linux**, or **Windows with WSL2** (Ubuntu): install the NVIDIA driver on Windows, then the
+  CUDA Toolkit 12.x for WSL inside Ubuntu (it gives `nvcc`, cuBLAS, CUB and the Nsight
+  command-line tools). Check with `nvidia-smi` and `nvcc --version`.
+- Nsight Compute may need permission to read performance counters: on Linux, run `make ncu`
+  with `sudo`, or allow it for all users (NVIDIA's "ERR_NVGPUCTRPERM" page); on WSL, enable
+  GPU performance counters for all users in the NVIDIA Control Panel on Windows.
+- **Renting a GPU**: any cloud Linux machine with an NVIDIA GPU and the CUDA Toolkit works.
+  Pass the right `ARCH`, and send the results to your Groundwork with
+  `python3 common/submit.py results.json --server http://<your machine>:8765`, or copy
+  `results.json` back and run `make submit` locally.
+
+## Running a lab
+
 ```
 cd labs/L0-hello
 make run      # build, check correctness, measure; writes results.json
@@ -25,6 +40,7 @@ other GPUs. Set `GW_PEAK_GBS` if the reported peak bandwidth looks wrong for you
 | L6-compiler | 6 | ILP versus occupancy, local memory from run-time indexing, and fusion, read from the SASS |
 | L7-workloads | 7 | Fused softmax and LayerNorm, and a pinned-memory stream pipeline |
 | L8-attention | 8 | Capstone: FlashAttention-style fused attention with WMMA, against a cuBLAS reference |
+| L9-reality | 9 | Deterministic reductions, compensated summation, and clocks and power under sustained load (NVML) |
 
 `common/gw.h` is the shared harness: error checking, device info, event timing with warm-up
 and median, exactness checks, and `results.json`.
