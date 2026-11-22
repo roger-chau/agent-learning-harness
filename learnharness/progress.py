@@ -56,7 +56,12 @@ class Progress:
         ex_ok = all(rec.get("exercises", {}).get(e, {}).get("passed") for e in it["exercises"])
         quiz_ok = (not it["has_quiz"]) or bool((rec.get("quiz") or {}).get("passed"))
         wu_ok = (not wu) or (rec.get("writeup") or {}).get("words", 0) >= wu.get("min_words", 100)
-        return ex_ok and quiz_ok and wu_ok
+        pr_ok = True
+        if it.get("has_problems"):
+            ps = content.problems(slug, it["id"]) or {"problems": []}
+            solved = sum(1 for p in ps["problems"] if (rec.get("problems", {}).get(p["id"]) or {}).get("solved"))
+            pr_ok = not ps["problems"] or solved / len(ps["problems"]) >= ps.get("pass", 0.7) - 1e-9
+        return ex_ok and quiz_ok and wu_ok and pr_ok
 
     def states(self, slug: str) -> dict[str, dict]:
         unlock_all = os.environ.get("GROUNDWORK_UNLOCK", "1") != "0"
@@ -79,6 +84,7 @@ class Progress:
                 "blocked_by": None if state != "locked" else blocked_by,
                 "exercises": {e: bool(rec.get("exercises", {}).get(e, {}).get("passed")) for e in it["exercises"]},
                 "quiz": rec.get("quiz"),
+                "problems": rec.get("problems", {}),
             }
             if it["status"] == "ready" and not done and blocked_by is None:
                 blocked_by = it["id"]
@@ -102,6 +108,24 @@ class Progress:
             }
             self._mark(slug, item_id, rec)
             self.save()
+
+    def record_problem(self, slug: str, item_id: str, pid: str, solved: bool | None = None, reveal: bool = False) -> dict:
+        """Record an attempt (solved given) or a reveal. A revealed problem can't count as solved."""
+        with self._lock:
+            rec = self._item(slug, item_id)
+            probs = rec.setdefault("problems", {})
+            p = probs.get(pid) or {"attempts": 0, "solved": False, "revealed": False}
+            if reveal:
+                p["revealed"] = True
+            else:
+                p["attempts"] += 1
+                if solved and not p["revealed"]:
+                    p["solved"] = True
+            p["at"] = _now()
+            probs[pid] = p
+            self._mark(slug, item_id, rec)
+            self.save()
+            return dict(p)
 
     def record_quiz(self, slug: str, item_id: str, result: dict) -> None:
         with self._lock:

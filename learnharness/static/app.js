@@ -291,8 +291,12 @@
           </header>
           <div class="ch-body prose" id="ch-body">${it.html}</div>
           ${it.exercises.length ? `<section class="practice" id="practice"><p class="eyebrow">Practice</p><h2>${it.type === "scenario" ? "Your solution" : "Exercises"}</h2>
-            <p class="muted">Pass every exercise${it.quiz ? " and the quiz" : ""} to unlock the next chapter. Your code is saved in this browser as you type.</p>
+            <p class="muted">Pass every exercise${it.problems ? ", the problem set" : ""}${it.quiz ? " and the quiz" : ""} to complete the chapter. Your code is saved in this browser as you type.</p>
             <div id="exercises"></div></section>` : ""}
+          ${it.problems ? `<section class="practice" id="problems-sec"><p class="eyebrow">Problem set</p><h2>Practice problems</h2>
+            <p class="muted">Solve at least ${Math.round(it.problems.pass * 100)}% to complete the chapter. ★ mechanics · ★★ analysis · ★★★ design. Hints are free; a worked solution unlocks when you solve a problem, or after ${2} tries if you give up (then it doesn't count).</p>
+            <div class="ps-progress" id="ps-progress"></div>
+            <div id="problems" class="problems"></div></section>` : ""}
           ${it.writeup ? `<section class="practice" id="writeup-sec"><p class="eyebrow">Design notes</p><h2>Write-up</h2>
             <p class="muted">At least ${it.writeup.min_words} words. Cover:</p>
             <ul class="wu-prompts">${it.writeup.prompts.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
@@ -325,6 +329,7 @@
     }));
 
     await renderExercises(slug, it);
+    renderProblems(slug, it);
     renderQuiz(slug, it);
     renderGate(it.state, it);
     setupAsk(slug, it);
@@ -379,6 +384,92 @@
       box.appendChild(wrap);
       typeset(wrap.querySelector(".ex-prompt"));
     }
+  }
+
+  function renderProblems(slug, it) {
+    const box = $("#problems");
+    if (!box || !it.problems) return;
+    const rec = () => it.state.problems || {};
+    const stars = (n) => "★".repeat(n || 1);
+    const progressLine = () => {
+      const solved = it.problems.problems.filter((p) => (rec()[p.id] || {}).solved).length, n = it.problems.problems.length;
+      const need = Math.ceil(it.problems.pass * n - 1e-9);
+      $("#ps-progress").innerHTML = `<div class="ps-bar"><span style="width:${(100 * solved) / n}%"></span></div><span class="muted">${solved} of ${n} solved · ${solved >= need ? "set complete" : `${need - solved} more to complete the set`}</span>`;
+    };
+    box.innerHTML = it.problems.problems.map((p, k) => {
+      const r = rec()[p.id] || {};
+      const parts = p.parts.map((q) => {
+        let input;
+        if (q.type === "single") input = q.options.map((o, i) => `<label class="opt"><input type="radio" name="${esc(q.id)}" value="${i}"> <span>${o}</span></label>`).join("");
+        else if (q.type === "multi") input = q.options.map((o, i) => `<label class="opt"><input type="checkbox" name="${esc(q.id)}" value="${i}"> <span>${o}</span></label>`).join("");
+        else input = `<div class="num"><input class="field" name="${esc(q.id)}" inputmode="decimal" autocomplete="off" placeholder="Answer">${q.unit ? `<span class="muted">${esc(q.unit)}</span>` : ""}</div>`;
+        return `<div class="pp" data-part="${esc(q.id)}"><div class="pp-prompt"><b>(${esc(q.id)})</b> ${q.prompt}</div>${input}<span class="pp-mark"></span></div>`;
+      }).join("");
+      return `<form class="prob ${r.solved ? "solved" : ""}" data-pid="${esc(p.id)}">
+        <div class="prob-head"><span class="prob-n">Problem ${k + 1}</span><span class="prob-lvl">${stars(p.level)}</span><b>${esc(p.title || "")}</b><span class="prob-status">${r.solved ? "✓ solved" : r.revealed ? "solution shown" : r.attempts ? `${r.attempts} attempt${r.attempts > 1 ? "s" : ""}` : ""}</span></div>
+        <div class="prob-stmt">${p.statement || ""}</div>
+        ${parts}
+        <div class="prob-actions"><button class="btn btn-primary btn-sm" type="submit">Check</button>
+          ${(p.hints || []).length ? `<button class="btn btn-ghost btn-sm" type="button" data-act="hint">Hint (${p.hints.length})</button>` : ""}
+          <button class="btn btn-ghost btn-sm" type="button" data-act="reveal">Show solution</button>
+          <span class="prob-msg muted"></span></div>
+        <div class="prob-hints"></div>
+        <div class="prob-sol" hidden></div>
+      </form>`;
+    }).join("");
+    typeset(box);
+    progressLine();
+    const showSolution = (form, res) => {
+      const sol = form.querySelector(".prob-sol");
+      const ans = Object.entries(res.answers || {}).map(([k, v]) => `<b>(${esc(k)})</b> ${esc(Array.isArray(v) ? v.map((i) => i + 1).join(", ") : String(v))}`).join(" · ");
+      sol.innerHTML = `<p class="eyebrow">Worked solution</p>${res.solution || ""}${ans ? `<p class="muted small">Answers: ${ans}</p>` : ""}`;
+      sol.hidden = false; typeset(sol);
+    };
+    box.querySelectorAll("form.prob").forEach((form) => {
+      const p = it.problems.problems.find((x) => x.id === form.dataset.pid);
+      let hintN = 0;
+      form.addEventListener("click", async (e) => {
+        const b = e.target.closest("button[data-act]");
+        if (!b) return;
+        const msg = form.querySelector(".prob-msg");
+        if (b.dataset.act === "hint") {
+          if (hintN < p.hints.length) {
+            const d = document.createElement("div"); d.className = "callout"; d.innerHTML = `<b>Hint ${hintN + 1}</b>${p.hints[hintN]}`;
+            form.querySelector(".prob-hints").appendChild(d); typeset(d); hintN++;
+            b.textContent = hintN < p.hints.length ? `Next hint (${p.hints.length - hintN})` : "No more hints"; if (hintN >= p.hints.length) b.disabled = true;
+          }
+        } else if (b.dataset.act === "reveal") {
+          try {
+            const r = await api(`/api/courses/${slug}/items/${it.id}/problems/${p.id}/reveal`, { method: "POST" });
+            showSolution(form, r); it.state = r.state; form.querySelector(".prob-status").textContent = r.record.solved ? "✓ solved" : "solution shown"; progressLine(); renderGate(r.state, it);
+          } catch (err) { msg.textContent = err.message; }
+        }
+      });
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const answers = {};
+        for (const q of p.parts) {
+          if (q.type === "multi") answers[q.id] = [...form.querySelectorAll(`input[name="${CSS.escape(q.id)}"]:checked`)].map((x) => +x.value);
+          else if (q.type === "single") { const c = form.querySelector(`input[name="${CSS.escape(q.id)}"]:checked`); answers[q.id] = c ? +c.value : null; }
+          else answers[q.id] = form.querySelector(`input[name="${CSS.escape(q.id)}"]`).value;
+        }
+        const msg = form.querySelector(".prob-msg");
+        try {
+          const r = await api(`/api/courses/${slug}/items/${it.id}/problems/${p.id}`, { method: "POST", body: JSON.stringify({ answers }) });
+          for (const [pid, ok] of Object.entries(r.parts)) {
+            const el = form.querySelector(`.pp[data-part="${CSS.escape(pid)}"]`);
+            el.classList.toggle("right", ok); el.classList.toggle("wrong", !ok);
+            el.querySelector(".pp-mark").textContent = ok ? "✓" : "✗";
+          }
+          it.state = r.state;
+          form.classList.toggle("solved", !!r.record.solved);
+          form.querySelector(".prob-status").textContent = r.record.solved ? "✓ solved" : r.record.revealed ? "solution shown" : `${r.record.attempts} attempt${r.record.attempts > 1 ? "s" : ""}`;
+          msg.textContent = r.solved ? "Correct." : `${Object.values(r.parts).filter(Boolean).length} of ${p.parts.length} parts right.`;
+          if (r.solution !== undefined) showSolution(form, r);
+          progressLine(); renderGate(r.state, it);
+        } catch (err) { msg.textContent = err.message; }
+      });
+    });
   }
 
   function renderQuiz(slug, it) {
@@ -459,13 +550,19 @@
     const exLeft = Object.values(state.exercises || {}).filter((v) => !v).length;
     const quizLeft = it.quiz && !(state.quiz && state.quiz.passed);
     const wuLeft = it.writeup && (state.writeup_words || 0) < it.writeup.min_words;
+    const psLeft = (() => {
+      if (!it.problems) return 0;
+      const n = it.problems.problems.length, need = Math.ceil(it.problems.pass * n - 1e-9);
+      const solved = it.problems.problems.filter((p) => ((state.problems || {})[p.id] || {}).solved).length;
+      return Math.max(0, need - solved);
+    })();
     const done = state.state === "complete";
     const nextLink = it.next ? `#/c/${reader.slug}/${it.next}` : `#/c/${reader.slug}`;
     g.className = `gate ${done ? "done" : ""}`;
     g.innerHTML = done
       ? `<div><b>${CHECK} Complete.</b> ${it.next ? "The next chapter is unlocked." : "That's everything written so far."}</div>
          <a class="btn btn-primary" href="${nextLink}">${it.next ? "Next" : "Back to course"} ${ARROW}</a>`
-      : `<div><b>${LOCK} Next chapter locked.</b> ${[exLeft ? `${exLeft} check${exLeft > 1 ? "s" : ""} to pass` : "", quizLeft ? "quiz to pass" : "", wuLeft ? "write-up to save" : ""].filter(Boolean).join(" · ") || "Finishing up…"}</div>
+      : `<div><b>${LOCK} Next chapter locked.</b> ${[exLeft ? `${exLeft} check${exLeft > 1 ? "s" : ""} to pass` : "", psLeft ? `${psLeft} problem${psLeft > 1 ? "s" : ""} to solve` : "", quizLeft ? "quiz to pass" : "", wuLeft ? "write-up to save" : ""].filter(Boolean).join(" · ") || "Finishing up…"}</div>
          <button class="btn btn-ghost" type="button" disabled>Next ${ARROW}</button>`;
     // keep the TOC in sync
     if (done) {

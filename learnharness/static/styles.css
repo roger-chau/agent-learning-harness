@@ -452,7 +452,7 @@ svg .d-arrowhead { fill: var(--muted); }
 .term-btn[disabled] { opacity: .5; cursor: wait; }
 .term-editor { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 520px; overflow: auto; background: #0b1020; }
 .term-gutter { margin: 0; padding: 12px 10px 12px 14px; text-align: right; color: #4a5576; font-family: var(--font-mono); font-size: .82rem; line-height: 1.6; user-select: none; background: #0b1020; }
-.term-code { border: 0; outline: none; resize: none; background: transparent; color: #e6e9f2; font-family: var(--font-mono); font-size: .82rem; line-height: 1.6; padding: 12px 14px 12px 4px; white-space: pre; overflow-x: auto; overflow-y: hidden; tab-size: 2; caret-color: #3fc1b0; min-height: 120px; }
+.term-code { border: 0; outline: none; resize: none; background: transparent; color: transparent; -webkit-text-fill-color: transparent; font-family: var(--font-mono); font-size: .82rem; line-height: 1.6; padding: 12px 14px 12px 4px; white-space: pre; overflow-x: auto; overflow-y: hidden; tab-size: 2; caret-color: #3fc1b0; min-height: 120px; }
 .term-console { border-top: 1px solid #222c48; background: #070b17; padding: 10px 14px; font-family: var(--font-mono); font-size: .78rem; line-height: 1.55; max-height: 260px; min-height: 52px; overflow: auto; color: #c9cfdf; }
 .term-line { white-space: pre-wrap; overflow-wrap: anywhere; }
 .term-line.cmd { color: #98a2ba; } .term-line.dim, .term-line.hint { color: #6b7592; }
@@ -572,3 +572,42 @@ svg .d-arrowhead { fill: var(--muted); }
 .tree-wrap { background: var(--surface-2); border: 1px solid var(--rule); border-radius: var(--radius-lg); padding: 8px; overflow-x: auto; }
 .tree-svg { width: 100%; min-width: 560px; height: auto; display: block; }
 .tree-label { font-size: .78rem; color: var(--ink-2); margin-top: 8px; min-height: 1.4em; }
+
+/* ---- Problem sets ---- */
+.problems { display: grid; gap: 16px; }
+.prob { border: 1px solid var(--rule); border-radius: var(--radius-lg); background: var(--surface); padding: 16px 18px; min-width: 0; }
+.prob.solved { border-color: var(--mint-line); }
+.prob-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
+.prob-n { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.prob-lvl { color: var(--saffron); letter-spacing: 2px; }
+.prob-status { margin-left: auto; font-size: .85rem; color: var(--muted); }
+.prob.solved .prob-status { color: var(--mint-ink); }
+.prob-stmt { margin-bottom: 10px; }
+.prob-stmt p:first-child { margin-top: 0; }
+.pp { border-top: 1px dashed var(--rule); padding: 10px 0; display: grid; gap: 6px; position: relative; }
+.pp-prompt { padding-right: 24px; }
+.pp-mark { position: absolute; right: 0; top: 10px; font-weight: 700; }
+.pp.right .pp-mark { color: var(--mint-ink); } .pp.wrong .pp-mark { color: var(--rose-ink); }
+.pp.wrong .field { border-color: var(--rose-line); } .pp.right .field { border-color: var(--mint-line); }
+.prob-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.prob-hints .callout { margin: 10px 0 0; }
+.prob-sol { margin-top: 12px; border-top: 1px solid var(--rule); padding-top: 10px; }
+.ps-progress { display: flex; align-items: center; gap: 12px; margin: 4px 0 14px; }
+.ps-bar { flex: 0 0 160px; height: 8px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.ps-bar span { display: block; height: 100%; background: var(--mint-ink); }
+
+/* ---- Terminal syntax colouring (overlay under a transparent textarea) ---- */
+.term-stack { position: relative; min-width: 0; }
+.term-stack .term-code { position: relative; z-index: 1; width: 100%; display: block; }
+.term-hl { position: absolute; inset: 0; margin: 0; pointer-events: none; font-family: var(--font-mono); font-size: .82rem; line-height: 1.6; padding: 12px 14px 12px 4px; white-space: pre; overflow: hidden; tab-size: 2; color: #e6e9f2; }
+.term-hl code { font: inherit; background: none; padding: 0; color: inherit; white-space: pre; }
+.term-code::selection { background: #3fc1b055; -webkit-text-fill-color: transparent; }
+.tk-kw { color: #c792ea; }
+.tk-bi { color: #4fd1c5; }
+.tk-fn { color: #82aaff; }
+.tk-str { color: #c3e88d; }
+.tk-num { color: #f78c6c; }
+.tk-com { color: #6b7592; font-style: italic; }
+.tk-op { color: #89ddff; }
+.tk-reg { color: #ffcb6b; }
+.tk-label { color: #f07178; }

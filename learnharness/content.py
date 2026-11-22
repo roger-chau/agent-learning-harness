@@ -47,6 +47,7 @@ def _course_cached(slug: str, mtime: float) -> dict:
             item.setdefault("status", "ready")
             item.setdefault("exercises", [])
             item["has_quiz"] = (ROOT / slug / "quizzes" / f"{item['id']}.json").exists()
+            item["has_problems"] = (ROOT / slug / "problems" / f"{item['id']}.json").exists()
             order.append(item)
     data["order"] = order
     return data
@@ -124,6 +125,38 @@ def _check(question: dict, given) -> bool:
     except (TypeError, ValueError):
         return False
     return False
+
+
+def problems(slug: str, item_id: str) -> dict | None:
+    p = ROOT / _safe(slug) / "problems" / f"{_safe(item_id)}.json"
+    return json.loads(p.read_text()) if p.exists() else None
+
+
+def public_problems(ps: dict | None) -> dict | None:
+    """Problem set without answers or worked solutions (hints are public)."""
+    if not ps:
+        return None
+    hide = ("answer", "tolerance", "explanation")
+    return {
+        "pass": ps.get("pass", 0.7),
+        "problems": [
+            {**{k: v for k, v in pr.items() if k != "solution"},
+             "parts": [{k: v for k, v in part.items() if k not in hide} for part in pr["parts"]]}
+            for pr in ps["problems"]
+        ],
+    }
+
+
+def find_problem(ps: dict, pid: str) -> dict:
+    for pr in ps["problems"]:
+        if pr["id"] == pid:
+            return pr
+    raise NotFound(pid)
+
+
+def grade_problem(pr: dict, answers: dict) -> dict:
+    parts = {part["id"]: _check(part, answers.get(part["id"])) for part in pr["parts"]}
+    return {"parts": parts, "solved": all(parts.values())}
 
 
 def asset_path(slug: str, kind: str, rel: str) -> Path:

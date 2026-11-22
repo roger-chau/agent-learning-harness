@@ -12,6 +12,49 @@
     return null;
   }
 
+  // ---- Syntax colouring: JavaScript, simulator built-ins, and GWX assembly inside template strings.
+  const KW = new Set("const let var function return if else for while do break continue new of in typeof instanceof switch case default throw try catch finally class extends async await yield true false null undefined this".split(" "));
+  const BUILTIN = new Set("threadIdx blockIdx blockDim gridDim warpSize __syncthreads __syncwarp __shfl_sync __shfl_down_sync __shfl_up_sync __shfl_xor_sync __ballot_sync __any_sync __all_sync __mma_sync __popc __threadfence shared fma ldg4 stg4 f16 atomicAdd atomicSub atomicMax atomicMin atomicExch atomicOr atomicAnd atomicCAS gpu GWX GPUSim print table show Math".split(" "));
+  const TOKEN = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|(`(?:\\[\s\S]|[^`\\])*`?|"(?:\\.|[^"\\\n])*"?|'(?:\\.|[^'\\\n])*'?)|(\b0x[0-9a-fA-F]+\b|\b\d+\.?\d*(?:e[-+]?\d+)?\b)|([A-Za-z_$][\w$]*)(\s*\()?|([{}()[\];,.]|[-+*/%=<>!&|^~?:]+)/g;
+  function highlightTemplate(text) {
+    // template literals often hold kernel source or GWX assembly: colour them too, with a string tint
+    const inner = text.slice(1, text.endsWith("`") && text.length > 1 ? -1 : undefined);
+    const looksAsm = /(^|\n)\s*(ld\.|st\.|fma |add |mov |setp\.|@%|bra |\.shared )/.test(inner);
+    const body = looksAsm ? highlightAsm(inner) : highlightJs(inner, true);
+    return `<span class="tk-str">\`</span>${body}${text.endsWith("`") && text.length > 1 ? `<span class="tk-str">\`</span>` : ""}`;
+  }
+  function highlightAsm(src) {
+    return src.split("\n").map((ln) => {
+      const m = /^(\s*)(\/\/.*)?$/.exec(ln);
+      if (m) return esc(m[1]) + (m[2] ? `<span class="tk-com">${esc(m[2])}</span>` : "");
+      return esc(ln)
+        .replace(/(\/\/.*)$/, '<span class="tk-com">$1</span>')
+        .replace(/^(\s*)([A-Za-z_]\w*:)/, '$1<span class="tk-label">$2</span>')
+        .replace(/^(\s*(?:@!?%\w+\s+)?)([a-z][\w.]*)/, '$1<span class="tk-kw">$2</span>')
+        .replace(/(%[A-Za-z_]\w*)/g, '<span class="tk-reg">$1</span>')
+        .replace(/(\$[A-Za-z_]\w*)/g, '<span class="tk-fn">$1</span>')
+        .replace(/(^|[\s,\[+-])(\d+\.?\d*)/g, '$1<span class="tk-num">$2</span>');
+    }).join("\n");
+  }
+  function highlightJs(src, nested) {
+    let out = "", last = 0, m;
+    TOKEN.lastIndex = 0;
+    while ((m = TOKEN.exec(src))) {
+      out += esc(src.slice(last, m.index));
+      last = TOKEN.lastIndex;
+      if (m[1]) out += `<span class="tk-com">${esc(m[1])}</span>`;
+      else if (m[2]) out += m[2][0] === "`" && !nested ? highlightTemplate(m[2]) : `<span class="tk-str">${esc(m[2])}</span>`;
+      else if (m[3]) out += `<span class="tk-num">${esc(m[3])}</span>`;
+      else if (m[4]) {
+        const w = m[4], call = m[5] || "";
+        const cls = KW.has(w) ? "tk-kw" : BUILTIN.has(w) ? "tk-bi" : call ? "tk-fn" : "";
+        out += (cls ? `<span class="${cls}">${esc(w)}</span>` : esc(w)) + esc(call);
+      } else out += `<span class="tk-op">${esc(m[6])}</span>`;
+    }
+    return out + esc(src.slice(last));
+  }
+  const highlight = (src) => highlightJs(src, false);
+
   /**
    * opts: { title, starter, storageKey, exerciseUrl, exerciseId, onResult(passed, results) }
    * Without exerciseId it's a playground (Run only).
@@ -32,7 +75,10 @@
       </div>
       <div class="term-editor">
         <pre class="term-gutter" aria-hidden="true"></pre>
-        <textarea class="term-code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
+        <div class="term-stack">
+          <pre class="term-hl" aria-hidden="true"><code></code></pre>
+          <textarea class="term-code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
+        </div>
       </div>
       <div class="term-console" role="log" aria-live="polite"><div class="term-line hint">Ready. Ctrl+Enter runs main().${opts.exerciseId ? " Test runs the checks and records your result." : ""}</div></div>`;
 
@@ -42,13 +88,16 @@
     const starter = (opts.starter || "").replace(/^\n/, "");
     ta.value = (opts.storageKey && store(opts.storageKey)) || starter;
 
+    const hl = el.querySelector(".term-hl code");
     const syncGutter = () => {
       const n = ta.value.split("\n").length;
       gutter.textContent = Array.from({ length: n }, (_, i) => i + 1).join("\n");
+      hl.innerHTML = highlight(ta.value) + "\n";
       ta.style.height = "auto";
       ta.style.height = Math.max(ta.scrollHeight, 120) + "px";
     };
     syncGutter();
+    ta.addEventListener("scroll", () => { hl.style.transform = `translateX(${-ta.scrollLeft}px)`; });
     ta.addEventListener("input", () => { syncGutter(); if (opts.storageKey) store(opts.storageKey, ta.value); });
     ta.addEventListener("keydown", (e) => {
       if (e.key === "Tab" && !e.shiftKey) {

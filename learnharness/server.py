@@ -93,6 +93,7 @@ def _course_stats(c: dict) -> dict:
         "scenarios": sum(1 for i in c["order"] if i["type"] == "scenario"),
         "papers": sum(1 for i in c["order"] if i["type"] == "paper"),
         "quizzes": sum(1 for i in c["order"] if i["has_quiz"]),
+        "problems": sum(len((content.problems(c["slug"], i["id"]) or {"problems": []})["problems"]) for i in c["order"] if i.get("has_problems")),
     }
 
 
@@ -103,7 +104,7 @@ def get_course(slug: str):
     parts = []
     for p in c["parts"]:
         parts.append({k: v for k, v in p.items() if k != "items"} | {
-            "items": [{k: it[k] for k in ("id", "type", "title", "status", "exercises", "has_quiz")}
+            "items": [{k: it[k] for k in ("id", "type", "title", "status", "exercises", "has_quiz", "has_problems")}
                       | {"summary": it.get("summary", ""), "project": it.get("project")}
                       | states[it["id"]] for it in p["items"]]
         })
@@ -126,6 +127,7 @@ def get_item(slug: str, item_id: str):
         "html": content.chapter_html(slug, item_id),
         "exercises": it["exercises"],
         "quiz": content.public_quiz(content.quiz(slug, item_id)),
+        "problems": content.public_problems(content.problems(slug, item_id)),
         "state": st,
         "prev": order[idx - 1]["id"] if idx > 0 else None,
         "next": order[idx + 1]["id"] if idx + 1 < len(order) else None,
@@ -156,6 +158,54 @@ def submit_quiz(slug: str, item_id: str, body: QuizIn):
                 r.pop("answer", None)
                 r["explanation"] = ""
     return result | {"state": progress.states(slug)[item_id], "progress": progress.summary(slug)}
+
+
+class ProblemIn(BaseModel):
+    answers: dict
+
+
+REVEAL_AFTER = 2  # wrong attempts before a worked solution can be revealed
+
+
+@app.post("/api/courses/{slug}/items/{item_id}/problems/{pid}")
+def submit_problem(slug: str, item_id: str, pid: str, body: ProblemIn):
+    _course(slug)
+    _item(slug, item_id)
+    _require_open(slug, item_id)
+    ps = content.problems(slug, item_id)
+    if not ps:
+        raise HTTPException(404, "no problems for this item")
+    try:
+        pr = content.find_problem(ps, pid)
+    except content.NotFound:
+        raise HTTPException(404, "no such problem")
+    g = content.grade_problem(pr, body.answers)
+    rec = progress.record_problem(slug, item_id, pid, solved=g["solved"])
+    out = g | {"record": rec, "state": progress.states(slug)[item_id], "progress": progress.summary(slug)}
+    if g["solved"] or rec["revealed"]:
+        out["solution"] = pr.get("solution", "")
+        out["answers"] = {part["id"]: part["answer"] for part in pr["parts"]}
+    return out
+
+
+@app.post("/api/courses/{slug}/items/{item_id}/problems/{pid}/reveal")
+def reveal_problem(slug: str, item_id: str, pid: str):
+    _course(slug)
+    _item(slug, item_id)
+    _require_open(slug, item_id)
+    ps = content.problems(slug, item_id)
+    if not ps:
+        raise HTTPException(404, "no problems for this item")
+    try:
+        pr = content.find_problem(ps, pid)
+    except content.NotFound:
+        raise HTTPException(404, "no such problem")
+    rec = (progress.states(slug)[item_id]["problems"] or {}).get(pid) or {"attempts": 0, "solved": False}
+    if not rec.get("solved") and rec.get("attempts", 0) < REVEAL_AFTER:
+        raise HTTPException(409, f"try at least {REVEAL_AFTER} times before revealing the solution")
+    rec = progress.record_problem(slug, item_id, pid, reveal=not rec.get("solved"))
+    return {"solution": pr.get("solution", ""), "answers": {part["id"]: part["answer"] for part in pr["parts"]},
+            "record": rec, "state": progress.states(slug)[item_id], "progress": progress.summary(slug)}
 
 
 class WriteupIn(BaseModel):
