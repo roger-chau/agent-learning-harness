@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Sliding windows need…",
+   "options": [
+    "monotonicity: an invalid window stays invalid when extended",
+    "sorted input",
+    "a heap"
+   ],
+   "answer": 0,
+   "explanation": "Otherwise you can't shrink safely."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "For a window maximum, keep…",
+   "options": [
+    "a monotonic deque of indices",
+    "a sum",
+    "a set"
+   ],
+   "answer": 0,
+   "explanation": "Each index pushed and popped once."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Exactly k distinct =",
+   "options": [
+    "atMost(k) − atMost(k − 1)",
+    "atMost(k)",
+    "a single window"
+   ],
+   "answer": 0,
+   "explanation": "Counting trick."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "In \"abba\", why check last[c] ≥ left?",
+   "options": [
+    "So left never moves backwards",
+    "Speed",
+    "Unicode"
+   ],
+   "answer": 0,
+   "explanation": "The window only moves forward."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Complexity of a correct sliding window?",
+   "options": [
+    "O(n²)",
+    "O(n) amortised",
+    "O(n log n)"
+   ],
+   "answer": 1,
+   "explanation": "Each pointer moves at most n times."
+  }
+ ]
+}

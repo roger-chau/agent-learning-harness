@@ -211,7 +211,7 @@
             <p class="muted small">${p.complete} of ${p.ready} written items complete${c.hours ? ` · about ${c.hours} hours of study in all (reading, assigned readings, problems, exercises, labs and exams)` : ""}</p>
             <div class="companions">
               <div class="k">Companions</div>
-              ${c.companions.map((x) => `<div class="comp"><b>${esc(x.title)}</b> <span class="muted">${esc(x.by)}</span></div>`).join("")}
+              ${(c.companions || []).map((x) => `<div class="comp"><b>${esc(x.title)}</b> <span class="muted">${esc(x.by)}</span></div>`).join("")}
             </div>
           </div>
         </div>
@@ -221,7 +221,7 @@
           <div class="section-head"><p class="eyebrow">Projects</p><h2 class="h2">What you'll build</h2>
             <p>Long-running projects grow across Parts in milestones. The capstone reuses your own code.</p></div>
           <div class="project-grid">
-            ${c.projects.map((x) => `<div class="project"><div class="pid">${esc(x.id)}</div><h3>${esc(x.title)}</h3><p>${esc(x.summary)}</p><span class="chip">${esc(x.runs)}</span></div>`).join("")}
+            ${(c.projects || []).map((x) => `<div class="project"><div class="pid">${esc(x.id)}</div><h3>${esc(x.title)}</h3><p>${esc(x.summary)}</p><span class="chip">${esc(x.runs)}</span></div>`).join("")}
           </div>
         </div>
       </section>

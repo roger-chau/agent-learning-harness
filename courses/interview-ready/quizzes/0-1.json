@@ -1,0 +1,64 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Which candidate likely scores better on communication and verification?",
+   "options": [
+    "Optimal solution coded silently, untested",
+    "Slightly slower solution, explained throughout, tested with chosen edge cases and a bug found and fixed"
+   ],
+   "answer": 1,
+   "explanation": "Rubrics score rows separately; silence and no testing cost points."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "When should you agree the approach with the interviewer?",
+   "options": [
+    "Before coding",
+    "After coding",
+    "Never; just code"
+   ],
+   "answer": 0,
+   "explanation": "Coding the wrong approach wastes the round."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "What should you do in the first 5 minutes?",
+   "options": [
+    "Start coding",
+    "Clarify: restate, ask about sizes, edge cases, duplicates, empty input",
+    "Discuss complexity of sorting"
+   ],
+   "answer": 1,
+   "explanation": "Clarifying catches misunderstandings while they're cheap."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Why state the brute force even if it's slow?",
+   "options": [
+    "It proves understanding and gives a baseline to improve",
+    "Interviewers want slow code",
+    "It's required by law"
+   ],
+   "answer": 0,
+   "explanation": "Brute force first, then optimise."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Online assessments are mostly scored by…",
+   "options": [
+    "communication",
+    "hidden tests: correctness and edge cases within the time limit",
+    "code style"
+   ],
+   "answer": 1,
+   "explanation": "Speed and edge cases dominate."
+  }
+ ]
+}

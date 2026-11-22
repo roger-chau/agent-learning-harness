@@ -1,0 +1,69 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "The six moves start with…",
+   "options": [
+    "coding",
+    "restating and clarifying",
+    "complexity"
+   ],
+   "answer": 1,
+   "explanation": "Clarify before anything."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "\"Find the bottleneck\" means…",
+   "options": [
+    "profile the code",
+    "identify what the brute force repeats or wastes",
+    "pick a data structure at random"
+   ],
+   "answer": 1,
+   "explanation": "Then choose the transformation."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "A loop invariant is…",
+   "options": [
+    "what's true at the start of every iteration",
+    "the loop counter",
+    "the final answer"
+   ],
+   "answer": 0,
+   "explanation": "It makes each line's job clear and proves correctness."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Brute force searches for a complement in an inner loop. Try…",
+   "options": [
+    "a heap",
+    "a hash map",
+    "DP"
+   ],
+   "answer": 1,
+   "explanation": "Searching → hashing."
+  },
+  {
+   "id": "q5",
+   "type": "multi",
+   "prompt": "Which are meta-transformations?",
+   "options": [
+    "Sort first",
+    "Change the question (contributions, complement, reverse)",
+    "Use more memory always",
+    "Write it in C++"
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "They sit above the table."
+  }
+ ]
+}

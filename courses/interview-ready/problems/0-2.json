@@ -1,0 +1,355 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Reading constraints",
+   "statement": "<p>Pick the largest complexity that fits in about a second (≈10⁸ simple operations).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "n ≤ 20",
+     "options": [
+      "O(n!)",
+      "O(2ⁿ · n)",
+      "O(n⁵)"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "n ≤ 5,000",
+     "options": [
+      "O(n³)",
+      "O(n²)",
+      "O(2ⁿ)"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "n ≤ 10⁶",
+     "options": [
+      "O(n²)",
+      "O(n log n)",
+      "O(n √n · log n)"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "d",
+     "type": "single",
+     "prompt": "n ≤ 10¹⁸",
+     "options": [
+      "O(n)",
+      "O(log n)",
+      "O(√n)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "2²⁰·20 ≈ 2·10⁷; 5000² = 2.5·10⁷; 10⁶ log 10⁶ ≈ 2·10⁷."
+   ],
+   "solution": "<p>2ⁿ·n at n = 20 is 2·10⁷; n² at 5,000 is 2.5·10⁷; n log n at 10⁶ is 2·10⁷; at 10¹⁸ only logarithmic (or constant) work fits.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Operation counts",
+   "statement": "<p>Count operations.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "n = 10⁵, O(n²): operations?",
+     "answer": 10000000000.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Seconds at 10⁸ per second?",
+     "answer": 100,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "n = 10⁵, O(n log₂ n): operations (millions, to 1 decimal)?",
+     "answer": 1.660964047443681,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "log₂ 10⁵ ≈ 16.6."
+   ],
+   "solution": "<p>10¹⁰ operations, about 100 s: far too slow. n log n is about 1.7 million: milliseconds.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Hidden costs",
+   "statement": "<p>A Python loop over n = 10⁵ items does <code>result = result + s[i]</code> (string concatenation, copying the whole string each time).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Characters copied in total, about (n²/2)?",
+     "answer": 5000000000.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "Append to a list and ''.join at the end",
+      "Use a bigger string",
+      "Recursion"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Each concatenation copies the current length."
+   ],
+   "solution": "<p>1 + 2 + … + n ≈ n²/2 = 5·10⁹ characters: quadratic. Building a list and joining once is linear.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Recurrences",
+   "statement": "<p>Solve the recurrences.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "T(n) = 2T(n/2) + O(n)",
+     "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(n²)"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "T(n) = T(n/2) + O(1)",
+     "options": [
+      "O(log n)",
+      "O(n)",
+      "O(1)"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "T(n) = 2T(n − 1) + O(1)",
+     "options": [
+      "O(n²)",
+      "O(2ⁿ)",
+      "O(n log n)"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "d",
+     "type": "single",
+     "prompt": "T(n) = T(n − 1) + O(n)",
+     "options": [
+      "O(n)",
+      "O(n²)",
+      "O(n log n)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Draw the recursion tree: work per level × levels."
+   ],
+   "solution": "<p>Merge sort; binary search; naive Fibonacci-style branching; a loop that shrinks by one each time (selection sort).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Amortised",
+   "statement": "<p>A dynamic array starts with capacity 1 and doubles when full. Append n = 1,024 elements.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Element copies done by all the resizes?",
+     "answer": 1023,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Average cost per append (copies + 1 write)?",
+     "answer": 1.9990234375,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Copies at resizes: 1 + 2 + 4 + … + 512."
+   ],
+   "solution": "<p>1 + 2 + … + 512 = 1,023 copies; with the 1,024 writes, about 2 operations per append: O(1) amortised.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "A nested loop that's linear",
+   "statement": "<p><code>j = 0; for i in range(n): while j &lt; n and cond(i, j): j += 1</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum total executions of <code>j += 1</code> over the whole run, for n = 1000?",
+     "answer": 1000,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Overall complexity?",
+     "options": [
+      "O(n²)",
+      "O(n)",
+      "O(n log n)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "j never decreases."
+   ],
+   "solution": "<p>j only increases and stops at n, so the inner body runs at most n times in total: O(n). This is the sliding-window argument.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Space",
+   "statement": "<p>Recursive DFS on a path-shaped tree of n = 10⁵ nodes.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Recursion depth?",
+     "answer": 100000.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Risk in Python?",
+     "options": [
+      "None",
+      "RecursionError (default limit about 1000) or stack overflow; use an explicit stack"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Depth equals the height."
+   ],
+   "solution": "<p>Depth n: O(n) stack space, and Python's default recursion limit is about 1,000. Use an explicit stack, or raise the limit carefully.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 1,
+   "title": "Expected versus worst",
+   "statement": "<p>A hash map with adversarially chosen keys that all collide.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Cost of n insertions in the worst case?",
+     "options": [
+      "O(n)",
+      "O(n²)",
+      "O(n log n)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Each insertion scans a chain of the colliding keys."
+   ],
+   "solution": "<p>O(n²) worst case, O(n) expected. Say \"expected O(1) per operation\"; the alternative with guarantees is a balanced tree, O(log n).</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Lower bounds",
+   "statement": "<p>When are you done optimising?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which are valid lower-bound arguments?",
+     "options": [
+      "Any algorithm must read all n inputs: Ω(n)",
+      "Comparison sorting needs Ω(n log n) comparisons",
+      "Output of size k needs Ω(k) time",
+      "Hash maps make everything O(1)"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Reading, comparing, writing."
+   ],
+   "solution": "<p>The first three are standard; reaching them means you can stop and say so.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 3,
+   "title": "Choosing by constraints",
+   "statement": "<p>Find the number of pairs (i &lt; j) with a[i] + a[j] ≤ T, n ≤ 2·10⁵.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which fits?",
+     "options": [
+      "All pairs, O(n²)",
+      "Sort, then two pointers or binary search: O(n log n)",
+      "Bitmask over subsets"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Pairs examined by all-pairs for n = 2·10⁵ (billions, 1 decimal)?",
+     "answer": 19.9999,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "n(n − 1)/2."
+   ],
+   "solution": "<p>About 20.0 billion pairs: too many. After sorting, for each i the valid j form a prefix: two pointers count them in O(n) after the O(n log n) sort.</p>"
+  }
+ ]
+}

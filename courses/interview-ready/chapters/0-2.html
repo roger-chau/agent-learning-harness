@@ -1,0 +1,47 @@
+<section class="blk" data-n="01">
+<h2>Complexity as a design tool</h2>
+<p>Big-O isn't something you compute after writing code; it's a tool for choosing what to write. Before designing anything, read the constraints and ask: <strong>what complexity does this input size allow?</strong> A modern machine does roughly 10⁸ simple operations per second in compiled code (10⁷ in Python). Judges give about a second.</p>
+<table>
+<thead><tr><th>n up to…</th><th>Feasible complexity</th><th>Typical technique</th></tr></thead>
+<tbody>
+<tr><td>10–12</td><td>O(n!)</td><td>permutations, brute force</td></tr>
+<tr><td>20–25</td><td>O(2ⁿ), O(2ⁿ·n)</td><td>subsets, bitmask DP, meet in the middle (n ≤ 40)</td></tr>
+<tr><td>500</td><td>O(n³)</td><td>triple loops, interval DP, Floyd–Warshall</td></tr>
+<tr><td>5,000</td><td>O(n²)</td><td>pairwise DP, all pairs</td></tr>
+<tr><td>10⁵–10⁶</td><td>O(n log n), O(n)</td><td>sorting, heaps, hashing, two pointers, binary search</td></tr>
+<tr><td>10⁹ and up</td><td>O(log n), O(1)</td><td>binary search on the answer, maths</td></tr>
+</tbody></table>
+<p>This table is one of the strongest hints an interviewer gives you without saying anything: "n up to 10⁵" means "don't even propose O(n²)".</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>Counting, honestly</h2>
+<ul>
+<li><strong>Loops multiply, sequences add.</strong> A loop of n containing a loop of m is O(nm); two loops one after the other are O(n + m).</li>
+<li><strong>Hidden costs.</strong> String concatenation in a loop (O(n²) in total), slicing (O(k) per slice), <code>x in list</code> (O(n)), sorting inside a loop, copying a dict. These are the most common way to write O(n²) while thinking O(n).</li>
+<li><strong>Hash maps</strong> are O(1) expected per operation, O(n) worst case under adversarial collisions. Say "expected".</li>
+<li><strong>Recursion:</strong> work per call × number of calls. Use the recurrence: T(n) = 2T(n/2) + O(n) is O(n log n); T(n) = 2T(n − 1) + O(1) is O(2ⁿ).</li>
+<li><strong>Space</strong> includes the recursion stack (depth × frame), and say whether you count the output.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Amortised analysis: the most useful proof you'll give</h2>
+<p>Many optimal solutions have a nested loop that is nevertheless O(n) in total. The argument is always the same: <strong>count how many times each element can be touched over the whole run</strong>, not how many times the inner loop can run per iteration.</p>
+<ul>
+<li>A sliding window's left pointer only moves forward: it moves at most n times in total, however the inner <code>while</code> looks.</li>
+<li>A monotonic stack pushes and pops each element at most once: O(n) total pops.</li>
+<li>A dynamic array that doubles when full copies 1 + 2 + 4 + … + n &lt; 2n elements over n appends: O(1) amortised per append.</li>
+</ul>
+<p>In an interview, saying "the inner loop looks quadratic, but each index enters and leaves the window once, so it's O(n) amortised" is exactly the sentence that earns the complexity row.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Lower bounds: when to stop optimising</h2>
+<p>Know when you're done. Any solution must at least read its input (Ω(n)) and write its output. Comparison sorting is Ω(n log n). If you've reached the lower bound, say so: "this is O(n), and we have to look at every element, so it's optimal". If the interviewer pushes further, they usually want a constant-factor or space improvement, or they're probing whether you know you're done.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<p>Constants matter more than textbooks admit. O(n log n) with a sort of 10⁶ integers takes milliseconds; O(n) with a hash map of 10⁶ entries may take longer because of cache misses (the GPU course's memory wall, on a CPU). In performance-team interviews, being able to say <em>why</em> the asymptotically better solution might be slower in practice is a strong signal.</p>
+</section>

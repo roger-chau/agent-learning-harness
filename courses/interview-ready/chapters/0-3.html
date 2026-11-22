@@ -1,0 +1,47 @@
+<section class="blk" data-n="01">
+<h2>The problem with "practise a lot"</h2>
+<p>Solving hundreds of problems makes you good at problems you've seen. Interviews ask ones you haven't. What transfers is a <strong>method</strong>: a sequence of moves you can run on any problem, that reliably produces a decent solution and often the optimal one. This chapter gives you the method this course uses everywhere. Every worked solution in the course is written as a trace of it, so you see it applied hundreds of times.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The six moves</h2>
+<ol>
+<li><strong>Restate and clarify.</strong> Inputs, outputs, sizes, edge cases. Write the signature.</li>
+<li><strong>Examples by hand.</strong> One normal, one edge. Solve them manually and <em>watch what your brain does</em>: the manual procedure is often the algorithm.</li>
+<li><strong>Brute force with its cost.</strong> The most direct correct solution, and its complexity.</li>
+<li><strong>Find the bottleneck.</strong> What does the brute force do repeatedly or wastefully? Ask: what work is <em>repeated</em>, what's <em>recomputed from scratch</em>, what's <em>searched for</em> again and again, what's <em>impossible</em> and needn't be checked?</li>
+<li><strong>Apply a transformation</strong> that removes that bottleneck (the table below).</li>
+<li><strong>Argue correctness and test.</strong> State the invariant your loop maintains, then trace an example and an edge case through your code.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Bottleneck → technique</h2>
+<p>This table is the core of the course. Each row is a pattern with its own Part or chapter later.</p>
+<table>
+<thead><tr><th>If the brute force…</th><th>try…</th></tr></thead>
+<tbody>
+<tr><td>searches for a matching element (complement, duplicate, previous occurrence)</td><td>a <strong>hash map/set</strong> of what you've seen</td></tr>
+<tr><td>recomputes sums or counts over ranges</td><td><strong>prefix sums</strong> (or a difference array for range updates)</td></tr>
+<tr><td>checks every pair in a sorted (or sortable) array</td><td><strong>two pointers</strong> that discard one candidate per step</td></tr>
+<tr><td>re-examines a contiguous window that changed by one element</td><td>a <strong>sliding window</strong> with incremental updates</td></tr>
+<tr><td>looks for the next larger/smaller element repeatedly</td><td>a <strong>monotonic stack or deque</strong></td></tr>
+<tr><td>tries every value of an answer that has a yes/no test that's monotone</td><td><strong>binary search on the answer</strong></td></tr>
+<tr><td>repeatedly takes the minimum or maximum of a changing set</td><td>a <strong>heap</strong></td></tr>
+<tr><td>solves the same subproblem many times</td><td><strong>dynamic programming</strong> (memoise, then tabulate)</td></tr>
+<tr><td>explores choices one by one with no structure</td><td><strong>backtracking</strong> with pruning, or a greedy choice with an exchange argument</td></tr>
+<tr><td>asks "are these connected / in the same group?" repeatedly</td><td><strong>union-find</strong> or BFS/DFS</td></tr>
+<tr><td>answers many range queries with updates</td><td>a <strong>segment or Fenwick tree</strong></td></tr>
+</tbody></table>
+<p>Two meta-transformations sit above the table: <strong>sort first</strong> (creating order that two pointers, binary search and greedy can exploit), and <strong>change the question</strong> (count the complement, reverse time, think about where each element contributes instead of what each answer contains).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Invariants: how to be right the first time</h2>
+<p>Most bugs in interview code are off-by-one errors and wrong loop updates. Both disappear if you can state, for every loop, <strong>what is true at the start of each iteration</strong>. For two-sum with a hash map: "<code>seen</code> holds every value before index i, mapped to its index". For a sliding window: "<code>s[left..i)</code> has no repeated character". Then each line of the loop body has one job: restore the invariant after the window moves. Saying the invariant out loud also scores communication points, and it's the proof of correctness the interviewer wants.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Testing like an engineer</h2>
+<p>Don't "run the example and see". Choose tests that attack your code: empty input, one element, all equal, already sorted, reverse sorted, negative numbers, the answer at the first or last position, no valid answer, duplicates at the boundary. Then trace the code on the smallest interesting one, line by line, with the variable values written down. Interviewers notice when you find your own bug; it's one of the strongest positive signals there is.</p>
+</section>

@@ -1,0 +1,227 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Trace",
+   "statement": "<p>Longest substring without repeats on \"abcabcbb\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Window start (left) after processing the whole string?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Track left after each repeat."
+   ],
+   "solution": "<p>Answer 3. At the final 'b' (index 7), its last occurrence is 6, so left = 7.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "The abba trap",
+   "statement": "<p>\"abba\" with the rule left = last[c] + 1 applied without checking last[c] ≥ left.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Left after the final 'a' (index 3) with the buggy rule?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Answer reported by the buggy code?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "At index 2, left = 2. At index 3, last['a'] = 0."
+   ],
+   "solution": "<p>The buggy rule moves left back to 1, giving window \"bba\" of length 3, which repeats b. Correct answer 2.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Monotonicity",
+   "statement": "<p>Which conditions allow a sliding window?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "Sum ≤ k with non-negative numbers",
+      "At most 2 distinct characters",
+      "Sum exactly k with negative numbers",
+      "No repeated characters"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Does growing a window only make it worse?"
+   ],
+   "solution": "<p>All except the one with negatives: there, growing can fix an invalid window, so shrinking decisions aren't safe.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Exactly k distinct",
+   "statement": "<p>Count subarrays with exactly k distinct values.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Standard trick?",
+     "options": [
+      "atMost(k) − atMost(k − 1)",
+      "A heap",
+      "Sorting"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For [1, 2, 1, 2, 3], k = 2: count?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "atMost counts are each one sliding window."
+   ],
+   "solution": "<p>atMost(2) = 12, atMost(1) = 5: 7 subarrays ([1,2], [2,1], [1,2], [2,3], [1,2,1], [2,1,2], [1,2,1,2]).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Deque trace",
+   "statement": "<p>Sliding max, k = 3, on [1, 3, −1, −3, 5, 3, 6, 7].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Output length?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Third output?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Last output?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Windows: [1,3,−1], [3,−1,−3], [−1,−3,5], …"
+   ],
+   "solution": "<p>Windows [1, 3, −1] → 3, [3, −1, −3] → 3, [−1, −3, 5] → 5, [−3, 5, 3] → 5, [5, 3, 6] → 6, [3, 6, 7] → 7. Six outputs; the third is 5, the last 7.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Why the deque is O(n)",
+   "statement": "<p>Each index…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "is pushed and popped how many times at most?",
+     "options": [
+      "once each",
+      "k times",
+      "log n times"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Amortised."
+   ],
+   "solution": "<p>Once each: O(n) total for the deque operations.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 3,
+   "title": "Minimum window by hand",
+   "statement": "<p>s = \"ADOBECODEBANC\", t = \"ABC\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Length of the first valid window found (ending at the first C)?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Length of the final answer?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "First valid: ADOBEC."
+   ],
+   "solution": "<p>The first valid window is \"ADOBEC\" (6); shrinking and sliding eventually finds \"BANC\" (4).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Fixed-size windows",
+   "statement": "<p>Maximum average of any subarray of length k = 4 in [1, 12, −5, −6, 50, 3].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 12.75,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Add the new element, subtract the one k back."
+   ],
+   "solution": "<p>Window sums 2, 51, 42: the best average is 51/4 = 12.75.</p>"
+  }
+ ]
+}

@@ -1,0 +1,253 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Trace sorted two-sum",
+   "statement": "<p>a = [1, 3, 4, 6, 8, 11], target 10, pointers at both ends.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Steps (pointer moves) before the first match?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Matched pair?",
+     "options": [
+      "(1, 8)",
+      "(4, 6)",
+      "(3, 8)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "1 + 11 = 12 > 10 → j−−; 1 + 8 = 9 < 10 → i++; 3 + 8 = 11 → j−−; 3 + 6 = 9 → i++; 4 + 6 = 10."
+   ],
+   "solution": "<p>1 + 11 = 12 → move j; 1 + 8 = 9 → move i; 3 + 8 = 11 → move j; 3 + 6 = 9 → move i; 4 + 6 = 10: found (4, 6) after 4 moves.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Exchange argument",
+   "statement": "<p>Container with most water, current pair (i, j) with h[i] = 3, h[j] = 7.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which pointer moves?",
+     "options": [
+      "i",
+      "j",
+      "either"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why?",
+     "options": [
+      "Any pair (i, j') with j' &lt; j is narrower and no taller than 3",
+      "Because 3 &lt; 7 is smaller",
+      "Random"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The shorter line caps the height."
+   ],
+   "solution": "<p>Every pair still using i is narrower and capped at height 3: none can beat the current area, so i is discarded.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "3Sum complexity",
+   "statement": "<p>n = 3,000.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Pair checks in the sort + two-pointer solution, about n²/2 (millions)?",
+     "answer": 4.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Triples checked by brute force, about n³/6 (billions)?",
+     "answer": 4.5,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Fix i, then O(n) for j, k."
+   ],
+   "solution": "<p>About 4.5 million versus 4.5 billion.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Duplicates",
+   "statement": "<p>3Sum on [−2, 0, 0, 2, 2] without duplicate skipping.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Triplets reported (with repeats)?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Distinct triplets?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "[−2, 0, 2] appears via different indices."
+   ],
+   "solution": "<p>Without skipping, [−2, 0, 2] can be reported twice (the second 0 or 2); with skipping, once.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Rain water by formula",
+   "statement": "<p>Heights [3, 0, 2, 0, 4].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Water above index 1?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Total?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "min(leftMax, rightMax) − h."
+   ],
+   "solution": "<p>Index 1: min(3, 4) − 0 = 3; index 2: 3 − 2 = 1; index 3: 3 − 0 = 3. Total 7.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Fast and slow",
+   "statement": "<p>Remove duplicates in place from a sorted array, returning the new length.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Invariant for the slow pointer w?",
+     "options": [
+      "a[0..w) are the distinct values seen so far, in order",
+      "w counts duplicates",
+      "a is sorted descending"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "New length for [1, 1, 2, 3, 3, 3, 4]?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Copy a[i] to a[w] when it differs from a[w − 1]."
+   ],
+   "solution": "<p>Everything before w is finished output; result length 4.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Sorting loses indices",
+   "statement": "<p>Two-sum must return original indices.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "To use two pointers anyway…",
+     "options": [
+      "sort (value, index) pairs",
+      "sort values only",
+      "impossible"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Its complexity?",
+     "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(n²)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Carry indices through the sort."
+   ],
+   "solution": "<p>Sort pairs: O(n log n), O(n) space. The hash map is O(n) expected; mention both.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Dutch national flag",
+   "statement": "<p>Sort an array of 0s, 1s and 2s in one pass, in place.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Pointers needed?",
+     "options": [
+      "one",
+      "three: low, mid, high",
+      "two only, from the ends"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "When a[mid] = 2…",
+     "options": [
+      "swap with a[high], high−−, don't advance mid",
+      "advance mid",
+      "swap with low"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The element swapped in from high hasn't been examined."
+   ],
+   "solution": "<p>Invariant: [0, low) = 0s, [low, mid) = 1s, (high, n) = 2s, [mid, high] unknown. A swapped-in element from high is unknown, so mid stays.</p>"
+  }
+ ]
+}

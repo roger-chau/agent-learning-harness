@@ -1,0 +1,206 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Prefix sums by hand",
+   "statement": "<p>a = [3, −1, 4, −1, 5].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P[5]?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Sum of a[1..3] via P?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "P[j + 1] − P[i]."
+   ],
+   "solution": "<p>P = [0, 3, 2, 6, 5, 10]; a[1..3] = P[4] − P[1] = 2.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Counting with the map",
+   "statement": "<p>nums = [1, 2, 1, 2, 1], k = 3.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of subarrays summing to 3?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Prefixes: 0, 1, 3, 4, 6, 7; count earlier prefixes equal to current − 3."
+   ],
+   "solution": "<p>4: [1,2], [2,1], [1,2], [2,1].</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Divisible by k",
+   "statement": "<p>Count subarrays with sum divisible by 5 in [4, 5, 0, −2, −3, 1].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Count?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Prefix sums mod 5; pairs of equal residues."
+   ],
+   "solution": "<p>Prefix residues: 0, 4, 4, 4, 2, 4, 0. Equal-residue pairs: C(2,2) + C(4,2) = 1 + 6 = 7.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Why not a window",
+   "statement": "<p>Subarray sum equals k with negative numbers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why does a sliding window fail?",
+     "options": [
+      "Windows are slow",
+      "Extending a window can decrease the sum, so you can't tell when to shrink",
+      "It needs sorting"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Monotonicity."
+   ],
+   "solution": "<p>Without monotonicity, the shrink decision isn't safe; prefix sums plus a map don't need it.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Difference array",
+   "statement": "<p>Array of 6 zeros; add 2 to [1, 3], add 5 to [2, 5], add −1 to [0, 2].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Final value at index 2?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "At index 5?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "d[l] += v, d[r + 1] −= v, then prefix-sum."
+   ],
+   "solution": "<p>Index 2 is in all three ranges: 2 + 5 − 1 = 6. Index 5 only in the second: 5.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "2-D prefix sums",
+   "statement": "<p>Grid [[1, 2, 3], [4, 5, 6], [7, 8, 9]]. S[r][c] = sum of the rectangle from (0, 0) to (r − 1, c − 1).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "S[3][3]?",
+     "answer": 45,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Sum of rows 1–2, columns 1–2 via S?",
+     "answer": 28,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "S[3][3] − S[1][3] − S[3][1] + S[1][1]."
+   ],
+   "solution": "<p>45; and 45 − 6 − 12 + 1 = 28 = 5 + 6 + 8 + 9.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Longest subarray with sum k",
+   "statement": "<p>To find the longest (not count) subarray summing to k with a prefix map…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "store, for each prefix value…",
+     "options": [
+      "its latest index",
+      "its earliest index",
+      "its count"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Longest means the start is as early as possible."
+   ],
+   "solution": "<p>Earliest index: length = j − first[P[j] − k]. Don't overwrite it.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Equal 0s and 1s",
+   "statement": "<p>Longest subarray of a binary array with equally many 0s and 1s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Transformation?",
+     "options": [
+      "Map 0 → −1, then longest subarray with sum 0",
+      "Sort it",
+      "Count 1s only"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Answer for [0, 1, 0, 0, 1, 1, 0]?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Prefix sums with first occurrences."
+   ],
+   "solution": "<p>As ±1: −1, 1, −1, −1, 1, 1, −1; prefixes 0, −1, 0, −1, −2, −1, 0, −1. Prefix 0 at 0 and 6 → length 6; prefix −1 at 1 and 7 → 6. Answer 6.</p>"
+  }
+ ]
+}

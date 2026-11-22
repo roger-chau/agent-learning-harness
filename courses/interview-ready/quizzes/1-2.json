@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Range sum a[i..j] with P (P[0] = 0)?",
+   "options": [
+    "P[j] − P[i]",
+    "P[j + 1] − P[i]",
+    "P[j] − P[i − 1]"
+   ],
+   "answer": 1,
+   "explanation": "n + 1 prefixes."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Why seed the map with {0: 1}?",
+   "options": [
+    "To count subarrays starting at index 0",
+    "Speed",
+    "To avoid negatives"
+   ],
+   "answer": 0,
+   "explanation": "The empty prefix."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Difference arrays are for…",
+   "options": [
+    "many range updates then reads",
+    "range queries only",
+    "sorting"
+   ],
+   "answer": 0,
+   "explanation": "d[l] += v, d[r + 1] −= v."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Prefix sums work for…",
+   "options": [
+    "any invertible associative operation (sum, XOR)",
+    "max",
+    "median"
+   ],
+   "answer": 0,
+   "explanation": "Max has no inverse."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Sum divisible by k ⇔",
+   "options": [
+    "equal prefix sums mod k",
+    "prefix divisible by k",
+    "sorted prefixes"
+   ],
+   "answer": 0,
+   "explanation": "Difference ≡ 0 mod k."
+  }
+ ]
+}

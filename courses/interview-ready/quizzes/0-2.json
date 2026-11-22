@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "n ≤ 10⁵ suggests…",
+   "options": [
+    "O(n²)",
+    "O(n log n) or better",
+    "O(2ⁿ)"
+   ],
+   "answer": 1,
+   "explanation": "10¹⁰ operations is too many."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Why is a sliding window O(n) despite an inner while loop?",
+   "options": [
+    "Each pointer moves forward at most n times in total",
+    "The inner loop runs once",
+    "Hashing"
+   ],
+   "answer": 0,
+   "explanation": "Amortised counting."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "x in some_list in Python costs…",
+   "options": [
+    "O(1)",
+    "O(n)",
+    "O(log n)"
+   ],
+   "answer": 1,
+   "explanation": "Linear scan; use a set."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "The space complexity of recursion includes…",
+   "options": [
+    "only heap allocations",
+    "the call stack depth times the frame size",
+    "nothing"
+   ],
+   "answer": 1,
+   "explanation": "Deep recursion uses stack."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "You reach O(n) for a problem that must read every element. You should…",
+   "options": [
+    "keep optimising the asymptotics",
+    "say it's optimal, then discuss constants or space if asked",
+    "switch languages"
+   ],
+   "answer": 1,
+   "explanation": "Know when you're done."
+  }
+ ]
+}

@@ -7,6 +7,13 @@
   "summary": "How a GPU really works and how to make code fast on it, from why throughput machines exist to a fused attention kernel you design, tune, profile and explain."
  },
  {
+  "slug": "interview-ready",
+  "status": "available",
+  "track": "Careers",
+  "title": "Interview Ready",
+  "summary": "Coding, systems, quant and behavioural interview preparation built on a method: six moves from brute force to optimal, invariants and proofs, with a Python/C++ judge, hidden tests and timed drills."
+ },
+ {
   "slug": "build-a-tiny-gpu-kernel-compiler",
   "status": "planned",
   "track": "GPU & compilers",
@@ -26,13 +33,6 @@
   "track": "Companion",
   "title": "Quantitative Computer Architecture",
   "summary": "Companion to Hennessy & Patterson (7th ed.): performance equations, ILP, memory hierarchy, data-level parallelism."
- },
- {
-  "slug": "dsa-for-interviews",
-  "status": "planned",
-  "track": "Side track",
-  "title": "DSA for Interviews",
-  "summary": "Interview patterns drilled with timed problems and a mock-interviewer mode, ordered for GPU and compiler roles."
  },
  {
   "slug": "embedded-linux-yocto",

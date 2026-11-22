@@ -1,0 +1,229 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Trace two-sum",
+   "statement": "<p>nums = [4, 1, 5, 3], target = 8, one pass with a map value → index, query before insert.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "At which index i is the pair found?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Size of the map when it's found?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Walk i = 0, 1, 2, 3."
+   ],
+   "solution": "<p>i = 0 (4: need 4, absent; insert), i = 1 (1: need 7), i = 2 (5: need 3), i = 3 (3: need 5, found at index 2). The map has 3 entries.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Choosing a key",
+   "statement": "<p>Group strings that are rotations of each other (\"abc\", \"bca\", \"cab\").</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "A canonical key?",
+     "options": [
+      "The sorted letters",
+      "The lexicographically smallest rotation",
+      "The length"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Sorted letters also group anagrams that aren't rotations (\"acb\")."
+   ],
+   "solution": "<p>Sorted letters over-group; the smallest rotation is equal exactly for rotations.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Space for time",
+   "statement": "<p>n = 10⁶ 32-bit integers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes for the input?",
+     "answer": 4000000.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "A Python set of them uses roughly…",
+     "options": [
+      "the same 4 MB",
+      "tens of MB (object overhead per entry)",
+      "1 KB"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Python ints and hash slots carry overhead."
+   ],
+   "solution": "<p>4 MB raw; a Python set uses roughly 30–60 MB. In C++ an unordered_set is also several times the raw size. Mention memory when it's large.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Counts not maps",
+   "statement": "<p>Check whether two lowercase strings are anagrams.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best data structure?",
+     "options": [
+      "A hash map of counts",
+      "An array of 26 counters",
+      "Sorting both"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Complexity with it?",
+     "options": [
+      "O(n log n)",
+      "O(n)",
+      "O(n²)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Small fixed alphabet."
+   ],
+   "solution": "<p>An int[26]: one increment per character of one string, one decrement per character of the other, then check all zero. O(n), tiny constant.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Longest consecutive: amortised",
+   "statement": "<p>For [5, 4, 3, 2, 1] with the start-of-run rule.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "How many elements start a walk?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Total successor checks (y + 1 in set) including the failing one?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Only 1 has no predecessor."
+   ],
+   "solution": "<p>Only 1 starts: it checks 2, 3, 4, 5 (found) and 6 (absent): 5 checks. Without the rule, each element would walk its own suffix: 15 checks.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Top-k approaches",
+   "statement": "<p>Top 10 most frequent among n = 10⁷ items with 10⁶ distinct values.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "After counting, which is cheapest?",
+     "options": [
+      "Sort all 10⁶ (value, count) pairs",
+      "A size-10 min-heap over the counts",
+      "Bucket by count (counts up to 10⁷)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "k is tiny; buckets would be 10⁷ long."
+   ],
+   "solution": "<p>A heap of size 10 costs O(d log 10) over d distinct values; buckets need an array as long as n. Choose by k and n.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 3,
+   "title": "Design under memory limits",
+   "statement": "<p>Detect duplicates among 10⁹ 64-bit IDs streaming past, with 1 GB of RAM.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which works exactly?",
+     "options": [
+      "A hash set of all IDs (8 GB+)",
+      "External sort, then compare neighbours",
+      "Count IDs"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "If a small false-positive rate is acceptable?",
+     "options": [
+      "A Bloom filter",
+      "A linked list",
+      "A heap"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "8 bytes × 10⁹ = 8 GB."
+   ],
+   "solution": "<p>Exact: sort externally (or hash-partition to disk, then dedupe each partition in memory). Approximate: a Bloom filter at ~10 bits per item ≈ 1.25 GB for ~1% false positives.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Query before insert",
+   "statement": "<p>Two-sum with nums = [3, 3], target = 6, but the code inserts before querying and checks only membership.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What does it return for nums = [3], target = 6?",
+     "options": [
+      "[] (correct)",
+      "[0, 0]: the element pairs with itself",
+      "an error"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Insert 3, then find 6 − 3 = 3: itself."
+   ],
+   "solution": "<p>Inserting first lets an element match itself. Query first, then insert.</p>"
+  }
+ ]
+}

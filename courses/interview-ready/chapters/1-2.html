@@ -1,0 +1,49 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Prefix sums answer anything about <strong>contiguous ranges</strong> of an array, fast: range sums, counts of subarrays with a property, averages over windows, or "how many elements in [l, r] satisfy…". The brute force recomputes a sum over each range from scratch; prefix sums compute each range in O(1) after O(n) preprocessing. The mirror image, the <strong>difference array</strong>, handles many range <em>updates</em> followed by reads.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p>Let $P[0] = 0$ and $P[k] = a_0 + \dots + a_{k-1}$. Then</p>
+<div class="eq">$$\sum_{t=i}^{j} a_t = P[j+1] - P[i].$$</div>
+<p>Two consequences power most problems:</p>
+<ul>
+<li><strong>A subarray condition becomes a condition on two prefixes.</strong> "Subarray (i, j] sums to k" ⇔ "$P[j] - P[i] = k$" ⇔ "$P[i] = P[j] - k$": combine with a hash map of earlier prefixes (Chapter 1.1) to count them in one pass.</li>
+<li><strong>Any associative, invertible operation works.</strong> Sums, XORs (XOR is its own inverse), counts; products if no zeros (or use prefix and suffix products, as in product-except-self). Modular sums: "sum divisible by k" ⇔ equal prefix sums mod k.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>count = 0; prefix = 0
+seen = Counter({0: 1})          # invariant: seen counts prefixes P[0..j] for the j processed so far
+for x in nums:
+    prefix += x                 # prefix = P[j + 1]
+    count += seen[prefix - k]   # earlier prefixes P[i] with P[j+1] − P[i] = k
+    seen[prefix] += 1</code></pre>
+<p>The seed <code>{0: 1}</code> is the empty prefix, so subarrays starting at index 0 count. Forgetting it is the classic bug.</p>
+<p><strong>Difference array:</strong> to add v to every element of [l, r], do <code>d[l] += v; d[r+1] -= v</code>; after all updates, the prefix sum of d gives the values. Many updates, one read: O(updates + n).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: subarray sum equals k</h2>
+<ol>
+<li><strong>Clarify:</strong> values can be negative (this matters!), count subarrays, not just find one.</li>
+<li><strong>Brute force:</strong> all (i, j) pairs with a running sum: O(n²).</li>
+<li><strong>Why not a sliding window?</strong> Windows need monotonicity: growing the window must only increase the sum. Negative values break that, so a window can't decide when to shrink. Saying this out loud shows you know when a pattern <em>doesn't</em> apply.</li>
+<li><strong>Bottleneck:</strong> for each end j, we search all starts i for $P[i] = P[j+1] - k$: a search, so a hash map.</li>
+<li><strong>Invariant and complexity:</strong> as in the template, O(n) time and space.</li>
+<li><strong>Tests:</strong> [1, −1, 0] with k = 0 has 3 subarrays ([1, −1], [0], [1, −1, 0]); empty array gives 0.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Overflow:</strong> prefix sums can exceed 32 bits even when elements don't. Use 64-bit in C++.</li>
+<li><strong>Off-by-one:</strong> always use the "P has n + 1 entries, P[0] = 0" convention; then every range is P[r+1] − P[l] with no special cases.</li>
+<li><strong>2-D prefix sums:</strong> $S[r][c]$ = sum of the rectangle above-left; a rectangle sum is four lookups (inclusion–exclusion).</li>
+<li><strong>Variations:</strong> longest subarray with sum k (store the <em>first</em> index of each prefix), equal numbers of 0s and 1s (map 0 → −1, then sum zero), subarray sums divisible by k (prefixes mod k).</li>
+</ul>
+</section>

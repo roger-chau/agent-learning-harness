@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Two pointers need…",
+   "options": [
+    "sorted (or end-based) structure that lets each step discard a candidate",
+    "a hash map",
+    "recursion"
+   ],
+   "answer": 0,
+   "explanation": "Discard by argument."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Sorted two-sum: sum too small. Move…",
+   "options": [
+    "the left pointer right",
+    "the right pointer left",
+    "both"
+   ],
+   "answer": 0,
+   "explanation": "a[i] with anything ≤ a[j] is too small."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Container with most water: move…",
+   "options": [
+    "the taller line",
+    "the shorter line",
+    "the middle"
+   ],
+   "answer": 1,
+   "explanation": "The shorter caps every remaining pair with it."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "3Sum complexity after sorting?",
+   "options": [
+    "O(n)",
+    "O(n²)",
+    "O(n³)"
+   ],
+   "answer": 1,
+   "explanation": "n fixed elements × O(n) two pointers."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Exchange arguments prove…",
+   "options": [
+    "a discarded candidate can't beat one still considered",
+    "sorting is optimal",
+    "hashing is fast"
+   ],
+   "answer": 0,
+   "explanation": "The core proof of greedy and two-pointer moves."
+  }
+ ]
+}

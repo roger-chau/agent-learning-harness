@@ -1,0 +1,368 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Pattern drill 1",
+   "statement": "<p>Name the technique from the statement alone (60 seconds each).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Find whether any two distinct elements of an unsorted array differ by exactly k.",
+     "options": [
+      "Hash map / set",
+      "Prefix sums",
+      "Two pointers (sorted)",
+      "Sliding window",
+      "Monotonic stack/deque",
+      "Binary search on the answer",
+      "Heap",
+      "Dynamic programming",
+      "Union-find / BFS"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Count subarrays whose sum is divisible by 7 (values may be negative).",
+     "options": [
+      "Hash map / set",
+      "Prefix sums",
+      "Two pointers (sorted)",
+      "Sliding window",
+      "Monotonic stack/deque",
+      "Binary search on the answer",
+      "Heap",
+      "Dynamic programming",
+      "Union-find / BFS"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "What does the brute force do over and over?"
+   ],
+   "solution": "<p>(a) Hash map / set: the brute force searches for x + k and x − k. (b) Prefix sums: the brute force recomputes range sums.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Pattern drill 2",
+   "statement": "<p>Name the technique from the statement alone (60 seconds each).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "In a sorted array, count pairs whose sum is at most T.",
+     "options": [
+      "Hash map / set",
+      "Prefix sums",
+      "Two pointers (sorted)",
+      "Sliding window",
+      "Monotonic stack/deque",
+      "Binary search on the answer",
+      "Heap",
+      "Dynamic programming",
+      "Union-find / BFS"
+     ],
+     "answer": 2
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Longest substring containing at most 2 distinct characters.",
+     "options": [
+      "Hash map / set",
+      "Prefix sums",
+      "Two pointers (sorted)",
+      "Sliding window",
+      "Monotonic stack/deque",
+      "Binary search on the answer",
+      "Heap",
+      "Dynamic programming",
+      "Union-find / BFS"
+     ],
+     "answer": 3
+    }
+   ],
+   "hints": [
+    "What does the brute force do over and over?"
+   ],
+   "solution": "<p>(a) Two pointers (sorted): the brute force checks all pairs although order tells you which side to discard. (b) Sliding window: the brute force re-examines windows that changed by one character.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 1,
+   "title": "Pattern drill 3",
+   "statement": "<p>Name the technique from the statement alone (60 seconds each).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "For each day's temperature, how many days until a warmer one?",
+     "options": [
+      "Hash map / set",
+      "Prefix sums",
+      "Two pointers (sorted)",
+      "Sliding window",
+      "Monotonic stack/deque",
+      "Binary search on the answer",
+      "Heap",
+      "Dynamic programming",
+      "Union-find / BFS"
+     ],
+     "answer": 4
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Minimum ship capacity to deliver packages, in order, within D days.",
+     "options": [
+      "Hash map / set",
+      "Prefix sums",
+      "Two pointers (sorted)",
+      "Sliding window",
+      "Monotonic stack/deque",
+      "Binary search on the answer",
+      "Heap",
+      "Dynamic programming",
+      "Union-find / BFS"
+     ],
+     "answer": 5
+    }
+   ],
+   "hints": [
+    "What does the brute force do over and over?"
+   ],
+   "solution": "<p>(a) Monotonic stack/deque: the brute force scans forward for the next larger element again and again. (b) Binary search on the answer: the brute force tries capacities one by one, though feasibility is monotone in capacity.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Pattern drill 4",
+   "statement": "<p>Name the technique from the statement alone (60 seconds each).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Repeatedly merge the two smallest ropes; minimise total cost.",
+     "options": [
+      "Hash map / set",
+      "Prefix sums",
+      "Two pointers (sorted)",
+      "Sliding window",
+      "Monotonic stack/deque",
+      "Binary search on the answer",
+      "Heap",
+      "Dynamic programming",
+      "Union-find / BFS"
+     ],
+     "answer": 6
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Number of ways to climb n stairs taking 1 or 2 steps.",
+     "options": [
+      "Hash map / set",
+      "Prefix sums",
+      "Two pointers (sorted)",
+      "Sliding window",
+      "Monotonic stack/deque",
+      "Binary search on the answer",
+      "Heap",
+      "Dynamic programming",
+      "Union-find / BFS"
+     ],
+     "answer": 7
+    }
+   ],
+   "hints": [
+    "What does the brute force do over and over?"
+   ],
+   "solution": "<p>(a) Heap: the brute force repeatedly finds the two smallest of a changing set. (b) Dynamic programming: the brute force recomputes the same subproblems.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Pattern drill 5",
+   "statement": "<p>Name the technique from the statement alone (60 seconds each).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "After each of 10⁵ friendship announcements, report whether persons a and b are connected.",
+     "options": [
+      "Hash map / set",
+      "Prefix sums",
+      "Two pointers (sorted)",
+      "Sliding window",
+      "Monotonic stack/deque",
+      "Binary search on the answer",
+      "Heap",
+      "Dynamic programming",
+      "Union-find / BFS"
+     ],
+     "answer": 8
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Smallest element of a rotated sorted array.",
+     "options": [
+      "Hash map / set",
+      "Prefix sums",
+      "Two pointers (sorted)",
+      "Sliding window",
+      "Monotonic stack/deque",
+      "Binary search on the answer",
+      "Heap",
+      "Dynamic programming",
+      "Union-find / BFS"
+     ],
+     "answer": 5
+    }
+   ],
+   "hints": [
+    "What does the brute force do over and over?"
+   ],
+   "solution": "<p>(a) Union-find / BFS: the brute force re-searches connectivity from scratch. (b) Binary search on the answer: the brute force scans although a monotone test (is the min to my right?) halves the range.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Bottlenecks",
+   "statement": "<p>Name the bottleneck, then the fix.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Brute force: for each i, for each j &gt; i, sum a[i..j] in a loop. The first waste to remove?",
+     "options": [
+      "Recomputing sums of overlapping ranges",
+      "Using two loops",
+      "Reading input"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "…and the fix?",
+     "options": [
+      "Running sum (or prefix sums)",
+      "Sorting",
+      "A heap"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "What is computed again and again?"
+   ],
+   "solution": "<p>Each range sum is recomputed from scratch; a running sum makes the inner loop O(1) per step, and prefix sums make any range O(1).</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Invariants",
+   "statement": "<p>For the two-sum hash-map loop, which statement is the invariant at the start of iteration i?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "seen contains every value in nums, with its index",
+      "seen contains every value at indices &lt; i, with its index",
+      "seen is empty"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "What's been inserted when iteration i begins?"
+   ],
+   "solution": "<p>Exactly the elements before i: that's why querying before inserting prevents an element from pairing with itself.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Choosing tests",
+   "statement": "<p>You've written a function returning the longest substring without repeating characters.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which tests attack likely bugs?",
+     "options": [
+      "\"\" (empty)",
+      "\"abba\" (the left edge must not move backwards)",
+      "\"abcabcbb\" (the example)",
+      "\"aaaa\" (all equal)",
+      "a 50,000-character random string (complexity)"
+     ],
+     "answer": [
+      0,
+      1,
+      3,
+      4
+     ]
+    }
+   ],
+   "hints": [
+    "The example was already used to design the code."
+   ],
+   "solution": "<p>Edge cases and adversarial structure find bugs; re-running the design example rarely does.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Change the question",
+   "statement": "<p>Count pairs (i, j) with i &lt; j and a[i] &gt; a[j] (inversions), n ≤ 10⁵.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which reframing gives O(n log n)?",
+     "options": [
+      "For each j, count earlier elements greater than a[j], with a merge sort that counts while merging (or a Fenwick tree)",
+      "Hash every pair",
+      "Two pointers from both ends"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Contribution per element instead of per pair."
+   ],
+   "solution": "<p>Count each element's contribution: during merge sort, when an element of the right half is placed before remaining left-half elements, all of those form inversions with it. O(n log n). Changing the question from pairs to per-element contributions is the key move.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Manual procedure as algorithm",
+   "statement": "<p>You check by hand whether a word is a palindrome.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What does your hand procedure suggest?",
+     "options": [
+      "Compare the outer characters, then move inward: two pointers",
+      "Sort the letters",
+      "Count letters"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Watch what you do on the example."
+   ],
+   "solution": "<p>Your manual procedure is the two-pointer algorithm: move 2 of the method in action.</p>"
+  }
+ ]
+}

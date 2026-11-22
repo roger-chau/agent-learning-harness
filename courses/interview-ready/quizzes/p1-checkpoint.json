@@ -1,0 +1,101 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Brute force searches for a complement:",
+   "options": [
+    "hash map",
+    "heap",
+    "DP"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Brute force recomputes range sums:",
+   "options": [
+    "prefix sums",
+    "two pointers",
+    "union-find"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Pairs in a sorted array with a target relation:",
+   "options": [
+    "two pointers",
+    "prefix sums",
+    "backtracking"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Longest contiguous substring with a monotone condition:",
+   "options": [
+    "sliding window",
+    "binary search",
+    "heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Window maximum:",
+   "options": [
+    "monotonic deque",
+    "prefix sums",
+    "hash set"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Counting subarrays with sum k, negatives allowed:",
+   "options": [
+    "prefix sums + hash map",
+    "sliding window",
+    "sorting"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Proof that two pointers are correct:",
+   "options": [
+    "exchange argument for each discarded candidate",
+    "it passes the examples",
+    "it's O(n)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Proof that a window is O(n):",
+   "options": [
+    "each pointer moves forward at most n times",
+    "the while loop is short",
+    "hashing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

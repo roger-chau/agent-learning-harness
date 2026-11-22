@@ -1,0 +1,44 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>A <strong>contiguous</strong> subarray or substring that is the "longest", "shortest" or "count of" something satisfying a condition, where adding elements makes the condition monotonically harder (or easier) to satisfy. The brute force examines every window: O(n²) windows, often each in O(n). A sliding window examines O(n) windows, updating its state incrementally as one element enters and one leaves.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p>Keep a window [left, right]. Move <code>right</code> forward one step at a time; after each step, move <code>left</code> forward just enough to restore validity (for "longest valid window") or as far as possible while still valid (for "shortest valid window"). Keep the window's state (counts, sum, distinct characters) up to date in O(1) per move.</p>
+<p>It works only under <strong>monotonicity</strong>: if a window is invalid, every larger window containing it is invalid too (e.g. "has a repeated character", "sum exceeds k with positive numbers"). Then left never needs to move backwards. Without monotonicity (negative numbers in sum problems) the window can't decide when to shrink, and you need prefix sums instead (Chapter 1.2).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>left = 0; state = empty; best = 0
+for right, x in enumerate(s):
+    add x to state
+    while window [left, right] is invalid:   # restore the invariant
+        remove s[left] from state; left += 1
+    # invariant: s[left..right] is the longest valid window ending at right
+    best = max(best, right - left + 1)</code></pre>
+<p>For "shortest window containing…" flip it: while the window <em>is</em> valid, record it and shrink. The O(n) proof is amortised: <code>left</code> and <code>right</code> each move at most n times in total.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: minimum window substring</h2>
+<ol>
+<li><strong>Clarify:</strong> t may have repeated characters (multiplicity counts); return the window, not its length; "" if none.</li>
+<li><strong>Brute force:</strong> every window, checking counts: O(n² · alphabet).</li>
+<li><strong>Monotonicity:</strong> a window containing all of t stays valid when enlarged. So for each right end, the best left is the largest one still valid, and it only moves forward.</li>
+<li><strong>State:</strong> <code>need[c]</code> = how many more c the window needs (negative = surplus), and <code>missing</code> = total still needed, so validity is <code>missing == 0</code>: O(1).</li>
+<li><strong>Loop:</strong> extend right; when valid, advance left past surplus characters, record, then give up one needed character to search for the next window.</li>
+<li><strong>Complexity:</strong> O(|s| + |t|). <strong>Tests:</strong> t longer than s, t with repeats ("aa" in "a"), the answer at the very end.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Fixed-size windows</strong> (size k): add the new element, remove the one k back; no while loop.</li>
+<li><strong>Window maximum or minimum:</strong> the state can't be a single number (removal is hard); use a <strong>monotonic deque</strong> of indices with decreasing values: each index is pushed and popped once.</li>
+<li><strong>"At most k distinct" counting trick:</strong> the number of subarrays with exactly k distinct = atMost(k) − atMost(k − 1), each a sliding window.</li>
+<li><strong>Stale state is sometimes fine:</strong> in longest repeating replacement, the max frequency never needs to decrease, because the answer only improves when it grows.</li>
+</ul>
+</section>

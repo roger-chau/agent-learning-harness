@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "The signal for a hash map is…",
+   "options": [
+    "the brute force searches for a matching element",
+    "the input is sorted",
+    "contiguous ranges"
+   ],
+   "answer": 0,
+   "explanation": "Searching → hashing."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Expected cost of a hash-map lookup?",
+   "options": [
+    "O(1)",
+    "O(log n)",
+    "O(n)"
+   ],
+   "answer": 0,
+   "explanation": "Expected; O(n) worst case."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "In two-sum, why query before inserting?",
+   "options": [
+    "So an element can't pair with itself",
+    "It's faster",
+    "No reason"
+   ],
+   "answer": 0,
+   "explanation": "Invariant: seen = elements before i."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Anagram grouping key?",
+   "options": [
+    "sorted letters or letter counts",
+    "first letter",
+    "length"
+   ],
+   "answer": 0,
+   "explanation": "Canonical form."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Longest consecutive is O(n) because…",
+   "options": [
+    "each element is walked at most once, starting only at run starts",
+    "sets are sorted",
+    "of binary search"
+   ],
+   "answer": 0,
+   "explanation": "Amortised."
+  }
+ ]
+}

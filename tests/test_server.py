@@ -243,3 +243,21 @@ def test_exam_partial_credit_and_late(client, monkeypatch):
     monkeypatch.setattr(server.time, "time", lambda: real() + 4 * 3600)  # far past the deadline
     res = client.post(base + "/exam/submit", json={"answers": {}}).json()
     assert res["late"] and not res["passed"] and res["score"] == 0.0
+
+
+def test_coding_flow(client, monkeypatch):
+    monkeypatch.setenv("GROUNDWORK_UNLOCK", "1")
+    base = "/api/courses/interview-ready/items/1-1"
+    it = client.get(base).json()
+    ids = [c["id"] for c in it["coding"]]
+    assert "two-sum" in ids and all("tests" not in c or isinstance(c["tests"], int) for c in it["coding"])
+    wrong = "def two_sum(nums, target):\n    return [0, 1]\n"
+    r = client.post(base + "/coding/two-sum", json={"lang": "python", "code": wrong, "mode": "run"}).json()
+    assert any(not x["pass"] for x in r["results"]) and "expected" in r["results"][0]
+    r = client.post(base + "/coding/two-sum", json={"lang": "python", "code": wrong, "mode": "submit"}).json()
+    assert r["passed"] < r["total"] and r["failing"] and "solution" not in r
+    assert client.post(base + "/coding/two-sum/reveal").status_code == 409
+    right = "def two_sum(nums, target):\n    seen = {}\n    for i, x in enumerate(nums):\n        if target - x in seen:\n            return [seen[target - x], i]\n        seen[x] = i\n"
+    r = client.post(base + "/coding/two-sum", json={"lang": "python", "code": right, "mode": "submit"}).json()
+    assert r["passed"] == r["total"] and r["record"]["solved"] and r["solution"]["python"]
+    assert client.post(base + "/coding/nope", json={"lang": "python", "code": "", "mode": "run"}).status_code == 404

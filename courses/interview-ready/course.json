@@ -1,0 +1,590 @@
+{
+ "title": "Interview Ready",
+ "tagline": "Coding, systems, quant and behavioural interviews",
+ "description": "A university-grade preparation course that trains a method, not memorised answers: the six moves, a bottleneck → technique table, invariants and exchange arguments, applied to hundreds of problems you solve in Python or C++ against hidden tests, plus systems, quant and behavioural tracks.",
+ "chips": [
+  "Python & C++ judge",
+  "Hidden tests",
+  "Pattern drills",
+  "Quant track",
+  "Mock interviews"
+ ],
+ "parts": [
+  {
+   "id": "p0",
+   "n": 0,
+   "title": "The interview game and the method",
+   "summary": "How interviews are scored, complexity as a design tool, and the six-move method this course uses for every problem.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "0-1",
+     "title": "How interviews work",
+     "summary": "The rubric, the 45-minute script, kinds of loop, and how to practise.",
+     "blocks": [
+      [
+       "What you're scored on",
+       "the rubric rows"
+      ],
+      [
+       "The 45-minute script",
+       "clarify to wrap-up"
+      ],
+      [
+       "Different loops",
+       "big tech, OAs, GPU teams, quant"
+      ],
+      [
+       "How to practise",
+       "struggle, then compare reasoning"
+      ],
+      [
+       "Reality",
+       "noise and volume"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "0-2",
+     "title": "Complexity you can defend",
+     "summary": "Constraints → target complexity, hidden costs, amortised arguments and lower bounds.",
+     "blocks": [
+      [
+       "Complexity as a design tool",
+       "the constraints table"
+      ],
+      [
+       "Counting honestly",
+       "hidden costs, recurrences"
+      ],
+      [
+       "Amortised analysis",
+       "the sentence that earns points"
+      ],
+      [
+       "Lower bounds",
+       "when to stop"
+      ],
+      [
+       "Reality",
+       "constants and caches"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "0-3",
+     "title": "The six-move method",
+     "summary": "Restate, examples, brute force, bottleneck, transformation, invariant and tests; the bottleneck → technique table.",
+     "blocks": [
+      [
+       "Why a method",
+       "transfer to unseen problems"
+      ],
+      [
+       "The six moves",
+       "from clarify to test"
+      ],
+      [
+       "Bottleneck → technique",
+       "the core table"
+      ],
+      [
+       "Invariants",
+       "right the first time"
+      ],
+      [
+       "Testing like an engineer",
+       "attack your own code"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p1",
+   "n": 1,
+   "title": "Arrays: hashing, prefix sums, two pointers, sliding windows",
+   "summary": "The four patterns behind most array and string questions, each with its signal, invariant and proof.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "1-1",
+     "title": "Hash maps: trading space for time",
+     "summary": "Remember what you've seen, keyed by what you'll search for.",
+     "coding": [
+      "contains-duplicate",
+      "two-sum",
+      "group-anagrams",
+      "longest-consecutive",
+      "top-k-frequent"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "searching inside a loop"
+      ],
+      [
+       "The core idea",
+       "choose the key"
+      ],
+      [
+       "The invariant and template",
+       "query before insert"
+      ],
+      [
+       "A thinking trace",
+       "longest consecutive"
+      ],
+      [
+       "Traps and variations",
+       "keys, collisions, counters"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "1-2",
+     "title": "Prefix sums and difference arrays",
+     "summary": "Range questions in O(1), subarray conditions as conditions on two prefixes.",
+     "coding": [
+      "subarray-sum-k",
+      "product-except-self",
+      "range-sum-query",
+      "car-pooling"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "contiguous ranges"
+      ],
+      [
+       "The core idea",
+       "P[j+1] − P[i]"
+      ],
+      [
+       "The invariant and template",
+       "seed with zero"
+      ],
+      [
+       "A thinking trace",
+       "subarray sum equals k"
+      ],
+      [
+       "Traps and variations",
+       "overflow, 2-D, variants"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "1-3",
+     "title": "Two pointers",
+     "summary": "Discard a candidate per step, justified by an exchange argument.",
+     "coding": [
+      "valid-palindrome",
+      "three-sum",
+      "container-most-water",
+      "trapping-rain-water"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "sorted, or both ends"
+      ],
+      [
+       "The core idea",
+       "discard the useless"
+      ],
+      [
+       "The invariant and template",
+       "exchange arguments"
+      ],
+      [
+       "A thinking trace",
+       "container with most water"
+      ],
+      [
+       "Traps and variations",
+       "duplicates, fast/slow, flags"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "1-4",
+     "title": "Sliding windows",
+     "summary": "Contiguous windows under a monotone condition, updated incrementally; monotonic deques.",
+     "coding": [
+      "longest-substring-no-repeat",
+      "longest-repeating-replacement",
+      "minimum-window-substring",
+      "sliding-window-maximum"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "contiguous + monotone"
+      ],
+      [
+       "The core idea",
+       "grow right, shrink left"
+      ],
+      [
+       "The invariant and template",
+       "amortised O(n)"
+      ],
+      [
+       "A thinking trace",
+       "minimum window substring"
+      ],
+      [
+       "Traps and variations",
+       "fixed windows, deques, exactly-k"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p1-checkpoint",
+     "title": "Part 1 checkpoint",
+     "summary": "Signals and proofs across the four array patterns."
+    }
+   ]
+  },
+  {
+   "id": "p2",
+   "n": 2,
+   "title": "Stacks, queues and binary search",
+   "summary": "Monotonic stacks, parsing with stacks, binary search on indices and on the answer.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "2-1",
+     "title": "Stacks, queues and binary search",
+     "summary": "Monotonic stacks, parsing with stacks, binary search on indices and on the answer.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p3",
+   "n": 3,
+   "title": "Linked lists, trees and tries",
+   "summary": "Pointer manipulation, tree recursion and traversals, BSTs, LCA, serialisation, tries.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "3-1",
+     "title": "Linked lists, trees and tries",
+     "summary": "Pointer manipulation, tree recursion and traversals, BSTs, LCA, serialisation, tries.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p4",
+   "n": 4,
+   "title": "Graphs",
+   "summary": "BFS/DFS on grids and implicit graphs, topological sort, Dijkstra, 0-1 BFS, union-find, MST.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "4-1",
+     "title": "Graphs",
+     "summary": "BFS/DFS on grids and implicit graphs, topological sort, Dijkstra, 0-1 BFS, union-find, MST.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p5",
+   "n": 5,
+   "title": "Heaps, intervals and greedy",
+   "summary": "Top-k, two heaps, k-way merge, sweep lines, exchange-argument greedy.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "5-1",
+     "title": "Heaps, intervals and greedy",
+     "summary": "Top-k, two heaps, k-way merge, sweep lines, exchange-argument greedy.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p6",
+   "n": 6,
+   "title": "Dynamic programming I",
+   "summary": "State design: 1-D, grid, knapsack, LCS and edit distance.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "6-1",
+     "title": "Dynamic programming I",
+     "summary": "State design: 1-D, grid, knapsack, LCS and edit distance.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p7",
+   "n": 7,
+   "title": "Dynamic programming II and backtracking",
+   "summary": "Interval, bitmask, tree and digit DP; search with pruning.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "7-1",
+     "title": "Dynamic programming II and backtracking",
+     "summary": "Interval, bitmask, tree and digit DP; search with pruning.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p8",
+   "n": 8,
+   "title": "Advanced data structures and algorithms",
+   "summary": "Segment and Fenwick trees, strings (KMP, rolling hash), bits, maths.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "8-1",
+     "title": "Advanced data structures and algorithms",
+     "summary": "Segment and Fenwick trees, strings (KMP, rolling hash), bits, maths.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p9",
+   "n": 9,
+   "title": "C++ for interviews",
+   "summary": "Lifetimes, RAII, move semantics, templates, UB, STL complexity.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "9-1",
+     "title": "C++ for interviews",
+     "summary": "Lifetimes, RAII, move semantics, templates, UB, STL complexity.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p10",
+   "n": 10,
+   "title": "OS, concurrency and low latency",
+   "summary": "Virtual memory, caches, atomics, lock-free queues, order books, latency.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "10-1",
+     "title": "OS, concurrency and low latency",
+     "summary": "Virtual memory, caches, atomics, lock-free queues, order books, latency.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p11",
+   "n": 11,
+   "title": "System design",
+   "summary": "Estimation, building blocks and classic designs.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "11-1",
+     "title": "System design",
+     "summary": "Estimation, building blocks and classic designs.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p12",
+   "n": 12,
+   "title": "ML systems design",
+   "summary": "LLM serving, training parallelism, GPU cluster scheduling.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "12-1",
+     "title": "ML systems design",
+     "summary": "LLM serving, training parallelism, GPU cluster scheduling.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p13",
+   "n": 13,
+   "title": "Probability I",
+   "summary": "Counting, conditioning, Bayes, expectation and indicators.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "13-1",
+     "title": "Probability I",
+     "summary": "Counting, conditioning, Bayes, expectation and indicators.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p14",
+   "n": 14,
+   "title": "Probability II",
+   "summary": "Markov chains, martingales, gambler's ruin, order statistics, geometric probability.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "14-1",
+     "title": "Probability II",
+     "summary": "Markov chains, martingales, gambler's ruin, order statistics, geometric probability.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p15",
+   "n": 15,
+   "title": "Mental maths and estimation",
+   "summary": "Timed arithmetic drills, Fermi estimates, sequences.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "15-1",
+     "title": "Mental maths and estimation",
+     "summary": "Timed arithmetic drills, Fermi estimates, sequences.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p16",
+   "n": 16,
+   "title": "Trading games",
+   "summary": "Market making against an informed bot, EV, adverse selection, Kelly, game theory.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "16-1",
+     "title": "Trading games",
+     "summary": "Market making against an informed bot, EV, adverse selection, Kelly, game theory.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p17",
+   "n": 17,
+   "title": "Statistics and machine learning",
+   "summary": "MLE, regression, tests, bias–variance, time series, backtest overfitting.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "17-1",
+     "title": "Statistics and machine learning",
+     "summary": "MLE, regression, tests, bias–variance, time series, backtest overfitting.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p18",
+   "n": 18,
+   "title": "Stochastic calculus and pricing",
+   "summary": "Brownian motion, Itô, Black–Scholes, Greeks, binomial trees.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "18-1",
+     "title": "Stochastic calculus and pricing",
+     "summary": "Brownian motion, Itô, Black–Scholes, Greeks, binomial trees.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p19",
+   "n": 19,
+   "title": "Quant developer",
+   "summary": "Low-latency C++, order books and tick data, brainteasers in code.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "19-1",
+     "title": "Quant developer",
+     "summary": "Low-latency C++, order books and tick data, brainteasers in code.",
+     "status": "planned"
+    }
+   ]
+  },
+  {
+   "id": "p20",
+   "n": 20,
+   "title": "Behavioural rounds and the offer",
+   "summary": "Story bank, STAR, hard-bug stories, negotiation.",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "20-1",
+     "title": "Behavioural rounds and the offer",
+     "summary": "Story bank, STAR, hard-bug stories, negotiation.",
+     "status": "planned"
+    }
+   ]
+  }
+ ],
+ "companions": [
+  {
+   "title": "Introduction to Algorithms (CLRS), 4th ed.",
+   "by": "Cormen, Leiserson, Rivest & Stein"
+  },
+  {
+   "title": "Elements of Programming Interviews",
+   "by": "Aziz, Lee & Prakash"
+  },
+  {
+   "title": "Designing Data-Intensive Applications",
+   "by": "Kleppmann"
+  },
+  {
+   "title": "A Practical Guide to Quantitative Finance Interviews",
+   "by": "Zhou"
+  },
+  {
+   "title": "Heard on the Street",
+   "by": "Crack"
+  }
+ ],
+ "projects": [
+  {
+   "id": "A",
+   "title": "Coding interviews",
+   "runs": "Parts 0–8",
+   "summary": "The method, then every major pattern: arrays, stacks, trees, graphs, heaps, greedy, DP, advanced structures."
+  },
+  {
+   "id": "B",
+   "title": "Systems",
+   "runs": "Parts 9–12",
+   "summary": "C++, OS and concurrency, low latency, system design and ML systems design."
+  },
+  {
+   "id": "C",
+   "title": "Quant",
+   "runs": "Parts 13–19",
+   "summary": "Probability, mental maths, trading games, statistics, stochastic calculus, quant developer."
+  },
+  {
+   "id": "D",
+   "title": "Behavioural and offers",
+   "runs": "Part 20",
+   "summary": "A story bank from your own projects, STAR, negotiation."
+  }
+ ]
+}

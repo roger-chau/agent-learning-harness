@@ -657,3 +657,7 @@ svg .d-arrowhead { fill: var(--muted); }
 .sample code { white-space: pre-wrap; word-break: break-word; }
 .pill-diff { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; background: var(--surface-3, var(--surface)); }
 .pill-diff.t-mint { color: var(--mint-ink); } .pill-diff.t-indigo { color: var(--indigo-ink); } .pill-diff.t-rose { color: var(--rose-ink, #e5484d); }
+/* Code must show the characters typed: no ligatures (!= must not become ≠). */
+.code-ed, .code-sol, .code-sol code, .code-out, .code-err, .sample code, pre, code { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+.code-sol { background: var(--surface-2, var(--surface)); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; overflow-x: auto; }
+.code-sol code { background: none !important; padding: 0 !important; border: 0 !important; white-space: pre; display: block; }

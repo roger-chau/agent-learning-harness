@@ -1,0 +1,44 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Two pointers work when the input is <strong>sorted</strong> (or can be sorted without losing what you need), or when the answer involves the two <strong>ends</strong> of something: pairs with a target sum, palindromes, partitioning, merging sorted lists, removing duplicates in place. The brute force checks all O(n²) pairs; two pointers check O(n) of them by proving that each step discards a candidate that can't be part of a better answer.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p>Start with pointers at both ends (or both at the start, moving at different speeds). At each step, compare and <strong>move the pointer whose current element can't possibly be in a better answer</strong>. In sorted two-sum: if a[i] + a[j] is too small, then a[i] paired with any element left of j is even smaller, so i is useless: discard it (i += 1). Too big: discard j. Each step eliminates a whole row or column of the pair matrix, so n steps cover all n² pairs.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>i, j = 0, len(a) - 1
+# invariant: every pair with a pointer outside [i, j] has been ruled out (or recorded)
+while i &lt; j:
+    s = a[i] + a[j]
+    if s &lt; target: i += 1       # a[i] + anything ≤ a[j] is too small
+    elif s &gt; target: j -= 1     # a[j] + anything ≥ a[i] is too big
+    else: record; i += 1; j -= 1 (skipping duplicates if needed)</code></pre>
+<p>The justification of each move is an <strong>exchange argument</strong>: show the discarded element can't beat what you'll still consider. Getting into the habit of stating it for each pointer move is what separates a guessed two-pointer solution from a correct one.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: container with most water</h2>
+<ol>
+<li><strong>Brute force:</strong> all pairs, area = (j − i) × min(h[i], h[j]): O(n²).</li>
+<li><strong>Examples:</strong> [1, 8, 6, 2, 5, 4, 8, 3, 7] → 49 (lines 8 and 7, width 7).</li>
+<li><strong>Bottleneck:</strong> most pairs are clearly bad. Which can we discard? Start with the widest pair (0, n − 1).</li>
+<li><strong>Exchange argument:</strong> suppose h[i] ≤ h[j]. Any pair (i, j') with j' &lt; j is narrower, and its height is still at most h[i]. So no pair using i can beat the current one: discard i. Symmetric if h[j] is shorter.</li>
+<li><strong>Complexity:</strong> each step discards one index: O(n), O(1) space.</li>
+<li><strong>Test:</strong> equal heights (either move is fine), two lines, strictly increasing heights.</li>
+</ol>
+<p>The pattern of thought: <strong>"which candidate can I prove useless?"</strong> rather than "which is best?".</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Duplicates</strong> (3Sum): after a match, skip equal values on both sides, and skip equal values for the fixed element too.</li>
+<li><strong>Sorting destroys indices:</strong> if the answer needs original positions, sort (value, index) pairs, or use a hash map instead.</li>
+<li><strong>Same-direction pointers</strong> (fast and slow): removing duplicates in place, partitioning (Dutch national flag), linked-list cycle detection. The invariant is "everything before slow is the finished output".</li>
+<li><strong>Trapping rain water</strong> combines two pointers with running maxima: the side with the lower wall is decided by its own maximum, so it can be finalised and moved.</li>
+</ul>
+</section>
