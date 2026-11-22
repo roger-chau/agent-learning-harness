@@ -1,0 +1,358 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Which bank?",
+   "statement": "<p>32 banks of 4-byte words.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bank of word 70?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bank of the float at byte offset 1000?",
+     "answer": 26,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Bank = word mod 32."
+   ],
+   "solution": "<p>(a) $70 \\bmod 32 = 6$. (b) Byte 1000 is word 250; $250 \\bmod 32 = 26$.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Conflict degrees",
+   "statement": "<p>Lane ℓ reads word $s\\ell$.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "s = 2?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "s = 8?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "s = 32?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "s = 3?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "The degree is gcd(s, 32)."
+   ],
+   "solution": "<p>The lanes hit banks $s\\ell \\bmod 32$; each bank is hit $\\gcd(s, 32)$ times: 2, 8, 32, and 1 for any odd stride.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Padding choices",
+   "statement": "<p>A 32-row tile read by columns (lane ℓ reads row ℓ, column c), with row lengths of 32, 33 or 34 words.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Row length 32: conflict degree?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "33?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "34?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Column reads have stride equal to the row length."
+   ],
+   "solution": "<p>gcd(32, 32) = 32, gcd(33, 32) = 1, gcd(34, 32) = 2. Padding works when it makes the row length odd.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Cost of a conflicted transpose",
+   "statement": "<p>A 32 × 8 block transposes a 32 × 32 unpadded tile; each thread reads 4 tile elements by column.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warp read instructions per warp?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Shared-memory passes for them?",
+     "answer": 128,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "With the 33-word padding?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each column read is 32-way."
+   ],
+   "solution": "<p>4 instructions × 32 passes = 128, against 4 when padded: 32× fewer shared-memory cycles for one wasted column.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Broadcasts",
+   "statement": "<p>Same word: broadcast. Different words in the same bank: conflict.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Lane ℓ reads word ⌊ℓ/2⌋: passes?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Lane ℓ reads word 32·(ℓ mod 2): passes?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Every lane reads word 7: passes?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "(b): words 0 and 32."
+   ],
+   "solution": "<p>(a) 16 distinct words in 16 distinct banks, each read by 2 lanes: 1 pass. (b) Two distinct words, both in bank 0: 2 passes. (c) Broadcast: 1.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Fitting tiles",
+   "statement": "<p>The GW-1 allows 48 KB of shared memory per block and 64 KB per SM, allocated in 256-byte chunks; at most 16 blocks per SM.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes in a 32 × 33 float tile?",
+     "answer": 4224,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bytes actually allocated for it?",
+     "answer": 4352,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Blocks per SM if each uses one such tile (shared memory only)?",
+     "answer": 15,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Round 4224 up to a multiple of 256."
+   ],
+   "solution": "<p>(a) 4,224 bytes, (b) 4,352 (17 chunks), (c) $\\lfloor 65536/4352 \\rfloor = 15$ blocks: shared memory, not the 16-block limit, binds, by a hair.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 3,
+   "title": "Swizzling instead of padding",
+   "statement": "<p>Store element (r, c) of a 32 × 32 tile at word $32r + (c \\oplus r)$ (XOR).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Conflict degree reading a row?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Reading a column?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "multi",
+     "prompt": "Which layouts are conflict-free for both rows and columns?",
+     "options": [
+      "Plain 32-word rows",
+      "33-word rows (padding)",
+      "XOR swizzle",
+      "Rotation: word 32r + ((c + r) mod 32)"
+     ],
+     "answer": [
+      1,
+      2,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Column c, lane ℓ = row: bank $c \\oplus \\ell$, distinct for distinct ℓ."
+   ],
+   "solution": "<p>(a) Row r: banks $c \\oplus r$ for $c = 0..31$, a permutation. (b) Column c: banks $c \\oplus \\ell$, also a permutation. (c) Padding, XOR and rotation all work; XOR wastes no memory and suits power-of-two tiles, which is why CUTLASS and Triton use it.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Barrier hazards",
+   "statement": "<p>Which code is correct?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Threads write a tile, then read neighbours' values from it…",
+     "options": [
+      "without a barrier, since writes are fast",
+      "after __syncthreads()",
+      "after __syncthreads() placed inside <code>if (threadIdx.x &lt; 16)</code>",
+      "after __syncwarp()"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "A loop loads tile k, computes, then loads tile k+1 into the same buffer. It needs…",
+     "options": [
+      "one barrier after the load",
+      "a barrier after the load and another before the next load overwrites it",
+      "no barriers",
+      "a barrier only at the end"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Every thread must reach the same barrier; reads must finish before overwrites."
+   ],
+   "solution": "<p>(a) A block-wide barrier between the writes and the reads; a barrier only some threads reach can deadlock, and __syncwarp covers only one warp. (b) Two: after loading (so reads see the data) and before overwriting (so slow readers finish). Forgetting the second is a classic race.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Conflicts in time",
+   "statement": "<p>A kernel issues 1,000,000 warp shared-memory loads, each with an average conflict degree of 8. Each SM serves one pass per cycle; the work is spread evenly over the GW-1's 16 SMs at 1.5 GHz.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Time spent on shared-memory passes, in µs?",
+     "answer": 333.3333333333333,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Without conflicts, in µs?",
+     "answer": 41.666666666666664,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Passes / (16 SMs × 1.5 GHz)."
+   ],
+   "solution": "<p>(a) $8 \\times 10^6 / 16 = 500{,}000$ cycles = 333 µs. (b) 41.7 µs. Bank conflicts turn a memory-light kernel into an issue-bound one.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "What shared memory is for",
+   "statement": "<p>Pick the best use.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which are good reasons to stage data in shared memory?",
+     "options": [
+      "Turning a strided global access into coalesced ones (transpose)",
+      "Reusing a tile of data many times (tiled GEMM, stencils)",
+      "Exchanging values between threads of a block",
+      "Making a single coalesced streaming pass faster",
+      "Replacing registers for per-thread scalars"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Shared memory pays off through reuse or reordering."
+   ],
+   "solution": "<p>Reordering, reuse and communication. A single coalesced pass gains nothing from an extra copy, and registers are faster than shared memory for private values.</p>"
+  }
+ ]
+}

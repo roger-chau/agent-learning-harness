@@ -1,0 +1,339 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Three register counts",
+   "statement": "<p>256-thread blocks, no shared memory, on the GW-1 (64 warps, 16 blocks, 65,536 registers per SM; registers allocated per warp in chunks of 256).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Occupancy at 32 registers per thread, in %?",
+     "answer": 100.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "At 64?",
+     "answer": 50.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "At 80?",
+     "answer": 37.5,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Registers per warp = 32 × per-thread, rounded up to 256."
+   ],
+   "solution": "<p>(a) 1,024 per warp → 64 warps → 8 blocks: 100%. (b) 2,048 → 32 warps → 4 blocks: 50%. (c) 2,560 → 25 warps → 3 whole blocks: 24 warps, 37.5%.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Shared memory as the limiter",
+   "statement": "<p>128-thread blocks using 20 KB of shared memory each.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Blocks per SM?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Occupancy, in %?",
+     "answer": 18.75,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "64 KB / 20 KB."
+   ],
+   "solution": "<p>3 blocks (12 warps): 18.75%.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "One register too many",
+   "statement": "<p>256-thread blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Registers per warp at 65 per thread (allocated)?",
+     "answer": 2304,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Occupancy, in %?",
+     "answer": 37.5,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "65 × 32 = 2,080, rounded up to a multiple of 256."
+   ],
+   "solution": "<p>(a) 2,304. (b) $65536/2304 = 28.4 \\to 28$ warps → 3 blocks → 24 warps: 37.5%, down from 50% at 64 registers. One register cost a whole block.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Register budgets",
+   "statement": "<p>128-thread blocks (4 warps), no shared memory.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum registers per thread for 100% occupancy?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Maximum for at least 75%?",
+     "answer": 40,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "75% = 48 warps = 12 blocks.",
+    "Registers per warp must be at most ⌊65536/48⌋ rounded down to a multiple of 256."
+   ],
+   "solution": "<p>(a) 64 warps need ≤ 1,024 registers per warp: 32 per thread. (b) 48 warps: ≤ 1,365 per warp, so ≤ 1,280 after rounding to 256: 40 per thread. Check: at 40, 51 warps fit → 12 blocks → 48 warps ✓; at 41, 1,536 per warp → 42 warps → 10 blocks → 40 warps ✗.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Trimming shared memory",
+   "statement": "<p>256-thread blocks, 32 registers per thread.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Occupancy with 12 KB of shared memory per block, in %?",
+     "answer": 62.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With 10 KB?",
+     "answer": 75.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "64 KB / 12 KB = 5.33."
+   ],
+   "solution": "<p>(a) 5 blocks = 40 warps: 62.5%. (b) 6 blocks = 48 warps: 75%. Shrinking a tile by a sixth bought 20% more warps.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Little's law for the GW-1",
+   "statement": "<p>512 GB/s at 1.5 GHz, 400-cycle latency, 128 bytes per warp request.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes that must be in flight?",
+     "answer": 136533.3333333333,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Warps needed at one request each?",
+     "answer": 1066.6666666666665,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Warps needed at 4 requests each?",
+     "answer": 266.66666666666663,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "Occupancy that corresponds to (c), in %?",
+     "answer": 26.041666666666664,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Bytes per cycle × latency."
+   ],
+   "solution": "<p>(a) $341.3 \\times 400 = 136,533$ bytes. (b) 1067 warps, more than the GW-1's 1,024. (c) 267. (d) 26%. Four independent loads per thread replace three quarters of the warps.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "A copy kernel at half occupancy",
+   "statement": "<p>Same model: one 128-byte request per warp, 50% occupancy on all 16 SMs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes in flight?",
+     "answer": 65536,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fraction of peak bandwidth, in %?",
+     "answer": 48.00000000000001,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "512 warps."
+   ],
+   "solution": "<p>$512 \\times 128 = 65{,}536$ bytes in flight, $48\\%$ of the 136,533 needed: about half of peak, as the chapter says.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Volkov's trade",
+   "statement": "<p>Version 1: one load per thread, 32 registers, 256-thread blocks. Version 2: four independent loads per thread, 48 registers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Version 1 occupancy, in %?",
+     "answer": 100,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Version 2 resident warps per SM?",
+     "answer": 40,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Version 1 bytes in flight (whole GPU) as % of need?",
+     "answer": 96.00000000000001,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "Version 2, as % of need?",
+     "answer": 240.00000000000003,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "48 × 32 = 1,536 registers per warp.",
+    "Bytes in flight = warps × requests per warp × 128."
+   ],
+   "solution": "<p>(a) 100%. (b) $65536/1536 = 42$ warps → 5 blocks → 40 warps (62.5%). (c) $1024 \\times 128 = 131{,}072$: 96%. (d) $640 \\times 4 \\times 128 = 327{,}680$: 240%, saturated with room to spare. Lower occupancy, more bytes in flight.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "Find the limiter",
+   "statement": "<p>128-thread blocks, 32 registers per thread, 16 KB shared memory per block.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which limit binds?",
+     "options": [
+      "Warp slots",
+      "Block slots",
+      "Registers",
+      "Shared memory"
+     ],
+     "answer": 3
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Occupancy, in %?",
+     "answer": 25.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Compute all four limits."
+   ],
+   "solution": "<p>Warps allow 16 blocks, blocks 16, registers 16, shared memory $64/16 = 4$. Shared memory binds: 4 blocks, 16 warps, 25%.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Occupancy and waves",
+   "statement": "<p>A grid of 1,024 blocks of 256 threads, each taking the same time. A code change takes resident blocks per SM from 8 to 7.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Waves before?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Waves after?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Slowdown, if per-block time is unchanged?",
+     "answer": 1.25,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "A wave is blocks per SM × 16 SMs."
+   ],
+   "solution": "<p>(a) 1024/128 = 8. (b) $\\lceil 1024/112 \\rceil = 10$ (the last wave is only partly full). (c) 1.25×, from 12.5% fewer resident blocks. Occupancy changes act through both latency hiding and wave quantisation (Part 5).</p>"
+  }
+ ]
+}

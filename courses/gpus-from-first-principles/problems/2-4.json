@@ -1,0 +1,319 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Cache per thread",
+   "statement": "<p>Divide cache capacity by the threads that share it.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "256 KB of L1 per SM over 2,048 resident threads: bytes per thread?",
+     "answer": 128,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "The GW-1's 256 KB L2 over all its threads (16 SMs × 2,048)?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "16 × 2048 = 32,768 threads."
+   ],
+   "solution": "<p>(a) 128 bytes, about one cache line. (b) 8 bytes: two floats. GPU caches work through sharing between neighbouring threads, not private working sets.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Cyclic sweeps and LRU",
+   "statement": "<p>A kernel sweeps an array repeatedly, in the same order, through the GW-1's 256 KB LRU L2. No other traffic.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Hit rate on the second and later passes for a 192 KB array, in %?",
+     "answer": 100,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For a 320 KB array, in %?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "LRU evicts the least recently used sector; in a cyclic sweep that's the one needed next."
+   ],
+   "solution": "<p>(a) It fits: 100%. (b) Each sector is evicted just before it's needed again: 0%. LRU has a cliff for cyclic access just past capacity; a 25% bigger working set loses all reuse.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "L2-bound or DRAM-bound?",
+   "statement": "<p>A kernel moves 400 MB between the SMs and L2 with a 60% L2 hit rate. L2 bandwidth 1,024 GB/s, DRAM 512 GB/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "DRAM traffic, in MB?",
+     "answer": 160,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Lower bound on time, in ms?",
+     "answer": 0.390625,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Which level limits it?",
+     "options": [
+      "L2",
+      "DRAM"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Time bound = max(L2 bytes / L2 bw, DRAM bytes / DRAM bw)."
+   ],
+   "solution": "<p>(a) 40% of 400 MB = 160 MB. (b) $\\max(0.391, 0.3125) = 0.391$ ms. (c) L2. A high hit rate shifts the bottleneck up the hierarchy.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Walking columns",
+   "statement": "<p>A loop walks down column c of an N × N row-major float matrix (one element per row), then down column c + 1, and so on. Each access touches the 32-byte sector holding (row, c), which also holds 7 neighbouring columns. The only traffic goes through the GW-1's 256 KB LRU L2.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes of distinct sectors touched by one column walk, for N = 4096, in KB?",
+     "answer": 128.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For N = 4096: how many times is each sector fetched from DRAM?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "For N = 16,384?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "The reuse distance between (row, c) and (row, c + 1) is one whole column walk.",
+    "Does N sectors fit in 256 KB?"
+   ],
+   "solution": "<p>(a) 4,096 sectors × 32 bytes = 128 KB. (b) That fits, so when column c + 1 comes back to the same sectors they're still cached: each is fetched once and used 8 times. (c) 16,384 sectors = 512 KB doesn't fit; LRU evicts each sector before its next use, so it's fetched 8 times, once per column it holds: 8× the necessary DRAM traffic. The fix is to walk a strip of 8 (or 32) columns together, so each sector is fully used while it's in cache: a reuse-distance fix, not a bandwidth one.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Repeated GEMV",
+   "statement": "<p>Ten iterations of $y = Ax$ with the same A (FP32), in a 256 KB L2.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "A is 128 × 256 (128 KB): DRAM bytes for A over the 10 iterations?",
+     "answer": 131072,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "A is 1024 × 1024 (4 MB)?",
+     "answer": 41943040,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Does A fit?"
+   ],
+   "solution": "<p>(a) Fits: A comes from DRAM once, 128 KB; the next nine passes hit. (b) Doesn't fit and is swept cyclically: 40 MB. Small operators reused across iterations (or kernels) can live in L2; Ampere's persisting-L2 controls make that deliberate.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 3,
+   "title": "Restructuring for LRU",
+   "statement": "<p>A kernel makes 10 passes over a 512 KB array through a 256 KB LRU cache.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Overall hit rate as written (10 full sweeps), in %?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Restructured: 10 passes over the first half, then 10 over the second half. Hit rate, in %?",
+     "answer": 90,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Each half fits.",
+    "Only the first pass over each half misses."
+   ],
+   "solution": "<p>(a) 0%: the cyclic-sweep cliff. (b) Each 256 KB half misses on its first pass and hits on the other nine: 90%. This is loop tiling for caches: reorder work so that reuse happens within a working set that fits.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 1,
+   "title": "Where writes go",
+   "statement": "<p>GPU cache write policy.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "On most NVIDIA GPUs, global stores…",
+     "options": [
+      "are cached in L1 and written back on eviction",
+      "go to L2, where they're merged; L1 isn't used for them",
+      "bypass every cache and go straight to DRAM",
+      "are discarded unless followed by __threadfence()"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "The chapter's Reality section."
+   ],
+   "solution": "<p>Stores go to L2 (writes from different SMs to the same line must meet somewhere coherent). In the simulator a written sector that misses L2 counts as one sector of DRAM traffic.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "A large table, random lookups",
+   "statement": "<p>An embedding table of 4 MB is read at uniformly random rows through a 2 MB LRU cache, 1M lookups of 32 bytes each, after warm-up.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected hit rate, in %?",
+     "answer": 50,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "DRAM bytes for the 1M lookups, in MB (10⁶ bytes)?",
+     "answer": 16.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Under uniform random access, the cache holds a random half of the table."
+   ],
+   "solution": "<p>(a) About $2/4 = 50\\%$. (b) Half of 32 MB: 16 MB. For random access, hit rate ≈ capacity / working set; only shrinking the table (compression, smaller types) or reordering lookups helps.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "The three Cs",
+   "statement": "<p>Classify misses in the simulator's fully associative LRU L2.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which kinds of miss can happen in a fully associative LRU cache?",
+     "options": [
+      "Compulsory (cold): first touch",
+      "Capacity: working set too big",
+      "Conflict: too many lines mapping to one set"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "A kernel reads a 64 MB array once. Its misses are…",
+     "options": [
+      "compulsory",
+      "capacity",
+      "conflict"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Conflict misses need set mapping."
+   ],
+   "solution": "<p>(a) Fully associative caches have no sets, so no conflict misses: only compulsory and capacity. Real GPU caches are set-associative and do have conflict misses. (b) A single pass: every miss is a first touch.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Neighbour reuse in a blur",
+   "statement": "<p>A 5-tap horizontal blur on a 512 × 512 float image; warps go left to right along rows. Count DRAM bytes per pixel.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "If every read went to DRAM (no caching)?",
+     "answer": 24,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With the cache serving all repeats?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Reuse distance of a neighbour read, roughly, in sectors (order of magnitude: 1, 1,000 or 100,000)?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Five reads and one write.",
+    "The neighbouring warp loaded the same sector moments ago."
+   ],
+   "solution": "<p>(a) 20 + 4 = 24. (b) 4 + 4 = 8. (c) A handful of sectors: the previous lanes or warp just touched it. Tiny reuse distances are what caches handle perfectly, even small ones.</p>"
+  }
+ ]
+}

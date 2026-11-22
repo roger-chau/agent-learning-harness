@@ -43,3 +43,33 @@
 </ul>
 <div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 4</strong> presents the roofline model in its section on data-level parallelism. This Part's Roofline paper chapter covers the original paper.</div>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: placing a kernel on the roofline from its source</h3>
+<p><strong>Kernel.</strong> Softmax over rows of a 4096 × 1024 FP32 matrix, written as three passes: row max, then sum of exponentials, then normalise.</p>
+<p><strong>FLOPs per element.</strong> Pass 1: 1 comparison. Pass 2: 1 subtraction, 1 exponential (count it as ~4 FLOPs; it's a few instructions on the special-function unit), 1 add. Pass 3: 1 subtraction, 1 exponential again or a stored value, 1 multiply. Roughly 12 FLOPs per element whichever way you count.</p>
+<p><strong>Bytes per element.</strong> Pass 1 reads 4. Pass 2 reads 4 (and writes 4 if it stores the exponentials). Pass 3 reads 4 (or 4 + 4) and writes 4. About 16–20 bytes.</p>
+<p><strong>Intensity</strong> $\approx 12/18 \approx 0.7$ FLOP/byte: memory-bound on the GW-1 (ridge 3) by a factor of 4. Attainable: $0.7 \times 512 \approx 350$ GFLOP/s, and the time bound is $18 \times 4\text{M} / 512\,\text{GB/s} \approx 0.15$ ms.</p>
+<p><strong>What that tells you to do:</strong> not to optimise the exponential, but to cut bytes. A fused one-pass version reads 4 and writes 4 bytes per element: 8 instead of 18, about 2.2× faster (Lab 7 measures exactly this).</p>
+
+<h3>Example 2: from a measured time to a diagnosis</h3>
+<p><strong>Data.</strong> A kernel takes 2.0 ms, executes $1.2 \times 10^9$ FLOPs and moves 600 MB of DRAM traffic on the GW-1.</p>
+<p><strong>Achieved:</strong> 600 GFLOP/s (39% of peak) and 300 GB/s (59% of peak bandwidth). <strong>Intensity:</strong> $1.2\text{G}/600\text{M} = 2$ FLOP/byte, left of the ridge, so the roof is $2 \times 512 = 1024$ GFLOP/s.</p>
+<p><strong>Gap to the roof:</strong> 600 of 1,024, 59%: the same as the bandwidth fraction, as it must be for a memory-bound kernel. So the questions are about bandwidth: is the kernel coalesced (2.3)? Does it have enough bytes in flight (2.6)? Is it moving bytes it doesn't need to? Shaving FLOPs would do nothing.</p>
+
+<h3>Example 3: how intensity grows with reuse</h3>
+<p><strong>Setup.</strong> Matrix multiply $C = AB$, all $n \times n$, FP32, computed in tiles of $T \times T$ that stay on chip while being reused.</p>
+<p><strong>Counting.</strong> Total FLOPs: $2n^3$. With tiles, each element of A and B is loaded from DRAM once per tile of C that needs it: $n/T$ times. Bytes: $2 \times 4n^2 \times n/T = 8n^3/T$ (ignoring C's $4n^2$).</p>
+<p><strong>Intensity</strong> $= 2n^3 / (8n^3/T) = T/4$ FLOP/byte. With $T = 1$ (no reuse) it's 0.25, memory-bound; to reach the GW-1's ridge of 3 needs $T \ge 12$; to reach the tensor-core ridge of 24 needs $T \ge 96$.</p>
+<p><strong>The lesson</strong> that drives all of Part 4: an algorithm's intensity isn't fixed. Reuse (tiles held in shared memory and registers) raises it in proportion to the tile size, until on-chip storage runs out.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> S. Williams, A. Waterman, D. Patterson, "Roofline: An Insightful Visual Performance Model for Multicore Architectures", <em>CACM</em> 52(4), 2009 (this Part's paper chapter).</li>
+<li><strong>Required:</strong> Hennessy &amp; Patterson (7th ed.), Chapter 4, section 4.5 (the roofline model in the data-level parallelism chapter).</li>
+<li><strong>Optional:</strong> NVIDIA Nsight Compute documentation, "Roofline Charts": how the profiler places a kernel, with hierarchical (L1/L2/DRAM) roofs.</li>
+</ul>
+</section>

@@ -48,3 +48,31 @@
 </ul>
 <div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 2</strong>'s sections on memory technology explain DRAM rows, banks and bursts, and why row-buffer locality matters.</div>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: counting sectors for an arbitrary pattern</h3>
+<p><strong>Pattern.</strong> 8-byte doubles, lane ℓ reads element $2\ell + (\ell \bmod 2)$ (a zigzag).</p>
+<p><strong>Method.</strong> Write down byte addresses, divide by 32, count distinct results. Element indices for lanes 0–7: 0, 3, 4, 7, 8, 11, 12, 15. Byte addresses: 0, 24, 32, 56, 64, 88, 96, 120. Sectors: 0, 0, 1, 1, 2, 2, 3, 3. So every pair of lanes shares a sector, and the 32 lanes span elements 0–63 (bytes 0–511): 16 sectors.</p>
+<p><strong>Efficiency:</strong> $32 \times 8 / (16 \times 32) = 50\%$. The pattern reads every other double, so half of every sector is wasted, regardless of the zigzag. Shortcut: for any pattern, efficiency = useful bytes / (32 × distinct sectors). Draw the sectors; don't trust intuition about "almost contiguous".</p>
+
+<h3>Example 2: what a cache line costs in DRAM terms</h3>
+<p><strong>Setup.</strong> GDDR memory delivers data in bursts: say a 32-bit channel with burst length 16 gives $4 \times 16 = 64$ bytes per burst, or 32 bytes for a 16-bit channel at BL16. An activation (opening a row) costs on the order of 30–50 ns; a burst from an open row a few ns.</p>
+<p><strong>Consequence 1:</strong> the minimum useful granularity is one burst, which is why sectors are 32 bytes and not 4.</p>
+<p><strong>Consequence 2:</strong> a stream of consecutive sectors from one row amortises the activation over many bursts. Random sectors pay an activation each. That's why "random 32-byte reads" run at a fraction of the bandwidth of sequential reads even when each read is a full sector: the GPU's spec-sheet bandwidth assumes row-buffer locality. Lab 0's pointer chase shows the latency side of this.</p>
+
+<h3>Example 3: from sectors to a time prediction</h3>
+<p><strong>Kernel.</strong> 16 M particles in AoS (16 bytes: x, y, vx, vy); the kernel updates x += vx and y += vy, one thread per particle, field by field.</p>
+<p><strong>Per warp:</strong> 4 loads (x, y, vx, vy) and 2 stores (x, y), each touching the same 16 sectors (512 bytes): 6 × 16 = 96 sector requests. Useful: 6 × 128 = 768 bytes. Efficiency 25%.</p>
+<p><strong>DRAM.</strong> If L1/L2 catch the repeats, DRAM sees 512 bytes in and 512 out per warp: 1 KB per 32 particles, the minimum. If they don't (a huge working set and poor ordering), it can see up to 3,072 bytes.</p>
+<p><strong>Prediction.</strong> At 512 GB/s: best case $16\text{M}/32 \times 1\,\text{KB} = 512$ MB, 1.0 ms; worst case 3.0 ms. SoA needs the same 1 KB per warp at 100% efficiency with no reliance on caching: reliably 1.0 ms. Predicting both bounds before measuring is what lets you interpret the measurement.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Best Practices Guide</em>, "Coalesced Access to Global Memory" (with the sector diagrams).</li>
+<li><strong>Required:</strong> Hennessy &amp; Patterson (7th ed.), Chapter 2, section 2.2 (memory technology: DRAM organisation, banks, rows and bursts; GDDR and HBM).</li>
+<li><strong>Optional:</strong> B. Jacob, S. Ng, D. Wang, <em>Memory Systems: Cache, DRAM, Disk</em> (2008), Chapters 7–8 on DRAM timing.</li>
+</ul>
+</section>

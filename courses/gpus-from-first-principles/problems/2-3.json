@@ -1,0 +1,343 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Which index drives x?",
+   "statement": "<p>A 4096 × 4096 row-major float matrix, 32 × 8 blocks, accessed as <code>a[y * 4096 + x]</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors per warp load with x from threadIdx.x?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With x and y swapped (x from threadIdx.y, y from threadIdx.x)?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Swapped: consecutive lanes differ in y."
+   ],
+   "solution": "<p>(a) 32 consecutive floats: 4 sectors. (b) Consecutive lanes are a row apart (16 KB): every lane gets its own sector, 32.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Particles, AoS and SoA",
+   "statement": "<p>Particles with fields x, y, vx, vy (floats). A warp reads x for 32 consecutive particles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "AoS: sectors?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "AoS: efficiency, in %?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "SoA: sectors?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "AoS stride is 16 bytes."
+   ],
+   "solution": "<p>AoS: lanes 16 bytes apart, 512 bytes spanned, 16 sectors, 25%. SoA: 4 sectors, 100%.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "A three-field struct",
+   "statement": "<p>AoS of 12-byte structs {x, y, z}. A warp reads all three fields of 32 consecutive structs, one field per instruction.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors per instruction?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Sector requests for all three instructions?",
+     "answer": 36,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Sector requests with SoA?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "32 structs span 384 bytes = 12 sectors, whichever field you read."
+   ],
+   "solution": "<p>Each instruction touches all 12 sectors of the 384-byte span: 36 requests for 12 sectors of data. SoA: 3 × 4 = 12. If L1 catches the repeats, DRAM traffic is the same, but the 3× request count still costs L1 bandwidth and issue slots.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Pitch",
+   "statement": "<p>A float image is 1001 pixels wide. Rows are stored back to back from a 128-byte-aligned base. Warps read 32 consecutive pixels starting at x = 0, 32, 64, … of a row.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Average sectors per warp load, over 8 consecutive rows?",
+     "answer": 4.875,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Smallest row pitch (in floats, ≥ 1001) that makes every row start 32-byte aligned?",
+     "answer": 1008,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Smallest pitch that makes every row start 128-byte aligned?",
+     "answer": 1024,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Row y starts at byte 4004y; 4004y mod 32 = 4y mod 32.",
+    "Pitch × 4 must be a multiple of 32 (or 128)."
+   ],
+   "solution": "<p>(a) Row starts are 32-byte aligned only every 8th row; the other 7 cost 5 sectors per warp: $(4 + 35)/8 = 4.875$. (b) 1008 floats = 4032 bytes = 126 sectors. (c) 1024 floats = 4096 bytes. <code>cudaMallocPitch</code> picks such a pitch for you and returns it.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Thread per row, or thread per column?",
+   "statement": "<p>Each thread sums one line of an N × N row-major matrix (N = 4096), looping over the other index.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Thread ℓ sums row ℓ: sectors per warp load?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Thread ℓ sums column ℓ: sectors per warp load?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "At each loop step, which addresses do the 32 lanes read?"
+   ],
+   "solution": "<p>(a) Lanes read the same column position of 32 different rows: 16 KB apart, 32 sectors. (b) Lanes read 32 consecutive elements of the same row: 4 sectors. The \"natural\" row sum is the uncoalesced one; it needs a warp (or block) per row instead (Lab 5 does exactly this for GEMV).</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "RGB bytes",
+   "statement": "<p>An interleaved RGB8 image; one thread per pixel reads its R byte (lane ℓ reads byte 3ℓ).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Efficiency, in %?",
+     "answer": 33.333333333333336,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "If 24 lanes instead each read one 4-byte word of the warp's 96 bytes: sectors?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Lane addresses span 0–93."
+   ],
+   "solution": "<p>(a) 3 sectors, (b) 32 useful bytes of 96: 33%; reading G and B costs 2 more instructions on the same sectors. (c) Cooperative word loads fetch the same 3 sectors in one instruction at 100%, then pixels are unpacked from shared memory or registers. That's milestone A2's trick.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 3,
+   "title": "Sorting gathers",
+   "statement": "<p>A warp gathers <code>a[idx[i]]</code>. Unsorted, idx is random over a huge array. After sorting idx, each warp's 32 indices fall uniformly at random within a window of 64 consecutive floats (8 sectors).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors per warp unsorted?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0.5
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected sectors per warp sorted?",
+     "answer": 7.888481303698535,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Traffic reduction?",
+     "answer": 4.056547612656027,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Expected distinct sectors among 32 draws from 8."
+   ],
+   "solution": "<p>(a) 32. (b) $8(1 - (7/8)^{32}) = 7.89$. (c) 4.1×. Sorting indices (or binning work by address) turns random gathers into nearly coalesced ones.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "The naive transpose",
+   "statement": "<p>Transpose a 4096 × 4096 float matrix: thread (x, y) reads <code>a[y][x]</code> and writes <code>b[x][y]</code>, 32 × 8 blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors per warp read?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Sectors per warp write?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Overall efficiency (useful bytes / bytes moved), in %?",
+     "answer": 22.22222222222222,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Writes: consecutive lanes write consecutive rows of b."
+   ],
+   "solution": "<p>(a) 4, (b) 32, (c) 256 useful bytes over 36 sectors (1,152 bytes): 22.2%. One side of a transpose is always strided; shared memory fixes it (2.5).</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "Spot the coalesced access",
+   "statement": "<p>1-D index <code>i</code> from the global thread index unless stated; 2-D blocks are 32 × 8.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which accesses are fully coalesced (4 sectors per warp for floats)?",
+     "options": [
+      "<code>a[i]</code>",
+      "<code>a[2*i]</code>",
+      "<code>a[y*w + x]</code>, x from threadIdx.x, w a multiple of 32",
+      "<code>a[x*h + y]</code>, x from threadIdx.x",
+      "a grid-stride loop over <code>a[i]</code>"
+     ],
+     "answer": [
+      0,
+      2,
+      4
+     ]
+    }
+   ],
+   "hints": [
+    "Consecutive lanes, consecutive addresses."
+   ],
+   "solution": "<p><code>a[2*i]</code> is stride 2 (8 sectors). <code>a[x*h + y]</code> puts consecutive lanes h floats apart. The others are contiguous per warp.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Narrow blocks",
+   "statement": "<p>Read <code>a[y*4096 + x]</code> with x from threadIdx.x and different block widths. Count sectors per warp.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "32 × 8 blocks?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "8 × 32 blocks?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "4 × 64 blocks?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "8 floats are exactly one sector; 4 floats are half a sector."
+   ],
+   "solution": "<p>(a) One row of 32: 4 sectors. (b) Four rows of 8 floats, each exactly one aligned sector: still 4. (c) Eight rows of 4 floats, each half a sector: 8 sectors, 50%. Under the sector rule a warp needs runs of at least 8 floats; real hardware also prefers fewer distinct 128-byte lines per request (fewer L1 tag lookups), which is why 32-wide blocks are the default.</p>"
+  }
+ ]
+}

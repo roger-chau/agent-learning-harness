@@ -47,3 +47,33 @@ x[i], y[i], vx[i], vy[i]</code></pre>
 <li><strong>Measure it.</strong> Profilers report sectors per request and "uncoalesced global accesses". The simulator's <code>coalescing</code> field is the same idea.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: diagnosing an access from the code</h3>
+<p><strong>Code.</strong> <code>out[i] = in[i * C + c]</code>: each thread i reads channel c of pixel i from an image with C = 4 interleaved float channels.</p>
+<p><strong>Step 1, find the lane stride.</strong> Consecutive lanes have consecutive i, so addresses are $4C = 16$ bytes apart.</p>
+<p><strong>Step 2, count.</strong> 32 lanes × 16 bytes = 512 bytes spanned, 16 sectors for 128 useful bytes: 25%.</p>
+<p><strong>Step 3, fix.</strong> Either change the layout to planar (four arrays: 100%), or have each thread read the whole pixel as one <code>float4</code> (lane stride 16 bytes, each lane uses all 16: 100%) and process all channels. The second needs no layout change, which matters when the data format isn't yours to choose.</p>
+
+<h3>Example 2: a 2-D stencil and block shape</h3>
+<p><strong>Setup.</strong> A 3 × 3 stencil over a 4096-wide float image. Each output pixel reads 3 rows × 3 columns.</p>
+<p><strong>32 × 8 blocks.</strong> Each warp is one row of 32 outputs. For each of the 3 input rows it reads 34 consecutive floats (32 plus a neighbour each side): 136 bytes, 5 or 6 sectors when not aligned. Mostly coalesced.</p>
+<p><strong>8 × 32 blocks.</strong> Each warp is 4 rows of 8 outputs. For each input row it reads 4 runs of 10 floats (40 bytes, 2–3 sectors each): about 10 sectors per input row, roughly double.</p>
+<p><strong>Reuse.</strong> Within a 32 × 8 block, each input row is read by up to 3 warps; the L1 cache or a shared-memory tile catches the repeats. The block's input footprint is $34 \times 10$ floats for $32 \times 8$ outputs: 1.33 reads per output, against 9 in the source. Wide blocks are better on both counts.</p>
+
+<h3>Example 3: converting AoS to SoA, and when not to</h3>
+<p><strong>Setup.</strong> A particle system with 7 floats per particle (position, velocity, mass). Kernel A integrates positions (reads all 7, writes 6). Kernel B computes the total mass (reads 1).</p>
+<p><strong>AoS (28-byte structs).</strong> Kernel A: for each field, 32 lanes span 896 bytes: 28 sectors per instruction, 13 instructions: 364 sector requests per warp, but only 28 distinct sectors per warp overall, so with a good L1 DRAM traffic is near minimal. Kernel B: 28 sectors for 128 useful bytes: 14% efficiency, and caching can't help since the other fields are never used. Kernel B is 7× slower than necessary.</p>
+<p><strong>SoA.</strong> Every instruction in both kernels: 4 sectors, 100%.</p>
+<p><strong>Hybrid (AoSoA).</strong> Groups of 32 particles stored as 7 arrays of 32: each field access by a warp is contiguous (100%), and all of one particle's data stays within 896 bytes, which is friendly to CPU code and to copying a group at once. Libraries for particle and molecular dynamics use exactly this layout.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> W. Hwu, D. Kirk, I. El Hajj, <em>Programming Massively Parallel Processors</em> (4th ed.), Chapter 6 (performance considerations: memory coalescing).</li>
+<li><strong>Required:</strong> M. Harris, "How to Access Global Memory Efficiently in CUDA C/C++ Kernels", NVIDIA Developer Blog (2013).</li>
+<li><strong>Optional:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Device Memory Accesses" and the 2-D allocation API (<code>cudaMallocPitch</code>).</li>
+</ul>
+</section>

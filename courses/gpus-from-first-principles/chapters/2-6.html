@@ -46,3 +46,36 @@
 <li><strong>Tail effects.</strong> Blocks per SM also decides how many blocks run per wave (Chapter 0.4), so occupancy changes can shift a grid from 2 waves to 3. Part 5 looks at this.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: the full occupancy calculation</h3>
+<p><strong>Kernel.</strong> 192 threads per block (6 warps), 42 registers per thread, 9 KB of shared memory, on the GW-1.</p>
+<ul>
+<li><strong>Warp slots:</strong> $\lfloor 64/6 \rfloor = 10$ blocks.</li>
+<li><strong>Block slots:</strong> 16.</li>
+<li><strong>Registers:</strong> $42 \times 32 = 1344$, rounded up to 1,536 per warp; $\lfloor 65536/1536 \rfloor = 42$ warps; $\lfloor 42/6 \rfloor = 7$ blocks.</li>
+<li><strong>Shared memory:</strong> 9 KB = 9,216 bytes, a multiple of 256; $\lfloor 65536/9216 \rfloor = 7$ blocks.</li>
+</ul>
+<p><strong>Result:</strong> 7 blocks, 42 warps, 65.6%, limited jointly by registers and shared memory. To reach 8 blocks you'd need both ≤ 40 registers (1,280 per warp → 51 warps → 8 blocks) and ≤ 8 KB of shared memory: fixing one alone gains nothing. Always compute all four limits.</p>
+
+<h3>Example 2: does occupancy matter for this kernel?</h3>
+<p><strong>Kernel A</strong>: a copy, one 4-byte load per thread, then a store. <strong>Kernel B</strong>: each thread loads 8 independent floats with <code>float4</code> × 2, then does 200 FMAs on them.</p>
+<p><strong>A.</strong> Little's law needs about 1,067 warps' worth of 128-byte requests on the GW-1. At 100% occupancy (1,024 warps) it just reaches peak; at 50% it gets about half. A is occupancy-sensitive.</p>
+<p><strong>B.</strong> Each warp has 2 × 512 = 1,024 bytes in flight per load phase, so 134 warps (13% occupancy) would saturate memory. And it's compute-heavy: 200 FMAs per 32 bytes = 12.5 FLOP/byte, right of the ridge. Compute-bound kernels need enough warps to hide arithmetic latency (about 4 cycles per dependent FMA, a few warps per scheduler), not memory latency. B is nearly occupancy-insensitive above ~25%.</p>
+<p><strong>Rule:</strong> raise occupancy when a kernel is latency-bound with few requests per warp; otherwise spend registers on ILP and reuse instead.</p>
+
+<h3>Example 3: what a launch-bounds cap does</h3>
+<p><strong>Setup.</strong> A kernel compiles to 72 registers per thread with 256-thread blocks: $72 \times 32 = 2304$ per warp, 28 warps, 3 blocks, 37.5%.</p>
+<p><strong>Cap at 64</strong> with <code>__launch_bounds__(256, 4)</code> ("256 threads, at least 4 blocks per SM"): the compiler must fit in $65536 / (4 \times 256) = 64$ registers. Occupancy rises to 50%.</p>
+<p><strong>The cost:</strong> 8 values per thread no longer fit and spill to local memory. If they're used in the inner loop, each use becomes an L1 access (about 30 cycles, and L1 bandwidth shared with everything else). Whether the trade wins depends on whether the kernel was latency-bound (more warps help) or not (spills only hurt). The only way to know is to measure both versions, which is precisely Lab 6's exercise.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> V. Volkov, "Better Performance at Lower Occupancy", GTC 2010 (this Part's paper chapter), and its Little's-law argument.</li>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Best Practices Guide</em>, "Occupancy" and "Register Pressure"; the occupancy calculator (in Nsight Compute).</li>
+<li><strong>Optional:</strong> V. Volkov, <em>Understanding Latency Hiding on GPUs</em>, PhD thesis, UC Berkeley, 2016, Chapters 2–4.</li>
+</ul>
+</section>

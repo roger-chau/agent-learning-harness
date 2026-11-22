@@ -61,3 +61,32 @@ function main() {
 </ul>
 <div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Appendix B</strong> (cache basics: associativity, replacement, the three Cs of misses) and <strong>Chapter 2</strong> (advanced cache optimisations).</div>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: predicting a hit rate from reuse distance</h3>
+<p><strong>Setup.</strong> A vertical 5-tap blur (each output reads its pixel and 2 above, 2 below) on a 4096 × 4096 float image, with warps assigned row by row, left to right, top to bottom. L2 is 256 KB.</p>
+<p><strong>Reuse distance.</strong> Pixel (x, y) is read by outputs in rows $y-2$ to $y+2$. Between the first and last of those reads, the kernel processes 4 full rows of outputs. Each row of outputs touches 5 input rows' worth of sectors in its window, but the distinct new data per output row is one input row: 16 KB. So the reuse distance is about $4 \times 16 = 64$ KB, well under 256 KB.</p>
+<p><strong>Prediction:</strong> every repeat hits; DRAM sees each input pixel once. Now make the image 32,768 wide: one row is 128 KB, the reuse distance is about 512 KB, and repeats start missing. The same kernel's DRAM traffic jumps up to 5×.</p>
+<p><strong>Fix:</strong> process the image in vertical strips (say 1,024 columns wide) so that the rows of a strip are short. Same code, different traversal order, and the reuse distance shrinks by the strip ratio.</p>
+
+<h3>Example 2: LRU on a cyclic sweep, step by step</h3>
+<p><strong>Setup.</strong> A 3-line LRU cache, access sequence A B C D A B C D…</p>
+<p><strong>Trace.</strong> A, B, C miss (cold). D misses and evicts A, the least recently used. Then A misses and evicts B; B misses and evicts C; and so on: <em>every</em> access misses. With a 4-line cache, the second round hits everything.</p>
+<p><strong>Why it matters.</strong> One line short of the working set gives 0% hits, not 75%. Random replacement would keep some lines across rounds and do better here. GPU L2 replacement isn't pure LRU, but the cliff still shows up: a kernel's hit rate can collapse when the problem size grows past cache size, and the response is to tile (Example 1) or to use shared memory.</p>
+
+<h3>Example 3: how much does a cache save a stencil?</h3>
+<p><strong>Setup.</strong> A 7-point 3-D stencil (centre and 6 neighbours) on a $512^3$ float grid, one output per thread, warps along x.</p>
+<p><strong>No cache:</strong> 7 reads + 1 write = 32 bytes per point. <strong>Perfect cache:</strong> 4 + 4 = 8. Ratio 4×.</p>
+<p><strong>What a real cache catches.</strong> The x-neighbours are in the same or adjacent sectors as the centre: caught by L1 immediately. The y-neighbours are one row (2 KB) away: caught if a block covers several rows. The z-neighbours are one plane (1 MB) away: with a 256 KB L2 and a plane-by-plane traversal, they miss. So DRAM traffic is about 4 (centre and x) + 4 (z−1) + 4 (z+1) + 4 (write) = 16 bytes: 2× the ideal.</p>
+<p><strong>Fix:</strong> 2.5D blocking: each block marches along z through its x–y tile, keeping three planes of the tile in shared memory or registers. Then z-reuse is managed on chip, and DRAM traffic falls to the 8-byte minimum. This is how production stencil codes work.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> Hennessy &amp; Patterson (7th ed.), Appendix B (sections B.1–B.3: cache organisation, the three Cs, replacement) and Chapter 2, section 2.3 (ten advanced cache optimisations).</li>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Device Memory L2 Access Management" (persisting accesses).</li>
+<li><strong>Optional:</strong> Z. Jia, M. Maggioni, B. Staiger, D. Scarpazza, "Dissecting the NVIDIA Volta GPU Architecture via Microbenchmarking" (2018), the cache chapters (Part 5's paper).</li>
+</ul>
+</section>

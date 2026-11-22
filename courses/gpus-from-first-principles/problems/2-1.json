@@ -1,0 +1,371 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Three intensities",
+   "statement": "<p>All arrays are FP32 and nothing is cached: every array element is read or written once from DRAM.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Vector add, c = a + b: FLOP per byte?",
+     "answer": 0.08333333333333333,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "SAXPY, y = a·x + y?",
+     "answer": 0.16666666666666666,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Dot product, s = Σ xᵢyᵢ (ignore the single output)?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Count FLOPs per element and bytes per element.",
+    "SAXPY: a multiply and an add; reads x and y, writes y."
+   ],
+   "solution": "<p>(a) 1 FLOP / 12 bytes = 0.083. (b) 2 / 12 = 0.167. (c) 2 / 8 = 0.25. All three are far left of any GPU's ridge: memory-bound, and their only goal is full bandwidth.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Reading the GW-1 roofline",
+   "statement": "<p>GW-1: 1,536 GFLOP/s peak, 512 GB/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ridge point, FLOP/byte?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Attainable GFLOP/s at I = 0.25?",
+     "answer": 128,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "At I = 5?",
+     "answer": 1536,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "min(peak, I × B)."
+   ],
+   "solution": "<p>(a) $1536/512 = 3$. (b) $0.25 \\times 512 = 128$. (c) $\\min(1536, 2560) = 1536$: compute-bound.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "How good is 1.9 ms?",
+   "statement": "<p>SAXPY over $n = 2^{26}$ floats takes 1.9 ms on the GW-1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum DRAM traffic, in bytes?",
+     "answer": 805306368,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Lower bound on the time, in ms?",
+     "answer": 1.572864,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Achieved fraction of peak bandwidth, in %?",
+     "answer": 82.7823157894737,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Bytes / bandwidth."
+   ],
+   "solution": "<p>(a) $12 \\times 2^{26} = 805,306,368$ bytes. (b) $/512\\,\\text{GB/s} = 1.573$ ms. (c) $82.8\\%$: good (80–90% is the practical ceiling), so little is left on the table.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Matrix–vector",
+   "statement": "<p>$y = Ax$ with $A$ an 8192 × 8192 FP32 matrix, read once; x read once, y written once.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Arithmetic intensity, FLOP/byte?",
+     "answer": 0.4998779594825482,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Lower bound on time on the GW-1, in ms?",
+     "answer": 0.524416,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$2MN$ FLOPs; bytes dominated by A."
+   ],
+   "solution": "<p>(a) $2MN / (4MN + 4M + 4N) \\approx 0.4999$: essentially 0.5, because each element of A is used once. (b) $\\approx 268$ MB at 512 GB/s: 0.524 ms. GEMV is memory-bound on every GPU ever made; GEMM is not (Part 4).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Precision moves you on the roofline",
+   "statement": "<p>Vector add on the GW-1, in different precisions. FP16 math runs at the FP32 rate here; FP64 at 1/32 of it.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FP16 intensity?",
+     "answer": 0.16666666666666666,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "FP16 attainable GFLOP/s?",
+     "answer": 85.33333333333333,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "FP64 attainable GFLOP/s?",
+     "answer": 21.333333333333332,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Bytes per element: 2 + 2 + 2, or 8 + 8 + 8.",
+    "FP64 peak 48 GFLOP/s."
+   ],
+   "solution": "<p>(a) $1/6$, (b) $512/6 = 85.3$: half the bytes, twice the speed. (c) $\\min(48, 512/24 = 21.3) = 21.3$: even with a 32× slower FP64 unit, vector add is still memory-bound.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Fusion on the roofline",
+   "statement": "<p>Three kernels over n floats: <code>c = a + b</code>, then <code>d = s·c</code>, then <code>e = d + a</code>. Or one fused kernel computing e directly.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes per element, unfused?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bytes per element, fused?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Intensity, fused?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "Expected speedup from fusion?",
+     "answer": 2.6666666666666665,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Kernel 1: read 2, write 1. Kernel 2: read 1, write 1. Kernel 3: read 2, write 1.",
+    "Fused: read a and b, write e."
+   ],
+   "solution": "<p>(a) $12 + 8 + 12 = 32$. (b) 12. (c) 3 FLOPs / 12 bytes = 0.25 (up from 3/32). (d) $32/12 = 2.67\\times$: fusion is the single biggest lever for chains of memory-bound operations, and the reason ML compilers exist.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "The next generation",
+   "statement": "<p>A new GPU has 4× the GW-1's peak compute and 2× its bandwidth.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "New ridge point?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "A kernel at I = 4: speedup over the GW-1?",
+     "answer": 2.6666666666666665,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "A kernel at I = 0.5?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Attainable on each machine, then the ratio."
+   ],
+   "solution": "<p>(a) $6144/1024 = 6$. (b) GW-1: $\\min(1536, 2048) = 1536$ (compute-bound); new: $\\min(6144, 4096) = 4096$ (now memory-bound): 2.67×. (c) Memory-bound on both: 2×, the bandwidth ratio. As ridges move right, kernels that were compute-bound become memory-bound.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "A blur's true intensity",
+   "statement": "<p>A 5-tap horizontal box blur: per output pixel, 4 adds and 1 multiply (by 1/5). FP32 image of 4096 × 4096.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Intensity counting the source's reads (5 reads, 1 write per pixel)?",
+     "answer": 0.20833333333333334,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Intensity if the cache serves all repeated reads (DRAM sees 1 read, 1 write)?",
+     "answer": 0.625,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Lower bound on time in the second case, in ms?",
+     "answer": 0.26214400000000004,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$5 \\times 4 + 4 = 24$ bytes versus $4 + 4 = 8$."
+   ],
+   "solution": "<p>(a) $5/24 = 0.21$. (b) $5/8 = 0.625$. (c) $8 \\times 4096^2 / 512\\,\\text{GB/s} = 0.262$ ms. Intensity is about DRAM traffic, so caching changes it by 3×; both are still memory-bound.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Under both roofs",
+   "statement": "<p>A kernel reaches 30% of peak bandwidth and 2% of peak compute. The profiler shows 12% occupancy and long stalls waiting on memory.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What limits it?",
+     "options": [
+      "Bandwidth",
+      "Compute",
+      "Latency: too few requests in flight",
+      "Instruction cache"
+     ],
+     "answer": 2
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Which fix comes first?",
+     "options": [
+      "Fewer FLOPs",
+      "More parallelism or more independent loads per thread",
+      "Smaller data types",
+      "A bigger L2"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Neither roof is close."
+   ],
+   "solution": "<p>It sits well below both roofs, with low occupancy and memory stalls: latency-bound (Part 0's Little's law). More warps, or more loads in flight per warp (Volkov), raise it toward the bandwidth roof; only then do byte-saving optimisations pay.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 3,
+   "title": "More roofs",
+   "statement": "<p>The GW-1's tensor cores give 8× the FP32 peak (12,288 GFLOP/s), and its L2 delivers 1,024 GB/s. A GEMM kernel has intensity 16 FLOP/byte against DRAM and 4 FLOP/byte against L2.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ridge point of the tensor roof against DRAM?",
+     "answer": 24.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Attainable GFLOP/s?",
+     "answer": 4096,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Which roof binds?",
+     "options": [
+      "Tensor compute",
+      "DRAM bandwidth",
+      "L2 bandwidth"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "Attainable = min over all roofs: peak, I_DRAM × B_DRAM, I_L2 × B_L2."
+   ],
+   "solution": "<p>(a) $12288/512 = 24$. (b) $\\min(12288, 8192, 4096) = 4096$. (c) L2: the kernel reuses data well from DRAM's point of view but re-reads it from L2 too often. The fix is more reuse in shared memory and registers (Part 4), which raises the L2 intensity.</p>"
+  }
+ ]
+}

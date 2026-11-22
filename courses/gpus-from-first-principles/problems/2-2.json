@@ -1,0 +1,336 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Counting sectors",
+   "statement": "<p>A warp loads 4-byte floats; lane ℓ reads element $o + s\\ell$ of an array that starts on a 128-byte boundary.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "s = 1, o = 0: sectors?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "s = 1, o = 1?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "s = 2, o = 0?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "Efficiency for s = 2, in %?",
+     "answer": 50,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Sectors are 32-byte aligned chunks."
+   ],
+   "solution": "<p>(a) bytes 0–127: 4 sectors. (b) bytes 4–131: 5. (c) bytes 0–255, every sector touched: 8, (d) 50%.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Element size and instruction count",
+   "statement": "<p>Read 1 MiB contiguously with fully coalesced warp loads.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warp load instructions with 1-byte loads?",
+     "answer": 32768,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With 4-byte loads?",
+     "answer": 8192,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "With 16-byte (float4) loads?",
+     "answer": 2048,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "A warp moves 32 × element size bytes per instruction."
+   ],
+   "solution": "<p>(a) 32,768, (b) 8,192, (c) 2,048. All are 100% sector-efficient; the difference is instructions issued. Narrow loads can make a memory-bound kernel issue-bound.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Stride 3",
+   "statement": "<p>Lane ℓ reads float $3\\ell$ (aligned array).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Efficiency, in %?",
+     "answer": 33.333333333333336,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Byte addresses 0, 12, 24, …, 372."
+   ],
+   "solution": "<p>Addresses span bytes 0–375; consecutive lanes are 12 bytes apart, less than a sector, so every sector in the span is touched: 12 sectors, efficiency $128/384 = 33.3\\%$. In general, stride $s \\le 8$ costs $4s$ sectors.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Misaligned float4",
+   "statement": "<p>Each lane loads 16 bytes; lane ℓ starts at byte $16\\ell + 4$ (the buffer is offset by one float).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors touched?",
+     "answer": 17,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Efficiency, in %?",
+     "answer": 94.11764705882354,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The warp spans bytes 4–515."
+   ],
+   "solution": "<p>Span 4–515 covers sectors 0 through 16: 17 sectors for 512 bytes, $94.1\\%$. (On real hardware a misaligned float4 load isn't even legal: vector loads must be naturally aligned. Alignment matters more for vector loads than for scalar ones.)</p>"
+  },
+  {
+   "id": "p5",
+   "level": 3,
+   "title": "Gathering from a small table",
+   "statement": "<p>Each lane loads a float at a uniformly random index into a table, independently.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Table of 1 GiB: expected sectors per warp load (to the nearest integer)?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0.5
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Table of 4 KiB (128 sectors): expected distinct sectors?",
+     "answer": 28.41131186819699,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Expected distinct values among 32 draws from m: $m(1 - (1 - 1/m)^{32})$."
+   ],
+   "solution": "<p>(a) Collisions are negligible: 32 sectors, 12.5% efficiency. (b) $128(1 - (127/128)^{32}) = 28.4$: barely better. Small tables help through caching (they stay in L1/L2), not through coalescing.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Two half-rows",
+   "statement": "<p>A 16 × 16 block reads a row-major float image; warp 0 covers x = 0–15 of rows 0 and 1. The image starts on a 128-byte boundary.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors for width 1024 floats?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For width 1001 floats?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Row 1 starts at byte 4 × width."
+   ],
+   "solution": "<p>(a) Each half-row is 64 bytes, starting at 0 and 4096: 2 sectors each, 4 in all. (b) Row 1 starts at byte 4004, which is 4 bytes past a sector boundary, so its 64 bytes straddle 3 sectors: 5 in all. Row pitch alignment matters whenever a warp spans rows.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 3,
+   "title": "Partial-sector writes",
+   "statement": "<p>A warp stores floats at stride 2. Suppose the memory system must read each partially written sector, merge, and write it back.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors written?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "DRAM bytes moved (reads + writes)?",
+     "answer": 512,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Multiple of the 128 useful bytes?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each sector is half written."
+   ],
+   "solution": "<p>8 sectors, each needing a 32-byte read and a 32-byte write: 512 bytes for 128 useful, 4×. Scattered or strided stores can cost more than the same loads; making them full-sector is worth extra effort.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "What coalescing costs at scale",
+   "statement": "<p>A memory-bound kernel moves 1 GB between L2 and the SMs per run (simulator: <code>bytesMoved</code>), with coalescing 25%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Time at full 512 GB/s, in ms?",
+     "answer": 1.953125,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time if fully coalesced, in ms?",
+     "answer": 0.48828125,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Speedup?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Useful bytes are 25% of 1 GB."
+   ],
+   "solution": "<p>(a) 1.953 ms, (b) 0.488 ms, (c) 4×. A memory-bound kernel's runtime is proportional to sectors moved.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "DRAM's physical reality",
+   "statement": "<p>DRAM reads activate a whole row into a row buffer, then stream bursts from it.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which costs the least per useful byte?",
+     "options": [
+      "32 bytes from 32 different rows",
+      "32 consecutive bytes from one row",
+      "4 bytes each from 8 rows",
+      "1 byte from 32 rows"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Nsight Compute reports 16 sectors per request for a kernel's 4-byte loads. The simplest pattern that explains it is…",
+     "options": [
+      "stride 1",
+      "stride 2",
+      "stride 4",
+      "stride 8"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "Activations are expensive; bursts are cheap.",
+    "Stride s ≤ 8 costs 4s sectors."
+   ],
+   "solution": "<p>(a) Consecutive bytes in one open row: one activation, one burst. (b) $4s = 16 \\Rightarrow s = 4$, 25% efficiency, for example a 16-byte struct read one field at a time.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Same bytes, any order",
+   "statement": "<p>Lane ℓ reads float $\\pi(\\ell)$ where π is a permutation of 0–31.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors touched, for any permutation?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "On modern NVIDIA GPUs, is this slower than lane ℓ reading float ℓ?",
+     "options": [
+      "Yes, much slower",
+      "No: the same sectors are fetched once each"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Sectors depend on the set of addresses, not their order."
+   ],
+   "solution": "<p>The set of addresses is the same 128 bytes, so 4 sectors. Early CUDA GPUs required lanes in order; modern ones just count distinct sectors.</p>"
+  }
+ ]
+}
