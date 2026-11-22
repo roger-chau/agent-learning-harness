@@ -123,7 +123,7 @@ class Progress:
         if it["type"] == "exam":
             return any(a.get("passed") for a in (rec.get("exam") or {}).get("attempts", []))
         wu = it.get("writeup")
-        if not it["exercises"] and not it["has_quiz"] and not wu and it["type"] != "lab":
+        if not it["exercises"] and not it["has_quiz"] and not wu and it["type"] != "lab" and not it.get("coding") and not it.get("has_problems"):
             return bool(rec.get("read"))  # nothing to pass: reading it is enough
         ex_ok = all(rec.get("exercises", {}).get(e, {}).get("passed") for e in it["exercises"])
         quiz_ok = (not it["has_quiz"]) or bool((rec.get("quiz") or {}).get("passed"))
@@ -135,7 +135,10 @@ class Progress:
             ps = content.problems(slug, it["id"]) or {"problems": []}
             solved = sum(1 for p in ps["problems"] if (rec.get("problems", {}).get(p["id"]) or {}).get("solved"))
             pr_ok = not ps["problems"] or solved / len(ps["problems"]) >= ps.get("pass", 0.7) - 1e-9
-        return ex_ok and quiz_ok and wu_ok and pr_ok
+        cd = it.get("coding", [])
+        cd_solved = sum(1 for c in cd if (rec.get("coding", {}).get(c) or {}).get("solved"))
+        cd_ok = not cd or cd_solved / len(cd) >= it.get("coding_pass", 0.7) - 1e-9
+        return ex_ok and quiz_ok and wu_ok and pr_ok and cd_ok
 
     def states(self, slug: str) -> dict[str, dict]:
         unlock_all = os.environ.get("GROUNDWORK_UNLOCK", "1") != "0"
@@ -159,6 +162,7 @@ class Progress:
                 "exercises": {e: bool(rec.get("exercises", {}).get(e, {}).get("passed")) for e in it["exercises"]},
                 "quiz": rec.get("quiz"),
                 "problems": rec.get("problems", {}),
+                "coding": rec.get("coding", {}),
             }
             if it["status"] == "ready" and not done and blocked_by is None:
                 blocked_by = it["id"]
@@ -197,6 +201,28 @@ class Progress:
                     p["solved"] = True
             p["at"] = _now()
             probs[pid] = p
+            self._mark(slug, item_id, rec)
+            self.save()
+            return dict(p)
+
+    def record_coding(self, slug: str, item_id: str, pid: str, lang: str, passed: int, total: int, reveal: bool = False) -> dict:
+        """A submission against all tests (or a reveal). Solved means every test passed before revealing."""
+        with self._lock:
+            rec = self._item(slug, item_id)
+            cd = rec.setdefault("coding", {})
+            p = cd.get(pid) or {"submissions": 0, "solved": False, "revealed": False, "best": 0}
+            if reveal:
+                p["revealed"] = True
+            else:
+                p["submissions"] += 1
+                p["best"] = max(p["best"], passed / total if total else 0)
+                if passed == total and total and not p["revealed"]:
+                    p["solved"] = True
+                    p.setdefault("langs", [])
+                    if lang not in p["langs"]:
+                        p["langs"].append(lang)
+            p["at"] = _now()
+            cd[pid] = p
             self._mark(slug, item_id, rec)
             self.save()
             return dict(p)

@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import agent, content
+from . import runner, agent, content
 from .progress import Progress
 from .prompts import chapter_context
 
@@ -142,7 +142,66 @@ def get_item(slug: str, item_id: str):
         "lab_record": progress.lab(slug, item_id) if it["type"] == "lab" else None,
         "writeup_text": progress.writeup(slug, item_id),
         "exam": _exam_info(slug, item_id) if it["type"] == "exam" else None,
+        "coding": [content.public_coding(content.coding(slug, c)) for c in it.get("coding", []) if content.coding(slug, c)],
     }
+
+
+# ---------- Coding problems ----------
+CODING_REVEAL_AFTER = 3
+
+
+class CodeIn(BaseModel):
+    lang: str
+    code: str = Field(max_length=100_000)
+    mode: str = "run"  # "run": samples only, full detail; "submit": every test
+
+
+@app.post("/api/courses/{slug}/items/{item_id}/coding/{pid}")
+async def run_coding(slug: str, item_id: str, pid: str, body: CodeIn):
+    it = _item(slug, item_id)
+    _require_open(slug, item_id)
+    if pid not in it.get("coding", []):
+        raise HTTPException(404, "no such coding problem in this item")
+    pr = content.coding(slug, pid)
+    if body.lang not in ("python", "cpp") or not (pr.get("entry") or {}).get(body.lang):
+        raise HTTPException(400, "language not available for this problem")
+    tests = [t for t in pr["tests"] if t.get("sample")] if body.mode == "run" else pr["tests"]
+    try:
+        res = await asyncio.to_thread(runner.run, pr, body.lang, body.code, tests)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    out = {"mode": body.mode, "compile_error": res.get("compile_error")}
+    rs = res["results"]
+    if body.mode == "run":
+        out["results"] = [r | {"args": t.get("args", t.get("ops")), "expected": t["expected"]} for r, t in zip(rs, tests)]
+        return out
+    passed = sum(1 for r in rs if r["pass"])
+    out |= {"passed": passed, "total": len(tests), "max_ms": max((r.get("ms") or 0) for r in rs) if rs else 0}
+    fail = next((k for k, r in enumerate(rs) if not r["pass"]), None)
+    if fail is not None:  # show the first failing case, as judges do
+        t = tests[fail]
+        out["failing"] = {"args": t.get("args", t.get("ops")), "expected": t["expected"], "got": rs[fail].get("got"), "error": rs[fail].get("error")}
+    if res.get("compile_error"):
+        passed = 0
+    rec = progress.record_coding(slug, item_id, pid, body.lang, passed, len(tests))
+    out |= {"record": rec, "state": progress.states(slug)[item_id], "progress": progress.summary(slug)}
+    if rec["solved"] or rec.get("revealed"):
+        out["solution"] = pr.get("solution", {})
+    return out
+
+
+@app.post("/api/courses/{slug}/items/{item_id}/coding/{pid}/reveal")
+def reveal_coding(slug: str, item_id: str, pid: str):
+    it = _item(slug, item_id)
+    _require_open(slug, item_id)
+    if pid not in it.get("coding", []):
+        raise HTTPException(404, "no such coding problem")
+    pr = content.coding(slug, pid)
+    rec = (progress.states(slug)[item_id].get("coding") or {}).get(pid) or {"submissions": 0, "solved": False}
+    if not rec.get("solved") and rec.get("submissions", 0) < CODING_REVEAL_AFTER:
+        raise HTTPException(409, f"submit at least {CODING_REVEAL_AFTER} times before revealing the solution")
+    rec = progress.record_coding(slug, item_id, pid, "", 0, 0, reveal=not rec.get("solved"))
+    return {"solution": pr.get("solution", {}), "record": rec, "state": progress.states(slug)[item_id]}
 
 
 # ---------- Exams ----------

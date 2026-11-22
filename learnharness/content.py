@@ -132,6 +132,22 @@ def problems(slug: str, item_id: str) -> dict | None:
     return json.loads(p.read_text()) if p.exists() else None
 
 
+def coding(slug: str, pid: str) -> dict | None:
+    """A coding problem: courses/<slug>/coding/<pid>.json (see learnharness/runner.py)."""
+    p = ROOT / _safe(slug) / "coding" / f"{_safe(pid)}.json"
+    return json.loads(p.read_text()) if p.exists() else None
+
+
+def public_coding(pr: dict) -> dict:
+    """What the learner sees before solving: statement, starters, samples and hints."""
+    langs = [l for l in ("python", "cpp") if (pr.get("entry") or {}).get(l) and pr.get("starter", {}).get(l)]
+    return {"id": pr["id"], "title": pr["title"], "difficulty": pr.get("difficulty", "medium"), "pattern": pr.get("pattern", ""),
+            "statement": pr["statement"], "starter": {l: pr["starter"][l] for l in langs}, "langs": langs,
+            "samples": [{"args": t["args"], "expected": t["expected"]} if "args" in t else {"ops": t["ops"], "expected": t["expected"]}
+                        for t in pr["tests"] if t.get("sample")],
+            "tests": len(pr["tests"]), "hints": pr.get("hints", []), "target": pr.get("complexity", "")}
+
+
 def exam(slug: str, item_id: str) -> dict | None:
     """Exam problems live in exams/<id>.json, in the problem-set format, plus
     {"minutes": ..., "pass": ...}. They're never sent with the item: only when an attempt starts."""
@@ -221,6 +237,8 @@ def estimate(slug: str, it: dict) -> dict:
     if it["id"] == "capstone":
         per_ex = 600
     practice += per_ex * len(it.get("exercises", []))
+    practice += sum({"easy": 15, "medium": 30, "hard": 50}.get((coding(slug, c) or {}).get("difficulty", "medium"), 30)
+                    for c in it.get("coding", []))
     practice += (20 if it.get("type") == "checkpoint" else 10) if it.get("has_quiz") else 0
     wu = it.get("writeup")
     practice += round(wu.get("min_words", 150) / 10) if wu else 0

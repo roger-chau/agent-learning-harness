@@ -316,6 +316,9 @@ make submit     # record the results here (Groundwork must be running)</code></p
             ${it.lab.targets.length ? `<table class="lab-targets"><thead><tr><th>Target</th><th>Needed</th><th>Your best run</th></tr></thead><tbody id="lab-tbody"></tbody></table>` : ""}
             <div class="quiz-actions"><button class="btn btn-ghost btn-sm" type="button" id="lab-refresh">Check for new results</button><span class="muted" id="lab-status"></span></div>
           </section>` : ""}
+          ${it.coding && it.coding.length ? `<section class="practice" id="coding-sec"><p class="eyebrow">Coding problems</p><h2>Solve them</h2>
+            <p class="muted">Solve at least ${Math.round((it.coding_pass || 0.7) * 100)}% to complete this chapter. <b>Run</b> checks the sample cases; <b>Submit</b> runs every hidden test on this computer, in Python or C++. Say the approach and its complexity out loud before you code: that's the interview. The worked solution unlocks when you solve a problem, or after ${3} submissions.</p>
+            <div id="coding" class="problems"></div></section>` : ""}
           ${it.problems ? `<section class="practice" id="problems-sec"><p class="eyebrow">Problem set</p><h2>Practice problems</h2>
             <p class="muted">Solve at least ${Math.round(it.problems.pass * 100)}% to complete the chapter. ★ mechanics · ★★ analysis · ★★★ design. Hints are free; a worked solution unlocks when you solve a problem, or after ${2} tries if you give up (then it doesn't count).</p>
             <div class="ps-progress" id="ps-progress"></div>
@@ -355,6 +358,7 @@ make submit     # record the results here (Groundwork must be running)</code></p
 
     await renderExercises(slug, it);
     renderProblems(slug, it);
+    if (it.coding && it.coding.length) renderCoding(slug, it);
     if (it.lab) setupLab(slug, it);
     renderQuiz(slug, it);
     renderGate(it.state, it);
@@ -671,6 +675,87 @@ make submit     # record the results here (Groundwork must be running)</code></p
   }
 
   // ---------- Ask panel ----------
+  // ---------- Coding problems ----------
+  const LANG_NAME = { python: "Python", cpp: "C++" };
+  const show = (v) => esc(JSON.stringify(v));
+  function renderCoding(slug, it) {
+    const box = $("#coding");
+    const rec = () => (it.state.coding || {});
+    const badge = { easy: "t-mint", medium: "t-indigo", hard: "t-rose" };
+    box.innerHTML = it.coding.map((p, k) => {
+      const r = rec()[p.id] || {};
+      return `<div class="prob code-prob ${r.solved ? "solved" : ""}" data-pid="${esc(p.id)}">
+        <div class="prob-head"><span class="prob-n">Problem ${k + 1}</span><span class="pill-diff ${badge[p.difficulty] || ""}">${esc(p.difficulty)}</span><b>${esc(p.title)}</b>
+          <span class="prob-status">${r.solved ? `✓ solved${r.langs ? " in " + r.langs.map((l) => LANG_NAME[l]).join(", ") : ""}` : r.submissions ? `${r.submissions} submission${r.submissions > 1 ? "s" : ""}, best ${Math.round(100 * (r.best || 0))}%` : ""}</span></div>
+        <div class="prob-stmt">${p.statement}</div>
+        ${p.samples.length ? `<div class="samples">${p.samples.map((t, i) => `<div class="sample"><span class="muted small">Example ${i + 1}</span><code>${t.args ? "input " + show(t.args) : "ops " + show(t.ops)}</code><code>output ${show(t.expected)}</code></div>`).join("")}</div>` : ""}
+        ${p.target ? `<p class="muted small">Target complexity: ${esc(p.target)}</p>` : ""}
+        <div class="code-bar"><select class="field code-lang">${p.langs.map((l) => `<option value="${l}">${LANG_NAME[l]}</option>`).join("")}</select>
+          <button class="btn btn-ghost btn-sm" type="button" data-act="run">Run samples</button>
+          <button class="btn btn-primary btn-sm" type="button" data-act="submit">Submit</button>
+          ${p.hints.length ? `<button class="btn btn-ghost btn-sm" type="button" data-act="hint">Hint (${p.hints.length})</button>` : ""}
+          <button class="btn btn-ghost btn-sm" type="button" data-act="reveal">Show solution</button>
+          <button class="btn btn-ghost btn-sm" type="button" data-act="reset">Reset code</button></div>
+        <textarea class="code-ed" spellcheck="false" autocapitalize="off" autocomplete="off" rows="14"></textarea>
+        <div class="prob-hints"></div>
+        <div class="code-out"></div>
+        <div class="prob-sol" hidden></div>
+      </div>`;
+    }).join("");
+    typeset(box);
+    box.querySelectorAll(".code-prob").forEach((el) => {
+      const p = it.coding.find((x) => x.id === el.dataset.pid);
+      const ed = el.querySelector(".code-ed"), langSel = el.querySelector(".code-lang"), out = el.querySelector(".code-out");
+      const key = (l) => `gw-code-${slug}-${p.id}-${l}`;
+      let lastLang = null; try { lastLang = localStorage.getItem(`gw-code-lang-${slug}-${p.id}`); } catch (e) {}
+      if (lastLang && p.langs.includes(lastLang)) langSel.value = lastLang;
+      const load = () => { let v = null; try { v = localStorage.getItem(key(langSel.value)); } catch (e) {} ed.value = v ?? p.starter[langSel.value]; };
+      load();
+      langSel.addEventListener("change", () => { try { localStorage.setItem(`gw-code-lang-${slug}-${p.id}`, langSel.value); } catch (e) {} load(); });
+      ed.addEventListener("input", () => { try { localStorage.setItem(key(langSel.value), ed.value); } catch (e) {} });
+      ed.addEventListener("keydown", (e) => {
+        if (e.key === "Tab") { e.preventDefault(); const a = ed.selectionStart; ed.setRangeText("    ", a, ed.selectionEnd, "end"); ed.dispatchEvent(new Event("input")); }
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); el.querySelector('[data-act="run"]').click(); }
+      });
+      const showSol = (sol) => {
+        const box2 = el.querySelector(".prob-sol");
+        const code = sol[langSel.value] || sol.python || "";
+        box2.innerHTML = `<p class="eyebrow">Worked solution</p>${sol.explanation || ""}${code ? `<pre class="code-sol"><code>${esc(code)}</code></pre>` : ""}`;
+        box2.hidden = false; typeset(box2);
+      };
+      let hintN = 0;
+      el.addEventListener("click", async (e) => {
+        const b = e.target.closest("button[data-act]");
+        if (!b) return;
+        const act = b.dataset.act;
+        if (act === "reset") { if (confirm("Replace your code with the starter?")) { ed.value = p.starter[langSel.value]; ed.dispatchEvent(new Event("input")); } return; }
+        if (act === "hint") { if (hintN < p.hints.length) { el.querySelector(".prob-hints").insertAdjacentHTML("beforeend", `<p><b>Hint ${hintN + 1}.</b> ${p.hints[hintN]}</p>`); hintN++; typeset(el.querySelector(".prob-hints")); } return; }
+        if (act === "reveal") {
+          try { const r = await api(`/api/courses/${slug}/items/${it.id}/coding/${p.id}/reveal`, { method: "POST" }); showSol(r.solution); it.state = r.state; }
+          catch (err) { out.innerHTML = `<p class="muted">${esc(err.message)}</p>`; }
+          return;
+        }
+        b.disabled = true; out.innerHTML = `<p class="muted">${act === "run" ? "Running the samples…" : "Running every test…"}</p>`;
+        try {
+          const r = await api(`/api/courses/${slug}/items/${it.id}/coding/${p.id}`, { method: "POST", body: JSON.stringify({ lang: langSel.value, code: ed.value, mode: act }) });
+          if (r.compile_error) out.innerHTML = `<pre class="code-err">${esc(r.compile_error)}</pre>`;
+          else if (act === "run") out.innerHTML = r.results.map((x, i) => `<div class="case ${x.pass ? "ok" : "bad"}">${x.pass ? "✓" : "✗"} Example ${i + 1}${x.ms != null ? ` · ${x.ms} ms` : ""}${x.pass ? "" : `<br><span class="muted small">expected ${show(x.expected)}${x.error ? ` · <b>${esc(x.error)}</b>` : ` · got ${show(x.got)}`}</span>`}</div>`).join("") || `<p class="muted">No sample cases: use Submit.</p>`;
+          else {
+            out.innerHTML = `<div class="case ${r.passed === r.total ? "ok" : "bad"}"><b>${r.passed} / ${r.total} tests passed</b>${r.passed === r.total ? ` · slowest test ${r.max_ms} ms` : ""}</div>` +
+              (r.failing ? `<div class="case bad small">First failing case: input ${show(r.failing.args)}<br>expected ${show(r.failing.expected)}${r.failing.error ? `<br><b>${esc(r.failing.error)}</b>` : `<br>got ${show(r.failing.got)}`}</div>` : "");
+            it.state = r.state;
+            const st = el.querySelector(".prob-status"), rr = r.record;
+            st.textContent = rr.solved ? `✓ solved${rr.langs ? " in " + rr.langs.map((l) => LANG_NAME[l]).join(", ") : ""}` : `${rr.submissions} submission${rr.submissions > 1 ? "s" : ""}, best ${Math.round(100 * rr.best)}%`;
+            el.classList.toggle("solved", !!rr.solved);
+            if (r.solution) showSol(r.solution);
+            renderGate(r.state, it);
+          }
+        } catch (err) { out.innerHTML = `<p class="muted">${esc(err.message)}</p>`; }
+        b.disabled = false;
+      });
+    });
+  }
+
   // ---------- Exams ----------
   // Timed, closed-book: problems appear only when an attempt starts, with no hints and no Ask
   // panel. Answers are kept in this browser while you work (a reload doesn't lose them) and
