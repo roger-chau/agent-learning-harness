@@ -1,0 +1,209 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Fair walk",
+   "statement": "<p>A simple random walk from 0 stops at +3 or −7.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(hit +3 first)?",
+     "answer": 0.7,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected steps?",
+     "answer": 21,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "b/(a + b); ab."
+   ],
+   "solution": "<p>7/10 and 3 × 7.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Martingale?",
+   "statement": "<p>Which are martingales for a fair ±1 walk Sₙ?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "Sₙ",
+      "Sₙ² − n",
+      "Sₙ²",
+      "2^{Sₙ}"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    }
+   ],
+   "hints": [
+    "E[next | now] = now?"
+   ],
+   "solution": "<p>Sₙ² drifts up by 1 per step; 2^{Sₙ} drifts up too (E[2^X] = 5/4).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Doubling with a bankroll",
+   "statement": "<p>Double after each loss on a fair coin; you can afford at most 10 consecutive losses (bankroll $1,023).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(losing the whole bankroll in a round)?",
+     "answer": 0.0009765625,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected profit per round ($)?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": "100%"
+    }
+   ],
+   "hints": [
+    "Optional stopping."
+   ],
+   "solution": "<p>(1 − 2⁻¹⁰)(+1) + 2⁻¹⁰(−1,023) = 0.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Roulette",
+   "statement": "<p>Bet red at p = 18/38, $1 per spin, start at $50, stop at $100 or $0.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(reach $100)?",
+     "answer": 0.005127349998021048,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Bet $50 once instead?",
+     "options": [
+      "much better: P = 18/38 ≈ 0.47",
+      "worse",
+      "the same"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "q/p = 20/18."
+   ],
+   "solution": "<p>Only ≈ 0.0051 with $1 bets. In an unfavourable game, bold play (few large bets) maximises your chance of hitting a target.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Ballot",
+   "statement": "<p>Candidate A gets 6 votes and B gets 4, counted in random order.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(A strictly ahead throughout the count)?",
+     "answer": 0.2,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "(a − b)/(a + b)."
+   ],
+   "solution": "<p>2/10.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Wald",
+   "statement": "<p>Roll a die repeatedly until the running total is at least 100.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Approximate expected number of rolls (100/3.5 plus overshoot ≈ 5/3 ÷ 3.5)?",
+     "answer": 29.047619047619047,
+     "unit": "",
+     "tolerance": "3%"
+    }
+   ],
+   "hints": [
+    "E[S_τ] = E[τ]·3.5; the expected overshoot ≈ (E[X²]/(2E[X])) − ½ ≈ 5/3."
+   ],
+   "solution": "<p>E[τ] ≈ (100 + overshoot)/3.5 ≈ 29.0.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Exponential martingale",
+   "statement": "<p>A biased walk with p = 2/3 up, q = 1/3 down.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Value of q/p?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Probability of ever hitting −1 from 0 (= (q/p)¹)?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Let N → ∞ in the ruin formula."
+   ],
+   "solution": "<p>(q/p)^{Sₙ} is a martingale; the probability of ever dropping by k is (q/p)ᵏ = 2⁻ᵏ.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Stopping when ahead",
+   "statement": "<p>A fair walk from 0, stop the first time you're at +1 (no bankroll limit).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Is E[S_τ] = 0?",
+     "options": [
+      "No: S_τ = 1 always; optional stopping fails because E[τ] = ∞",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Check the theorem's conditions."
+   ],
+   "solution": "<p>The walk hits +1 with probability 1, but the expected time is infinite and the losses before stopping are unbounded.</p>"
+  }
+ ]
+}

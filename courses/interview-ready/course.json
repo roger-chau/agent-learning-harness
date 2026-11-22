@@ -2219,14 +2219,144 @@
    "id": "p14",
    "n": 14,
    "title": "Probability II",
-   "summary": "Markov chains, martingales, gambler's ruin, order statistics, geometric probability.",
+   "summary": "Markov chains, martingales and gambler's ruin, order statistics and continuous tricks, and geometric probability.",
    "items": [
     {
      "type": "chapter",
      "id": "14-1",
-     "title": "Probability II",
-     "summary": "Markov chains, martingales, gambler's ruin, order statistics, geometric probability.",
-     "status": "planned"
+     "title": "Markov chains",
+     "summary": "First-step systems for absorption; stationary distributions and return times; walks on graphs.",
+     "coding": [
+      "absorbing-markov"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "states and moves"
+      ],
+      [
+       "The core idea",
+       "transient vs long-run"
+      ],
+      [
+       "The invariant and template",
+       "equations, balance, returns"
+      ],
+      [
+       "A thinking trace",
+       "knight's return time"
+      ],
+      [
+       "Traps and variations",
+       "periodicity, symmetry, regimes"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "14-2",
+     "title": "Martingales and gambler's ruin",
+     "summary": "Fair games stay fair under stopping; ruin probabilities and durations in one line.",
+     "blocks": [
+      [
+       "The signal",
+       "random walks, betting systems"
+      ],
+      [
+       "The core idea",
+       "optional stopping"
+      ],
+      [
+       "The invariant and template",
+       "ruin formulas, martingales to try"
+      ],
+      [
+       "A thinking trace",
+       "the doubling strategy"
+      ],
+      [
+       "Traps and variations",
+       "conditions, ballot, Wald"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "14-3",
+     "title": "Order statistics and continuous tricks",
+     "summary": "Spacings symmetry, CDFs of max/min, exponential races, volumes and e.",
+     "blocks": [
+      [
+       "The signal",
+       "max, min, k-th"
+      ],
+      [
+       "The core idea",
+       "spacings and CDFs"
+      ],
+      [
+       "The invariant and template",
+       "formulas to know"
+      ],
+      [
+       "A thinking trace",
+       "uniform sums exceeding 1"
+      ],
+      [
+       "Traps and variations",
+       "inspection paradox, auctions"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "14-4",
+     "title": "Geometric probability",
+     "summary": "Draw the region; area ratios; canonical disjoint decompositions.",
+     "blocks": [
+      [
+       "The signal",
+       "sticks, circles, needles"
+      ],
+      [
+       "The core idea",
+       "area ratios"
+      ],
+      [
+       "The invariant and template",
+       "draw, cut, measure"
+      ],
+      [
+       "A thinking trace",
+       "points in a semicircle"
+      ],
+      [
+       "Traps and variations",
+       "Bertrand, discs, Monte Carlo"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p14-checkpoint",
+     "title": "Part 14 checkpoint",
+     "summary": "Probability II: chains, martingales, order statistics, geometry."
     }
    ]
   },

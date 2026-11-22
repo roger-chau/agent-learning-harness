@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "E[k-th smallest of n uniforms]:",
+   "options": [
+    "k/(n + 1)",
+    "k/n",
+    "1/2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Min of exponentials with rates λᵢ is…",
+   "options": [
+    "Exp(Σλᵢ)",
+    "Exp(min λ)",
+    "uniform"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Expected uniforms until the sum exceeds 1:",
+   "options": [
+    "e",
+    "2",
+    "π"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "P(max of n uniforms ≤ x) =",
+   "options": [
+    "xⁿ",
+    "nx",
+    "1 − xⁿ"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Inspection paradox: the gap you land in is…",
+   "options": [
+    "longer than average",
+    "average",
+    "shorter"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

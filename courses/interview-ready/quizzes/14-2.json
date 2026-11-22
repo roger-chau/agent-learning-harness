@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Fair gambler's ruin P(reach N from i):",
+   "options": [
+    "i/N",
+    "1/2",
+    "(N − i)/N"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Expected duration of fair ruin:",
+   "options": [
+    "i(N − i)",
+    "N",
+    "i²"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Martingale betting on a fair game has expected profit…",
+   "options": [
+    "zero (with a finite bankroll)",
+    "positive",
+    "infinite"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Optional stopping can fail when…",
+   "options": [
+    "E[τ] = ∞ and losses are unbounded",
+    "the game is fair",
+    "p = 1/2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "In an unfavourable game, to reach a target…",
+   "options": [
+    "bet boldly",
+    "bet timidly",
+    "it doesn't matter"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

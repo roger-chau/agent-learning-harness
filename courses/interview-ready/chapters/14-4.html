@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Break a stick at two random points: probability the pieces form a triangle?", "three random points on a circle: probability the triangle is acute?", "Buffon's needle", "two people arrive at random within an hour and wait 15 minutes: probability they meet?". Geometric probability rewards drawing the sample space and computing an area ratio.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: probability = favourable area / total area</h2>
+<p>With uniform continuous variables, the sample space is a square, cube or simplex, and the event is a region inside it. Draw it. Most interview answers are areas of triangles in a unit square.</p>
+<ul>
+<li><strong>Meeting problem:</strong> arrivals X, Y uniform on [0, 1]; they meet if |X − Y| ≤ t. The complement is two corner triangles of total area (1 − t)², so P = 1 − (1 − t)². For t = ¼: 7/16.</li>
+<li><strong>Broken stick:</strong> a triangle needs every piece &lt; ½. The favourable region is the medial triangle, ¼ of the area, so P = ¼.</li>
+<li><strong>Circle points (Wendel):</strong> n random points lie in some semicircle with probability n/2ⁿ⁻¹; three points form an acute triangle iff they're <em>not</em> in a semicircle: 1 − 3/4 = ¼.</li>
+<li><strong>Buffon:</strong> a needle of length l ≤ d on lines spaced d apart crosses a line with probability 2l/(πd).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>1. Name the random variables and their joint uniform domain (square, cube, simplex, angle × offset).
+2. Translate the event into inequalities; DRAW the region.
+3. Use symmetry to cut the region (e.g. assume X &lt; Y and double).
+4. Area by triangles and rectangles; integrate only if forced.
+5. Check: P in [0, 1]; limiting cases (t → 0, t → 1).</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: points in a semicircle</h2>
+<p><em>n points uniform on a circle. Probability that they all lie in some semicircle?</em></p>
+<ol>
+<li><strong>Find the right events:</strong> for each point i, let Aᵢ = "all other points lie in the semicircle starting at i going clockwise".</li>
+<li><strong>P(Aᵢ):</strong> each other point independently falls in that half with probability ½, so (½)ⁿ⁻¹.</li>
+<li><strong>Disjoint:</strong> if all points fit in a semicircle, exactly one point is the clockwise-first of the arrangement (probability-1 genericity), so at most one Aᵢ happens.</li>
+<li><strong>Sum:</strong> P = n/2ⁿ⁻¹. For n = 3 that's ¾, so P(acute) = ¼; n = 4 gives ½.</li>
+</ol>
+<p>The habit: <strong>split the event into disjoint pieces indexed by a canonical choice</strong> (the first point, the largest element) to avoid inclusion–exclusion.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Bertrand's paradox:</strong> "a random chord" is ambiguous; different uniform models give 1/2, 1/3 or 1/4. Ask which distribution is meant.</li>
+<li><strong>Uniform on a disc</strong> isn't uniform in radius: P(R ≤ r) = r², E[R] = 2/3.</li>
+<li><strong>Distance between two uniform points on [0, 1]:</strong> E|X − Y| = 1/3.</li>
+<li><strong>Monte Carlo π:</strong> P(a point in the unit square lands inside the quarter circle) = π/4. The standard error shrinks like 1/√n, which is why Monte Carlo pricing needs variance reduction.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Green book, section 4.7 (geometric probability).</li>
+<li>* Paul Nahin, <em>Digital Dice</em>: probability puzzles solved by simulation and by analysis.</li>
+<li>Draw the region for the broken-stick problem; then do the "break the longer piece again" variant.</li>
+<li>Wendel's theorem in d dimensions (points in a half-sphere).</li>
+</ul>
+</section>

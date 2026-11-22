@@ -1,0 +1,223 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Two-state regime",
+   "statement": "<p>Calm → volatile with probability 0.1 per day; volatile → calm with probability 0.3.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Long-run fraction of volatile days?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected length of a volatile spell (days)?",
+     "answer": 3.3333333333333335,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "π_vol = a/(a + b); geometric spell length."
+   ],
+   "solution": "<p>π = 0.1/(0.1 + 0.3) = 0.25; spells last 1/0.3 ≈ 3.33 days on average.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Random walk on a graph",
+   "statement": "<p>A walk on an undirected graph with 10 edges; vertex v has degree 4.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Stationary probability of v?",
+     "answer": 0.2,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected return time to v?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "deg / 2E."
+   ],
+   "solution": "<p>4/20 = 0.2; return in 1/0.2 = 5 steps.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Knight",
+   "statement": "<p>A knight's random walk from a corner of an 8×8 board.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sum of degrees over all squares?",
+     "answer": 336,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected return time to the corner?",
+     "answer": 168,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Corner degree 2."
+   ],
+   "solution": "<p>π_corner = 2/336, so the return time is 168.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Gambler's ruin check",
+   "statement": "<p>Fair ±1 walk from 3, absorbed at 0 and 10.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(reach 10)?",
+     "answer": 0.3,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected duration?",
+     "answer": 21,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "i/N; i(N − i)."
+   ],
+   "solution": "<p>0.3 and 3 × 7 = 21 steps.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Biased ruin",
+   "statement": "<p>Win each $1 bet with p = 0.6; start with $5, stop at $0 or $10.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(reach $10)?",
+     "answer": 0.8836363636363636,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "(1 − (q/p)ⁱ)/(1 − (q/p)ᴺ)."
+   ],
+   "solution": "<p>0.8836.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Distinct faces chain",
+   "statement": "<p>Roll a die until all 6 faces have appeared; the state is the number of distinct faces seen.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of states needed (including 0)?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected rolls to go from 5 seen to 6?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Collapse by symmetry."
+   ],
+   "solution": "<p>States 0–6; from k seen, a new face arrives with probability (6 − k)/6.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Periodicity",
+   "statement": "<p>A random walk on a cycle of 6 vertices.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Does Pⁿ converge?",
+     "options": [
+      "No: the cycle is bipartite, period 2",
+      "Yes"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Long-run fraction of time at any vertex?",
+     "answer": 0.16666666666666666,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Even cycles are bipartite."
+   ],
+   "solution": "<p>The distribution alternates between the two colour classes, but time averages converge to 1/6.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Absorption",
+   "statement": "<p>A frog on lily pads 0–4 jumps left or right with equal probability from pads 1–3; pad 0 is a snake, pad 4 is home. It starts at pad 1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(home)?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected jumps?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Fair gambler's ruin with N = 4."
+   ],
+   "solution": "<p>1/4 and 1 × 3 = 3.</p>"
+  }
+ ]
+}

@@ -1,0 +1,54 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Continuous random variables in interview form: "expected maximum of n uniforms", "expected gap between sorted points", "minimum of exponential waiting times", "how many uniforms until the sum exceeds 1?". Order statistics show up in auction theory, pricing the best of several bids, and in latency analysis (the max of n server times).</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: symmetry of spacings and CDF tricks</h2>
+<ul>
+<li><strong>n i.i.d. Uniform(0, 1) points cut [0, 1] into n + 1 spacings that are exchangeable</strong> (identically distributed). So each spacing has mean 1/(n + 1), and the k-th smallest has mean k/(n + 1). E[max] = n/(n + 1), E[min] = 1/(n + 1), with no integration needed.</li>
+<li><strong>CDF of a max:</strong> P(max ≤ x) = P(all ≤ x) = Fⁿ(x). For a min: P(min &gt; x) = (1 − F(x))ⁿ.</li>
+<li><strong>Exponentials:</strong> min of independent Exp(λᵢ) is Exp(Σλᵢ), and P(the i-th is smallest) = λᵢ/Σλ. Memorylessness: P(X &gt; s + t | X &gt; s) = P(X &gt; t).</li>
+<li><strong>Volume arguments:</strong> P(U₁ + … + Uₙ ≤ 1) = 1/n! (a simplex), so the expected number of uniforms until the sum exceeds 1 is Σ P(N &gt; n) = Σ 1/n! = e.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Order statistics of n Uniform(0,1):   E[U_(k)] = k/(n+1),   U_(k) ~ Beta(k, n−k+1)
+max:  P(max ≤ x) = xⁿ  →  density n xⁿ⁻¹,  mean n/(n+1)
+Exponential race:  min ~ Exp(Σλ),  P(i wins) = λ_i / Σλ
+Tail integral (continuous X ≥ 0):  E[X] = ∫₀^∞ P(X &gt; t) dt</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "expected number of Uniform(0, 1) draws until the running sum exceeds 1"</h2>
+<ol>
+<li><strong>Define N</strong> as the first n with Sₙ &gt; 1. Then P(N &gt; n) = P(Sₙ ≤ 1).</li>
+<li><strong>Geometry:</strong> {x ∈ [0, 1]ⁿ : Σx ≤ 1} is a simplex of volume 1/n!.</li>
+<li><strong>Tail sum:</strong> E[N] = Σ_{n≥0} P(N &gt; n) = Σ 1/n! = e ≈ 2.718.</li>
+<li><strong>Sanity:</strong> N ≥ 2 always (one uniform can't exceed 1), and two usually suffice (P(S₂ ≤ 1) = ½), so a mean a bit above 2.5 is plausible. ✓</li>
+</ol>
+<p>The habit: <strong>turn "expected count" into a tail sum, and tail probabilities into volumes</strong>. Answers involving e often hide a 1/n! volume.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Inspection paradox:</strong> the bus interval you arrive in is longer on average than a typical interval (length-biased sampling). With Poisson buses at mean gap 10 minutes, your expected wait is still 10, not 5.</li>
+<li><strong>Max of normals</strong> grows like σ√(2 ln n), which explains tail latency in fan-out (Part 11).</li>
+<li><strong>Second-highest bid:</strong> in a second-price auction with n uniform bidders, the expected price is (n − 1)/(n + 1).</li>
+<li><strong>Range of n uniforms:</strong> E[max − min] = (n − 1)/(n + 1).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Green book, sections 4.6 (order statistics) and the continuous-distribution problems.</li>
+<li>* Blitzstein & Hwang, chapters 5 and 8 (continuous random variables, Beta and order statistics).</li>
+<li>Prove E[U_(k)] = k/(n + 1) two ways: Beta moments and the spacings symmetry.</li>
+<li>Simulate the uniform-sum stopping time; compare with e.</li>
+</ul>
+</section>

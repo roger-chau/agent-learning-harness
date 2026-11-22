@@ -1,0 +1,54 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>A process that moves between <strong>states</strong> where the next move depends only on the current state: random walks, board games, a frog on lily pads, a knight on a chessboard, a server's queue length, a market regime. The questions are where the process ends up (absorption), how long it takes (hitting times), and where it spends its time in the long run (the stationary distribution).</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: two kinds of question, two tools</h2>
+<p><strong>Transient questions</strong> (which absorbing state, how long until absorbed) are <strong>first-step analysis</strong>: one linear equation per state (Part 13.4). In matrix form, with Q the transient-to-transient block, the fundamental matrix N = (I − Q)⁻¹ gives expected visits, N·1 gives expected absorption times, and N·R gives absorption probabilities. That's the judged problem.</p>
+<p><strong>Long-run questions</strong> use the <strong>stationary distribution</strong> π with πP = π, Σπ = 1. For an irreducible, aperiodic chain, the fraction of time in state i → π_i and the expected return time to i is 1/π_i. For a <strong>random walk on an undirected graph</strong>, π_i = deg(i) / Σ deg (2 × edges), no equations needed.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Absorption / hitting:   x_i = Σ_j P_ij x_j (+ 1 per step for times),   boundary values at absorbing states
+Stationary:             π P = π, Σ π = 1        (solve the balance equations, or use symmetry/degrees)
+Detailed balance:       π_i P_ij = π_j P_ji     (if it holds, π is stationary: an easy check for reversible chains)
+Return time:            E[return to i] = 1 / π_i
+n-step distribution:    p_n = p_0 · Pⁿ          (matrix power: Part 8.5)</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: a knight on a chessboard</h2>
+<p><em>A knight moves uniformly at random among its legal moves, starting in a corner. Expected number of moves to return to that corner?</em></p>
+<ol>
+<li><strong>Model:</strong> a random walk on the knight's-move graph of 64 squares. It's undirected, so π_i = deg(i) / (2E).</li>
+<li><strong>Degrees:</strong> knight moves per square: corners 2, edge-adjacent squares 3 and 4, the inner region 6 and 8. Summing over the board gives Σ deg = 336 (168 edges).</li>
+<li><strong>Stationary probability of the corner:</strong> 2/336 = 1/168.</li>
+<li><strong>Return time:</strong> 1/π = 168 moves. No linear system with 64 unknowns needed.</li>
+<li><strong>Sanity:</strong> corners are hard to reach (only 2 entry squares), so a long return time makes sense.</li>
+</ol>
+<p>The habit: <strong>before setting up equations, ask whether the chain is a walk on an undirected graph or has a symmetry</strong>. Long-run questions often have one-line answers.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Periodicity:</strong> a walk on a bipartite graph alternates sides, so Pⁿ doesn't converge, though time averages still do.</li>
+<li><strong>Reducible chains</strong> have several stationary distributions; first find the closed classes.</li>
+<li><strong>Expected time vs probability:</strong> for times, add 1 per step and set 0 at the targets; for probabilities, use 0/1 boundaries and no +1.</li>
+<li><strong>Collapse states by symmetry:</strong> a die-rolling "how many distinct faces seen" chain has 7 states, not 2⁶.</li>
+<li><strong>Market regimes:</strong> a 2-state (calm/volatile) chain with switching probabilities a, b has π = (b/(a + b), a/(a + b)).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Green book, section 5.1 (Markov chains) and 5.3 (gambler's ruin variants).</li>
+<li>* Blitzstein & Hwang, chapter 11 (Markov chains), including random walks on graphs.</li>
+<li>Norris, <em>Markov Chains</em>, chapter 1 (hitting times, recurrence).</li>
+<li>Compute the knight's return time with the judged solver's fundamental matrix to confirm 168.</li>
+</ul>
+</section>

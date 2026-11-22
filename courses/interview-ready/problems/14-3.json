@@ -1,0 +1,245 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Uniform order stats",
+   "statement": "<p>5 i.i.d. Uniform(0, 1).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "E[max]?",
+     "answer": 0.8333333333333334,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "E[min]?",
+     "answer": 0.16666666666666666,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "E[2nd smallest]?",
+     "answer": 0.3333333333333333,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "E[max − min]?",
+     "answer": 0.6666666666666666,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "k/(n + 1)."
+   ],
+   "solution": "<p>5/6, 1/6, 2/6 and 4/6.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Exponential race",
+   "statement": "<p>Three servers with exponential times at rates 1, 2 and 3 per second.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected time until the first finishes (s)?",
+     "answer": 0.16666666666666666,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "P(the rate-3 server finishes first)?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "min ~ Exp(Σλ)."
+   ],
+   "solution": "<p>1/6 s; 3/6.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Uniform sums",
+   "statement": "<p>Draw Uniform(0, 1) until the sum exceeds 1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(sum of 3 uniforms ≤ 1)?",
+     "answer": 0.16666666666666666,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected number of draws?",
+     "answer": 2.718281828459045,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Simplex volume 1/n!."
+   ],
+   "solution": "<p>1/3! and e.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Max CDF",
+   "statement": "<p>Max of 3 Uniform(0, 1).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(max ≤ 0.5)?",
+     "answer": 0.125,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Median of the max (x³ = ½)?",
+     "answer": 0.7937005259840998,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "P(max ≤ x) = x³."
+   ],
+   "solution": "<p>1/8; 2^{−1/3} ≈ 0.794.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Second-price auction",
+   "statement": "<p>4 bidders with private values i.i.d. Uniform(0, 1), bidding truthfully; the winner pays the second-highest value.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected revenue?",
+     "answer": 0.6,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected winner's value?",
+     "answer": 0.8,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Second-highest of 4 = 3rd smallest: 3/5."
+   ],
+   "solution": "<p>The seller gets 3/5; the winner's value averages 4/5.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Memorylessness",
+   "statement": "<p>Bulb lifetimes ~ Exp(mean 1,000 h). A bulb has lasted 500 h.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected remaining life (h)?",
+     "answer": 1000,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "P(lasts another 1,000 h)?",
+     "answer": 0.36787944117144233,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Memoryless."
+   ],
+   "solution": "<p>1,000 h; e⁻¹.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Inspection paradox",
+   "statement": "<p>Buses arrive as a Poisson process every 10 minutes on average; you arrive at a random time.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected wait (min)?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected length of the gap you arrived in (min)?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Length-biased sampling: E[L²]/E[L]."
+   ],
+   "solution": "<p>For exponential gaps, E[L²]/E[L] = 2 × 10 = 20; your wait is half of that, 10.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Distance on a line",
+   "statement": "<p>X, Y i.i.d. Uniform(0, 1).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "E|X − Y|?",
+     "answer": 0.3333333333333333,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "E[max(X, Y)]?",
+     "answer": 0.6666666666666666,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Two points cut [0, 1] into 3 spacings of mean 1/3."
+   ],
+   "solution": "<p>The middle spacing is |X − Y|: 1/3. The max is 2/3.</p>"
+  }
+ ]
+}

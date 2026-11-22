@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Geometric probability =",
+   "options": [
+    "favourable area / total area",
+    "counting",
+    "1/2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Broken stick triangle probability:",
+   "options": [
+    "1/4",
+    "1/2",
+    "1/3"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "n points in a semicircle:",
+   "options": [
+    "n/2ⁿ⁻¹",
+    "1/2",
+    "n/2ⁿ"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Buffon (l ≤ d):",
+   "options": [
+    "2l/(πd)",
+    "l/d",
+    "π/4"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "\"A random chord\" is…",
+   "options": [
+    "ambiguous until the model is fixed",
+    "always 1/3",
+    "always 1/2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

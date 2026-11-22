@@ -1,0 +1,101 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Return time to a state:",
+   "options": [
+    "1/π",
+    "π",
+    "n"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Knight's return to a corner:",
+   "options": [
+    "168",
+    "64",
+    "336"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Fair walk from 0, stop at +a/−b: E[time] =",
+   "options": [
+    "ab",
+    "a + b",
+    "a²"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Biased ruin uses the martingale…",
+   "options": [
+    "(q/p)^S",
+    "S",
+    "S²"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "E[max of n uniforms]:",
+   "options": [
+    "n/(n + 1)",
+    "1/2",
+    "1"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Uniforms until the sum exceeds 1:",
+   "options": [
+    "e on average",
+    "2 always",
+    "3"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Meeting within t of an hour:",
+   "options": [
+    "1 − (1 − t)²",
+    "t",
+    "2t"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "3 random points form an acute triangle:",
+   "options": [
+    "1/4",
+    "1/2",
+    "3/4"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

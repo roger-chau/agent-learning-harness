@@ -1,0 +1,61 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"A gambler with $i bets until $0 or $N…", "expected time for a random walk to hit ±a", "a fair game: can a stopping strategy beat it?". Martingales give the shortest proofs for random-walk questions, and the idea that no stopping rule beats a fair game is the mathematical heart of market efficiency and option pricing.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: fair games stay fair under (reasonable) stopping</h2>
+<p>A <strong>martingale</strong> Mₙ satisfies E[Mₙ₊₁ | history] = Mₙ: your expected future wealth equals your current wealth. <strong>Optional stopping:</strong> for a bounded stopping time (or a bounded martingale), E[M_τ] = M₀. To use it:</p>
+<ol>
+<li>Find a martingale built from the process.</li>
+<li>Apply E[M_τ] = M₀ at the stopping time.</li>
+<li>Solve for the unknown probability or expectation.</li>
+</ol>
+<ul>
+<li><strong>Fair gambler's ruin:</strong> wealth Sₙ is a martingale, so i = N·P(win) + 0·P(lose), giving P(reach N) = i/N.</li>
+<li><strong>Expected duration:</strong> Sₙ² − n is a martingale, so E[S_τ²] − E[τ] = i², giving E[τ] = N·i − i² = i(N − i).</li>
+<li><strong>Biased walk (p ≠ q):</strong> (q/p)^{Sₙ} is a martingale, giving P(reach N) = (1 − (q/p)ⁱ)/(1 − (q/p)ᴺ).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Simple random walk from 0, stop at +a or −b:
+  P(hit +a first) = b / (a + b)
+  E[time]         = a · b
+Biased (p up, q = 1 − p), from i, absorb at 0 and N:
+  P(hit N) = (1 − (q/p)^i) / (1 − (q/p)^N)
+Martingales to try: S_n − n(p − q),   S_n² − n (fair),   (q/p)^{S_n},   e^{θS_n} / (E e^{θX})^n</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "can a doubling strategy beat roulette?"</h2>
+<ol>
+<li><strong>Strategy (martingale betting):</strong> bet $1 on red; after a loss, double; stop after the first win. Each "round" nets +$1 with high probability.</li>
+<li><strong>Catch 1, fair game:</strong> wealth is a martingale. If your bankroll is finite (you stop when you can't double), optional stopping applies and E[final wealth] = initial wealth. The many small wins are exactly paid for by rare catastrophic losses.</li>
+<li><strong>Quantify:</strong> with a $1,023 bankroll (10 doublings) on a fair coin, you lose $1,023 with probability 2⁻¹⁰ ≈ 0.001 and win $1 otherwise: 0.999 × 1 − 0.001 × 1,023 ≈ 0.</li>
+<li><strong>Catch 2, real roulette:</strong> p = 18/38 &lt; ½, so wealth is a <em>super</em>martingale: the expected value is negative and the strategy only reshapes the distribution (frequent small wins, rare ruin).</li>
+<li><strong>Trading lesson:</strong> strategies with a high win rate and a fat left tail (selling deep out-of-the-money options) can look brilliant for years. Judge a strategy by its expected value and tail risk, not its hit rate.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Optional stopping needs conditions:</strong> "stop when ahead by $1" with an unlimited bankroll and time has E[τ] = ∞, and E[M_τ] = 1 ≠ 0. The theorem's conditions matter.</li>
+<li><strong>Ballot problem / reflection:</strong> P(the winner leads throughout the count) = (a − b)/(a + b).</li>
+<li><strong>Wald's identity:</strong> E[S_τ] = E[τ]·E[X] for i.i.d. steps and a valid stopping time. Expected rolls to accumulate a sum ≥ k ≈ k/3.5.</li>
+<li><strong>Doob's maximal inequality and Kelly (Part 16)</strong> are the next steps when risk of ruin, not just expectation, matters.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Green book, section 5.2 (martingales and random walks) and 5.3.</li>
+<li>* Williams, <em>Probability with Martingales</em>, chapter 10 (an elegant reference for optional stopping).</li>
+<li>Derive E[τ] = ab for a walk stopped at +a or −b using Sₙ² − n.</li>
+<li>Simulate the doubling strategy with a finite bankroll for 10⁶ rounds; plot the P&amp;L distribution.</li>
+</ul>
+</section>

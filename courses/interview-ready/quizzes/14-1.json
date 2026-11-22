@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Random walk on an undirected graph: π_i =",
+   "options": [
+    "deg(i)/2E",
+    "1/n",
+    "deg(i)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Expected return time to i:",
+   "options": [
+    "1/π_i",
+    "π_i",
+    "n"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Absorption probabilities come from…",
+   "options": [
+    "a first-step linear system",
+    "the stationary distribution",
+    "simulation only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "A bipartite chain is…",
+   "options": [
+    "periodic",
+    "aperiodic",
+    "absorbing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Two-state chain with switch rates a, b: π₂ =",
+   "options": [
+    "a/(a + b)",
+    "b/(a + b)",
+    "1/2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}
