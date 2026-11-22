@@ -1484,6 +1484,14 @@
       [
        "Reality",
        "what libraries do"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
       ]
      ]
     },
@@ -1515,6 +1523,14 @@
       [
        "Reality",
        "tile sizes in practice"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
       ]
      ]
     },
@@ -1556,6 +1572,14 @@
       [
        "Reality",
        "tiles, spills and unrolling"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
       ]
      ]
     },
@@ -1597,6 +1621,14 @@
       [
        "Reality",
        "how many stages"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
       ]
      ]
     },
@@ -1647,6 +1679,14 @@
       [
        "Reality",
        "libraries, loss scaling, sparsity"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
       ]
      ]
     },

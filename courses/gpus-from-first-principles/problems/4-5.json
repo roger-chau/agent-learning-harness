@@ -1,0 +1,318 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "One instruction, many FMAs",
+   "statement": "<p>A 16 × 16 × 16 MMA.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FMAs?",
+     "answer": 4096,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Equivalent warp-wide FP32 FMA instructions?",
+     "answer": 128,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "16³; a warp FMA does 32."
+   ],
+   "solution": "<p>4,096 FMAs, the work of 128 warp FMA instructions.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "GW-1 tensor peak",
+   "statement": "<p>256 FMAs per SM per cycle, 16 SMs, 1.5 GHz.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "GFLOP/s?",
+     "answer": 12288.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Ratio to FP32 peak?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "2 FLOPs per FMA."
+   ],
+   "solution": "<p>12,288 GFLOP/s, 8× the FP32 lanes.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "An FP16 accumulator",
+   "statement": "<p>Add 1.0 to an FP16 accumulator 4,096 times, starting from 0, rounding after each add.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Final value?",
+     "answer": 2048.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Spacing between FP16 numbers in [2048, 4096)?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "FP16 has 10 explicit mantissa bits."
+   ],
+   "solution": "<p>(a) 2048: once the accumulator reaches 2,048, adding 1 rounds back down (ties to even). (b) $2^{11-10} = 2$. Hence FP32 accumulation in every tensor-core GEMM.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Rounding steps",
+   "statement": "<p>Relative rounding (unit roundoff) of each input format.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FP16?",
+     "answer": 0.00048828125,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "BF16?",
+     "answer": 0.00390625,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "FP8 E4M3?",
+     "answer": 0.0625,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$2^{-(m+1)}$ for m mantissa bits."
+   ],
+   "solution": "<p>$4.9 \\times 10^{-4}$, $3.9 \\times 10^{-3}$ and $0.0625$. FP8 changes inputs by up to 6%, which is why it needs per-tensor (or per-block) scaling.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "An error budget",
+   "statement": "<p>FP16 inputs, FP32 accumulation, n = 1024, all entries in [−1, 1].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Worst-case bound $n \\cdot 2 \\cdot 2^{-11}$?",
+     "answer": 1.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "A typical (random-walk) error is about $\\sqrt{n}$ times one term's error. Estimate it.",
+     "answer": 0.03125,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Each product carries up to $2 \\cdot 2^{-11}$ relative error."
+   ],
+   "solution": "<p>(a) 1.0 in the worst case. (b) About $32 \\times 0.001 = 0.03$. A test with absolute tolerance 1e-3 will fail; the right tolerance comes from the budget, scaled to the data.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Fragments",
+   "statement": "<p>The simulator's accumulator layout: lane ℓ holds row ℓ ≫ 1, columns (ℓ &amp; 1)·8 to +7.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Row held by lane 13?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "First column held by lane 13?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Which lane holds element (row 9, column 3)?",
+     "answer": 18,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Row r is held by lanes 2r and 2r + 1."
+   ],
+   "solution": "<p>(a) 13 ≫ 1 = 6. (b) 13 is odd: columns 8–15. (c) Row 9 → lanes 18 and 19; column 3 &lt; 8 → lane 18.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Memory-bound again",
+   "statement": "<p>Tensor cores at 12,288 GFLOP/s on the GW-1 (512 GB/s). A 64 × 64-tiled kernel has DRAM intensity about 16.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ridge point?",
+     "answer": 24,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Attainable GFLOP/s?",
+     "answer": 8192,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Bound by?",
+     "options": [
+      "Tensor compute",
+      "Memory bandwidth"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "min(peak, I × B)."
+   ],
+   "solution": "<p>Ridge 24, attainable 8,192 GFLOP/s: memory-bound. The kernel that was comfortably compute-bound in FP32 now needs bigger tiles and deeper pipelines.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "FP16 inputs halve the bytes",
+   "statement": "<p>The same tiled kernel with FP16 inputs (2 bytes) instead of FP32: intensity is about T/2 instead of T/4.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Smallest power-of-two T above the tensor ridge of 24 with FP16 inputs?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With FP8 inputs (intensity about T)?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "T/2 &gt; 24 and T &gt; 24."
+   ],
+   "solution": "<p>(a) T &gt; 48: 64. (b) T &gt; 24: 32. Narrower inputs raise intensity as well as math rate, which is half of why low precision is so effective.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Range",
+   "statement": "<p>FP16's largest finite value is 65,504.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "BF16's largest finite value is about…",
+     "options": [
+      "65,504",
+      "3.4 × 10³⁸ (FP32's range)",
+      "448"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Which training setup needs loss scaling?",
+     "options": [
+      "BF16",
+      "FP16",
+      "FP32"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "BF16 keeps FP32's 8 exponent bits."
+   ],
+   "solution": "<p>BF16 has FP32's range, so gradients don't underflow. FP16's narrow range makes small gradients flush to zero unless the loss is scaled up first (the Mixed Precision Training paper).</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Which formats have FP32's range?",
+   "statement": "<p>Exponent bits decide range.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Formats with 8 exponent bits",
+     "options": [
+      "FP32",
+      "TF32",
+      "FP16",
+      "BF16",
+      "FP8 E4M3"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "The chapter's table."
+   ],
+   "solution": "<p>FP32, TF32 and BF16. TF32 is \"FP32 range, FP16 precision\", which is why \"FP32\" GEMMs on Ampere tensor cores lose precision silently unless you opt out.</p>"
+  }
+ ]
+}

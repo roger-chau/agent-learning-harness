@@ -37,3 +37,30 @@
 <li>Ampere and later GPUs can copy tiles straight into shared memory asynchronously (<code>cp.async</code>, and TMA on Hopper), which Chapter 4.4 discusses.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: writing the tiled kernel from the invariant</h3>
+<p><strong>Invariant.</strong> At the start of k-step $t$, thread (r, c) of block (I, J) holds in its accumulator $\sum_{k &lt; tT} A_{iR+r,\,k} B_{k,\,jT+c}$, where $i = I$ and $R = T$.</p>
+<p><strong>Step.</strong> To extend the sum by $T$ more terms, the block needs $A[IT..IT+T-1][tT..tT+T-1]$ and $B[tT..tT+T-1][JT..JT+T-1]$. Thread (r, c) loads exactly one element of each: <code>sA[r][c] = A[IT + r][tT + c]</code> and <code>sB[r][c] = B[tT + r][JT + c]</code>. Both are coalesced, since c varies fastest across lanes.</p>
+<p><strong>Barrier,</strong> then <code>acc += sA[r][k] * sB[k][c]</code> for k = 0..T−1, then a barrier before the next load overwrites the tiles. The invariant holds for t + 1. After $K/T$ steps, acc is $C_{IT+r,\,JT+c}$.</p>
+<p><strong>Why bother with the invariant:</strong> it tells you which indices go where, and it makes the edge case obvious: if K isn't a multiple of T, the last step must load zeros past the edge (so the extra terms add nothing), and if M or N isn't, threads past the edge must still load and sync but not store.</p>
+
+<h3>Example 2: conflicts in the tiled inner loop</h3>
+<p><strong>Setup.</strong> T = 32, 32 × 32 threads. In the inner loop a warp is one row r of the thread block (32 consecutive c).</p>
+<p><strong>sA[r][k]:</strong> all 32 lanes read the same word: broadcast, 1 pass. <strong>sB[k][c]:</strong> 32 consecutive words of row k: 32 different banks, 1 pass. Conflict-free with no padding.</p>
+<p><strong>Now transpose the thread mapping</strong> (warp = a column of the block: fixed c, 32 values of r). sA[r][k]: 32 rows, same column: stride 32, a 32-way conflict. sB[k][c]: broadcast. One choice of mapping is free; the other is 32× slower in shared memory. Check every shared array's access pattern for the warp shape you actually have.</p>
+
+<h3>Example 3: is the tiled kernel compute-, issue- or memory-bound?</h3>
+<p><strong>n = 2048, T = 32, GW-1.</strong> FLOPs: $1.7 \times 10^{10}$; at the 33% instruction ceiling: 512 GFLOP/s → 33.6 ms. DRAM traffic (T/4 intensity, ignoring L2 reuse): $2^{34}/8 \approx 2.1$ GB → 4.2 ms at 512 GB/s. Shared memory: 2 loads per FMA, but one is a broadcast; about $2^{33}$ shared accesses / 32 lanes = $2.7 \times 10^8$ warp loads at 16 per cycle across the GPU: 11 ms.</p>
+<p><strong>Verdict:</strong> issue-bound (33.6 ms), with memory far behind. So making tiles bigger (less DRAM traffic) won't help; making each instruction do more work will. That's register tiling, next chapter, and the reason to always compute every bound before optimising.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> W. Hwu, D. Kirk, I. El Hajj, <em>Programming Massively Parallel Processors</em> (4th ed.), Chapter 5, the tiled matrix multiplication kernel with boundary checks.</li>
+<li><strong>Required:</strong> S. Boehm's matmul worklog, kernels 2–3 (global coalescing and shared-memory caching).</li>
+<li><strong>Optional:</strong> NVIDIA CUTLASS documentation, "Efficient GEMM in CUDA": threadblock-level tiling and rasterisation.</li>
+</ul>
+</section>

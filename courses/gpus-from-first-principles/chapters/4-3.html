@@ -51,3 +51,38 @@ for (let k = 0; k &lt; 16; k++) {
 <li>In JavaScript, <code>acc</code> is an array. On a GPU, a fully unrolled kernel keeps those 16 or 64 values in individual registers; that only works because the loops over <code>i</code> and <code>j</code> have constant trip counts.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: mapping threads to a 64 × 64 block tile</h3>
+<p><strong>Choice.</strong> A 64 × 64 block tile with 4 × 4 thread tiles needs $4096/16 = 256$ threads. Arrange them as a 16 × 16 grid: thread (ty, tx) owns rows $4ty..4ty+3$ and columns $4tx..4tx+3$.</p>
+<p><strong>Per k:</strong> the thread reads <code>sA_T[k][4ty..4ty+3]</code> (A transposed: 4 contiguous floats, one float4) and <code>sB[k][4tx..4tx+3]</code> (one float4), then 16 FMAs.</p>
+<p><strong>Warp view.</strong> A warp is threads 0–31: ty ∈ {0, 1}, tx = 0..15. Its A reads hit 2 distinct float4s (broadcast to 16 lanes each); its B reads hit 16 consecutive float4s = 64 words = 2 phases of 32 banks, conflict-free. Both cheap.</p>
+<p><strong>Alternative "strided" mapping</strong> (thread owns rows ty, ty + 16, ty + 32, ty + 48): the same reuse, no float4 reads unless the layout is permuted. CUTLASS-style kernels choose mappings so each thread's values are contiguous for vector loads and each warp's reads are broadcasts or conflict-free: that's the warp tile.</p>
+
+<h3>Example 2: arithmetic intensity at every level</h3>
+<p><strong>Kernel:</strong> block tile 128 × 128, BK = 8, 256 threads with 8 × 8 thread tiles.</p>
+<ul>
+<li><strong>DRAM → shared:</strong> per k-step, $(128 + 128) \times 8 = 2{,}048$ floats (8 KB) for $128 \times 128 \times 8 = 131{,}072$ FMAs: 64 FMAs per float, 32 FLOP/byte.</li>
+<li><strong>Shared → registers:</strong> per thread per k, 16 floats for 64 FMAs: 4 FMAs per float loaded.</li>
+<li><strong>Registers → FMA units:</strong> every FMA reads 3 registers; free.</li>
+</ul>
+<p>Each level has an intensity, and each must exceed the ratio of compute to that level's bandwidth. Shared memory on the GW-1 delivers 32 words per cycle per SM against 32 FMAs per cycle: needs ≥ 1 FMA per word. At 4, there's margin, which is why this kernel can approach peak.</p>
+
+<h3>Example 3: diagnosing a register-tiled kernel that's slower than expected</h3>
+<p><strong>Symptom.</strong> An 8 × 8 thread-tiled kernel reaches 40% of peak, not the 80% the instruction count predicts.</p>
+<p><strong>Check 1, spills:</strong> <code>-Xptxas -v</code> reports "0 bytes spill stores": fine. (If not, the accumulators live in local memory and every FMA does a memory access.)</p>
+<p><strong>Check 2, the accumulator array:</strong> if the code indexes <code>acc[i][j]</code> with loop variables the compiler can't fully unroll (a runtime tile size), the array can't live in registers at all (Lab 6's local-memory lesson): look for LDL/STL in the SASS.</p>
+<p><strong>Check 3, bank conflicts on the A reads</strong> if A isn't stored transposed: each thread's 8 values are a column, stride BK... conflict counters in the profiler.</p>
+<p><strong>Check 4, waves:</strong> a 512 × 512 problem with 128 × 128 tiles is only 16 blocks; with 2 per SM on a 34-SM card, the GPU is a quarter full. Choose the tile for the problem.</p>
+<p>Each check is a different number in the profiler; knowing which number to read first is the skill.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> V. Volkov, J. Demmel, "Benchmarking GPUs to Tune Dense Linear Algebra", SC 2008: register blocking and the case for low occupancy.</li>
+<li><strong>Required:</strong> S. Boehm's matmul worklog, kernels 4–6 (1-D and 2-D blocktiling, vectorised accesses).</li>
+<li><strong>Optional:</strong> NVIDIA CUTLASS documentation, "Efficient GEMM in CUDA": the block / warp / thread hierarchy diagram.</li>
+</ul>
+</section>

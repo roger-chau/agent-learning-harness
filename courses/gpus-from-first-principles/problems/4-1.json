@@ -1,0 +1,335 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Counting FLOPs",
+   "statement": "<p>Square GEMM, $C = AB$, all $n \\times n$.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FLOPs for n = 1024?",
+     "answer": 2147483648,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For n = 4096?",
+     "answer": 137438953472,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Time for n = 4096 at the GW-1's 1,536 GFLOP/s, in ms?",
+     "answer": 89.47848533333332,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$2n^3$."
+   ],
+   "solution": "<p>(a) $2^{31} \\approx 2.15 \\times 10^9$. (b) $1.37 \\times 10^{11}$. (c) 89.5 ms: the floor for any FP32 kernel on this machine.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Best-case intensity",
+   "statement": "<p>Read A and B once, write C once, FP32.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "I_max for n = 256?",
+     "answer": 42.666666666666664,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For n = 4096?",
+     "answer": 682.6666666666666,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$2n^3/(12n^2) = n/6$."
+   ],
+   "solution": "<p>42.7 and 683 FLOP/byte: far right of any ridge. A large GEMM can always be compute-bound; whether it is depends on reuse.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "The naive instruction ceiling",
+   "statement": "<p>The naive kernel's inner loop: two loads, one FMA, one loop branch.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Fraction of issued instructions that are FMAs, in %?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Ceiling on the GW-1, GFLOP/s?",
+     "answer": 384,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Even with every load hitting in cache."
+   ],
+   "solution": "<p>1 in 4 instructions: 25%, so at most 384 GFLOP/s, even before memory is considered. Fast GEMM is about raising that fraction.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Naive traffic without caches",
+   "statement": "<p>Naive GEMM with n = 1024, and suppose every load went to DRAM.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes loaded?",
+     "answer": 8589934592,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time at 512 GB/s, in ms?",
+     "answer": 16.777216000000003,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Time for the FLOPs at peak, in ms?",
+     "answer": 1.3981013333333332,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Two 4-byte loads per FMA."
+   ],
+   "solution": "<p>(a) $8n^3 = 8.6$ GB. (b) 16.8 ms against (c) 1.40 ms: 12× apart. Caches catch much of it in practice, by luck; tiling makes it deliberate.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Skinny GEMMs",
+   "statement": "<p>Best-case intensity with M = N = 4096 and small K (a low-rank update).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "K = 64?",
+     "answer": 31.03030303030303,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "K = 8?",
+     "answer": 3.9844357976653697,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "On the GW-1 (ridge 3), K = 8 is…",
+     "options": [
+      "compute-bound",
+      "memory-bound"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "$2MNK / (4(MK + KN + MN))$."
+   ],
+   "solution": "<p>(a) 31.0. (b) 3.98: C dominates the traffic ($MN$ elements written), so intensity is about $K/2$. (c) Still above 3, so compute-bound, just. At K = 4 it's below the ridge. Small-K GEMMs are bandwidth problems in disguise.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "GEMV is GEMM with N = 1",
+   "statement": "<p>M = K = 8192, N = 1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Best-case intensity?",
+     "answer": 0.4998779594825482,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Which matters for it?",
+     "options": [
+      "Tensor cores",
+      "Register tiling",
+      "Bandwidth: every element of A is used once"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "A is read once and each element feeds one FMA."
+   ],
+   "solution": "<p>(a) 0.500. (b) Bandwidth. Batching several vectors (N = 8, 16) is how LLM inference makes this compute-bound again: the same A serves more FLOPs.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Many tiny GEMMs",
+   "statement": "<p>10,000 independent GEMMs of 32 × 32 × 32. A kernel launch costs 5 µs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Total FLOPs?",
+     "answer": 655360000,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time at GW-1 peak, in ms?",
+     "answer": 0.42666666666666664,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Launch overhead if each GEMM is its own launch, in ms?",
+     "answer": 50,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$2 \\times 32^3 = 65{,}536$ FLOPs each."
+   ],
+   "solution": "<p>(a) $6.55 \\times 10^8$. (b) 0.43 ms. (c) 50 ms: 100× the work. One batched launch (cuBLAS <code>gemmBatched</code>, or a grouped GEMM) is the only sane option.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "How big for tensor cores?",
+   "statement": "<p>With tensor cores at 8× FP32, the GW-1's ridge moves to 24 FLOP/byte.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Smallest n for which square GEMM's best-case intensity exceeds 24?",
+     "answer": 145,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "The intensity a tiled kernel actually achieves is about T/4 for tile size T (Part 2's worked example). Smallest power-of-two T above the ridge?",
+     "answer": 128,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "$n/6 &gt; 24$.",
+    "$T/4 &gt; 24$."
+   ],
+   "solution": "<p>(a) $n &gt; 144$: n = 145. (b) $T &gt; 96$: T = 128. The problem allows compute-bound execution at modest sizes; the kernel only gets there with tiles of 128, which is why tensor-core GEMMs use 128 × 128 (or bigger) block tiles.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Who reads what",
+   "statement": "<p>Naive kernel for $C = A^\\top B$ with all matrices row-major; thread (i, j) computes $C_{ij}$, j from threadIdx.x. At step k a warp reads $A^\\top_{ik} = A_{ki}$ and $B_{kj}$.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "The warp's read of A is…",
+     "options": [
+      "coalesced",
+      "a broadcast (all lanes, same i)",
+      "32 sectors"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "The warp's read of B is…",
+     "options": [
+      "coalesced",
+      "a broadcast",
+      "32 sectors"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Lanes differ only in j."
+   ],
+   "solution": "<p>All lanes share i and k, so A is one address (broadcast). B's 32 lanes read consecutive j: coalesced. Transposes in a GEMM are about which operand is broadcast and which is streamed, which changes the tiling, not the arithmetic.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Fused multiply-add",
+   "statement": "<p>FMA computes $a \\cdot b + c$.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "How many roundings?",
+     "options": [
+      "none",
+      "one, at the end",
+      "two: after the multiply and after the add"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "So fma(a, b, c) versus a * b + c with separate instructions…",
+     "options": [
+      "always gives the same bits",
+      "can differ in the last bit, and FMA is usually more accurate",
+      "is always less accurate"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "The product is kept exactly before the add."
+   ],
+   "solution": "<p>One rounding, so results can differ from the two-instruction version (compilers contract a*b + c into FMA by default, which is why GPU and CPU results differ in the last bits, Lab 2's tolerance lesson).</p>"
+  }
+ ]
+}

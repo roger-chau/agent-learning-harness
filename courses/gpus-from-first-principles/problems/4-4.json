@@ -1,0 +1,288 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Fewer, fatter loads",
+   "statement": "<p>256 threads load a 128 × 8 float tile (1,024 floats).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Instructions per thread with 4-byte loads?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With float4 loads?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "1,024 / 256 floats per thread."
+   ],
+   "solution": "<p>4 versus 1. Same bytes, same sectors, a quarter of the instructions.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Alignment",
+   "statement": "<p>A row-major float matrix with K columns, loaded with float4s along rows from a 16-byte-aligned base.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "For which K is every float4 aligned?",
+     "options": [
+      "K = 1000",
+      "K = 1001",
+      "K = 1002",
+      "K = 1024"
+     ],
+     "answer": [
+      0,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Row starts must be multiples of 16 bytes: K a multiple of 4."
+   ],
+   "solution": "<p>1000 and 1024 are multiples of 4. For other sizes, libraries pad, or take a scalar path for the misaligned edges.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "What double buffering saves",
+   "statement": "<p>Per K-step: loading the next tiles takes 400 cycles of latency; computing on the current tiles takes 300 cycles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cycles per step without overlap?",
+     "answer": 700,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With double buffering?",
+     "answer": 400,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Speedup?",
+     "answer": 1.75,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Overlapped: the longer of the two."
+   ],
+   "solution": "<p>(a) 700. (b) max(400, 300) = 400: now load-bound. (c) 1.75×. If compute were longer than the load, double buffering would hide the load completely.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "How many stages?",
+   "statement": "<p>With s stages, loads are issued s − 1 steps ahead. Load latency 600 cycles, compute per step 200 cycles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum stages to hide the latency?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "If compute per step doubles to 400?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Need (s − 1) × compute ≥ latency."
+   ],
+   "solution": "<p>(a) $s - 1 \\ge 3$: 4 stages. (b) $s - 1 \\ge 1.5$: 3. Faster math (tensor cores) needs deeper pipelines, which is why Hopper kernels run 4–7 stages.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "The shared-memory bill",
+   "statement": "<p>Block tile 128 × 128, BK = 32.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes per stage in FP32?",
+     "answer": 32768,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "In FP16?",
+     "answer": 16384,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Four FP16 stages?",
+     "answer": 65536,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "A and B tiles: 128 × 32 each."
+   ],
+   "solution": "<p>32 KB, 16 KB, and 64 KB for 4 stages: the whole of a GW-1 SM's shared memory. Stages compete with tile size and residency for the same storage.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Registers for register-staged prefetch",
+   "statement": "<p>Without cp.async, double buffering goes global → registers → shared. A 256-thread block prefetches 128 × 8 A values and 8 × 128 B values per step.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Extra registers per thread to hold the prefetched values?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "2,048 floats over 256 threads."
+   ],
+   "solution": "<p>8 floats per thread (two float4s). On a kernel already near 128 registers, that can cost occupancy or cause spills, which is part of why cp.async (straight to shared memory) matters.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 1,
+   "title": "Barriers per step",
+   "statement": "<p>Count __syncthreads per K-step.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Single buffer (load, sync, compute, sync)?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Double buffer?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "With two stages, one barrier separates writing the next stage from reading it."
+   ],
+   "solution": "<p>2 and 1. Writes to the next stage can't conflict with reads of the current one, so one of the two barriers disappears.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Bytes in flight per SM",
+   "statement": "<p>The GW-1's 512 GB/s shared evenly by 16 SMs at 1.5 GHz, 400-cycle latency.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes each SM must keep in flight?",
+     "answer": 8533.333333333332,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Does one 8 KB stage in flight for each of 2 resident blocks suffice? (1 = yes, 0 = no)",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Little's law per SM."
+   ],
+   "solution": "<p>(a) 8,533 bytes. (b) 16 KB in flight > 8.5 KB: yes. A double-buffered GEMM with a couple of blocks per SM keeps memory busy.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Copying a tile: threads versus TMA",
+   "statement": "<p>A 128 × 32 FP16 tile (8 KB), copied global → shared by 128 threads with 16-byte loads and stores.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Instructions in total (loads + stores)?",
+     "answer": 1024,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With Hopper's TMA?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "512 vectors of 16 bytes."
+   ],
+   "solution": "<p>1,024 instructions versus one TMA instruction from one thread (plus a barrier wait). Freeing the threads from copying is what lets Hopper kernels specialise warps into producers and consumers.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Declaring overlap",
+   "statement": "<p>The simulator can't detect overlap, so you declare <code>ilp</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "When is <code>ilp: 2</code> honest?",
+     "options": [
+      "Whenever the kernel uses shared memory",
+      "When the loop issues the next stage's loads before the current stage's math",
+      "When the kernel has two loops",
+      "Always: it's a hint"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "The loads must actually be in flight during the math."
+   ],
+   "solution": "<p>Only when the code really has two independent requests outstanding. A declared overlap the code doesn't have gives you a number the hardware won't reproduce.</p>"
+  }
+ ]
+}

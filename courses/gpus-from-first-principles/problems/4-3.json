@@ -1,0 +1,335 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Loads per FMA",
+   "statement": "<p>An r × c thread tile loads r values of A and c of B per k and does r·c FMAs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "4 × 4?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "8 × 8?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "2 × 8?",
+     "answer": 0.625,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "(r + c)/(rc)."
+   ],
+   "solution": "<p>0.5, 0.25 and 0.625. Square tiles minimise loads for a given number of accumulators.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "FMA fraction with vector loads",
+   "statement": "<p>8 × 8 thread tile; per k, the thread loads 8 A values and 8 B values from shared memory as float4s, then does 64 FMAs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Shared-load instructions per k?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "FMA fraction, in %?",
+     "answer": 94.11764705882354,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "16 floats in float4s."
+   ],
+   "solution": "<p>(a) 4. (b) 64/68 = 94.1%: the instruction ceiling is now close to peak, and other limits (latency, occupancy, memory) take over.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "What the registers cost",
+   "statement": "<p>An 8 × 8 tile kernel uses 64 accumulators + 16 operands + about 20 for addresses and loop state: 100 registers. 256-thread blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Registers per warp (allocated)?",
+     "answer": 3328,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Resident blocks per SM?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Occupancy, in %?",
+     "answer": 25.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Round 3,200 up to 256."
+   ],
+   "solution": "<p>(a) 3328. (b) 19 warps fit, so 2 blocks. (c) 25%. Low, by design.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Is low occupancy enough?",
+   "statement": "<p>Same kernel: 16 warps per SM (4 per scheduler). Each warp has 64 independent FMAs per k step; FMA latency is 4 cycles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Independent FMAs a scheduler can choose from per k step?",
+     "answer": 256,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Can the scheduler issue an FMA every cycle?",
+     "options": [
+      "Yes: far more independent work than the 4-cycle latency needs",
+      "No: it needs 16 warps per scheduler"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "To issue every cycle with latency 4 you need 4 independent instructions in flight."
+   ],
+   "solution": "<p>256 independent FMAs available against 4 needed: occupancy is irrelevant here, ILP covers it. That's Volkov's point in its purest form.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Tiles versus parallelism",
+   "statement": "<p>64 × 64 block tiles on the GW-1 (16 SMs).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Blocks for a 256 × 256 GEMM?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For 128 × 128?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Fraction of SMs busy for 128 × 128, in %?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "(n/64)²."
+   ],
+   "solution": "<p>16 blocks fill the GW-1 once; 4 blocks leave 75% idle. Small GEMMs need smaller tiles, split-K, or Stream-K (Part 5's paper).</p>"
+  },
+  {
+   "id": "p6",
+   "level": 3,
+   "title": "The biggest square thread tile",
+   "statement": "<p>A thread may use 128 registers; about 24 go to addresses and loop state. An t × t tile needs $t^2$ accumulators and $2t$ operand registers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Largest t that fits?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Largest power of two?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "$t^2 + 2t \\le 104$."
+   ],
+   "solution": "<p>t = 9 gives 99 ≤ 104; t = 10 gives 120. Powers of two keep indexing and vector loads simple, so 8 × 8 is the standard choice.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Shared memory for a block tile",
+   "statement": "<p>Block tile 128 × 128, K-step BK = 8, FP32.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes for one stage of A and B tiles?",
+     "answer": 8192,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Double-buffered?",
+     "answer": 16384,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "A tile 128 × 8, B tile 8 × 128."
+   ],
+   "solution": "<p>8 KB per stage, 16 KB double-buffered: modest, because the reuse now happens in registers.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Reuse at the block level",
+   "statement": "<p>Per k-step a block loads (BM + BN)·BK values into shared memory and performs BM·BN·BK FMAs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FMAs per value loaded from global memory, for 128 × 128?",
+     "answer": 64.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For 64 × 64?",
+     "answer": 32.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "BM·BN / (BM + BN)."
+   ],
+   "solution": "<p>64 and 32. Bigger block tiles raise DRAM-level intensity; bigger thread tiles raise register-level intensity. Both are bounded by on-chip storage.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Reading the A tile",
+   "statement": "<p>In a register-tiled kernel, the 16 threads that share a row of the thread grid all read the same 8 A values at each k.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "That shared-memory read is…",
+     "options": [
+      "a 16-way bank conflict",
+      "a broadcast: cheap",
+      "uncoalesced"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why store A transposed in shared memory?",
+     "options": [
+      "To avoid bank conflicts on the B reads",
+      "So each thread's 8 values of one k are contiguous, for a float4 read",
+      "Because cuBLAS does",
+      "To save shared memory"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Same word, many lanes."
+   ],
+   "solution": "<p>(a) Lanes reading the same word get a broadcast. (b) A is row-major in global memory, so a column slice (fixed k) is strided; transposing while staging makes it contiguous for vector loads.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "The hierarchy",
+   "statement": "<p>Match each level of a GEMM's tiling to what it buys.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Block tile",
+     "options": [
+      "Fewer DRAM/L2 accesses (reuse across a block)",
+      "Fewer shared-memory loads per FMA",
+      "Conflict-free shared reads"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Thread tile",
+     "options": [
+      "Fewer DRAM accesses",
+      "Fewer shared-memory loads per FMA (register reuse)",
+      "More blocks"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Warp tile",
+     "options": [
+      "Fewer DRAM accesses",
+      "A shape for the warp's shared-memory reads (broadcasts, no conflicts)",
+      "Fewer registers"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Each level raises reuse at the level above it."
+   ],
+   "solution": "<p>Block tiles reduce global traffic, thread tiles reduce shared traffic, and warp tiles arrange the warp's accesses so the shared memory serves them in one pass.</p>"
+  }
+ ]
+}

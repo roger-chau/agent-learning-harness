@@ -1,0 +1,305 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Global loads per FMA",
+   "statement": "<p>Shared-memory tiling with T × T tiles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "T = 16?",
+     "answer": 0.125,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "T = 32?",
+     "answer": 0.0625,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "2 / T."
+   ],
+   "solution": "<p>0.125 and 0.0625: each value loaded is used T times.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Shared memory per block",
+   "statement": "<p>Tiles of A and B, T × T floats each.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "T = 16, bytes?",
+     "answer": 2048,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "T = 32?",
+     "answer": 8192,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "$2T^2 \\times 4$."
+   ],
+   "solution": "<p>2 KB and 8 KB.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "The tiled ceiling",
+   "statement": "<p>Inner loop: two shared loads (one a broadcast) and one FMA per step.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FMA fraction, in %?",
+     "answer": 33.333333333333336,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "GW-1 ceiling, GFLOP/s?",
+     "answer": 512,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Three instructions per FMA."
+   ],
+   "solution": "<p>33% and 512 GFLOP/s. Tiling removed the global loads but kept an instruction per operand.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Filling the machine",
+   "statement": "<p>A 256 × 256 GEMM, one thread per output, T × T thread blocks. The GW-1 holds 2,048 threads and 16 blocks per SM, 16 SMs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Blocks with T = 16?",
+     "answer": 256,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With T = 32?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Waves with T = 32?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "T = 32 is 1,024 threads: 2 blocks per SM."
+   ],
+   "solution": "<p>(a) 256 blocks. (b) 64. (c) 2 per SM × 16 = 32 per wave: 2 waves. Small problems can't use big tiles without losing parallelism.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Tiled DRAM traffic",
+   "statement": "<p>n = 4096, T = 32, and suppose L2 catches nothing between blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes read for A and B?",
+     "answer": 17179869184.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Intensity (including C's write)?",
+     "answer": 7.968871595330739,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Time for that traffic at 512 GB/s, in ms?",
+     "answer": 33.685503999999995,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Each element of A and B is read once per block-row or block-column: n/T times."
+   ],
+   "solution": "<p>(a) $2 \\times 4n^2 \\times n/T = 17.2$ GB. (b) ≈ T/4 = 7.97. (c) 33.7 ms, against 89.5 ms of compute at peak: compute (and the 33% instruction ceiling) now dominates.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 1,
+   "title": "Barriers",
+   "statement": "<p>n = 1024, T = 32, two barriers per k-step.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "k-steps per block?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Barriers per block?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "n / T steps."
+   ],
+   "solution": "<p>32 steps, 64 barriers. Each barrier stalls the block until its slowest warp arrives; Chapter 4.4's double buffering removes one per step.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 3,
+   "title": "The cost of an unknown trip count",
+   "statement": "<p>The tiled inner loop written with <code>k &lt; T</code> (a variable) instead of <code>k &lt; 16</code> (a literal) costs one extra branch instruction per iteration.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FMA fraction with the literal bound, in %?",
+     "answer": 33.333333333333336,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With the variable bound?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Slowdown if the kernel is issue-bound?",
+     "answer": 1.3333333333333333,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Count instructions per FMA."
+   ],
+   "solution": "<p>3 versus 4 instructions per FMA: 33% versus 25%, a 1.33× slowdown from a loop the compiler couldn't unroll. Making tile sizes compile-time constants (templates in C++) matters.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Block rasterisation",
+   "statement": "<p>An n = 4096 GEMM with 256 × 256 block tiles: a 16 × 16 grid of tiles. 16 blocks run at once. Each block needs one row-panel of A and one column-panel of B.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Distinct panels needed by a wave launched in row-major order (one row of tiles)?",
+     "answer": 17,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "By a wave arranged as a 4 × 4 group of tiles?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Row-major: one A panel, 16 B panels."
+   ],
+   "solution": "<p>(a) 17. (b) 8. Grouped launch order roughly halves the distinct data a wave pulls through L2, so more of it hits. CUTLASS calls this swizzling the block index; Triton exposes it as <code>GROUP_SIZE_M</code>.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Occupancy of a tiled kernel",
+   "statement": "<p>T = 32 (1,024-thread blocks), 32 registers per thread, 8 KB of shared memory, on the GW-1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Blocks per SM?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Occupancy, in %?",
+     "answer": 100,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Warps: 32 per block."
+   ],
+   "solution": "<p>2 blocks (the 64-warp limit), 100% occupancy, with shared memory to spare. Occupancy isn't this kernel's problem; instruction count is.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "What tiling doesn't fix",
+   "statement": "<p>After shared-memory tiling…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "…what still limits the kernel to about a third of peak?",
+     "options": [
+      "DRAM bandwidth",
+      "Each FMA still needs operand loads as separate instructions",
+      "Bank conflicts",
+      "Barrier cost"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Count the instructions."
+   ],
+   "solution": "<p>Operands from shared memory still cost an instruction each. Only register reuse (4.3) changes the ratio.</p>"
+  }
+ ]
+}

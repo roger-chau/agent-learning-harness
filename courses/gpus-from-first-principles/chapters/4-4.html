@@ -42,3 +42,36 @@ for (k0 = 0; k0 &lt; n; k0 += BK) {
 <li>Next chapter, tensor cores make the math 8× faster here (more on real hardware), and suddenly memory and latency are the limit again. That's when this chapter pays off.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: a double-buffered loop, written carefully</h3>
+<pre>load tile 0 into stage 0 (global → shared)
+__syncthreads()
+for t = 0 .. steps-1:
+    if t + 1 &lt; steps: load tile t+1 into registers   // issue early: in flight during the math
+    compute on stage t % 2                            // shared → registers → FMAs
+    if t + 1 &lt; steps: store registers to stage (t+1) % 2
+    __syncthreads()                                   // stage (t+1)%2 complete; stage t%2 free</pre>
+<p><strong>Why one barrier is enough:</strong> during step t, threads read stage t % 2 and write stage (t+1) % 2: different buffers, no conflict. The barrier at the end both publishes the new stage and guarantees everyone finished reading the old one before it's overwritten at step t + 1 (which writes stage t % 2 again).</p>
+<p><strong>The overlap</strong> comes from issuing the global loads before the math: the loads' latency runs while the FMAs execute, and the registers are only written to shared memory after.</p>
+
+<h3>Example 2: how deep a cp.async pipeline must be</h3>
+<p><strong>Setup.</strong> An Ampere-class SM computes a 128 × 128 × 32 FP16 tile step with tensor cores in about 260 cycles (at 1,024 dense FP16 FMAs per cycle per SM), and DRAM latency under load is about 600–800 cycles.</p>
+<p><strong>Stages needed:</strong> $(s - 1) \times 260 \ge 800 \Rightarrow s \ge 4.1$: 5 stages. Shared memory: 16 KB per FP16 stage × 5 = 80 KB per block: fine on an A100 (164 KB per SM), so one or two blocks per SM.</p>
+<p><strong>Check bandwidth too:</strong> each step moves 16 KB per SM in 260 cycles: 63 bytes per cycle per SM; 108 SMs at 1.4 GHz → 9.5 TB/s. That exceeds DRAM (2 TB/s), so the kernel relies on L2 reuse across blocks (rasterisation) to make the math rate sustainable. Latency sets the stage count; bandwidth sets whether the tile is big enough.</p>
+
+<h3>Example 3: vectorising loads under alignment constraints</h3>
+<p><strong>Problem.</strong> A GEMM must support K = 1001.</p>
+<p><strong>Plan:</strong> pad on allocation, if you own the buffers: allocate rows of 1,004 floats, zero the padding, and the kernel runs the aligned path (padding zeros contribute nothing). <strong>If you don't own the buffers:</strong> run the main loop over the first 1,000 columns with float4 loads, and handle the last column with scalar loads, as a separate final k-step. Libraries such as CUTLASS select an "alignment" template parameter (1, 2, 4 or 8 elements) at dispatch time and pick the widest that divides every leading dimension and pointer offset.</p>
+<p><strong>Cost of getting it wrong:</strong> on real hardware a misaligned vector load raises a "misaligned address" error and kills the kernel. It's never just slow: it's a crash, which is why alignment is checked before launch, not inside the kernel.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Asynchronous Data Copies" (cp.async / memcpy_async with pipelines) and the TMA section.</li>
+<li><strong>Required:</strong> S. Boehm's matmul worklog, the warptiling and double-buffering kernels.</li>
+<li><strong>Optional:</strong> NVIDIA CUTLASS documentation, "Efficient GEMM in CUDA", software pipelining; and the Hopper "warp specialization" kernels.</li>
+</ul>
+</section>
