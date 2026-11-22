@@ -1,0 +1,236 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Identities",
+   "statement": "<p>Evaluate.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "13 ^ 13?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "40 & 39?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "XOR of 0..10 (n % 4 rule)?",
+     "answer": 11,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "40 = 101000₂."
+   ],
+   "solution": "<p>x ^ x = 0; 40 &amp; 39 clears the lowest set bit → 32; for n = 10, n % 4 = 2 → n + 1 = 11.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Counting bits",
+   "statement": "<p>bits(i) for i = 0..7.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Array?",
+     "options": [
+      "[0, 1, 1, 2, 1, 2, 2, 3]",
+      "[0, 1, 1, 2, 2, 2, 3, 3]",
+      "[0, 1, 2, 3, 4, 5, 6, 7]"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "bits[i >> 1] + (i & 1)."
+   ],
+   "solution": "<p>[0, 1, 1, 2, 1, 2, 2, 3].</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Mod 3 counting",
+   "statement": "<p>nums = [2, 2, 3, 2] (binary 10, 10, 11, 10).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Count of numbers with bit 0 set?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Count with bit 1 set?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Single number?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Counts mod 3: bit 0 → 1, bit 1 → 1."
+   ],
+   "solution": "<p>Bit 0 count 1 ≡ 1 and bit 1 count 4 ≡ 1, so the single number is 11₂ = 3.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "XOR subarrays",
+   "statement": "<p>nums = [4, 2, 2, 6, 4], k = 6.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Subarrays with XOR 6?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Prefix XORs: 0, 4, 6, 4, 2, 6."
+   ],
+   "solution": "<p>4 ([4, 2], [4, 2, 2, 6, 4], [2, 2, 6], [6]).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Hamming",
+   "statement": "<p>Total Hamming distance between all pairs of [4, 14, 2] (0100, 1110, 0010).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Per-bit formula?",
+     "options": [
+      "c · (n − c) where c = count of ones",
+      "c²",
+      "n − c"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Bits 1, 2, 3: counts 2, 2, 1."
+   ],
+   "solution": "<p>Bit 0: 0; bit 1: 2·1; bit 2: 2·1; bit 3: 1·2. Total 6.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Precedence",
+   "statement": "<p>Python: <code>x & 1 == 0</code> with x = 4.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Value?",
+     "options": [
+      "0 (parsed as x & (1 == 0) = 4 & False)",
+      "True",
+      "False"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Comparison binds tighter than &."
+   ],
+   "solution": "<p>4 &amp; False = 0, which is falsy, so an \"is even\" check silently fails. Parenthesise.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Python 32-bit",
+   "statement": "<p>Emulating int32 in Python.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "0xFFFFFFFF as a signed 32-bit value?",
+     "answer": -1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Conversion?",
+     "options": [
+      "x − 2³² if x ≥ 2³¹",
+      "x & 0x7FFFFFFF",
+      "abs(x)"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Two's complement."
+   ],
+   "solution": "<p>Mask to 32 bits, then reinterpret the top bit as the sign.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Range AND",
+   "statement": "<p>The bitwise AND of all integers in [26, 30].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 24,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Method?",
+     "options": [
+      "the common binary prefix of 26 and 30",
+      "26 & 30 only",
+      "XOR"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "11010 … 11110."
+   ],
+   "solution": "<p>The common prefix is 11 followed by zeros, which is 24. Any bit below the first difference flips somewhere in the range.</p>"
+  }
+ ]
+}

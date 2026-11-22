@@ -1,0 +1,252 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Repeated squaring",
+   "statement": "<p>Computing 3¹³ by squaring.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "13 in binary has how many 1 bits?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "3¹³ mod 1000?",
+     "answer": 323,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "13 = 1101₂ = 8 + 4 + 1."
+   ],
+   "solution": "<p>3¹³ = 3⁸·3⁴·3 = 1,594,323 → 323 mod 1000.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "gcd/lcm",
+   "statement": "<p>a = 84, b = 120.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "gcd?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "lcm?",
+     "answer": 840,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Euclid steps (mod operations) until b = 0?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "(84, 120) → (120, 84) → (84, 36) → (36, 12) → (12, 0)."
+   ],
+   "solution": "<p>gcd 12, lcm 840.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Matrix power",
+   "statement": "<p>Fibonacci with [[1, 1], [1, 0]]ⁿ.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "F(90) mod 10⁹+7?",
+     "answer": 210345902,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Squarings for n = 10¹⁸ (about log₂ n)?",
+     "answer": 60,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "2⁶⁰ ≈ 1.15 × 10¹⁸."
+   ],
+   "solution": "<p>About 60 squarings plus at most 60 multiplications.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Recurrence to matrix",
+   "statement": "<p>T(n) = T(n−1) + T(n−2) + T(n−3) (tribonacci).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Matrix size k?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Cost for n = 10¹⁸?",
+     "options": [
+      "O(k³ log n) ≈ 27·60 multiplications",
+      "O(n)",
+      "O(k n)"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The state vector is [T(n), T(n−1), T(n−2)]."
+   ],
+   "solution": "<p>A 3 × 3 companion matrix.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Primes",
+   "statement": "<p>The sieve below n.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Primes below 100?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Primes below 10⁶?",
+     "answer": 78498,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Why start crossing at p²?",
+     "options": [
+      "smaller multiples have a smaller prime factor, already crossed",
+      "speed only",
+      "p² is prime"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "25 and 78,498."
+   ],
+   "solution": "<p>25 primes below 100; 78,498 below 10⁶ (about n / ln n ≈ 72,000).</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Magical numbers",
+   "statement": "<p>Divisible by 2 or 3.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "4th magical number?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Count ≤ 12?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "2, 3, 4, 6, 8, 9, 10, 12."
+   ],
+   "solution": "<p>The 4th is 6; 6 + 4 − 2 = 8 numbers ≤ 12.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Overflow",
+   "statement": "<p>C++: <code>long long l = a * b / gcd(a, b);</code> with int a = b = 40000.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Problem?",
+     "options": [
+      "a * b overflows int before the conversion to long long",
+      "none",
+      "gcd is slow"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "(long long)a / gcd(a, b) * b",
+      "use float",
+      "abs()"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "1.6 × 10⁹ > 2³¹ − 1."
+   ],
+   "solution": "<p>Divide first, and widen before multiplying.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Cycle instead",
+   "statement": "<p>xₙ₊₁ = (xₙ² + 1) mod 1000, starting at x₀ = 0. You need x at n = 10¹⁸.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best approach?",
+     "options": [
+      "Detect the cycle (it must repeat within 1000 steps), then index into it",
+      "Matrix power",
+      "Simulate 10¹⁸ steps"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Pigeonhole: at most 1000 distinct values."
+   ],
+   "solution": "<p>The map isn't linear, so there's no matrix. But the sequence is eventually periodic, so find the tail and cycle length and reduce n.</p>"
+  }
+ ]
+}

@@ -1,0 +1,73 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"O(1) extra space", "without using + or −", "every element appears twice/three times except…", "power of two", "subsets of a small set", "XOR of a range", Gray codes, hardware-ish questions about flags and masks. Also performance engineering in general: bit tricks are how compilers and GPU kernels avoid branches. Know the identities cold, because a bit-trick question is usually short and graded on fluency.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: per-bit arithmetic</h2>
+<p>Bitwise operations act on each bit independently. Many problems become easy when you <strong>think one bit position at a time</strong>:</p>
+<ul>
+<li><strong>XOR is addition mod 2 per bit</strong>, so pairs cancel: x ^ x = 0, x ^ 0 = x. The XOR of everything leaves the odd-count element.</li>
+<li><strong>Generalise the modulus:</strong> with "three times except one", count each bit mod 3. The ones/twos trick is a 2-bit counter per position.</li>
+<li><strong>XOR has an inverse (itself)</strong>, so prefix XORs work like prefix sums: XOR(l..r) = P[r+1] ^ P[l].</li>
+<li><strong>The lowest set bit</strong> is x &amp; −x (two's complement), and x &amp; (x − 1) clears it. That's the Fenwick tree's engine and Kernighan's popcount.</li>
+<li><strong>Addition without +</strong>: sum = a ^ b (no carry), carry = (a &amp; b) &lt;&lt; 1; repeat until no carry.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<table>
+<tr><th>Task</th><th>Expression</th></tr>
+<tr><td>test bit i</td><td><code>x &gt;&gt; i &amp; 1</code></td></tr>
+<tr><td>set / clear / flip bit i</td><td><code>x | 1&lt;&lt;i</code>, <code>x &amp; ~(1&lt;&lt;i)</code>, <code>x ^ 1&lt;&lt;i</code></td></tr>
+<tr><td>lowest set bit / clear it</td><td><code>x &amp; -x</code>, <code>x &amp; (x-1)</code></td></tr>
+<tr><td>power of two (x &gt; 0)</td><td><code>x &amp; (x-1) == 0</code></td></tr>
+<tr><td>popcount</td><td><code>x.bit_count()</code> / <code>__builtin_popcount</code></td></tr>
+<tr><td>all ones of width n</td><td><code>(1 &lt;&lt; n) - 1</code></td></tr>
+<tr><td>Gray code</td><td><code>i ^ (i &gt;&gt; 1)</code></td></tr>
+<tr><td>XOR of 0..n</td><td><code>[n, 1, n+1, 0][n % 4]</code></td></tr>
+</table>
+<p><strong>Python caveat:</strong> integers are unbounded, so ~x is −x − 1 and there's no overflow. To emulate 32-bit behaviour, mask with 0xFFFFFFFF and convert back: <code>x if x &lt; 2**31 else x - 2**32</code>.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: single number II</h2>
+<ol>
+<li><strong>Easy answers first:</strong> a hash-map count is O(n) time and space. Sort, then step by 3: O(n log n). Both are fine, but O(1) space is the ask.</li>
+<li><strong>Why plain XOR fails:</strong> three copies XOR to the value itself, not 0.</li>
+<li><strong>Think per bit:</strong> at bit position i, the count of numbers with bit i set is 3k + (the single number's bit). So count mod 3 recovers each bit. That's 32 passes, O(32n), and O(1) space.</li>
+<li><strong>Compress the counter:</strong> keep the per-bit count mod 3 in two words (ones, twos): ones = (ones ^ x) &amp; ~twos; twos = (twos ^ x) &amp; ~ones. Trace one bit through the states 0 → 1 → 2 → 0 to convince yourself.</li>
+<li><strong>Negatives:</strong> in C++ this just works on 32-bit ints. In the per-bit Python version, reconstruct the sign from bit 31.</li>
+</ol>
+<p>The move: <strong>when a whole-number trick fails, decompose into bits and solve per bit</strong>. Maximum XOR pairs (binary trie), the sum of pairwise Hamming distances, and the bitwise AND of a range all use it.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Precedence:</strong> in C/C++ and Python, comparison binds tighter than &amp;, so <code>x &amp; 1 == 0</code> is <code>x &amp; (1 == 0)</code>. Parenthesise.</li>
+<li><strong>Shifting into the sign bit</strong> or by ≥ the width is undefined behaviour in C++. Use 1LL &lt;&lt; i for i ≥ 31, and unsigned types for bit manipulation.</li>
+<li><strong>Total Hamming distance:</strong> per bit, count c ones among n numbers; that bit contributes c·(n − c). O(32n) instead of O(n²).</li>
+<li><strong>Bitwise AND of a range [m, n]:</strong> the common prefix of m and n; shift both right until equal.</li>
+<li><strong>Single number III</strong> (two odd ones out): XOR everything, split by any set bit of the result, XOR each group.</li>
+<li><strong>Subsets as masks</strong> and iterating over submasks: see Part 7.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/single-number/" target="_blank" rel="noopener">136. Single Number</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">XOR cancels pairs.</span></li>
+<li><a href="https://leetcode.com/problems/number-of-1-bits/" target="_blank" rel="noopener">191. Number of 1 Bits</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">x &amp; (x − 1) clears the lowest bit.</span></li>
+<li><a href="https://leetcode.com/problems/counting-bits/" target="_blank" rel="noopener">338. Counting Bits</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">bits[i >> 1] + (i &amp; 1).</span></li>
+<li><a href="https://leetcode.com/problems/power-of-two/" target="_blank" rel="noopener">231. Power of Two</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">x > 0 and x &amp; (x − 1) == 0.</span></li>
+<li><a href="https://leetcode.com/problems/single-number-ii/" target="_blank" rel="noopener">137. Single Number II</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Count bits mod 3.</span></li>
+<li><a href="https://leetcode.com/problems/single-number-iii/" target="_blank" rel="noopener">260. Single Number III</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Split by a set bit of the total XOR.</span></li>
+<li><a href="https://leetcode.com/problems/sum-of-two-integers/" target="_blank" rel="noopener">371. Sum of Two Integers</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">XOR + carry; 32-bit masking in Python.</span></li>
+<li><a href="https://leetcode.com/problems/bitwise-and-of-numbers-range/" target="_blank" rel="noopener">201. Bitwise AND of Numbers Range</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">The common prefix.</span></li>
+<li><a href="https://leetcode.com/problems/total-hamming-distance/" target="_blank" rel="noopener">477. Total Hamming Distance</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Per bit: c · (n − c).</span></li>
+<li><a href="https://leetcode.com/problems/gray-code/" target="_blank" rel="noopener">89. Gray Code</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">i ^ (i >> 1).</span></li>
+</ol>
+</section>

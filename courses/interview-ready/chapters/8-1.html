@@ -1,0 +1,84 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p><strong>Many range queries interleaved with updates</strong>: "sum / min / max / gcd over [l, r]" while values change, or counting "how many earlier elements are smaller than x" (inversions, count-smaller-after-self, ranking in a stream). Static data needs only prefix sums or a sparse table; it's the <em>mix</em> of updates and queries, each up to 10⁵, that calls for an O(log n) tree.</p>
+<table>
+<tr><th>Need</th><th>Structure</th></tr>
+<tr><td>prefix sums with point updates; counting by value</td><td>Fenwick tree (BIT)</td></tr>
+<tr><td>any associative combine (min, max, gcd) on ranges</td><td>segment tree</td></tr>
+<tr><td>range updates + range queries</td><td>segment tree with lazy tags (or two BITs for sums)</td></tr>
+<tr><td>static range min, no updates</td><td>sparse table, O(1) query</td></tr>
+<tr><td>sorted container with order statistics</td><td>BST / <code>SortedList</code> / policy-based tree, or BIT over ranks</td></tr>
+</table>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: precompute sums over power-of-two blocks</h2>
+<p>Both trees store the answer for O(n) carefully chosen blocks so that <strong>any range is a union of O(log n) blocks</strong> and <strong>any position lies in O(log n) blocks</strong>. A query combines the blocks covering the range; an update fixes the blocks containing the position.</p>
+<p><strong>Fenwick:</strong> entry i covers the (i &amp; −i) positions ending at i. Prefix queries walk down by clearing the lowest bit; updates walk up by adding it. It needs an <em>invertible</em> operation (sum, XOR) for range queries, as prefix(r) − prefix(l − 1).</p>
+<p><strong>Segment tree:</strong> a binary tree over [0, n); each node stores the combine of its range. It works for any associative operation, and supports range updates via <em>lazy tags</em>: a fully covered node records the pending update instead of passing it to all its descendants.</p>
+<p><strong>Coordinate compression</strong> makes value-indexed trees possible when values are up to 10⁹: sort the distinct values and replace each by its rank.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>class BIT:                                   # 1-indexed
+    def __init__(self, n): self.n = n; self.t = [0] * (n + 1)
+    def add(self, i, d):                     # position i (1..n) += d
+        while i &lt;= self.n: self.t[i] += d; i += i &amp; -i
+    def prefix(self, i):                     # sum of 1..i
+        s = 0
+        while i &gt; 0: s += self.t[i]; i -= i &amp; -i
+        return s
+
+# Segment tree (iterative, point update, range min). Leaves at [size, 2·size).
+def update(i, v):
+    i += size; t[i] = v
+    while i &gt; 1: i //= 2; t[i] = min(t[2*i], t[2*i+1])
+def query(l, r):                             # inclusive l, exclusive r
+    res = INF; l += size; r += size
+    while l &lt; r:
+        if l &amp; 1: res = min(res, t[l]); l += 1
+        if r &amp; 1: r -= 1; res = min(res, t[r])
+        l //= 2; r //= 2
+    return res</code></pre>
+<p>Invariant: every internal node equals the combine of its two children (plus its lazy tag, if any). Updates restore it along one root-to-leaf path.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: count of smaller numbers after self</h2>
+<ol>
+<li><strong>Brute force:</strong> for each i scan the right side: O(n²), 4 × 10⁸ for n = 2 × 10⁴. Too slow in Python, borderline in C++.</li>
+<li><strong>Reframe the direction:</strong> scan from the right. Then "elements after i" = "elements already inserted", and the question becomes <em>how many inserted values are &lt; x?</em>: a prefix count over values.</li>
+<li><strong>Structure:</strong> a Fenwick tree indexed by value: insert = add(value, 1), query = prefix(value − 1).</li>
+<li><strong>Values up to 10⁹:</strong> compress them to ranks 1..m first. Equal values get the same rank, so "strictly smaller" is prefix(rank − 1).</li>
+<li><strong>Alternative:</strong> merge sort, counting how many elements from the right half jump ahead of each left element. Same O(n log n), and a good second answer.</li>
+</ol>
+<p>The move: <strong>turn "how many before me satisfy P" into a running structure keyed by the thing P compares</strong>. Inversions, ranks in a stream, "count pairs with a[i] &gt; 2·a[j]" all follow.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Fenwick is 1-indexed:</strong> i = 0 loops forever (0 &amp; −0 = 0). Shift indices by one.</li>
+<li><strong>Point update as a delta:</strong> "set a[i] = v" needs the old value: add(i, v − a[i]).</li>
+<li><strong>Range add with point query:</strong> a BIT over the difference array. Range add with range sum: two BITs.</li>
+<li><strong>Recursion in Python</strong> segment trees is slow; prefer the iterative bottom-up form unless you need lazy propagation.</li>
+<li><strong>Sizes:</strong> a recursive segment tree needs 4n nodes; the iterative one 2·(next power of two).</li>
+<li><strong>Do you need a tree at all?</strong> Static ranges use prefix sums; offline queries can sometimes be sorted and answered with a sweep (Mo's algorithm, or sorting queries by right endpoint).</li>
+<li><strong>Interview reality:</strong> segment trees appear more at quant firms and in online assessments than in big-tech on-sites. Be able to write a BIT from memory in 2 minutes.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/range-sum-query-mutable/" target="_blank" rel="noopener">307. Range Sum Query – Mutable</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">BIT or segment tree; point update as a delta.</span></li>
+<li><a href="https://leetcode.com/problems/count-of-smaller-numbers-after-self/" target="_blank" rel="noopener">315. Count of Smaller Numbers After Self</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Scan right, BIT over ranks.</span></li>
+<li><a href="https://leetcode.com/problems/reverse-pairs/" target="_blank" rel="noopener">493. Reverse Pairs</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Merge sort counting, or BIT over compressed 2x values.</span></li>
+<li><a href="https://leetcode.com/problems/count-of-range-sum/" target="_blank" rel="noopener">327. Count of Range Sum</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Prefix sums + BIT over compressed prefix values.</span></li>
+<li><a href="https://leetcode.com/problems/falling-squares/" target="_blank" rel="noopener">699. Falling Squares</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Range max assign: segment tree with compression.</span></li>
+<li><a href="https://leetcode.com/problems/the-skyline-problem/" target="_blank" rel="noopener">218. The Skyline Problem</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Sweep with a max-heap (lazy deletion), or a segment tree.</span></li>
+<li><a href="https://leetcode.com/problems/create-sorted-array-through-instructions/" target="_blank" rel="noopener">1649. Create Sorted Array through Instructions</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">BIT over values; min(smaller, larger).</span></li>
+</ol>
+</section>

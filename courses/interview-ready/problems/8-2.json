@@ -1,0 +1,232 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Prefix function",
+   "statement": "<p>s = \"ababc\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "pi?",
+     "options": [
+      "[0, 0, 1, 2, 0]",
+      "[0, 1, 2, 3, 0]",
+      "[0, 0, 0, 0, 0]"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Longest proper border of each prefix."
+   ],
+   "solution": "<p>a → 0, ab → 0, aba → 1, abab → 2, ababc → 0.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Period",
+   "statement": "<p>s = \"abcabcabc\" (n = 9), pi[n − 1] = 6.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Smallest period?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Is s a repetition of a smaller block?",
+     "options": [
+      "Yes",
+      "No"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "n − pi[n − 1]."
+   ],
+   "solution": "<p>9 − 6 = 3, which divides 9: \"abc\" × 3.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "KMP cost",
+   "statement": "<p>Text length 10⁶, pattern length 10³, adversarial input.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Naive worst case, n·m (billions)?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "KMP character comparisons at most about 2(n + m) (millions)?",
+     "answer": 2.002,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Amortisation."
+   ],
+   "solution": "<p>Each step either advances or falls back, and falling back is bounded by advancing.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Shortest palindrome",
+   "statement": "<p>s = \"aacecaaa\" and \"abcd\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "For \"aacecaaa\"?",
+     "options": [
+      "aaacecaaa",
+      "aacecaaa",
+      "aaacecaaaa"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "For \"abcd\"?",
+     "options": [
+      "dcbabcd",
+      "abcdcba",
+      "dcbabcd "
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The longest palindromic prefix."
+   ],
+   "solution": "<p>aaacecaaa (prefix \"aacecaa\"); dcbabcd.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Hash collisions",
+   "statement": "<p>10⁵ substrings hashed into a 32-bit space (about 4.3 × 10⁹ values).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected colliding pairs ≈ k²/(2M)?",
+     "answer": 1.1641532182693481,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "61-bit modulus or double hashing, and verify on match",
+      "smaller base",
+      "nothing"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Birthday bound."
+   ],
+   "solution": "<p>About 1.2 expected collisions, which is far from negligible. With 2⁶¹ it's about 4 × 10⁻⁹.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Longest duplicate",
+   "statement": "<p>s = \"banana\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Length of the longest repeated substring?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why binary search works?",
+     "options": [
+      "a repeated length-L substring implies a repeated length-(L − 1) one",
+      "hashes are sorted",
+      "it doesn't"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "\"ana\" occurs twice (overlapping)."
+   ],
+   "solution": "<p>3. The predicate is monotone.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Concatenation",
+   "statement": "<p>Find all occurrences of p in t with the Z-function.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Compute Z on…",
+     "options": [
+      "p + '#' + t, and report i where z[i] = |p|",
+      "t + p",
+      "t only"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The separator stops a match crossing over."
+   ],
+   "solution": "<p>z at position |p| + 1 + j equals |p| exactly when t[j:] starts with p.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Repetition test",
+   "statement": "<p>Is s a repetition of a smaller string?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Valid tests?",
+     "options": [
+      "s in (s + s)[1:−1]",
+      "n % (n − pi[n−1]) == 0 and pi[n−1] > 0",
+      "s == s[::-1]",
+      "len(set(s)) == 1"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    }
+   ],
+   "hints": [
+    "Rotation and period arguments."
+   ],
+   "solution": "<p>A non-trivial rotation equal to s means it's periodic. The palindrome and single-character tests are different properties.</p>"
+  }
+ ]
+}

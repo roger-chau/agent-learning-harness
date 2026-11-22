@@ -1,0 +1,254 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Basic counts",
+   "statement": "<p>Compute.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "C(10, 3)?",
+     "answer": 120,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Ways to put 5 identical balls in 3 distinct boxes?",
+     "answer": 21,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Arrangements of MISSISSIPPI?",
+     "answer": 34650,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Stars and bars C(n + k − 1, k − 1); multinomial."
+   ],
+   "solution": "<p>120; C(7, 2) = 21; 11!/(4!·4!·2!) = 34,650.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Lattice paths",
+   "statement": "<p>Right/down paths in a 3 × 7 grid (from corner to corner).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Paths?",
+     "answer": 28,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "In a 3 × 3 grid with the centre blocked?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "C(m + n − 2, m − 1)."
+   ],
+   "solution": "<p>C(8, 2) = 28; C(4, 2) − (paths through the centre = 2·2) = 6 − 4 = 2.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Modular inverse",
+   "statement": "<p>p = 10⁹+7 (prime).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "The inverse of a mod p is…",
+     "options": [
+      "a^(p − 2) mod p",
+      "1/a rounded",
+      "a^(p − 1) mod p"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "2⁻¹ mod 7?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "2 · 4 = 8 ≡ 1 (mod 7)."
+   ],
+   "solution": "<p>Fermat: a^(p−1) ≡ 1, so a^(p−2) is the inverse. For 2 mod 7 that's 4.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "nCr mod p",
+   "statement": "<p>Using factorial tables mod 10⁹+7.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "C(10, 3) mod p?",
+     "answer": 120,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why compute inv_fact backwards from inv_fact[N]?",
+     "options": [
+      "inv_fact[i − 1] = inv_fact[i] · i needs only one exponentiation",
+      "it's required by Fermat",
+      "for style"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "(i!)⁻¹ · i = ((i − 1)!)⁻¹."
+   ],
+   "solution": "<p>One O(log p) power, then O(N) multiplications.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Catalan",
+   "statement": "<p>Catalan numbers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "C₅?",
+     "answer": 42,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "multi",
+     "prompt": "Which does Catalan count?",
+     "options": [
+      "balanced parentheses with n pairs",
+      "BST shapes on n keys",
+      "subsets of n items",
+      "triangulations of an (n + 2)-gon"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "1, 1, 2, 5, 14, 42."
+   ],
+   "solution": "<p>C₅ = 42. Subsets are 2ⁿ.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Inclusion–exclusion",
+   "statement": "<p>Integers in [1, 100] divisible by 2 or 3 or 5.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Count?",
+     "answer": 74,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "50 + 33 + 20 − 16 − 10 − 6 + 3."
+   ],
+   "solution": "<p>74.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Derangements",
+   "statement": "<p>Permutations with no fixed point.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "D(4)?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "D(5)?",
+     "answer": 44,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "D(n)/n! for large n is about (to 3 decimals)?",
+     "answer": 0.368,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "D(n) = (n − 1)(D(n − 1) + D(n − 2))."
+   ],
+   "solution": "<p>9, 44 and 1/e ≈ 0.368.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "First bad event",
+   "statement": "<p>Paths in a 4 × 4 grid avoiding blocked cells (1, 1) and (2, 2).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why subtract by the FIRST block hit?",
+     "options": [
+      "each bad path is subtracted exactly once",
+      "it's faster",
+      "to avoid sorting"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Total 20; through (1, 1) first; through (2, 2) without (1, 1)."
+   ],
+   "solution": "<p>Total C(6, 3) = 20. ways[(1, 1)] = 2 → 2·C(4, 2) = 12 paths. ways[(2, 2)] = C(4, 2) − 2·C(2, 1) = 2 → 2·C(2, 1) = 4. 20 − 12 − 4 = 4.</p>"
+  }
+ ]
+}

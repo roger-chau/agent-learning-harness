@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A Fenwick tree needs the operation to be…",
+   "options": [
+    "invertible (for range queries)",
+    "commutative only",
+    "idempotent"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Segment tree lazy tags let range updates cost…",
+   "options": [
+    "O(log n)",
+    "O(n)",
+    "O(1)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Coordinate compression maps values to…",
+   "options": [
+    "ranks 1..m",
+    "hashes",
+    "bits"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "BIT prefix walk: i -=…",
+   "options": [
+    "i & −i",
+    "1",
+    "i // 2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Static range minimum with O(1) queries:",
+   "options": [
+    "sparse table",
+    "BIT",
+    "prefix sums"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

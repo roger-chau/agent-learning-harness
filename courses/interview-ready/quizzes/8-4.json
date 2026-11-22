@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Dividing mod a prime p means…",
+   "options": [
+    "multiplying by the modular inverse",
+    "integer division",
+    "it's impossible"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Stars and bars counts…",
+   "options": [
+    "identical items into distinct bins",
+    "distinct items into bins",
+    "permutations"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Catalan's closed form:",
+   "options": [
+    "C(2n, n)/(n + 1)",
+    "2ⁿ",
+    "n!"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Paths avoiding few blocks in a huge grid:",
+   "options": [
+    "binomials + inclusion–exclusion by first block",
+    "grid DP",
+    "BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Before trusting a formula…",
+   "options": [
+    "check it against brute force on tiny cases",
+    "submit",
+    "simplify it"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

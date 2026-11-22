@@ -1,0 +1,74 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"How many ways…", "count the arrangements…", an answer "modulo 10⁹+7", or a DP whose table would be astronomically large (a 10⁵ × 10⁵ grid, n up to 10¹⁸). Also any time the first few answers form a sequence you recognise. Combinatorics replaces enumeration and often replaces DP: a formula is O(1) per query.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: count structures, not sequences of steps</h2>
+<p>The toolbox, with the problems each one cracks:</p>
+<table>
+<tr><th>Tool</th><th>Formula</th><th>Typical use</th></tr>
+<tr><td>Binomial coefficient</td><td>C(n, k) = n! / (k!(n − k)!)</td><td>lattice paths, choosing positions, subsets of size k</td></tr>
+<tr><td>Stars and bars</td><td>C(n + k − 1, k − 1)</td><td>distribute n identical items into k bins; non-decreasing sequences</td></tr>
+<tr><td>Multinomial</td><td>n! / (a!·b!·…)</td><td>arrangements of a multiset (\"MISSISSIPPI\")</td></tr>
+<tr><td>Inclusion–exclusion</td><td>|A ∪ B| = |A| + |B| − |A ∩ B|</td><td>\"divisible by a or b\", avoiding forbidden cells, derangements</td></tr>
+<tr><td>Complement</td><td>total − bad</td><td>\"at least one\" questions</td></tr>
+<tr><td>Catalan</td><td>C(2n, n)/(n + 1)</td><td>parentheses, BST shapes, triangulations, Dyck paths</td></tr>
+<tr><td>Contribution</td><td>Σ over elements of (count of structures containing it)</td><td>sums over all subarrays or subsets</td></tr>
+</table>
+<p><strong>Modular arithmetic:</strong> + − × commute with mod. Division doesn't: divide by multiplying by the <strong>modular inverse</strong>. For a prime p, Fermat gives a⁻¹ = a^(p−2) mod p. Precompute factorials and inverse factorials once, and every C(n, k) is O(1).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>M = 10**9 + 7
+fact = [1] * (N + 1)
+for i in range(1, N + 1): fact[i] = fact[i - 1] * i % M
+inv_fact = [1] * (N + 1)
+inv_fact[N] = pow(fact[N], M - 2, M)              # Fermat inverse
+for i in range(N, 0, -1): inv_fact[i - 1] = inv_fact[i] * i % M
+def C(n, k):
+    return 0 if k &lt; 0 or k &gt; n else fact[n] * inv_fact[k] % M * inv_fact[n - k] % M</code></pre>
+<p>Habits: reduce after every multiplication (in C++, 64-bit products of two values below 10⁹+7 fit, but sums of several products may not). Write the formula in words first ("choose which r of the m + n − 2 moves go down"), and <strong>check it on a tiny case by brute force</strong> before trusting it.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: lattice paths around a few blocks</h2>
+<ol>
+<li><strong>Part 6 answer:</strong> the grid DP, O(mn). With m = n = 10⁵ that's 10¹⁰ cells. Impossible.</li>
+<li><strong>No blocks:</strong> a path is a sequence of (m − 1) downs and (n − 1) rights; choose the positions of the downs: C(m + n − 2, m − 1). O(1) after precomputation.</li>
+<li><strong>One block B:</strong> complement. All paths − paths through B = C(to B) · C(B to end).</li>
+<li><strong>Several blocks:</strong> subtracting each block's paths double-subtracts paths through two blocks. Organise by the <em>first</em> block a path hits. Sort the blocks; ways[i] = C(start → bᵢ) − Σ over earlier blocks j of ways[j] · C(bⱼ → bᵢ). Treat the target as a final block.</li>
+<li><strong>Cost:</strong> O(k²) for k blocks, plus the factorial table. Independent of the grid area.</li>
+<li><strong>Check:</strong> against the Part 6 DP on small random grids. (The judge's reference was verified exactly this way.)</li>
+</ol>
+<p>The move: <strong>when a DP table is too big but the obstacles are few, count freely and subtract by the first bad event</strong>. This "first bad event" decomposition also counts derangements and walks avoiding a boundary (the reflection principle).</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Dividing mod p with /</strong> is wrong: use inverses. Fermat needs p prime and a not ≡ 0.</li>
+<li><strong>Overcounting by symmetry:</strong> are the items or bins distinguishable? "Distribute 5 identical balls into 3 distinct boxes" (stars and bars: 21) is different from distinct balls (3⁵ = 243).</li>
+<li><strong>Sequences you should recognise:</strong> Catalan 1, 1, 2, 5, 14, 42; Fibonacci; Bell numbers 1, 1, 2, 5, 15, 52 (set partitions); derangements 1, 0, 1, 2, 9, 44.</li>
+<li><strong>Count sorted vowel strings</strong> of length n: stars and bars, C(n + 4, 4).</li>
+<li><strong>Derangements:</strong> D(n) = (n − 1)(D(n − 1) + D(n − 2)), and D(n)/n! → 1/e. A quant favourite.</li>
+<li><strong>The reflection principle:</strong> paths from (0, 0) to (n, n) that never cross the diagonal number C(2n, n) − C(2n, n + 1), which is Catalan again.</li>
+<li><strong>Big exact numbers in Python</strong> (<code>math.comb</code>) are fine for n in the thousands. Use the modular version when the problem says mod.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/unique-paths/" target="_blank" rel="noopener">62. Unique Paths</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">C(m + n − 2, m − 1) in O(min(m, n)).</span></li>
+<li><a href="https://leetcode.com/problems/unique-binary-search-trees/" target="_blank" rel="noopener">96. Unique Binary Search Trees</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Catalan.</span></li>
+<li><a href="https://leetcode.com/problems/count-sorted-vowel-strings/" target="_blank" rel="noopener">1641. Count Sorted Vowel Strings</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Stars and bars: C(n + 4, 4).</span></li>
+<li><a href="https://leetcode.com/problems/number-of-ways-to-reorder-array-to-get-same-bst/" target="_blank" rel="noopener">1569. Number of Ways to Reorder Array to Get Same BST</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Interleavings C(l + r, l) times subtrees, mod p.</span></li>
+<li><a href="https://leetcode.com/problems/sum-of-all-subset-xor-totals/" target="_blank" rel="noopener">1863. Sum of All Subset XOR Totals</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">Contribution: each set bit appears in 2ⁿ⁻¹ subsets.</span></li>
+<li><a href="https://leetcode.com/problems/number-of-ways-to-reach-a-position-after-exactly-k-steps/" target="_blank" rel="noopener">2400. Number of Ways to Reach a Position After Exactly k Steps</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Choose the number of right steps: one binomial.</span></li>
+<li><a href="https://leetcode.com/problems/count-ways-to-make-array-with-product/" target="_blank" rel="noopener">1735. Count Ways to Make Array With Product</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Factorise; stars and bars per prime.</span></li>
+<li><a href="https://leetcode.com/problems/number-of-music-playlists/" target="_blank" rel="noopener">920. Number of Music Playlists</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">DP or inclusion–exclusion over unused songs.</span></li>
+</ol>
+</section>

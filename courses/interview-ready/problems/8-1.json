@@ -1,0 +1,262 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Which structure?",
+   "statement": "<p>Pick the simplest structure that works.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Static array, 10⁵ range-sum queries:",
+     "options": [
+      "prefix sums",
+      "segment tree",
+      "BIT"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Point updates + range sums:",
+     "options": [
+      "Fenwick tree",
+      "prefix sums",
+      "sparse table"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Range add + range min:",
+     "options": [
+      "segment tree with lazy tags",
+      "Fenwick tree",
+      "prefix sums"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Static or dynamic? Invertible operation?"
+   ],
+   "solution": "<p>Use prefix sums when nothing changes; a BIT for invertible sums with updates; a segment tree for min/max and range updates.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Lowest bit",
+   "statement": "<p>Fenwick index arithmetic.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "12 & −12?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Next index after 12 in an update walk (12 + lowbit)?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Next index after 12 in a prefix walk (12 − lowbit)?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "12 = 1100₂."
+   ],
+   "solution": "<p>lowbit(12) = 4: an update goes 12 → 16, a prefix query 12 → 8 → 0.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Count smaller",
+   "statement": "<p>nums = [5, 2, 6, 1].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Answer?",
+     "options": [
+      "[2, 1, 1, 0]",
+      "[3, 1, 1, 0]",
+      "[1, 1, 1, 0]"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why scan from the right?",
+     "options": [
+      "\"after me\" becomes \"already inserted\"",
+      "it's faster",
+      "sorting"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "5 has 2 and 1 after it."
+   ],
+   "solution": "<p>[2, 1, 1, 0].</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Compression",
+   "statement": "<p>Values [1000000000, −7, 42, 42, 3].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of distinct ranks?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Rank of 42 (1-based, ascending)?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Sorted distinct: −7, 3, 42, 10⁹."
+   ],
+   "solution": "<p>Four ranks; 42 → 3.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Costs",
+   "statement": "<p>n = q = 10⁵.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Naive (O(n) per query) total, about q·n/2 (billions)?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "BIT total, about (n + q)·log₂ n (millions, log ≈ 17)?",
+     "answer": 3.4,
+     "unit": "",
+     "tolerance": "10%"
+    }
+   ],
+   "hints": [
+    "5 × 10⁹ vs 3.4 × 10⁶."
+   ],
+   "solution": "<p>A factor of about 1,500.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Segment tree size",
+   "statement": "<p>An iterative segment tree for n = 100,000.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Next power of two?",
+     "answer": 131072,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Array length 2·size?",
+     "answer": 262144,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "2¹⁷."
+   ],
+   "solution": "<p>Leaves at [size, 2·size).</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Lazy tags",
+   "statement": "<p>Why can't a Fenwick tree do range-add with range-min?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "min has no inverse, so prefix(r) − prefix(l − 1) doesn't work",
+      "Fenwick is too slow",
+      "It can"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Range from prefixes requires subtraction."
+   ],
+   "solution": "<p>Sums are invertible and mins aren't, so min queries need a segment tree.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Inversions",
+   "statement": "<p>Count the pairs i &lt; j with a[i] &gt; a[j] in [3, 1, 2, 5, 4].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Inversions?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "multi",
+     "prompt": "O(n log n) methods?",
+     "options": [
+      "merge sort counting",
+      "BIT over ranks",
+      "nested loops",
+      "binary search on a sorted list with insort in Python (O(n²) worst case)"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    }
+   ],
+   "hints": [
+    "(3, 1), (3, 2), (5, 4)."
+   ],
+   "solution": "<p>3 inversions. insort is O(n) per insertion because of list shifting.</p>"
+  }
+ ]
+}

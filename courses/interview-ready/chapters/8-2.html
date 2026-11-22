@@ -1,0 +1,70 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>String problems where the naive approach compares substrings repeatedly: find a pattern (or many), periodicity ("is s a repetition of a smaller string?"), the longest prefix that is also a suffix, palindromic prefixes, the longest repeated or common substring, counting distinct substrings. When n reaches 10⁵ and the naive cost is O(n·m) or O(n²·L), you need a linear-time string tool.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: reuse what you've already matched</h2>
+<p><strong>Prefix function (KMP):</strong> pi[i] = the length of the longest proper prefix of s[:i+1] that is also a suffix of it (its longest <em>border</em>). On a mismatch after matching k characters, jump to k = pi[k − 1] instead of restarting. You never re-read text characters, so matching costs O(n + m).</p>
+<p><strong>Z-function:</strong> z[i] = the length of the longest common prefix of s and s[i:]. It's the same information, organised differently, and computed in O(n) with a moving window [l, r).</p>
+<p><strong>Rolling hash (Rabin–Karp):</strong> hash every length-L window in O(1) each by sliding: h' = (h − c_out·Bᴸ⁻¹)·B + c_in. Equality of substrings becomes equality of numbers (modulo collisions), and pairs with binary search over L for "longest repeated substring".</p>
+<p><strong>The concatenation trick:</strong> run the prefix function or Z-function on <code>pattern + '#' + text</code> or <code>s + '#' + reverse(s)</code>. The separator stops matches crossing the boundary, and the answer becomes a value in the array.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>def prefix_function(s):
+    pi = [0] * len(s); k = 0                 # invariant: k = pi[i - 1] at the top of each iteration
+    for i in range(1, len(s)):
+        while k and s[i] != s[k]: k = pi[k - 1]   # fall back to the next shorter border
+        if s[i] == s[k]: k += 1
+        pi[i] = k
+    return pi
+
+# Rolling hash of all windows of length L
+h = 0; p = pow(B, L, M)
+for i, c in enumerate(s):
+    h = (h * B + ord(c)) % M
+    if i &gt;= L: h = (h - ord(s[i - L]) * p) % M
+    if i &gt;= L - 1: use(h, i - L + 1)</code></pre>
+<p><strong>Period of a string:</strong> the smallest period is n − pi[n − 1]; s is a repetition of a smaller block iff that period divides n (and is less than n).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: shortest palindrome</h2>
+<ol>
+<li><strong>Restate:</strong> add characters only to the front. If s = P + rest where P is a palindrome, the answer is reverse(rest) + s. So <strong>maximise the palindromic prefix P</strong>.</li>
+<li><strong>Brute force:</strong> test each prefix for being a palindrome, longest first: O(n²). For "aaaa…ab…" inputs that's the worst case, 10⁹ at n = 4 × 10⁴.</li>
+<li><strong>Translate the condition:</strong> P is a palindrome ⇔ P = reverse(P) ⇔ P (a prefix of s) equals a suffix of reverse(s).</li>
+<li><strong>"A prefix equal to a suffix" is a border.</strong> Compute the prefix function of t = s + '#' + reverse(s); pi[last] is the longest prefix of s that is also a suffix of reverse(s), which is exactly |P|. The '#' stops it exceeding |s|.</li>
+<li><strong>Answer:</strong> reverse(s[pi[-1]:]) + s. O(n).</li>
+</ol>
+<p>The move: <strong>rewrite the condition until it matches the definition of a tool you know</strong>, here "prefix that is also a suffix" = border = prefix function.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Hash collisions:</strong> with a 32-bit modulus and 10⁵ windows, the birthday bound makes collisions likely. Use a 61-bit Mersenne modulus or two moduli, and verify on equal hashes when correctness matters. Adversarial tests can target overflowing 64-bit hashing with a fixed base, so randomise the base.</li>
+<li><strong>Python's built-ins</strong> (<code>in</code>, <code>find</code>) are fast C loops; use them in practice and say so, but know the algorithm.</li>
+<li><strong>Repeated substring pattern:</strong> s is a repetition iff s is found in (s + s)[1:−1], or via the period from pi.</li>
+<li><strong>Many patterns:</strong> Aho–Corasick is KMP on a trie (Part 3's Word Search II with failure links). Know that it exists.</li>
+<li><strong>Longest palindromic substring:</strong> expand around centres in O(n²) is the expected answer; Manacher's algorithm is O(n).</li>
+<li><strong>Suffix arrays and automata</strong> solve distinct substrings and longest common substring in O(n log n) or O(n). They're rare in interviews but common at quant online assessments with string-heavy problems.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/" target="_blank" rel="noopener">28. Find the Index of the First Occurrence in a String</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Write KMP once.</span></li>
+<li><a href="https://leetcode.com/problems/repeated-substring-pattern/" target="_blank" rel="noopener">459. Repeated Substring Pattern</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">Period n − pi[n − 1], or (s + s)[1:−1].</span></li>
+<li><a href="https://leetcode.com/problems/shortest-palindrome/" target="_blank" rel="noopener">214. Shortest Palindrome</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Prefix function on s#reverse(s).</span></li>
+<li><a href="https://leetcode.com/problems/longest-happy-prefix/" target="_blank" rel="noopener">1392. Longest Happy Prefix</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">It's literally pi[n − 1].</span></li>
+<li><a href="https://leetcode.com/problems/longest-duplicate-substring/" target="_blank" rel="noopener">1044. Longest Duplicate Substring</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Binary search + rolling hash.</span></li>
+<li><a href="https://leetcode.com/problems/repeated-string-match/" target="_blank" rel="noopener">686. Repeated String Match</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Bound the repetitions, then one search.</span></li>
+<li><a href="https://leetcode.com/problems/longest-palindromic-substring/" target="_blank" rel="noopener">5. Longest Palindromic Substring</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Expand around centres; Manacher for O(n).</span></li>
+<li><a href="https://leetcode.com/problems/distinct-echo-substrings/" target="_blank" rel="noopener">1316. Distinct Echo Substrings</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Rolling hash for O(1) substring equality.</span></li>
+</ol>
+</section>

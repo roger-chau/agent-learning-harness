@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Repeated squaring computes aⁿ in…",
+   "options": [
+    "O(log n) multiplications",
+    "O(n)",
+    "O(√n)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "A linear recurrence of order k for huge n:",
+   "options": [
+    "k × k matrix power",
+    "DP to n",
+    "a closed form only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "lcm(a, b) =",
+   "options": [
+    "a / gcd(a, b) · b",
+    "a · b",
+    "gcd(a, b)²"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Sieve complexity:",
+   "options": [
+    "O(n log log n)",
+    "O(n²)",
+    "O(n √n)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "\"k-th number with property P\" often becomes…",
+   "options": [
+    "count ≤ x + binary search",
+    "a heap",
+    "DP"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

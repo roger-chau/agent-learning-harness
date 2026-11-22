@@ -1,0 +1,113 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Point updates and range sums, 10⁵ each:",
+   "options": [
+    "Fenwick tree",
+    "prefix sums",
+    "sorting"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Range add and range min:",
+   "options": [
+    "segment tree with lazy tags",
+    "BIT",
+    "sparse table"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Find a pattern in O(n + m):",
+   "options": [
+    "KMP / Z-function",
+    "nested loops",
+    "sorting"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Longest repeated substring:",
+   "options": [
+    "binary search + rolling hash",
+    "KMP once",
+    "greedy"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Every number thrice except one, O(1) space:",
+   "options": [
+    "bit counts mod 3",
+    "hash map",
+    "sort"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "C(n, k) mod p for many queries:",
+   "options": [
+    "factorials + inverse factorials",
+    "Pascal's triangle to 10⁶",
+    "floating point"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "F(10¹⁸) mod p:",
+   "options": [
+    "matrix exponentiation",
+    "DP to n",
+    "Binet's formula in floats"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Paths in a 10⁵ × 10⁵ grid with 100 blocks:",
+   "options": [
+    "binomials + inclusion–exclusion",
+    "grid DP",
+    "BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q9",
+   "type": "single",
+   "prompt": "Number of BST shapes on n keys:",
+   "options": [
+    "Catalan",
+    "2ⁿ",
+    "n!"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "x & −x gives…",
+   "options": [
+    "the lowest set bit",
+    "the highest set bit",
+    "x"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "x & (x − 1) == 0 (x > 0) tests…",
+   "options": [
+    "power of two",
+    "even",
+    "prime"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Prefix XOR works because…",
+   "options": [
+    "XOR is its own inverse",
+    "XOR is monotone",
+    "XOR is commutative only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Every element thrice except one:",
+   "options": [
+    "count bits mod 3",
+    "XOR all",
+    "sort only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Total Hamming distance per bit:",
+   "options": [
+    "c · (n − c)",
+    "c",
+    "n²"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

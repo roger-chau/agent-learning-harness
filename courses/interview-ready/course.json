@@ -1271,9 +1271,193 @@
     {
      "type": "chapter",
      "id": "8-1",
-     "title": "Advanced data structures and algorithms",
-     "summary": "Segment and Fenwick trees; strings (KMP, Z, rolling hash); bit manipulation; and maths that replaces algorithms: counting and combinatorics, modular arithmetic, fast exponentiation and matrix powers, number theory.",
-     "status": "planned"
+     "title": "Range queries: Fenwick and segment trees",
+     "summary": "O(log n) updates and queries over ranges; coordinate compression.",
+     "coding": [
+      "range-sum-updates",
+      "count-smaller-after-self",
+      "range-add-range-min"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "updates + range queries"
+      ],
+      [
+       "The core idea",
+       "power-of-two blocks"
+      ],
+      [
+       "The invariant and template",
+       "BIT, iterative segment tree"
+      ],
+      [
+       "A thinking trace",
+       "count smaller after self"
+      ],
+      [
+       "Traps and variations",
+       "indexing, lazy, offline"
+      ],
+      [
+       "Practice on LeetCode",
+       "7 problems"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "8-2",
+     "title": "String algorithms",
+     "summary": "Prefix function, Z-function, rolling hashes and the concatenation trick.",
+     "coding": [
+      "kmp-find",
+      "shortest-palindrome",
+      "longest-duplicate-substring"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "repeated substring comparisons"
+      ],
+      [
+       "The core idea",
+       "borders and hashes"
+      ],
+      [
+       "The invariant and template",
+       "pi, rolling hash, period"
+      ],
+      [
+       "A thinking trace",
+       "shortest palindrome"
+      ],
+      [
+       "Traps and variations",
+       "collisions, built-ins"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "8-3",
+     "title": "Bit manipulation",
+     "summary": "Think per bit: XOR as addition mod 2, counters mod k, lowest-bit tricks.",
+     "coding": [
+      "single-number-ii",
+      "counting-bits",
+      "subarray-xor-k"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "O(1) space, XOR, masks"
+      ],
+      [
+       "The core idea",
+       "per-bit arithmetic"
+      ],
+      [
+       "The invariant and template",
+       "the identity table"
+      ],
+      [
+       "A thinking trace",
+       "single number II"
+      ],
+      [
+       "Traps and variations",
+       "precedence, signs"
+      ],
+      [
+       "Practice on LeetCode",
+       "10 problems"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "8-4",
+     "title": "Counting and combinatorics",
+     "summary": "Binomials, stars and bars, inclusion–exclusion, Catalan, modular inverses: formulas that replace DP.",
+     "coding": [
+      "ncr-mod",
+      "grid-paths-blocked",
+      "unique-bsts"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "how many ways, mod p"
+      ],
+      [
+       "The core idea",
+       "the counting toolbox"
+      ],
+      [
+       "The invariant and template",
+       "factorials and inverses"
+      ],
+      [
+       "A thinking trace",
+       "paths around blocks"
+      ],
+      [
+       "Traps and variations",
+       "symmetry, sequences, reflection"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "8-5",
+     "title": "Fast exponentiation and number theory",
+     "summary": "Repeated squaring, matrix powers for recurrences, gcd, sieves, counting with inclusion–exclusion.",
+     "coding": [
+      "fibonacci-huge",
+      "count-primes",
+      "nth-magical-number"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "n up to 10¹⁸"
+      ],
+      [
+       "The core idea",
+       "squaring halves the exponent"
+      ],
+      [
+       "The invariant and template",
+       "power, gcd, sieve"
+      ],
+      [
+       "A thinking trace",
+       "n-th magical number"
+      ],
+      [
+       "Traps and variations",
+       "overflow, inverses, cycles"
+      ],
+      [
+       "Practice on LeetCode",
+       "9 problems"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p8-checkpoint",
+     "title": "Part 8 checkpoint",
+     "summary": "Advanced structures, strings, bits and maths: recognise the tool."
     }
    ]
   },

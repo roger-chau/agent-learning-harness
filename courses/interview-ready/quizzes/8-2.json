@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "pi[i] is…",
+   "options": [
+    "the longest proper prefix of s[:i+1] that is also its suffix",
+    "the count of matches",
+    "the next index"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "KMP's complexity:",
+   "options": [
+    "O(n + m)",
+    "O(nm)",
+    "O(n log m)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Rolling hash makes each window's hash…",
+   "options": [
+    "O(1) from the previous one",
+    "O(L)",
+    "O(log L)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "The separator '#' in s + '#' + t…",
+   "options": [
+    "stops matches crossing the boundary",
+    "speeds up hashing",
+    "is decoration"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Longest repeated substring:",
+   "options": [
+    "binary search on length + rolling hash",
+    "KMP once",
+    "DP over pairs only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

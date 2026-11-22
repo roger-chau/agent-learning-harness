@@ -1,0 +1,73 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Exponents or indices up to 10¹⁸ ("the n-th term", "after n steps", "aⁿ mod m"); divisibility, primes, gcd and lcm; "multiples of a or b"; periodic behaviour; huge counts mod a prime. If a loop would run n = 10¹⁸ times, the intended solution is O(log n) via <strong>repeated squaring</strong>, or O(1) via a formula.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: squaring halves the exponent</h2>
+<p>aⁿ = (a^(n/2))² for even n, and a · a^(n−1) for odd n. So read n in binary, squaring the base at each bit and multiplying it into the result when the bit is 1. That's O(log n) multiplications. It works for anything with an associative multiplication: numbers mod m, <strong>matrices</strong>, permutations, even function composition.</p>
+<p><strong>Linear recurrences become matrix powers.</strong> If the state vector vₜ₊₁ = A·vₜ (Fibonacci: [[1, 1], [1, 0]]), then vₙ = Aⁿ·v₀, computed in O(k³ log n) for a k × k matrix. Counting paths of length n in a graph is the adjacency matrix to the n-th power.</p>
+<p><strong>Number theory essentials:</strong> Euclid's gcd(a, b) = gcd(b, a mod b) in O(log); lcm = a / gcd · b (divide first to avoid overflow); the sieve of Eratosthenes for all primes up to n in O(n log log n); trial division up to √n for one number's factors; Fermat inverses for primes.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>def power(a, n, mod):          # invariant: result · a^n = original a^n
+    result = 1; a %= mod
+    while n:
+        if n &amp; 1: result = result * a % mod
+        a = a * a % mod
+        n &gt;&gt;= 1
+    return result
+# Python: pow(a, n, mod) is built in, and pow(a, -1, mod) gives an inverse (3.8+).
+
+def gcd(a, b):
+    while b: a, b = b, a % b
+    return a
+
+def sieve(n):                  # is_prime[0..n-1]
+    s = bytearray([1]) * n; s[0:2] = b"\x00\x00"
+    for i in range(2, int(n**0.5) + 1):
+        if s[i]: s[i*i::i] = bytearray(len(range(i*i, n, i)))
+    return s</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: the n-th magical number</h2>
+<ol>
+<li><strong>Brute force:</strong> walk the multiples of a and b in merged order, n steps. With n = 10⁹ that's too slow.</li>
+<li><strong>Change the question</strong> from "what is the n-th?" to "how many are ≤ x?" That count is easy: multiples of a, plus multiples of b, minus the double-counted multiples of both, which are the multiples of lcm(a, b) (inclusion–exclusion).</li>
+<li><strong>Monotone count, so binary search</strong> the smallest x with count(x) ≥ n. The range is [1, n·min(a, b)], about 60 iterations.</li>
+<li><strong>lcm:</strong> a·b / gcd(a, b), with gcd by Euclid.</li>
+<li><strong>Modulus at the end only:</strong> reducing x mod 10⁹+7 inside the search would break the comparisons.</li>
+</ol>
+<p>The move, again: <strong>"find the k-th" becomes "count ≤ x" plus binary search</strong> (Part 2), and the counting step is where the maths goes.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Overflow in C++:</strong> a·b with both near 10⁹ needs 64 bits; with a 64-bit modulus use __int128 or mulmod.</li>
+<li><strong>pow(x, n) for real x with negative n:</strong> invert the base, and careful with n = INT_MIN in C++ (−n overflows).</li>
+<li><strong>Fermat inverse needs a prime modulus.</strong> Otherwise use the extended Euclidean algorithm (it exists iff gcd(a, m) = 1).</li>
+<li><strong>Cycle detection</strong> instead of matrix power: sequences like xₙ₊₁ = f(xₙ) mod m eventually repeat (Floyd from Part 3), so find the cycle and index into it.</li>
+<li><strong>Super pow</strong> (a^(huge exponent given as digits)): use a^(10q + r) = (a^q)^10 · a^r recursively.</li>
+<li><strong>Quant connection:</strong> Markov chain n-step probabilities are matrix powers, and the stationary distribution is the long-run limit (Part 14).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/powx-n/" target="_blank" rel="noopener">50. Pow(x, n)</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Repeated squaring; negative n.</span></li>
+<li><a href="https://leetcode.com/problems/super-pow/" target="_blank" rel="noopener">372. Super Pow</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Exponent as digits: a^(10q + r).</span></li>
+<li><a href="https://leetcode.com/problems/fibonacci-number/" target="_blank" rel="noopener">509. Fibonacci Number</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Then do it for n = 10¹⁸ with matrices.</span></li>
+<li><a href="https://leetcode.com/problems/count-primes/" target="_blank" rel="noopener">204. Count Primes</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Sieve from p².</span></li>
+<li><a href="https://leetcode.com/problems/nth-magical-number/" target="_blank" rel="noopener">878. Nth Magical Number</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Count ≤ x by inclusion–exclusion, binary search.</span></li>
+<li><a href="https://leetcode.com/problems/ugly-number-iii/" target="_blank" rel="noopener">1201. Ugly Number III</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Three-way inclusion–exclusion.</span></li>
+<li><a href="https://leetcode.com/problems/greatest-common-divisor-of-strings/" target="_blank" rel="noopener">1071. Greatest Common Divisor of Strings</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">gcd of the lengths, if s + t == t + s.</span></li>
+<li><a href="https://leetcode.com/problems/n-th-tribonacci-number/" target="_blank" rel="noopener">1137. N-th Tribonacci Number</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">A 3 × 3 matrix power for huge n.</span></li>
+<li><a href="https://leetcode.com/problems/count-vowels-permutation/" target="_blank" rel="noopener">1220. Count Vowels Permutation</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">A 5-state linear recurrence: DP or matrix power.</span></li>
+</ol>
+</section>
