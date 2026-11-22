@@ -42,3 +42,34 @@
 <li>The PP-triton project builds a tiny compiler that generates fused, tiled kernels and autotunes their parameters.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: deriving the tiled GEMM as a sequence of transformations</h3>
+<p><strong>Start:</strong> <code>for i, for j, for k: C[i][j] += A[i][k]·B[k][j]</code>.</p>
+<ol>
+<li><strong>Tile i and j</strong> by 64 (strip-mine and interchange): <code>for ii, for jj, for i in tile, for j in tile, for k</code>. Legal: the only dependence is the reduction over k, carried by the innermost loop.</li>
+<li><strong>Interchange k outward</strong> within the tile: <code>for ii, jj, for k, for i, for j</code>. Legal because + is treated as associative for the reduction (the compiler needs permission for floats; libraries take it).</li>
+<li><strong>Tile k</strong> by 16 and stage A[ii][kk] and B[kk][jj] in shared memory: the loads hoist out of the i, j loops.</li>
+<li><strong>Map</strong> ii, jj to blocks and the inner i, j to threads, then <strong>unroll</strong> each thread's sub-tile into registers.</li>
+</ol>
+<p>Every step of Part 4 is one of the classic transformations. A compiler like Triton or a polyhedral tool performs them automatically once the dependences are known; the hard part is choosing tile sizes, which is a cost-model (or search) problem.</p>
+
+<h3>Example 2: fusing softmax into a matmul epilogue</h3>
+<p><strong>Unfused:</strong> GEMM writes S (n × n), softmax reads S and writes P. Traffic: write S, read S, write P: $3 \times 4n^2$ bytes beyond the GEMM's inputs.</p>
+<p><strong>Fused epilogue:</strong> each GEMM block, holding a tile of S in registers, computes the tile's row maxima and exponentials before writing. But softmax needs a <em>full row's</em> max and sum, and a block holds only part of a row: the fusion is only legal across the whole row. Either one block owns entire rows (possible when n is small), or the kernel keeps running max and sum per row and rescales: the online softmax, which turns this into FlashAttention (Part 8). Fusion legality comes down to which data a block can see.</p>
+
+<h3>Example 3: proving an interchange illegal, then fixing it</h3>
+<p><strong>Loop:</strong> <code>for i in 1..n: for j in 0..n−2: a[i][j] = a[i−1][j+1] + a[i][j]</code>. Distance vector (1, −1).</p>
+<p><strong>Interchange</strong> gives (−1, 1): illegal, as Problem 8 showed. <strong>Skew</strong> j by i: $j' = j + i$. Now the dependence from $(i-1, j+1)$ to $(i, j)$ has $j'$ distance $(j + i) - (j + 1 + i - 1) = 0$: vector (1, 0). Interchanging gives (0, 1): legal. After skewing, all iterations on the same wavefront (an anti-diagonal of the original loop) are independent and can run in parallel. This is the classic wavefront parallelisation of stencils and dynamic programming, and the reason GPU dynamic-programming kernels (sequence alignment, for instance) sweep anti-diagonals.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> P. Tillet, H. T. Kung, D. Cox, "Triton: An Intermediate Language and Compiler for Tiled Neural Network Computations", MAPL 2019 (this Part's paper chapter).</li>
+<li><strong>Required:</strong> M. Wolf, M. Lam, "A Data Locality Optimizing Algorithm", PLDI 1991: tiling, interchange and skewing by distance vectors.</li>
+<li><strong>Optional:</strong> J. Ragan-Kelley et al., "Halide: A Language and Compiler for Optimizing Parallelism, Locality, and Recomputation in Image Processing Pipelines", PLDI 2013.</li>
+<li><strong>Optional:</strong> R. Allen, K. Kennedy, <em>Optimizing Compilers for Modern Architectures</em> (2001), Chapters 2–5 and 8.</li>
+</ul>
+</section>

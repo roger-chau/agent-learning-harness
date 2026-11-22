@@ -46,3 +46,29 @@
 <li>C5 asks you to do the compiler's job by hand in GWX: allocate, schedule, unroll and pipeline a GEMM inner loop.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: list scheduling by hand</h3>
+<p><strong>Block:</strong> 1: ld a (400). 2: ld b (400). 3: x = a·2 (4). 4: y = b + x (4). 5: p = 7·3 (4). 6: q = p + 1 (4). Dependences: 1 → 3, 3 → 4, 2 → 4, 5 → 6.</p>
+<p><strong>Priorities</strong> (longest latency path to the end): 1: 400 + 4 + 4 = 408; 2: 400 + 4 = 404; 3: 8; 4: 4; 5: 8; 6: 4.</p>
+<p><strong>Schedule</strong> (one issue per cycle): cycle 0: 1 (highest ready); cycle 1: 2; cycle 2: 5; cycle 6: 6 (5's result ready at 6); cycle 400: 3 (a ready); cycle 404: 4 (x ready at 404, b at 401). Done at 408: the critical path. In the written order 1–6, instructions 5 and 6 would queue behind the stalled 3 and 4 and finish at about 413: a small loss, because both loads already come first. Had the source said <code>ld a; x = a·2; ld b; …</code>, in-order issue would start the second load only at cycle 401 and the block would take about 810. Priorities put long-latency loads first, whatever order the source used.</p>
+
+<h3>Example 2: unroll and schedule a streaming loop</h3>
+<p><strong>Loop:</strong> <code>s += x[i] * w</code>, one warp, global latency 400, 4 instructions per iteration.</p>
+<p><strong>Rolled:</strong> each iteration waits for its load: about 404 cycles per element.</p>
+<p><strong>Unrolled 8×, loads hoisted:</strong> 8 loads issue back to back, then 8 FMAs. About 400 + 8·4 cycles per 8 elements ≈ 54 per element: 7.5×. But all 8 FMAs update the same <code>s</code>: a 4-cycle dependent chain, 32 cycles. With 4 accumulators that falls to about 11, and the time per 8 elements is ≈ 400 + 16, ≈ 52 per element. The load latency now dominates, which only more loads in flight (unroll further, or more warps) can fix.</p>
+
+<h3>Example 3: scheduling versus register pressure, quantified</h3>
+<p><strong>Setup.</strong> Hoisting k loads ahead of their uses needs k destination registers live at once. A kernel at 60 registers with 256-thread blocks sits at 4 blocks (50% occupancy on a 65,536-register SM). Hoisting 8 more loads adds 8 registers: 68, which drops to 3 blocks (37.5%).</p>
+<p><strong>Is it worth it?</strong> Per warp, 8 loads in flight instead of 1; total in flight goes from 32 warps × 1 to 24 warps × 8: 6× more memory parallelism for 25% fewer warps. Yes, by a wide margin, for a latency-bound loop. For a compute-bound one, the lost warps could cost more than the latency hidden. The scheduler and the allocator negotiate over exactly this, and ptxas's heuristics don't always pick your answer: that's why <code>__launch_bounds__</code> and manual unrolling exist.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> K. Cooper, L. Torczon, <em>Engineering a Compiler</em> (3rd ed.), Chapter 12 (instruction scheduling: list scheduling, priorities, regional scheduling).</li>
+<li><strong>Required:</strong> M. Lam, "Software Pipelining: An Effective Scheduling Technique for VLIW Machines", PLDI 1988.</li>
+<li><strong>Optional:</strong> J. Hennessy, D. Patterson (7th ed.), Chapter 3, sections on static scheduling and loop unrolling.</li>
+</ul>
+</section>

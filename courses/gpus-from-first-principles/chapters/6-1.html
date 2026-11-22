@@ -48,3 +48,32 @@ loop:
 <li>FMA contraction changes rounding. <code>nvcc</code> fuses by default (<code>--fmad=true</code>), which is why GPU and CPU results can differ in the last bits.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: following one line through the toolchain</h3>
+<p><strong>Source:</strong> <code>y[i] = a * x[i] + y[i];</code> inside <code>if (i &lt; n)</code>.</p>
+<p><strong>NVVM IR (LLVM):</strong> a <code>getelementptr</code> for each address, two <code>load float</code>s from <code>addrspace(1)</code> (global), <code>fmul</code> and <code>fadd</code> marked <code>contract</code> (allowed to fuse), a <code>store</code>. The bounds check is an <code>icmp</code> and a conditional branch.</p>
+<p><strong>PTX:</strong> the contract flags became one <code>fma.rn.f32</code>; addresses are explicit 64-bit adds (<code>mul.wide.s32</code> then <code>add.s64</code>); loads are <code>ld.global.f32</code>.</p>
+<p><strong>SASS:</strong> parameters read straight from the constant bank as operands; the index widened with one IMAD.WIDE per array; two LDG.E, one FFMA, one STG.E; the branch replaced by <code>@P0 EXIT</code>.</p>
+<p><strong>What you learn:</strong> the FMA contraction happened in the middle end (visible in PTX), the predication in ptxas (visible only in SASS). To know who to blame or thank, look at the stage where something first appears.</p>
+
+<h3>Example 2: estimating a kernel from its GWX listing</h3>
+<p><strong>Listing</strong> (per warp, per iteration): 2 × ld.global, 6 × ALU address/loop instructions, 4 × fma, 1 × st.global, 1 × branch: 14 instructions; the first FMA depends on both loads.</p>
+<p><strong>One warp:</strong> loads issue in cycles 0–1, the dependent FMA can't start before cycle 401: each iteration ≈ 410 cycles, of which 14 issue: 3.4% utilisation.</p>
+<p><strong>To fill the SM's single issue slot</strong> you need about 410/14 ≈ 30 warps, or fewer warps with several iterations' loads in flight each. The listing alone predicts the occupancy/ILP requirement; the GWX model then confirms it in cycles and stall reasons.</p>
+
+<h3>Example 3: forward compatibility, decided at build time</h3>
+<p><strong>Build:</strong> <code>-gencode arch=compute_75,code=sm_75 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_86,code=compute_86</code>.</p>
+<p><strong>On an RTX 2060 (sm_75):</strong> runs the sm_75 SASS. <strong>On an RTX 3090 (sm_86):</strong> runs the sm_86 SASS. <strong>On an RTX 4090 (sm_89):</strong> no matching SASS; the driver JIT-compiles the compute_86 PTX (first run is slower; the result is cached). <strong>Without the last flag,</strong> an sm_89 GPU would fail to load the kernel. Shipping the newest PTX you can is cheap insurance.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA Compiler Driver NVCC</em> documentation: the compilation trajectory, virtual and real architectures, <code>-gencode</code>.</li>
+<li><strong>Required:</strong> NVIDIA, <em>Parallel Thread Execution ISA</em>, chapters 1–5 (programming model, state spaces, types).</li>
+<li><strong>Optional:</strong> LLVM documentation, "User Guide for NVPTX Back-end".</li>
+<li><strong>Optional:</strong> K. Cooper, L. Torczon, <em>Engineering a Compiler</em> (3rd ed.), Chapters 1 and 4 (compiler structure, intermediate representations).</li>
+</ul>
+</section>

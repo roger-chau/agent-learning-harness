@@ -42,3 +42,31 @@
 <li>Kernels that use 255 registers aren't wrong: GEMMs often do, deliberately, at low occupancy.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: linear scan on a small block</h3>
+<p><strong>Code</strong> (index: definition): 0: a = ld; 1: b = ld; 2: c = a·b; 3: d = a + 1; 4: e = c + d; 5: f = b·2; 6: g = e + f.</p>
+<p><strong>Live intervals</strong> (from definition to last use): a [0, 3], b [1, 5], c [2, 4], d [3, 4], e [4, 6], f [5, 6], g [6, 6].</p>
+<p><strong>Scan in order of start, with registers R0–R3:</strong> a → R0; b → R1; c → R2; at 3, a ends (after its use), so d reuses R0; at 4, c and d end: e → R2; at 5, b ends: f → R1; g → R0. Maximum in use at once: 3 (at index 3: b, c and d, with a just dying). Three registers for seven values.</p>
+<p><strong>The convention matters:</strong> whether a register freed by a value's last use can be the destination of the same instruction (it can on GPUs: <code>FADD R0, R0, R1</code>) changes the count by one. Allocators exploit it.</p>
+
+<h3>Example 2: the occupancy cliff, from the compiler's side</h3>
+<p><strong>Situation.</strong> A kernel uses 66 registers with 256-thread blocks on a 65,536-register SM: 2,304 per warp (rounded to 256), 28 warps, 3 blocks: 37.5%.</p>
+<p><strong>At 64 registers:</strong> 2,048 per warp, 32 warps, 4 blocks: 50%.</p>
+<p><strong>The decision:</strong> <code>__launch_bounds__(256, 4)</code> forces ≤ 64. The compiler must free 2 registers: by rematerialising an address (free-ish) and maybe spilling one rarely used value. If <code>-Xptxas -v</code> then shows 0 spills, it's almost certainly a win for a latency-bound kernel; if it shows spills in the hot loop, measure before keeping it. Two registers decided a third more warps.</p>
+
+<h3>Example 3: why accumulators must be compile-time indexed</h3>
+<p><strong>Code:</strong> <code>float acc[8]; for (int r = 0; r &lt; R; r++) acc[r] += …;</code> with R a kernel argument.</p>
+<p><strong>Problem:</strong> registers can't be indexed by a runtime value, so <code>acc</code> goes to local memory: every update is an LDL and STL. With <code>R</code> a template parameter (or a <code>constexpr</code>) and <code>#pragma unroll</code>, every <code>acc[r]</code> becomes a named register. Same source shape, a 10× difference in the inner loop. Lab 6 measures this exact effect with a sort.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> M. Poletto, V. Sarkar, "Linear Scan Register Allocation", <em>ACM TOPLAS</em> 21(5), 1999.</li>
+<li><strong>Required:</strong> K. Cooper, L. Torczon, <em>Engineering a Compiler</em> (3rd ed.), Chapter 13 (register allocation: live ranges, graph colouring, spilling).</li>
+<li><strong>Optional:</strong> G. Chaitin, "Register Allocation and Spilling via Graph Coloring", SIGPLAN 1982.</li>
+<li><strong>Optional:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Launch Bounds".</li>
+</ul>
+</section>

@@ -1,0 +1,301 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Who does what",
+   "statement": "<p>The CUDA toolchain: front end → NVVM IR → PTX → ptxas → SASS.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Physical register allocation happens in…",
+     "options": [
+      "the front end",
+      "the NVVM back end",
+      "ptxas",
+      "the driver only"
+     ],
+     "answer": 2
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "PTX registers are…",
+     "options": [
+      "the hardware's R0–R254",
+      "unlimited typed virtual registers",
+      "64 per thread"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Inlining and loop unrolling are mostly done…",
+     "options": [
+      "in the LLVM/NVVM optimiser",
+      "by the GPU at run time",
+      "by ptxas only"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "PTX is a virtual ISA."
+   ],
+   "solution": "<p>ptxas maps virtual registers to physical ones and schedules for the target. High-level optimisations (inlining, unrolling, constant folding) happen in the LLVM-based middle end; ptxas also unrolls and schedules.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Why ship PTX",
+   "statement": "<p>A program is built with SASS for sm_75 and PTX for compute_75.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "On an sm_86 GPU it runs…",
+     "options": [
+      "the sm_75 SASS directly",
+      "the PTX, JIT-compiled by the driver for sm_86",
+      "not at all"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Built with sm_75 SASS only, no PTX, it runs on sm_86…",
+     "options": [
+      "fine",
+      "not at all: SASS isn't compatible across major versions",
+      "slower"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "SASS compatibility holds only within a major architecture version."
+   ],
+   "solution": "<p>SASS is specific to an architecture family; PTX is the forward-compatible contract the driver can JIT. Ship PTX for the newest virtual architecture you support.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "A dependent chain",
+   "statement": "<p>GWX model: one warp, one instruction per cycle, FMA latency 4, an instruction waits for its sources.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cycles to finish 10 FMAs, each using the previous result?",
+     "answer": 40,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "10 independent FMAs?",
+     "answer": 13,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Dependent: issue every 4 cycles. Independent: one per cycle."
+   ],
+   "solution": "<p>(a) 40 cycles. (b) 13: the last issues at cycle 9 and completes 4 later. Independence is worth 3× at this latency.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Load then use",
+   "statement": "<p>One warp: a global load (400 cycles), then 5 FMAs, each depending on the previous (the first on the load).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cycles?",
+     "answer": 420,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fraction of cycles the warp issues something, in %?",
+     "answer": 1.4285714285714286,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "400 + 5 × 4."
+   ],
+   "solution": "<p>(a) 420 cycles, (b) 1.4% issue utilisation: one warp alone is hopeless. Either other warps or more independent work must fill the 400 cycles.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 1,
+   "title": "Reading an instruction mix",
+   "statement": "<p>A loop body compiles to 12 instructions, 2 of them FFMA.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FMA share, in %?",
+     "answer": 16.666666666666668,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Ceiling on the GW-1 if issue-bound, GFLOP/s?",
+     "answer": 256.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Same as Part 4's ceilings."
+   ],
+   "solution": "<p>16.7% and 256 GFLOP/s. Counting instructions in the generated code gives the issue ceiling before any profiling.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Constants and division",
+   "statement": "<p>Under default (IEEE) compilation.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Will the compiler turn <code>x / 3.0f</code> into <code>x * 0.333…f</code>?",
+     "options": [
+      "Yes, always",
+      "No: it isn't exactly equal for all x; it uses a correctly rounded division sequence",
+      "Only for integers"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "<code>x / 4.0f</code>?",
+     "options": [
+      "No",
+      "Yes: dividing by a power of two equals multiplying by its reciprocal exactly"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "The reciprocal of 3 isn't representable exactly."
+   ],
+   "solution": "<p>Replacing division by multiplication with a rounded reciprocal changes results, so it requires fast-math. For powers of two the reciprocal is exact, so the transformation is legal and done. Write the multiply yourself when you accept the rounding.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Where does time go",
+   "statement": "<p>GWX latencies: ALU/FMA 4, ld.shared 24, ld.global 400.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cycles for one warp: ld.shared then a dependent FMA?",
+     "answer": 28,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Independent FMAs needed to cover one ld.shared with one warp?",
+     "answer": 23,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Fill the 24-cycle wait with other instructions."
+   ],
+   "solution": "<p>(a) 28. (b) The FMA can issue at cycle 24 at the earliest; 23 independent instructions in cycles 1–23 hide the latency completely. That's what register tiles provide (Part 4).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 1,
+   "title": "Which stage",
+   "statement": "<p>The NVVM IR is…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "…based on",
+     "options": [
+      "GCC GIMPLE",
+      "LLVM IR",
+      "SPIR-V",
+      "PTX"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "The CUDA compiler's middle end."
+   ],
+   "solution": "<p>LLVM IR with NVIDIA conventions. That's why LLVM knowledge transfers directly to GPU compiler work (and why Triton, Julia and others can target PTX through LLVM's NVPTX back end).</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Hidden 64-bit math",
+   "statement": "<p>A kernel indexes <code>x[i * stride + j]</code> with 32-bit int i, stride, j, and 64-bit pointers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "The SASS will contain…",
+     "options": [
+      "only 32-bit arithmetic",
+      "a widening multiply-add (IMAD.WIDE) or extra conversions to form the 64-bit address",
+      "FP64 instructions"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Addresses are 64-bit."
+   ],
+   "solution": "<p>The index must be sign-extended and scaled into a 64-bit address: IMAD.WIDE or I2L plus 64-bit adds. Cheap once, costly in a tight loop; strength reduction (pointer increments) removes it.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Scheduling and encoding",
+   "statement": "<p>Who decides instruction order and the control bits in SASS?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "The programmer",
+      "ptxas",
+      "The driver at run time",
+      "The hardware's out-of-order engine"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "GPUs issue in order."
+   ],
+   "solution": "<p>ptxas. GPUs have no out-of-order engine; the compiler's scheduling and its encoded stall counts and dependency barriers are what hide latency within a warp.</p>"
+  }
+ ]
+}

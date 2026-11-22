@@ -1,0 +1,274 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Overhead per element",
+   "statement": "<p>Loop body: 2 useful instructions; overhead: 3 (increment, compare, branch).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Instructions per element, not unrolled?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Unrolled 4×?",
+     "answer": 2.75,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Overhead is paid once per unrolled iteration."
+   ],
+   "solution": "<p>5 versus 2.75: 45% fewer instructions.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Separate accumulators",
+   "statement": "<p>One warp sums 1,024 values (already in registers) with FADD latency 4, one issue per cycle.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cycles with one accumulator?",
+     "answer": 4096,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With 4 accumulators (plus 3 adds to combine)?",
+     "answer": 1040,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Each add waits for the previous on the same accumulator."
+   ],
+   "solution": "<p>(a) About 4,096. (b) About 1,024 plus a short combine: ~4×. The result differs in the last bits, which is why the compiler won't do it for you.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Reassociation",
+   "statement": "<p>Which transformations does the compiler perform for floats under default settings?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "Contract a·b + c into an FMA",
+      "Split a sum into 4 partial sums",
+      "Replace x/3 by x·(1/3)",
+      "Unroll a loop with a constant trip count",
+      "Hoist a loop-invariant multiply"
+     ],
+     "answer": [
+      0,
+      3,
+      4
+     ]
+    }
+   ],
+   "hints": [
+    "Which change results?"
+   ],
+   "solution": "<p>FMA contraction is on by default in nvcc (it changes rounding, but is allowed), unrolling and hoisting are exact. Splitting sums and reciprocal division need fast-math.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Interchange for coalescing",
+   "statement": "<p><code>for j: for i: a[i][j] += 1</code> on a row-major array, where threads are assigned to the inner loop's index across a warp.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors per warp access as written (rows 4 KB apart)?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "After interchanging so threads take j?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Contiguous index should be the thread index."
+   ],
+   "solution": "<p>32 versus 4: interchange (or the equivalent thread mapping) puts the contiguous index on the lanes. It's legal here because iterations are independent.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 1,
+   "title": "Loop-invariant code motion",
+   "statement": "<p>A loop of 1,000 iterations computes <code>base = ptr + row * pitch</code> inside the body, though row and pitch never change.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Instructions saved by hoisting (2 per computation)?",
+     "answer": 1998,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Computed once instead of 1,000 times."
+   ],
+   "solution": "<p>1,998 instructions. Compilers do this routinely when they can prove nothing in the loop changes the inputs, which aliasing can prevent.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Fusing four elementwise kernels",
+   "statement": "<p>Four kernels in a chain, each reading one FP32 array and writing one, n elements.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes per element unfused?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fused?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Speedup if memory-bound?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each kernel: 4 in, 4 out."
+   ],
+   "solution": "<p>32 versus 8 bytes: 4×. Chains of elementwise ops are the bread and butter of ML compilers' fusion passes.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "When fusion needs a halo",
+   "statement": "<p>Kernel 1 produces y; kernel 2 computes z[i] = y[i−1] + y[i] + y[i+1].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Can a fused kernel compute z with each thread producing only its own y[i]?",
+     "options": [
+      "Yes",
+      "No: z needs neighbours' y, so blocks must also compute (or exchange) a halo of y"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Dependence distance ±1."
+   ],
+   "solution": "<p>A stencil consumer needs producer values from neighbouring threads, so the fused kernel recomputes the halo at block edges or shares it through shared memory. Legal, but no longer free.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Legality of interchange",
+   "statement": "<p><code>for i: for j: a[i][j] = a[i−1][j+1] + 1</code>. The dependence distance vector is (1, −1).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Is interchanging the loops (j outer, i inner) legal?",
+     "options": [
+      "Yes",
+      "No: the distance becomes (−1, 1), lexicographically negative, so a value would be read before it's written"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Interchange permutes the distance vector's components."
+   ],
+   "solution": "<p>Legal transformations keep every distance vector lexicographically positive. (1, −1) becomes (−1, 1): illegal. Skewing first (j' = j + i) makes it (1, 0) and then interchange is fine: the polyhedral model automates exactly this reasoning.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "Remainders",
+   "statement": "<p>Unroll by 8.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "n = 1000: main iterations?",
+     "answer": 125,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "n = 1003: remainder iterations?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "n // 8 and n % 8."
+   ],
+   "solution": "<p>125 and 3. The remainder needs a cleanup loop or predication; when n is a compile-time multiple of 8 the compiler drops it.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Strength reduction",
+   "statement": "<p>A loop of 1,000 iterations computes the address <code>base + 4·(i·stride)</code> each time.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Multiplies as written (2 per iteration)?",
+     "answer": 2000,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "After strength reduction (pointer += 4·stride, computed once)?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Replace multiplication by repeated addition."
+   ],
+   "solution": "<p>2,000 multiplies become one precomputed increment plus an add per iteration. This is how 64-bit address arithmetic disappears from good SASS.</p>"
+  }
+ ]
+}

@@ -1,0 +1,292 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 2,
+   "title": "Maximum live",
+   "statement": "<p>Straight-line code (each line defines one value): a = …; b = …; c = a + b; d = a · 2; e = c + d; f = b + 1; g = e + f. g is the result.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum number of values live at once (including the one being defined)?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "A value is live from its definition to its last use."
+   ],
+   "solution": "<p>After d is defined, a is dead, but b (needed by f), c and d are live: with the definition counted, the peak is 3. Registers needed: 3, though the code names 7 values.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Registers and occupancy",
+   "statement": "<p>256-thread blocks on the GW-1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Occupancy at 40 registers, in %?",
+     "answer": 75.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "At 48?",
+     "answer": 62.5,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Chapter 2.6's rules."
+   ],
+   "solution": "<p>75.0% and 62.5%.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Launch bounds",
+   "statement": "<p><code>__launch_bounds__(256, 3)</code> on the GW-1 (65,536 registers per SM; per-warp allocation in units of 256, i.e. per-thread multiples of 8).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum registers per thread the compiler may use?",
+     "answer": 80,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "3 blocks × 256 threads must fit."
+   ],
+   "solution": "<p>$65536 / 768 = 85.3$, rounded down to a multiple of 8: 80 registers per thread (80 × 32 = 2,560 per warp; 24 warps × 2,560 = 61,440 ≤ 65,536; at 88 it wouldn't fit).</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "The cost of a hot spill",
+   "statement": "<p>A loop body of 12 instructions runs 1,000 times. One spilled value is reloaded every iteration (an LDL hitting L1, 30 cycles latency).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Extra instructions, in %?",
+     "answer": 8.333333333333334,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "The bigger risk is…",
+     "options": [
+      "the extra instruction",
+      "the 30-cycle latency on a dependency, if not hidden",
+      "DRAM traffic"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "One LDL per iteration."
+   ],
+   "solution": "<p>8.3% more instructions, but if the reloaded value feeds the next instruction, the warp waits 30 cycles each iteration unless other work covers it. And L1 misses push spills to L2/DRAM.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Rematerialisation",
+   "statement": "<p>An address <code>base + 4·tid</code> is used at the start and end of a long kernel.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Keeping it costs…",
+     "options": [
+      "a register for the whole kernel",
+      "nothing"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Recomputing it costs…",
+     "options": [
+      "one or two integer instructions",
+      "a global load"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Cheap values are cheaper to recompute than to keep."
+   ],
+   "solution": "<p>A register held across the kernel versus one IMAD: under pressure, the allocator recomputes. Rematerialising cheap values is one of its main tools against spills.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 1,
+   "title": "maxrregcount",
+   "statement": "<p><code>-maxrregcount=64</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Does what?",
+     "options": [
+      "Limits every kernel in the file to 64 registers per thread",
+      "Reserves 64 registers",
+      "Sets the occupancy to 64%"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "A compile-wide cap."
+   ],
+   "solution": "<p>A cap for all kernels in the translation unit; __launch_bounds__ is the per-kernel, intent-revealing version.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Live across a loop",
+   "statement": "<p>A loop keeps 4 accumulators, a pointer (2 registers, 64-bit), a counter and a bound, and each iteration loads 2 temporaries before using them.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Registers live across the back edge?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Peak inside the body?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Temporaries don't survive the iteration."
+   ],
+   "solution": "<p>8 values cross the back edge; the body peaks at 10. Unrolling by 2 doubles the temporaries (and, with separate accumulators, the accumulators): the register cost of ILP.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Colouring intervals",
+   "statement": "<p>Register allocation as graph colouring: values are nodes, edges join values live at the same time.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "For straight-line code (interval graphs), the colours needed equal…",
+     "options": [
+      "the number of values",
+      "the maximum number of simultaneously live values",
+      "half the values"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Linear scan on straight-line code is…",
+     "options": [
+      "optimal",
+      "a heuristic that can be far off"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Interval graphs are perfect."
+   ],
+   "solution": "<p>For interval graphs, chromatic number = maximum clique = max live, and the greedy left-to-right (linear scan) assignment achieves it. Loops and branches break the interval structure, which is why real allocators use heuristics.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Registers versus ILP",
+   "statement": "<p>A thread computes 4 independent dot-product partial sums (ILP 4) instead of 1. Each extra accumulator costs 1 register and the extra loaded operands 2. The base kernel uses 32 registers with 256-thread blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Registers with ILP 4?",
+     "answer": 41,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Occupancy, in %?",
+     "answer": 62.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Is the trade good for a latency-bound loop?",
+     "options": [
+      "Usually yes: 4× the independent work per warp for a modest occupancy loss",
+      "Never"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "3 extra chains × 3 registers."
+   ],
+   "solution": "<p>(a) 41 registers. (b) 62.5% (down from 100%). (c) Each warp now has 4× the independent work, which more than offsets the lost warps: Volkov again, now from the allocator's side.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "SSA",
+   "statement": "<p>In SSA form…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "each variable is…",
+     "options": [
+      "assigned exactly once",
+      "assigned at most twice",
+      "global"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "which removes…",
+     "options": [
+      "true dependences",
+      "anti and output dependences (name reuse)",
+      "all dependences"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Renaming."
+   ],
+   "solution": "<p>One definition per name eliminates false (name) dependences, freeing the scheduler; the allocator later decides which names share registers.</p>"
+  }
+ ]
+}

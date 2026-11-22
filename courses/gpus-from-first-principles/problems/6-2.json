@@ -1,0 +1,327 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "SASS vocabulary",
+   "statement": "<p>Name the instruction.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "FFMA",
+     "options": [
+      "FP32 fused multiply-add",
+      "FP16 multiply",
+      "integer multiply"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "LDG.E.128",
+     "options": [
+      "a 128-byte load",
+      "a 128-bit (16-byte) global load per thread",
+      "a load of 128 elements"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "LDL / STL",
+     "options": [
+      "shared memory",
+      "local memory: usually register spills",
+      "constant memory"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "d",
+     "type": "single",
+     "prompt": "ISETP",
+     "options": [
+      "integer compare that sets a predicate",
+      "store",
+      "special function"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "SASS mnemonics name type and space."
+   ],
+   "solution": "<p>FFMA is FP32 FMA; LDG.E.128 a 16-byte vector global load; LDL/STL local memory (spills or arrays indexed dynamically); ISETP an integer compare writing a predicate register.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Counting a loop",
+   "statement": "<p>A hot loop's SASS, per iteration: 4 × LDG.E, 4 × FFMA, 2 × IMAD (address), 1 × IADD3, 1 × ISETP, 1 × BRA.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Instructions per iteration?",
+     "answer": 13,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "FMA share, in %?",
+     "answer": 30.76923076923077,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Count every line."
+   ],
+   "solution": "<p>13 instructions, 30.8% FMAs. Each FMA needs a fresh load: a memory-bound streaming loop, and the overhead is affordable.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "The innocent constant",
+   "statement": "<p><code>float y = x * 0.5;</code> in CUDA C++.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What does the SASS contain?",
+     "options": [
+      "one FMUL",
+      "F2F conversions to double, a DMUL, and a conversion back",
+      "an FFMA"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "<code>x * 0.5f</code>",
+      "<code>#pragma unroll</code>",
+      "<code>-O3</code>"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "0.5 is a double literal."
+   ],
+   "solution": "<p>The double literal promotes the expression to FP64: conversions plus a DMUL, at 1/32 or 1/64 rate on consumer GPUs. Write 0.5f. Grepping SASS for F2F and DMUL finds these.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Vector loads in a GEMM",
+   "statement": "<p>An 8 × 8 register-tiled SGEMM, per k step.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "LDS.128 instructions expected?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "FFMAs?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "If you see 16 × LDS instead of 4 × LDS.128…",
+     "options": [
+      "fine",
+      "the shared arrays aren't aligned or laid out for vector loads: issue count quadruples for loads"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "16 floats per k."
+   ],
+   "solution": "<p>4 vector shared loads feeding 64 FFMAs. 16 scalar loads would drop the FMA share from 94% to 80%. The SASS shows instantly whether vectorisation happened.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Reading -Xptxas -v",
+   "statement": "<p><code>ptxas info: Used 128 registers, 24 bytes spill stores, 24 bytes spill loads</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "4-byte values spilled?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Matters most if the spills are…",
+     "options": [
+      "in the prologue",
+      "inside the hot loop",
+      "in the epilogue"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "24 / 4."
+   ],
+   "solution": "<p>6 values. Spills outside loops are harmless; inside the k-loop each becomes an L1 round trip per iteration. Check where the LDL/STL instructions sit in the SASS.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 3,
+   "title": "Recovering the unroll factor",
+   "statement": "<p>A loop over k = 0..255 shows, per iteration of the SASS loop, 32 FFMA, 2 LDS.128 and 1 BRA. Each source iteration does 4 FMAs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Unroll factor?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "SASS loop iterations?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "32 FFMA / 4 per source iteration."
+   ],
+   "solution": "<p>Unrolled 8×: 32 SASS iterations of 32 FFMAs each. The branch now costs 1 instruction per 32 FMAs.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Virtual versus physical",
+   "statement": "<p>PTX declares <code>.reg .f32 %f&lt;120&gt;</code>, but ptxas reports 40 registers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why?",
+     "options": [
+      "ptxas spilled 80",
+      "Virtual registers are SSA-style names; values not live at the same time share physical registers",
+      "PTX is wrong"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Live ranges."
+   ],
+   "solution": "<p>PTX creates a new name for nearly every value; allocation maps them onto as many physical registers as are simultaneously live (Chapter 6.3).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 1,
+   "title": "Predicated exit",
+   "statement": "<p><code>@P0 EXIT</code> at the top of a kernel.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Means",
+     "options": [
+      "exit the kernel for lanes where P0 is true",
+      "exit the whole warp always",
+      "a breakpoint"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Predicates turn instructions off per lane."
+   ],
+   "solution": "<p>The bounds check <code>if (i &gt;= n) return;</code> compiled to a predicated exit: no branch at all.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Red flags",
+   "statement": "<p>Scanning a hot loop's SASS.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which are red flags?",
+     "options": [
+      "LDL/STL inside the loop",
+      "F2F or DMUL in an FP32 kernel",
+      "Mostly FFMA",
+      "LDG.E.128",
+      "Many I2L / 64-bit adds per element"
+     ],
+     "answer": [
+      0,
+      1,
+      4
+     ]
+    }
+   ],
+   "hints": [
+    "Things you didn't ask for."
+   ],
+   "solution": "<p>Spills, accidental FP64 and per-element 64-bit address arithmetic are red flags; FFMA-heavy code and vector loads are what you want.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "PTX versus SASS for performance work",
+   "statement": "<p>Choose the right artefact.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "To check whether registers spilled and how loads were scheduled, read…",
+     "options": [
+      "PTX",
+      "SASS"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "To check whether the front end unrolled a loop or contracted an FMA, PTX is…",
+     "options": [
+      "useless",
+      "usually enough"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "ptxas does allocation and scheduling."
+   ],
+   "solution": "<p>Allocation, spills and final scheduling only exist in SASS. High-level decisions (unrolling, contraction, vector types) are already visible in PTX, which is easier to read.</p>"
+  }
+ ]
+}

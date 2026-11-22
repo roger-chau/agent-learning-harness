@@ -1,0 +1,310 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Kinds of dependence",
+   "statement": "<p>Classify.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "<code>ld x</code> … <code>add s, s, x</code>",
+     "options": [
+      "true (RAW)",
+      "anti (WAR)",
+      "output (WAW)"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "<code>add s, a, 1</code> … <code>mov a, 0</code>",
+     "options": [
+      "true",
+      "anti",
+      "output"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "two writes to a",
+     "options": [
+      "true",
+      "anti",
+      "output"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "Which order must be kept, and why?"
+   ],
+   "solution": "<p>RAW is real data flow; WAR and WAW exist only because a name is reused, and renaming removes them.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Moving independent work",
+   "statement": "<p>One warp: <code>ld x; y = fma(x); i0 … i5 = six independent FMAs</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cycles as written?",
+     "answer": 410,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Cycles after list scheduling?",
+     "answer": 404,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "As written, the independent FMAs wait behind the dependent one."
+   ],
+   "solution": "<p>(a) 410: y waits until 400, and the six FMAs queue behind it. (b) 404: the FMAs issue during the load. The load's latency dominates either way, but the scheduler removed everything after it.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Hoisting loads",
+   "statement": "<p>One warp: <code>ld a; use a; ld b; use b</code>, versus <code>ld a; ld b; use a; use b</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cycles, first order?",
+     "answer": 805,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Second order?",
+     "answer": 405,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Two loads in flight at once."
+   ],
+   "solution": "<p>805 versus 405: hoisting both loads overlaps their latencies, nearly halving the time. This is what unrolling plus scheduling buys a single warp.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Critical-path priorities",
+   "statement": "<p>Block: l = ld (400); m = mul(l); n = add(m); p = fma (independent); q = fma(p). Priority = longest latency path to the end.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Priority of l?",
+     "answer": 408,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Priority of p?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Makespan with list scheduling?",
+     "answer": 408,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "l → m → n: 400 + 4 + 4."
+   ],
+   "solution": "<p>(a) 408, (b) 8. The load issues first; p and q fill the wait. Makespan 408: the critical path plus one issue cycle for l.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Warps or ILP",
+   "statement": "<p>Hide a 400-cycle load per 100 cycles of independent work per iteration.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps needed with one load per warp in flight?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With 4 independent loads per warp (unrolled), warps needed?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "(C + L)/C, then divide by the loads in flight."
+   ],
+   "solution": "<p>(a) $(100 + 400)/100 = 5$. (b) $5/4 = 1.25$, so 2 warps. Same idle slots, filled by either mechanism.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Renaming costs registers",
+   "statement": "<p>A loop body reuses one temporary t for 4 loads in sequence (load t, use t, load t, use t, …).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Can the 4 loads be hoisted together as written?",
+     "options": [
+      "Yes",
+      "No: the reuse of t creates anti/output dependences"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Registers for the temporaries after renaming to t0–t3?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each in-flight load needs its own destination."
+   ],
+   "solution": "<p>The shared name serialises the loads. Renaming to 4 registers lets all 4 be in flight: ILP paid for in registers.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 3,
+   "title": "Software pipelining",
+   "statement": "<p>A loop: each iteration loads (400 cycles latency) then computes for 50 cycles on the loaded data. 100 iterations, one warp.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cycles without overlap?",
+     "answer": 45000,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Loads that must be in flight to keep compute busy?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Cycles, fully pipelined (approximately)?",
+     "answer": 5400,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Iteration k's compute overlaps loads for k+1 … k+d."
+   ],
+   "solution": "<p>(a) 45,000. (b) ⌈400/50⌉ + 1 = 9 loads in flight. (c) About 400 + 5,000 = 5,400: 8.3× faster. The registers or shared memory for 9 stages are the price.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 1,
+   "title": "Memory dependences",
+   "statement": "<p>A store to <code>out[i]</code> is followed by a load from <code>in[j]</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "May the compiler move the load above the store?",
+     "options": [
+      "Always",
+      "Only if it can prove in and out don't overlap (e.g. __restrict__)",
+      "Never"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Aliasing."
+   ],
+   "solution": "<p>Without proof the pointers differ, the load might read what the store wrote. <code>__restrict__</code> gives the proof, unlocking reordering and caching (Part 2's read-only path).</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Accumulator chains",
+   "statement": "<p>A single warp sums with FADD (latency 4) into one accumulator.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Independent accumulators needed to issue an add every cycle?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Speedup from 1 to 4 accumulators for a long sum?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Latency × issue rate."
+   ],
+   "solution": "<p>4 chains keep the pipeline full: ~4× faster. The compiler can't do this for floats without fast-math (it changes rounding), so you write it.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Order matters at low occupancy",
+   "statement": "<p>A register-tiled GEMM runs 4 warps per SM (1 per scheduler).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Who hides shared-memory latency within a warp?",
+     "options": [
+      "other warps",
+      "the instruction order chosen by ptxas, putting independent FMAs between loads and uses",
+      "nothing"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "One warp per scheduler."
+   ],
+   "solution": "<p>With one warp per scheduler, nothing else can fill a gap: the schedule must, by issuing next step's loads early (or interleaving FMAs between LDS and first use). Lab 6's ILP exercise measures this.</p>"
+  }
+ ]
+}

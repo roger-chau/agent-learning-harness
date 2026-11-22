@@ -73,3 +73,30 @@ EXIT</code></pre>
 <li>When a result surprises you, change one thing in the source and diff the generated code. It's the compiler-side twin of Part 5's one-change-at-a-time rule.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: auditing a register-tiled GEMM's inner loop</h3>
+<p><strong>What you expect</strong> per k for an 8 × 8 tile: 4 × LDS.128 and 64 × FFMA, no branch inside an unrolled k-block, nothing else.</p>
+<p><strong>What you find (a real-world-style dump):</strong> 4 × LDS.128, 64 × FFMA, plus 8 × IMAD and 2 × IADD3 per k. Those are shared-memory addresses being recomputed each step because the tile offset was written <code>sA[(k * BM) + ty * 8]</code> with k a runtime loop variable and the loop not unrolled.</p>
+<p><strong>Fix:</strong> <code>#pragma unroll</code> on the k-loop within the tile (BK = 8 is constant), so every address becomes base + immediate offset, encoded in the LDS instruction itself. FMA share goes from 64/78 = 82% to 64/68 = 94%. That's a 15% speedup found by counting lines.</p>
+
+<h3>Example 2: spotting an accidental FP64 path</h3>
+<p><strong>Symptom:</strong> an FP32 kernel is 10× slower on a GeForce card than on an A100.</p>
+<p><strong>SASS grep:</strong> <code>cuobjdump -sass | grep -E "DMUL|DADD|DFMA|F2F"</code> finds F2F.F64.F32 and DFMA inside the loop. Source: <code>expf(x) * 2.0 + 1.0</code>: double literals.</p>
+<p><strong>Why the GPUs differ:</strong> A100 runs FP64 at half the FP32 rate; GeForce cards at 1/32 or 1/64. The same bug costs 2% on one and 10× on the other. Fix with <code>2.0f</code> and <code>1.0f</code>, and add <code>-Wdouble-promotion</code> style checks (or grep SASS in CI).</p>
+
+<h3>Example 3: was the load vectorised?</h3>
+<p><strong>Source:</strong> <code>float4 v = reinterpret_cast&lt;const float4*&gt;(x)[i];</code></p>
+<p><strong>Expected SASS:</strong> one <code>LDG.E.128</code>. <strong>If you see four <code>LDG.E</code></strong>, the compiler couldn't prove alignment (for example, x came from pointer arithmetic with an odd offset, or the type punning went through a struct without alignment). <strong>If you see <code>LDG.E.128.CONSTANT</code></strong> (or .NC), the read-only path is in use, thanks to <code>const __restrict__</code>. The SASS mnemonic encodes width and caching path, so one line answers both questions.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA Binary Utilities</em> (cuobjdump, nvdisasm) and its instruction set reference tables for your architecture.</li>
+<li><strong>Required:</strong> NVIDIA, <em>Parallel Thread Execution ISA</em>, chapter 9 (instruction set): read the entries for ld, st, fma, setp, bra, mma.</li>
+<li><strong>Optional:</strong> Z. Jia et al., "Dissecting the NVIDIA Volta GPU Architecture via Microbenchmarking" (2018), section on instruction encoding and control codes.</li>
+<li><strong>Optional:</strong> Compiler Explorer (godbolt.org) supports CUDA: compare PTX and SASS for small kernels interactively.</li>
+</ul>
+</section>
