@@ -529,6 +529,76 @@
      }
     },
     {
+     "type": "lab",
+     "id": "L1",
+     "title": "Lab 1: Warps on real hardware",
+     "summary": "Measure divergence on your GPU, and write Project A's grayscale and blur kernels for real.",
+     "dir": "labs/L1-warps",
+     "blocks": [
+      [
+       "Why this lab",
+       "the model meets silicon"
+      ],
+      [
+       "What to do",
+       "grayscale, divergence, blur"
+      ],
+      [
+       "Going further",
+       "SASS and Nsight"
+      ],
+      [
+       "What the numbers mean",
+       "per-warp, not per-branch"
+      ],
+      [
+       "Passing",
+       "targets and report"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "gray_pct",
+       "op": ">=",
+       "value": 50,
+       "label": "Grayscale, % of peak bandwidth"
+      },
+      {
+       "metric": "divergence_cost",
+       "op": ">=",
+       "value": 1.6,
+       "label": "Divergent / uniform time"
+      },
+      {
+       "metric": "warp_aligned_cost",
+       "op": "<=",
+       "value": 1.15,
+       "label": "Warp-aligned / uniform time"
+      },
+      {
+       "metric": "branch_free_cost",
+       "op": "<=",
+       "value": 1.15,
+       "label": "Branch-free / uniform time"
+      },
+      {
+       "metric": "blur_pct",
+       "op": ">=",
+       "value": 45,
+       "label": "Blur, effective % of peak bandwidth"
+      }
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "Your three predicted time ratios next to the measured ones; explain any gap.",
+       "What did the SASS for divergent and branch_free show (branches, reconvergence instructions)?",
+       "Grayscale: your bandwidth at one pixel per thread and after any improvement, and why it changed.",
+       "Blur: effective bandwidth compared with Lab 0's copy. What served the 9 reads per pixel?"
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p1-checkpoint",
      "title": "Part 1 checkpoint",
@@ -827,6 +897,70 @@
        "Which bottleneck did each change move you to (DRAM, L2, instruction issue)?",
        "What did you try that didn't help, and why not?",
        "What would you check first on the real embedded board (e.g. a Jetson-class SoC with shared LPDDR)?"
+      ]
+     }
+    },
+    {
+     "type": "lab",
+     "id": "L2",
+     "title": "Lab 2: The memory system for real",
+     "summary": "Sectors, coalescing, bank conflicts and data layout on your GPU, read from Nsight Compute's counters.",
+     "dir": "labs/L2-memory",
+     "blocks": [
+      [
+       "Why this lab",
+       "patterns over bytes"
+      ],
+      [
+       "What to do",
+       "stride, transpose, layout"
+      ],
+      [
+       "Read it from the counters",
+       "Nsight Compute"
+      ],
+      [
+       "Going further",
+       "tiles, vectors, AoSoA"
+      ],
+      [
+       "Passing",
+       "targets and report"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "transpose_padded_pct",
+       "op": ">=",
+       "value": 60,
+       "label": "Padded transpose, % of peak bandwidth"
+      },
+      {
+       "metric": "padded_vs_naive",
+       "op": ">=",
+       "value": 1.5,
+       "label": "Padded / naive transpose speedup"
+      },
+      {
+       "metric": "padded_vs_shared",
+       "op": ">=",
+       "value": 1.1,
+       "label": "Padded / unpadded tile speedup (bank conflicts)"
+      },
+      {
+       "metric": "soa_speedup",
+       "op": ">=",
+       "value": 1.2,
+       "label": "Structure of arrays / array of structs speedup"
+      }
+     ],
+     "writeup": {
+      "min_words": 200,
+      "prompts": [
+       "Stride sweep: your predicted and measured useful bandwidth at each stride. Where did the sector rule hold, and where did caches change the picture?",
+       "Transpose: sectors per request and bank conflicts from the counters, for each version, next to your predictions.",
+       "Particles: bytes per particle at sector granularity for each layout, and the measured speedup.",
+       "What would you check first in an unfamiliar slow kernel, after this lab?"
       ]
      }
     },

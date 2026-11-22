@@ -1,0 +1,39 @@
+<section class="blk" data-n="01">
+<h2>Why this lab</h2>
+<p>Part 2's claim is that on a GPU, memory access <em>patterns</em> matter more than almost anything else: a warp's 32 accesses are served in 32-byte sectors, shared memory has 32 banks, and the same bytes can cost 8× more when laid out badly. This lab measures all three effects on your card and makes you read them from the profiler's counters, which is how you'll diagnose them in real code.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>What to do</h2>
+<p>Open <code>labs/L2-memory/l2.cu</code> and implement the <code>TODO</code> kernels.</p>
+<ul>
+<li><strong>A. Stride sweep.</strong> <code>y[i] = x[i·s]</code> for strides 1 to 32. Before running, predict the useful bandwidth at s = 1, 2, 4, 8, 16, 32 from the 32-byte sector rule (Chapter 2.2): at what stride does each lane get a sector of its own?</li>
+<li><strong>B. Transpose</strong> a 4096 × 4096 matrix three ways: naive (coalesced reads, strided writes); through a 32 × 32 shared-memory tile so both sides coalesce; and the same tile padded to 33 columns. Predict the bank-conflict degree of the unpadded tile's column read (Chapter 2.5).</li>
+<li><strong>C. Particles</strong>: the same position update on an array of 32-byte structs and on six separate arrays. Count the bytes each version must move per particle, at sector granularity, and predict the speedup.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Read it from the counters</h2>
+<p><code>make metrics</code> runs Nsight Compute on the transpose kernels with just the counters this lab is about:</p>
+<ul>
+<li><strong>Sectors per request</strong>: <code>l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum</code> divided by <code>..._requests_...</code>. A coalesced warp of 4-byte loads needs 4 sectors per request; the naive transpose's writes need 32.</li>
+<li><strong>Bank conflicts</strong>: <code>l1tex__data_bank_conflicts_pipe_lsu_mem_shared_op_ld.sum</code>. Large for <code>transpose_shared</code>, near zero for <code>transpose_padded</code>.</li>
+<li><strong>DRAM throughput</strong> as a percentage of the sustained peak.</li>
+</ul>
+<p>Put the numbers in the report next to your predictions. Being able to say "this kernel has 8 sectors per request where 4 would do, so it's moving twice the bytes" is precisely the skill interviewers probe.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Going further</h2>
+<ul>
+<li>Try a 16 × 16 tile with 16 × 16 threads, and a transpose where each thread moves a <code>float4</code>. Which wins, and why?</li>
+<li>In C, try an AoSoA layout (structs of 32-particle arrays) and compare.</li>
+<li>Compare the padded transpose with Lab 0's best copy: a transpose can't beat a copy, since it moves the same bytes. How close do you get?</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Passing</h2>
+<p>All kernels correct; the padded transpose reaches at least 60% of peak bandwidth and is at least 1.5× faster than the naive one, and at least 1.1× faster than the unpadded tile; structure of arrays is at least 1.2× faster than array of structs. The report compares every prediction with the measured value and the counters.</p>
+</section>

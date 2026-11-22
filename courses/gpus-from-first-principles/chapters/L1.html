@@ -1,0 +1,35 @@
+<section class="blk" data-n="01">
+<h2>Why this lab</h2>
+<p>Part 1 built the SIMT model on the simulator: a warp issues one instruction for 32 lanes, a branch that splits a warp runs both sides one after the other, and a branch that's uniform within each warp costs nothing extra. Hardware is allowed to be cleverer than a model. Here you find out how closely your Turing GPU follows it, and you write the first two Project A kernels for real.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>What to do</h2>
+<p>Open <code>labs/L1-warps/l1.cu</code> and implement the <code>TODO</code> kernels.</p>
+<ul>
+<li><strong>A. Grayscale.</strong> Interleaved 8-bit RGB in, one gray byte out, using the integer weights in the file so the result is exact. Start with one pixel per thread. It's memory-bound: each pixel is 4 bytes of traffic.</li>
+<li><strong>B. Divergence.</strong> Four kernels doing the same 4,096 dependent FMAs per thread: <code>uniform</code> (everyone takes path A), <code>divergent</code> (odd lanes A, even lanes B), <code>warp_aligned</code> (odd <em>warps</em> A, even warps B) and <code>branch_free</code> (the same results as <code>divergent</code>, by selecting the constants first and running one loop).</li>
+<li><strong>C. Blur.</strong> A 3 × 3 box blur with clamp-to-edge borders on a 4093 × 2311 float image (awkward sizes on purpose). Map <code>threadIdx.x</code> to <code>x</code>.</li>
+</ul>
+<p><strong>Predict first</strong>, in the write-up: the divergent/uniform time ratio, the warp-aligned/uniform ratio, and the branch-free/uniform ratio. Then <code>make run</code>.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Going further</h2>
+<ul>
+<li><strong>Read the machine code.</strong> <code>make sass</code>, then find the <code>divergent</code> kernel. Look for the branch (<code>BRA</code>) and the reconvergence instructions (on Volta and later, <code>BSSY</code>/<code>BSYNC</code>), and compare with <code>branch_free</code>. Chapter 1.4's reconvergence model is now in front of you.</li>
+<li><strong>Profile.</strong> <code>make ncu</code>, and in the divergent kernel's report find "Warp Execution Efficiency" or the average active threads per warp (the exact name varies with the Nsight Compute version). It should be close to 50%.</li>
+<li><strong>Grayscale faster.</strong> One pixel per thread means 3 separate byte loads per thread. Try 4 pixels per thread using three 4-byte loads (12 bytes = 4 RGB pixels), and measure again.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>What the numbers mean</h2>
+<p>If <code>divergent</code> takes about twice as long as <code>uniform</code>, the hardware is serialising the two paths exactly as the SIMT model says. If <code>warp_aligned</code> costs about the same as <code>uniform</code>, divergence is a per-warp effect, not a per-branch one: the cure is to arrange data so that threads in a warp agree. <code>branch_free</code> shows the other cure: turn a difference in <em>code</em> into a difference in <em>data</em>.</p>
+<p>For the blur, the effective bandwidth counts each input pixel once even though each is read 9 times; caches serve the repeats. Comparing it with Lab 0's copy bandwidth tells you how well they do.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Passing</h2>
+<p>All three parts correct; divergence costs at least 1.6×; warp-aligned and branch-free within 15% of uniform; grayscale at least 50% and blur at least 45% of peak bandwidth (both effective). The targets are deliberately conservative, since cards and drivers vary: record what you actually get.</p>
+</section>
