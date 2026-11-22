@@ -4,7 +4,17 @@ Deep, hands-on courses that rebuild a subject from first principles. They run on
 
 Every chapter follows the same five steps: the real problem, the smallest idea, add one block, the whole machine, then reality. Chapters include diagrams, animations you can step through, and simulations you drive. An in-page terminal runs your code, and you only move on once you've passed the exercises and the quiz. Long-running projects grow across a course in milestones and end in a capstone. An **Ask** panel answers questions about the chapter you're reading. It gives hints, never solutions.
 
-The first course is **GPUs from First Principles** (`courses/gpus-from-first-principles/`), aimed at future GPU performance and compiler engineers. The course format is described in [`docs/course-format.md`](docs/course-format.md).
+Two courses are available:
+
+- **GPUs from First Principles** (`courses/gpus-from-first-principles/`), aimed at future GPU performance and compiler engineers, with simulator exercises, real-GPU labs and timed exams.
+- **Interview Ready** (`courses/interview-ready/`): coding, systems, quant and behavioural interview preparation in 21 Parts (Tracks A–D). Every pattern chapter teaches one way of thinking (signal → core idea → invariant/template → thinking trace → traps). It includes:
+  - judged coding problems in Python and C++ with hidden tests (`learnharness/runner.py`) and per-chapter LeetCode practice lists;
+  - two timed mock online assessments, with sample runs during the attempt and partial credit per hidden test;
+  - a timed mental-maths drill and a market-making game (`static/quant.js`);
+  - AI mock interviews (coding, system design, quant, behavioural) that run through the Ask panel and score you against a rubric;
+  - a spaced-repetition review of everything you've completed, at `#/c/interview-ready/review`.
+
+The course format is described in [`docs/course-format.md`](docs/course-format.md).
 
 ## Run it
 
@@ -37,11 +47,15 @@ courses/                       static course content
   <slug>/chapters/<id>.html    chapter text, SVG diagrams, <div data-gw="…"> components
   <slug>/exercises/<id>.js     exercise prompt, starter code, checks (run in the browser)
   <slug>/quizzes/<id>.json     quiz with answers (graded server-side, never sent to the browser)
+  <slug>/problems/<id>.json    problem sets (numeric / choice parts, graded server-side)
+  <slug>/coding/<pid>.json     judged coding problems: statement, starters, hidden tests, solutions
+  <slug>/exams/<id>.json       timed exams (problem-set parts and/or coding problems)
 learnharness/
   server.py                    FastAPI: content, gating, quiz grading, Ask panel (SSE)
   progress.py                  completion and hard gating
   content.py                   course loading and quiz grading
-  agent.py, prompts.py         the Ask panel: Claude Messages API with web search
+  agent.py, prompts.py         the Ask panel: Claude Messages API with web search (and the mock-interviewer prompts)
+  runner.py                    sandboxed Python / C++ judge for coding problems
   static/sim/gpusim.js         the GPU simulator (browser, Web Worker and Node)
   static/sim/worker.js         runs learner code off the main thread, with a timeout
   static/terminal.js           code editor and console
