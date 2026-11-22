@@ -1,0 +1,44 @@
+<section class="blk" data-n="01">
+<h2>Why this lab</h2>
+<p>This is the capstone of the real-GPU track: Part 8's fused attention, in CUDA, on your card's tensor cores. Attention is the kernel the whole industry optimises. FlashAttention made its authors' reputations, and "explain FlashAttention and its memory traffic" is a standard interview question for ML-systems roles. A working, correct, profiled implementation that you wrote yourself is the strongest single item a portfolio can have.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>What to do</h2>
+<p>Open <code>labs/L8-attention/l8.cu</code>. There are 16 heads, sequence length 4,096 and head dimension 64; Q, K and V are FP16 and O is FP32. The reference computes the 4,096 × 4,096 scores of every head with cuBLAS, which is 1 GiB in FP32 plus 0.5 GiB for P in FP16. Then it applies a softmax kernel and a second GEMM. Your <code>flash_attn</code> never writes the score matrix to memory.</p>
+<p>The design is fixed in the comments, so that you spend your time on the parts that matter. A block of 4 warps owns 64 query rows, and each warp owns 16 of them. Each warp keeps its Q tile as WMMA fragments in registers. The kernel loops over K/V tiles of 32 keys in shared memory, in six steps:</p>
+<ol>
+<li>Shared tiles, Q fragments, and per-lane running state: max <em>m</em>, sum <em>l</em>, and 32 output values.</li>
+<li>Copy the K and V tiles with 16-byte vector loads, with the two barriers they need.</li>
+<li>S = QKᵀ for the warp's 16 × 32 tile. Work out which WMMA layout makes K, stored as [key][d], act as Kᵀ.</li>
+<li>Online softmax (Part 8). Two lanes share a row. Rescale the running state by α = exp(m<sub>old</sub> − m<sub>new</sub>), and write P in FP16 over the scores.</li>
+<li>P·V, one 16 × 16 output fragment at a time, added into the lanes' registers. Accumulator fragments have no documented element layout, so per-row scaling goes through the scratch.</li>
+<li>O = o / l.</li>
+</ol>
+<p>The checks compare both implementations with exact (double-precision) attention on sample rows, and yours with the reference everywhere.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Predict, then measure</h2>
+<ul>
+<li>Count the reference's DRAM traffic: S written and read, P written and read. At your bandwidth, how long does that take on its own, and how does that compare with the GEMMs' time at cuBLAS's measured TFLOP/s from Lab 4?</li>
+<li>Count yours: Q, K, V and O, with K and V read once per query block. How many times is that?</li>
+<li>So what limits your kernel? Check with <code>make ncu</code>: tensor-pipe utilisation, the cost of the <code>expf</code>s (the MUFU pipe), shared-memory traffic for the scratch round trips, and occupancy (<code>make regs</code>: registers and 18 KB of shared memory per block).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Going further</h2>
+<ul>
+<li><strong>Causal masking</strong>: skip key tiles entirely above the diagonal, and mask the diagonal tile. You do half the work; the reference can't skip anything.</li>
+<li><strong>Longer sequences</strong>: at 16,384 the reference's S alone needs 16 GiB, so it can't run on your card. Yours needs only Q, K, V and O. Run it and report the TFLOP/s.</li>
+<li><strong>Faster softmax</strong>: fold log₂e into the scale and use <code>exp2f</code>; keep m and l per row in one lane and broadcast them.</li>
+<li><strong>Bigger tiles</strong>: 128 query rows with 8 warps, or 64-key tiles. Measure occupancy against reuse.</li>
+<li>Read FlashAttention 2's kernel in the <code>flash-attention</code> repository (it's written with CUTLASS/CuTe) and list three things it does that yours doesn't.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Passing</h2>
+<p>All three correctness checks pass, and your kernel is at least as fast as the reference while never allocating its 1.5 GiB of intermediates. The report is the most important part of this lab: it is your portfolio write-up for attention.</p>
+</section>

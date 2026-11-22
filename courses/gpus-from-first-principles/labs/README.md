@@ -24,6 +24,7 @@ other GPUs. Set `GW_PEAK_GBS` if the reported peak bandwidth looks wrong for you
 | L5-roofline | 5 | Measured FP32 and bandwidth ceilings, a roofline sweep, tail effects, and a profile-driven GEMV fix |
 | L6-compiler | 6 | ILP versus occupancy, local memory from run-time indexing, and fusion, read from the SASS |
 | L7-workloads | 7 | Fused softmax and LayerNorm, and a pinned-memory stream pipeline |
+| L8-attention | 8 | Capstone: FlashAttention-style fused attention with WMMA, against a cuBLAS reference |
 
 `common/gw.h` is the shared harness: error checking, device info, event timing with warm-up
 and median, exactness checks, and `results.json`.

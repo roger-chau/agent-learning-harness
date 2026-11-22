@@ -2686,6 +2686,53 @@
        "Against the state of the art: what FlashAttention-2 and -3 do that you didn't, and what the simulator could or couldn't show."
       ]
      }
+    },
+    {
+     "type": "lab",
+     "id": "L8",
+     "title": "Lab 8: Fused attention on tensor cores",
+     "summary": "FlashAttention's tiling and online softmax in CUDA with WMMA, checked against exact attention and timed against a cuBLAS reference that materialises the scores.",
+     "dir": "labs/L8-attention",
+     "hours": 10,
+     "blocks": [
+      [
+       "Why this lab",
+       "the kernel the industry optimises"
+      ],
+      [
+       "What to do",
+       "six steps of the fused kernel"
+      ],
+      [
+       "Predict, then measure",
+       "traffic and limiters"
+      ],
+      [
+       "Going further",
+       "causal, long sequences, bigger tiles"
+      ],
+      [
+       "Passing",
+       "targets and the portfolio write-up"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "flash_vs_reference",
+       "op": ">=",
+       "value": 1.0,
+       "label": "Fused / cuBLAS reference (speed)"
+      }
+     ],
+     "writeup": {
+      "min_words": 400,
+      "prompts": [
+       "The algorithm in your own words: why the online softmax gives the exact result, with the rescaling step written out.",
+       "DRAM traffic of the reference and of your kernel, counted, and the time each predicts.",
+       "Your kernel's profile: tensor-pipe utilisation, the top stall reasons, occupancy, and what you would change first.",
+       "TFLOP/s for the reference and for yours, and (if you did it) for causal masking and for sequence length 16,384."
+      ]
+     }
     }
    ],
    "hp": "Ch 4 · Ch 7"
