@@ -6,7 +6,8 @@ An item is complete when:
   checkpoint -> its quiz passed
 An item is unlocked when every earlier ready item in the course is complete.
 Planned (not yet written) items are always locked and don't block anything.
-Set GROUNDWORK_UNLOCK=1 to unlock everything (for authoring).
+Everything is unlocked by default (GROUNDWORK_UNLOCK unset or 1); set GROUNDWORK_UNLOCK=0, or run
+`groundwork --locked`, to enforce gating.
 """
 
 from __future__ import annotations
@@ -58,7 +59,7 @@ class Progress:
         return ex_ok and quiz_ok and wu_ok
 
     def states(self, slug: str) -> dict[str, dict]:
-        unlock_all = os.environ.get("GROUNDWORK_UNLOCK") == "1"
+        unlock_all = os.environ.get("GROUNDWORK_UNLOCK", "1") != "0"
         course = content.course(slug)
         out = {}
         blocked_by = None

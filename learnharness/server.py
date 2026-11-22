@@ -270,9 +270,13 @@ def main():
 
     p = argparse.ArgumentParser(description="Run Groundwork locally.")
     p.add_argument("--host", default="127.0.0.1")
-    p.add_argument("--port", type=int, default=8000)
+    p.add_argument("--port", type=int, default=8765)
+    p.add_argument("--locked", action="store_true", help="enforce chapter gating (each item unlocks when the previous ones are complete)")
     a = p.parse_args()
-    print(f"Groundwork running at http://{a.host}:{a.port}")
+    if a.locked:
+        os.environ["GROUNDWORK_UNLOCK"] = "0"
+    mode = "locked: complete items in order" if os.environ.get("GROUNDWORK_UNLOCK", "1") == "0" else "everything unlocked"
+    print(f"Groundwork running at http://{a.host}:{a.port} ({mode})")
     uvicorn.run(app, host=a.host, port=a.port, log_level="warning")
 
 

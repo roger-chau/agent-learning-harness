@@ -18,7 +18,7 @@ export ANTHROPIC_API_KEY=sk-ant-...   # only for the Ask panel
 groundwork
 ```
 
-Then open http://127.0.0.1:8000.
+Then open http://127.0.0.1:8765. Use `groundwork --port 9000` for another port, and `groundwork --locked` to enforce gating.
 
 | Environment variable | Default | Meaning |
 |---|---|---|
@@ -26,7 +26,7 @@ Then open http://127.0.0.1:8000.
 | `GROUNDWORK_MODEL` | `claude-opus-5-5` | Model for the Ask panel. |
 | `GROUNDWORK_EFFORT` | `medium` | Thinking effort for the Ask panel. |
 | `GROUNDWORK_DATA` | `data/progress.json` | Where your progress is stored. |
-| `GROUNDWORK_UNLOCK` | unset | Set to `1` to unlock every written chapter (for authoring). |
+| `GROUNDWORK_UNLOCK` | `1` | Every chapter is unlocked. Set to `0` (or run `groundwork --locked`) so each item unlocks only when the ones before it are complete. |
 
 ## How it's built
 
@@ -56,7 +56,7 @@ learnharness/
 
 It runs the threads of a warp one after another and lines up their memory operations and branches by order of execution. For code without divergence, that matches lockstep hardware exactly.
 
-**Gating.** A chapter is complete when its exercises pass and its quiz scores at least 80%. Each item unlocks when everything before it is complete. Planned (unwritten) chapters show as "coming soon".
+**Gating.** A chapter is complete when its exercises pass and its quiz scores at least 80%. By default everything is open; with `groundwork --locked` (or `GROUNDWORK_UNLOCK=0`) each item unlocks only when everything before it is complete. Planned (unwritten) chapters show as "coming soon".
 
 ## Development
 

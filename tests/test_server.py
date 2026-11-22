@@ -11,7 +11,7 @@ SLUG = "gpus-from-first-principles"
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
-    monkeypatch.delenv("GROUNDWORK_UNLOCK", raising=False)
+    monkeypatch.setenv("GROUNDWORK_UNLOCK", "0")
     monkeypatch.setattr(server, "progress", Progress(tmp_path / "p.json"))
     return TestClient(server.app)
 
@@ -108,3 +108,8 @@ def test_unlock_all_env(client, monkeypatch):
     assert client.get(f"/api/courses/{SLUG}/items/1-1").status_code == 200
     assert client.get(f"/api/courses/{SLUG}/items/9-1").status_code == 200
     assert client.get(f"/api/courses/{SLUG}/items/no-such-item").status_code == 404
+
+
+def test_unlocked_by_default(client, monkeypatch):
+    monkeypatch.delenv("GROUNDWORK_UNLOCK", raising=False)
+    assert client.get(f"/api/courses/{SLUG}/items/9-1").status_code == 200
