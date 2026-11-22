@@ -222,6 +222,52 @@
      ]
     },
     {
+     "type": "lab",
+     "id": "L0",
+     "title": "Lab 0: Hello, real GPU",
+     "summary": "Vector add, copy bandwidth and pointer-chase latency on your own card: test Part 0's predictions.",
+     "dir": "labs/L0-hello",
+     "blocks": [
+      [
+       "Why this lab",
+       "predict, then measure"
+      ],
+      [
+       "Setup",
+       "driver, toolkit, profilers"
+      ],
+      [
+       "What to do",
+       "three kernels"
+      ],
+      [
+       "What you should see",
+       "and why"
+      ],
+      [
+       "Passing",
+       "targets and report"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "copy_best_pct",
+       "op": ">=",
+       "value": 75,
+       "label": "Best copy kernel, % of peak DRAM bandwidth"
+      }
+     ],
+     "writeup": {
+      "min_words": 150,
+      "prompts": [
+       "Your predictions (written before running) for copy1, copy4, copy_vec4 and DRAM latency, next to the measurements.",
+       "Explain each miss: which assumption was off (latency, occupancy, request size)?",
+       "What did the latency curve show about your card's caches? Estimate the L1 and L2 sizes from the steps.",
+       "What did changing the block size or K do, and why?"
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p0-checkpoint",
      "title": "Part 0 checkpoint",

@@ -184,6 +184,8 @@ def estimate(slug: str, it: dict) -> dict:
     practice += 8 if it.get("has_quiz") else 0
     wu = it.get("writeup")
     practice += round(wu.get("min_words", 150) / 10) if wu else 0
+    if it.get("type") == "lab":
+        practice += int(it.get("hours", 2) * 60)
     return {"reading": reading, "practice": practice, "words": words}
 
 

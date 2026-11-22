@@ -134,6 +134,8 @@ def get_item(slug: str, item_id: str):
         "next": order[idx + 1]["id"] if idx + 1 < len(order) else None,
         "qa": agent.transcript(progress.qa(slug, item_id)),
         "writeup": it.get("writeup"),
+        "lab": {"dir": it.get("dir"), "targets": it.get("targets", []), "cloud": it.get("cloud", False)} if it["type"] == "lab" else None,
+        "lab_record": progress.lab(slug, item_id) if it["type"] == "lab" else None,
         "writeup_text": progress.writeup(slug, item_id),
     }
 
@@ -207,6 +209,37 @@ def reveal_problem(slug: str, item_id: str, pid: str):
     rec = progress.record_problem(slug, item_id, pid, reveal=not rec.get("solved"))
     return {"solution": pr.get("solution", ""), "answers": {part["id"]: part["answer"] for part in pr["parts"]},
             "record": rec, "state": progress.states(slug)[item_id], "progress": progress.summary(slug)}
+
+
+OPS = {">=": lambda v, t: v >= t, "<=": lambda v, t: v <= t, ">": lambda v, t: v > t, "<": lambda v, t: v < t}
+
+
+def evaluate_lab(it: dict, data: dict) -> dict:
+    """Check a lab's results against the item's targets. Metrics come from the learner's own GPU."""
+    metrics = data.get("metrics") or {}
+    checks = data.get("checks") or {}
+    targets = []
+    for t in it.get("targets", []):
+        v = metrics.get(t["metric"])
+        met = isinstance(v, (int, float)) and OPS[t.get("op", ">=")](v, t["value"])
+        targets.append({"label": t.get("label", t["metric"]), "metric": t["metric"], "op": t.get("op", ">="),
+                        "target": t["value"], "value": v, "met": bool(met)})
+    checks_ok = bool(checks) and all(bool(x) for x in checks.values())
+    return {"passed": checks_ok and all(t["met"] for t in targets), "checks_ok": checks_ok, "targets": targets}
+
+
+@app.post("/api/courses/{slug}/items/{item_id}/lab")
+def submit_lab(slug: str, item_id: str, body: dict):
+    _course(slug)
+    it = _item(slug, item_id)
+    if it["type"] != "lab":
+        raise HTTPException(404, "this item isn't a lab")
+    _require_open(slug, item_id)
+    if body.get("lab") != item_id:
+        raise HTTPException(400, f"these results are for lab {body.get('lab')!r}, not {item_id!r}")
+    result = evaluate_lab(it, body)
+    progress.record_lab(slug, item_id, body, result)
+    return result | {"state": progress.states(slug)[item_id], "progress": progress.summary(slug)}
 
 
 class WriteupIn(BaseModel):

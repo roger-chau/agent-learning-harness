@@ -1,0 +1,40 @@
+<section class="blk" data-n="01">
+<h2>Why this lab</h2>
+<p>Part 0 made predictions from first principles: memory latency is hundreds of nanoseconds, so you need a lot of work in flight to use the bandwidth; on your RTX 2060 Super, one load per warp shouldn't be enough. Now you test them on real silicon. Everything that follows in the real-GPU track uses the setup you do here, the shared harness (<code>labs/common/gw.h</code>), and the habit this lab is really about: <strong>write the prediction down before you run the experiment</strong>.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>Setup (once)</h2>
+<ol>
+<li><strong>Operating system.</strong> Native Linux is simplest. On Windows, use WSL2 with Ubuntu: CUDA works inside WSL2 with the normal Windows NVIDIA driver (don't install a Linux driver inside WSL).</li>
+<li><strong>Driver and toolkit.</strong> A recent NVIDIA driver, and the CUDA Toolkit 12.x from NVIDIA's site (on WSL2, pick the "WSL-Ubuntu" installer). Check: <code>nvidia-smi</code> shows your card; <code>nvcc --version</code> prints 12.x.</li>
+<li><strong>Profilers.</strong> Nsight Compute (<code>ncu</code>) and Nsight Systems (<code>nsys</code>) come with the toolkit. Reading hardware counters needs permission: on Linux, run <code>ncu</code> with <code>sudo</code> or allow it for all users through the driver option <code>NVreg_RestrictProfilingToAdminUsers=0</code>; on Windows/WSL2, enable "Allow access to the GPU performance counters to all users" in the NVIDIA Control Panel's developer settings.</li>
+<li><strong>Groundwork.</strong> Run <code>groundwork</code> on the same machine, so <code>make submit</code> can reach it.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="03">
+<h2>What to do</h2>
+<p>Open <code>labs/L0-hello/l0.cu</code>. Implement the kernels marked <code>TODO</code>:</p>
+<ul>
+<li><strong>A.</strong> <code>add</code>: vector addition with a bounds check (n isn't a multiple of the block size).</li>
+<li><strong>B.</strong> Three copy kernels: one element per thread; <code>copyK&lt;K&gt;</code>, which issues all K loads before any store, with each warp's accesses contiguous; and <code>copy_vec4</code>, one 16-byte <code>float4</code> per thread. The harness checks each one copies exactly, then times it and compares with <code>cudaMemcpy</code>.</li>
+<li><strong>C.</strong> <code>chase</code>: one thread follows a chain of indices, timing itself with <code>clock64()</code>. The harness builds random cyclic chains in arrays from 16 KB to 256 MB, so you see the latency of L1, L2 and DRAM as plateaus.</li>
+</ul>
+<p><strong>Before running, write down</strong> (in the write-up box): your predicted percentage of peak bandwidth for <code>copy1</code>, <code>copy4</code> and <code>copy_vec4</code>, using Chapter 0.4's Example 4; and your guess at the DRAM latency in nanoseconds. Then <code>make run</code>.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>What you should see, and why</h2>
+<ul>
+<li>The copies should improve from 1 to 2 to 4 elements per thread and level off near the hardware's practical ceiling, often 80–90% of the theoretical peak. If <code>copy1</code> is already near that, your card's latency or occupancy differs from the chapter's assumptions: use your measured latency to explain it in the write-up.</li>
+<li>The latency curve should step up as the array outgrows each cache: L1 (tens of cycles), L2 (a few hundred cycles), then DRAM. At the largest sizes TLB misses add to the DRAM number: the Volta microbenchmark paper (Part 5) separates them.</li>
+<li>Part D multiplies your measured DRAM latency by the peak bandwidth: the bytes in flight your card needs. Compare it with what one load per resident warp supplies.</li>
+</ul>
+<p>Then try: change the block size in the launches (128, 512), and <code>K</code> to 8. Profile <code>copy1</code> with <code>make ncu</code> and find "DRAM Throughput" and "Achieved Occupancy" in the report.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Passing</h2>
+<p>All correctness checks pass, and your best copy kernel reaches at least 75% of theoretical peak bandwidth. The lab report asks you to compare every prediction with the measurement, and to explain each miss. That habit is what employers mean by "performance intuition".</p>
+</section>

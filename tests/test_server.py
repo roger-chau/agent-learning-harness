@@ -155,3 +155,27 @@ def test_problem_sets_are_self_consistent():
             assert not content.grade_problem(pr, wrong)["solved"], (it["id"], pr["id"])
             seen += 1
     assert seen >= 40
+
+
+def test_lab_submission(client, monkeypatch):
+    monkeypatch.setenv("GROUNDWORK_UNLOCK", "1")
+    base = f"/api/courses/{SLUG}/items/L0"
+    item = client.get(base).json()
+    assert item["lab"]["dir"] == "labs/L0-hello" and item["lab"]["targets"]
+    good = {"lab": "L0", "device": {"name": "NVIDIA GeForce RTX 2060 SUPER", "cc": "7.5"},
+            "checks": {"copy1 copies correctly": True}, "metrics": {"copy_best_pct": 86.0}}
+    slow = dict(good, metrics={"copy_best_pct": 50.0})
+    wrong = dict(good, checks={"copy1 copies correctly": False})
+    assert client.post(base + "/lab", json=dict(good, lab="L1")).status_code == 400
+    r = client.post(base + "/lab", json=slow).json()
+    assert not r["passed"] and r["targets"][0]["met"] is False
+    r = client.post(base + "/lab", json=wrong).json()
+    assert not r["passed"] and not r["checks_ok"]
+    r = client.post(base + "/lab", json=good).json()
+    assert r["passed"] and r["state"]["state"] in ("open", "complete")
+    rec = client.get(base).json()["lab_record"]
+    assert rec["passed"] and rec["submissions"] == 3 and rec["best"]["metrics"]["copy_best_pct"] == 86.0
+    # a later bad run doesn't undo a pass
+    client.post(base + "/lab", json=slow)
+    assert client.get(base).json()["lab_record"]["passed"]
+    assert client.post(f"/api/courses/{SLUG}/items/0-1/lab", json=good).status_code == 404

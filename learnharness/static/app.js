@@ -174,7 +174,7 @@
   }
 
   // ---------- Course overview ----------
-  const TYPE_LABEL = { chapter: "chapter", milestone: "milestone", checkpoint: "checkpoint", paper: "paper", scenario: "scenario" };
+  const TYPE_LABEL = { chapter: "chapter", milestone: "milestone", checkpoint: "checkpoint", paper: "paper", scenario: "scenario", lab: "GPU lab" };
 
   async function renderCourse(slug) {
     setNav("courses");
@@ -233,10 +233,10 @@
                   ${part.items.map((it) => {
                     const n = it.type === "chapter" ? ++chapterNo : null;
                     const icon = it.state === "complete" ? CHECK : it.state === "open" ? "" : LOCK;
-                    const tone = it.state === "complete" ? "t-mint" : it.state === "open" ? "t-indigo" : it.type === "milestone" ? "t-saffron" : it.type === "paper" ? "t-rose" : it.type === "scenario" ? "t-mint" : "t-empty";
+                    const tone = it.state === "complete" ? "t-mint" : it.state === "open" ? "t-indigo" : it.type === "milestone" ? "t-saffron" : it.type === "paper" ? "t-rose" : it.type === "scenario" ? "t-mint" : it.type === "lab" ? "t-saffron" : "t-empty";
                     const tag = it.state === "planned" ? "coming soon" : it.state === "locked" ? "locked" : TYPE_LABEL[it.type];
                     const label = it.type === "chapter" ? `${it.id.replace("-", ".")}  ${it.title}` : it.title;
-                    const inner = `<span class="n">${it.type === "chapter" ? pad(n) : it.type === "milestone" ? "◆" : it.type === "paper" ? "¶" : it.type === "scenario" ? "★" : "✓"}</span><span class="name">${esc(label)}</span><span class="tag">${icon} ${esc(tag)}</span>`;
+                    const inner = `<span class="n">${it.type === "chapter" ? pad(n) : it.type === "milestone" ? "◆" : it.type === "paper" ? "¶" : it.type === "scenario" ? "★" : it.type === "lab" ? "▣" : "✓"}</span><span class="name">${esc(label)}</span><span class="tag">${icon} ${esc(tag)}</span>`;
                     return it.state === "open" || it.state === "complete"
                       ? `<a class="block ${tone} link" href="#/c/${slug}/${it.id}">${inner}</a>`
                       : `<div class="block ${tone}" title="${it.state === "locked" ? `Complete ${esc(it.blocked_by)} first` : "Not written yet"}">${inner}</div>`;
@@ -262,7 +262,7 @@
     }
     Object.assign(reader, { slug, item: it, course: c });
     const chNum = it.type === "chapter" ? it.id.replace("-", ".") : null;
-    const kicker = it.type === "chapter" ? `Part ${it.part.n} · Chapter ${chNum}` : it.type === "milestone" ? `Part ${it.part.n} · Project milestone` : it.type === "paper" ? `Part ${it.part.n} · Paper` : it.type === "scenario" ? `Part ${it.part.n} · Real-world scenario` : `Part ${it.part.n} · Checkpoint`;
+    const kicker = it.type === "chapter" ? `Part ${it.part.n} · Chapter ${chNum}` : it.type === "milestone" ? `Part ${it.part.n} · Project milestone` : it.type === "paper" ? `Part ${it.part.n} · Paper` : it.type === "scenario" ? `Part ${it.part.n} · Real-world scenario` : it.type === "lab" ? `Part ${it.part.n} · Real-GPU lab` : `Part ${it.part.n} · Checkpoint`;
 
     main.innerHTML = `
       <div class="reader container">
@@ -296,6 +296,15 @@
           ${it.exercises.length ? `<section class="practice" id="practice"><p class="eyebrow">Practice</p><h2>${it.type === "scenario" ? "Your solution" : "Exercises"}</h2>
             <p class="muted">Pass every exercise${it.problems ? ", the problem set" : ""}${it.quiz ? " and the quiz" : ""} to complete the chapter. Your code is saved in this browser as you type.</p>
             <div id="exercises"></div></section>` : ""}
+          ${it.lab ? `<section class="practice lab" id="lab-sec"><p class="eyebrow">${it.lab.cloud ? "Real GPU · rented Ampere/Hopper" : "Real GPU · your RTX 2060 Super"}</p><h2>Run it</h2>
+            <p class="muted">In a terminal on the machine with the GPU, from your clone of this repository:</p>
+            <pre class="lab-cmd"><code>cd courses/gpus-from-first-principles/${esc(it.lab.dir)}
+make run        # build, test correctness, measure; writes results.json
+make submit     # record the results here (Groundwork must be running)</code></pre>
+            <p class="muted small">Other targets: <code>make regs</code> (registers and spills), <code>make ptx</code>, <code>make sass</code>, <code>make ncu</code> (Nsight Compute), <code>make nsys</code> (Nsight Systems). Not on a 20-series card? Add <code>ARCH=sm_86</code> (30-series), <code>sm_89</code> (40-series) or <code>sm_80</code>/<code>sm_90</code> (A100/H100).</p>
+            ${it.lab.targets.length ? `<table class="lab-targets"><thead><tr><th>Target</th><th>Needed</th><th>Your best run</th></tr></thead><tbody id="lab-tbody"></tbody></table>` : ""}
+            <div class="quiz-actions"><button class="btn btn-ghost btn-sm" type="button" id="lab-refresh">Check for new results</button><span class="muted" id="lab-status"></span></div>
+          </section>` : ""}
           ${it.problems ? `<section class="practice" id="problems-sec"><p class="eyebrow">Problem set</p><h2>Practice problems</h2>
             <p class="muted">Solve at least ${Math.round(it.problems.pass * 100)}% to complete the chapter. ★ mechanics · ★★ analysis · ★★★ design. Hints are free; a worked solution unlocks when you solve a problem, or after ${2} tries if you give up (then it doesn't count).</p>
             <div class="ps-progress" id="ps-progress"></div>
@@ -334,6 +343,7 @@
 
     await renderExercises(slug, it);
     renderProblems(slug, it);
+    if (it.lab) setupLab(slug, it);
     renderQuiz(slug, it);
     renderGate(it.state, it);
     setupAsk(slug, it);
@@ -504,6 +514,33 @@
     });
   }
 
+  function setupLab(slug, it) {
+    const status = $("#lab-status"), tbody = $("#lab-tbody");
+    const show = (rec) => {
+      const last = rec && rec.last;
+      if (tbody) {
+        tbody.innerHTML = it.lab.targets.map((t) => {
+          const lt = last && (last.targets || []).find((x) => x.metric === t.metric);
+          const v = lt && typeof lt.value === "number" ? +lt.value.toFixed(2) : "–";
+          return `<tr class="${lt ? (lt.met ? "met" : "missed") : ""}"><td>${esc(t.label || t.metric)}</td><td>${esc(t.op || ">=")} ${t.value}</td><td>${v}${lt ? (lt.met ? " ✓" : " ✗") : ""}</td></tr>`;
+        }).join("");
+      }
+      status.textContent = !rec ? "No results submitted yet." :
+        `${rec.passed ? "Passed" : "Not passed yet"} · ${rec.submissions} submission${rec.submissions > 1 ? "s" : ""}` +
+        (last && last.device ? ` · last run on ${last.device.name}` : "") +
+        (last && last.checks && Object.values(last.checks).some((x) => !x) ? " · a correctness check failed" : "");
+    };
+    show(it.lab_record);
+    const refresh = async () => {
+      try {
+        const r = await api(`/api/courses/${slug}/items/${it.id}`);
+        if (JSON.stringify(r.lab_record) !== JSON.stringify(it.lab_record)) { it.lab_record = r.lab_record; it.state = r.state; show(r.lab_record); renderGate(r.state, it); }
+      } catch (e) { /* ignore */ }
+    };
+    $("#lab-refresh").addEventListener("click", refresh);
+    const timer = setInterval(() => { if (!document.body.contains($("#lab-sec") || document.createElement("i"))) clearInterval(timer); else if (!document.hidden) refresh(); }, 5000);
+  }
+
   function renderQuiz(slug, it) {
     const form = $("#quiz");
     if (!form || !it.quiz) return;
@@ -582,6 +619,7 @@
     const exLeft = Object.values(state.exercises || {}).filter((v) => !v).length;
     const quizLeft = it.quiz && !(state.quiz && state.quiz.passed);
     const wuLeft = it.writeup && (state.writeup_words || 0) < it.writeup.min_words;
+    const labLeft = it.lab && !(it.lab_record && it.lab_record.passed);
     const psLeft = (() => {
       if (!it.problems) return 0;
       const n = it.problems.problems.length, need = Math.ceil(it.problems.pass * n - 1e-9);
@@ -594,7 +632,7 @@
     g.innerHTML = done
       ? `<div><b>${CHECK} Complete.</b> ${it.next ? "The next chapter is unlocked." : "That's everything written so far."}</div>
          <a class="btn btn-primary" href="${nextLink}">${it.next ? "Next" : "Back to course"} ${ARROW}</a>`
-      : `<div><b>${LOCK} Next chapter locked.</b> ${[exLeft ? `${exLeft} check${exLeft > 1 ? "s" : ""} to pass` : "", psLeft ? `${psLeft} problem${psLeft > 1 ? "s" : ""} to solve` : "", quizLeft ? "quiz to pass" : "", wuLeft ? "write-up to save" : ""].filter(Boolean).join(" · ") || "Finishing up…"}</div>
+      : `<div><b>${LOCK} Next chapter locked.</b> ${[exLeft ? `${exLeft} check${exLeft > 1 ? "s" : ""} to pass` : "", labLeft ? "lab results to submit" : "", psLeft ? `${psLeft} problem${psLeft > 1 ? "s" : ""} to solve` : "", quizLeft ? "quiz to pass" : "", wuLeft ? "write-up to save" : ""].filter(Boolean).join(" · ") || "Finishing up…"}</div>
          <button class="btn btn-ghost" type="button" disabled>Next ${ARROW}</button>`;
     // keep the TOC in sync
     if (done) {

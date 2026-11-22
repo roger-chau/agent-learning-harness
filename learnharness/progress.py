@@ -51,11 +51,13 @@ class Progress:
             return False
         rec = self.data["courses"].get(slug, {}).get("items", {}).get(it["id"]) or {}
         wu = it.get("writeup")
-        if not it["exercises"] and not it["has_quiz"] and not wu:
+        if not it["exercises"] and not it["has_quiz"] and not wu and it["type"] != "lab":
             return bool(rec.get("read"))  # nothing to pass: reading it is enough
         ex_ok = all(rec.get("exercises", {}).get(e, {}).get("passed") for e in it["exercises"])
         quiz_ok = (not it["has_quiz"]) or bool((rec.get("quiz") or {}).get("passed"))
         wu_ok = (not wu) or (rec.get("writeup") or {}).get("words", 0) >= wu.get("min_words", 100)
+        if it["type"] == "lab":
+            return bool((rec.get("lab") or {}).get("passed"))
         pr_ok = True
         if it.get("has_problems"):
             ps = content.problems(slug, it["id"]) or {"problems": []}
@@ -126,6 +128,24 @@ class Progress:
             self._mark(slug, item_id, rec)
             self.save()
             return dict(p)
+
+    def record_lab(self, slug: str, item_id: str, data: dict, result: dict) -> None:
+        with self._lock:
+            rec = self._item(slug, item_id)
+            prev = rec.get("lab") or {"passed": False, "submissions": 0}
+            rec["lab"] = {
+                "passed": prev["passed"] or result["passed"],
+                "submissions": prev["submissions"] + 1,
+                "last": {"device": data.get("device"), "metrics": data.get("metrics"), "checks": data.get("checks"),
+                         "targets": result["targets"], "passed": result["passed"], "at": _now()},
+                "best": prev.get("best") if prev.get("best") and not result["passed"] else
+                        {"device": data.get("device"), "metrics": data.get("metrics"), "at": _now()} if result["passed"] else prev.get("best"),
+            }
+            self._mark(slug, item_id, rec)
+            self.save()
+
+    def lab(self, slug: str, item_id: str) -> dict | None:
+        return (self.data["courses"].get(slug, {}).get("items", {}).get(item_id) or {}).get("lab")
 
     def record_quiz(self, slug: str, item_id: str, result: dict) -> None:
         with self._lock:
