@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A topological order exists iff…",
+   "options": [
+    "the directed graph has no cycle",
+    "the graph is connected",
+    "it's a tree"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Kahn's algorithm starts from…",
+   "options": [
+    "nodes with in-degree 0",
+    "the highest-degree node",
+    "any node"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Minimum parallel rounds equals…",
+   "options": [
+    "the longest path (in nodes) of the DAG",
+    "the number of nodes",
+    "the number of edges"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "For the lexicographically smallest order, the frontier is…",
+   "options": [
+    "a min-heap",
+    "a stack",
+    "a queue"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "The most common topological-sort bug is…",
+   "options": [
+    "reversed edge direction",
+    "using a heap",
+    "counting nodes"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

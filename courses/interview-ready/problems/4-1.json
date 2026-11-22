@@ -1,0 +1,246 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Model it",
+   "statement": "<p>Name the nodes and edges.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Open the lock: a 4-wheel combination lock, one wheel turned by one notch per move, avoiding dead-ends. Nodes are…",
+     "options": [
+      "the 10,000 combinations; edges are single-notch turns (8 per node)",
+      "the wheels; edges join adjacent wheels",
+      "the dead-ends"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fewest moves → algorithm?",
+     "options": [
+      "BFS",
+      "Dijkstra",
+      "DFS"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "States and moves."
+   ],
+   "solution": "<p>The state space is implicit: 10⁴ combinations, each with 8 neighbours, and every move costs 1, so BFS.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Islands",
+   "statement": "<p>Grid rows: 11000, 11011, 00100, 01011.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of islands (4-directional)?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Flood-fill each new '1'."
+   ],
+   "solution": "<p>5: the top-left 2 × 2 block, the pair at columns 4–5 of row 2, the single centre cell, the lone 1 at row 4 column 2, and the 1s at row 4 columns 4–5 (diagonals don't connect).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Rotting",
+   "statement": "<p>Grid <code>[[2, 1, 1, 0], [1, 1, 0, 0], [0, 1, 1, 1], [0, 0, 0, 1]]</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minutes until no fresh orange remains (or −1)?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Multi-source BFS layers."
+   ],
+   "solution": "<p>The rot travels along the only path of fresh oranges; the farthest one, at the bottom right, is reached after 6 minutes.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Why multi-source?",
+   "statement": "<p>A 1000 × 1000 grid with 5,000 rotten oranges.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "One BFS per rotten orange, keeping each cell's minimum, costs about…",
+     "options": [
+      "5 × 10⁹ cell visits",
+      "10⁶",
+      "5,000"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Multi-source BFS costs about…",
+     "options": [
+      "10⁶ cell visits",
+      "5 × 10⁹",
+      "10¹²"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Sources × cells versus cells."
+   ],
+   "solution": "<p>Seeding all sources at distance 0 is one BFS from a virtual super-source: O(cells).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Enqueue or dequeue?",
+   "statement": "<p>BFS on an open 100 × 100 grid with 8 neighbours per cell, marking cells visited only when <em>dequeued</em>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What goes wrong?",
+     "options": [
+      "A cell may be pushed by up to 8 neighbours before it is dequeued, multiplying the queue size",
+      "Distances become wrong",
+      "Nothing"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "When does a duplicate get in?"
+   ],
+   "solution": "<p>Distances stay correct, since BFS order still holds, but the queue holds duplicates, costing up to 8× the work and memory. Mark on enqueue.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "State design",
+   "statement": "<p>Shortest path in a grid where you may remove at most k obstacles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "BFS state?",
+     "options": [
+      "(row, col, obstacles removed)",
+      "(row, col)",
+      "(row, col, direction)"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Number of states for a 40 × 40 grid with k = 40?",
+     "answer": 65600,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Two arrivals at the same cell with different budgets are different situations."
+   ],
+   "solution": "<p>(r, c, used) with used ∈ [0, k]: 40 · 40 · 41 = 65,600 states. A visited set on (r, c) alone is wrong, because a later arrival with more budget left might succeed.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Word ladder",
+   "statement": "<p>begin = \"hit\", end = \"cog\", words = [hot, dot, dog, lot, log, cog].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer (number of words in the sequence)?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Neighbour candidates generated per 3-letter word (26 letters per position, including the unchanged one)?",
+     "answer": 78,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "hit → hot → dot → dog → cog."
+   ],
+   "solution": "<p>5 words. Generating 3 × 26 = 78 candidate strings per word and checking a set beats comparing against every word when the list is large.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Bidirectional BFS",
+   "statement": "<p>A branching factor of 10 and a shortest distance of 6.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Nodes explored by one-sided BFS, roughly (10^d)?",
+     "answer": 1000000,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bidirectional (2 · 10^(d/2))?",
+     "answer": 2000,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Two searches of depth 3."
+   ],
+   "solution": "<p>10⁶ versus 2 × 10³: the frontiers meet in the middle. Always expand the smaller frontier.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Border inward",
+   "statement": "<p>Surrounded regions: flip every 'O' region not connected to the border into 'X'.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "The efficient approach:",
+     "options": [
+      "Flood-fill from the border 'O's to mark the safe cells, then flip everything else",
+      "From each 'O', search for the border",
+      "Sort the cells"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Reverse the direction of the search."
+   ],
+   "solution": "<p>One pass from the border marks every safe cell, so the whole thing is O(cells). Searching from each cell outward can repeat work O(cells) times.</p>"
+  }
+ ]
+}

@@ -557,14 +557,149 @@
    "id": "p4",
    "n": 4,
    "title": "Graphs",
-   "summary": "BFS/DFS on grids and implicit graphs, topological sort, Dijkstra, 0-1 BFS, union-find, MST.",
+   "summary": "Model the story as states and moves, then pick the search by the edge weights: BFS, topological order, Dijkstra, 0-1 BFS, Bellman–Ford, union-find and MSTs.",
    "items": [
     {
      "type": "chapter",
      "id": "4-1",
-     "title": "Graphs",
-     "summary": "BFS/DFS on grids and implicit graphs, topological sort, Dijkstra, 0-1 BFS, union-find, MST.",
-     "status": "planned"
+     "title": "BFS and DFS",
+     "summary": "Modelling states and moves; BFS for fewest steps, multi-source BFS, implicit graphs.",
+     "coding": [
+      "number-of-islands",
+      "rotting-oranges",
+      "shortest-path-binary-matrix",
+      "word-ladder"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "states and moves"
+      ],
+      [
+       "The core idea",
+       "BFS visits by distance"
+      ],
+      [
+       "The invariant and template",
+       "mark on enqueue"
+      ],
+      [
+       "A thinking trace",
+       "word ladder"
+      ],
+      [
+       "Traps and variations",
+       "state design, border inward"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "4-2",
+     "title": "Topological order",
+     "summary": "Dependencies: Kahn's algorithm, cycle detection, layers and critical paths.",
+     "coding": [
+      "course-schedule",
+      "course-order",
+      "parallel-courses",
+      "alien-dictionary"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "before, prerequisite"
+      ],
+      [
+       "The core idea",
+       "in-degree zero goes first"
+      ],
+      [
+       "The invariant and template",
+       "Kahn, edge direction"
+      ],
+      [
+       "A thinking trace",
+       "alien dictionary"
+      ],
+      [
+       "Traps and variations",
+       "DAG DP, scheduling"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "4-3",
+     "title": "Weighted shortest paths",
+     "summary": "Choose by the weights: Dijkstra, 0-1 BFS, Bellman–Ford with bounded edges, minimax paths.",
+     "coding": [
+      "network-delay-time",
+      "cheapest-flights-k-stops",
+      "path-minimum-effort",
+      "min-obstacles"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "pick by weights"
+      ],
+      [
+       "The core idea",
+       "settled is final"
+      ],
+      [
+       "The invariant and template",
+       "lazy deletion, deque, rounds"
+      ],
+      [
+       "A thinking trace",
+       "cheapest flights within k stops"
+      ],
+      [
+       "Traps and variations",
+       "copies, overflow, density"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "4-4",
+     "title": "Union-find and MSTs",
+     "summary": "Merge groups and ask about membership; Kruskal, Prim and the cut property.",
+     "coding": [
+      "number-of-provinces",
+      "redundant-connection",
+      "equality-equations",
+      "min-cost-connect-points"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "merging groups"
+      ],
+      [
+       "The core idea",
+       "compression and size"
+      ],
+      [
+       "The invariant and template",
+       "DSU, Kruskal, Prim"
+      ],
+      [
+       "A thinking trace",
+       "equality equations"
+      ],
+      [
+       "Traps and variations",
+       "reverse time, weighted DSU"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p4-checkpoint",
+     "title": "Part 4 checkpoint",
+     "summary": "Graphs: model the problem and choose the search."
     }
    ]
   },

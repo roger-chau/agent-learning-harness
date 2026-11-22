@@ -1,0 +1,61 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Graphs rarely arrive labelled "graph". The interview skill is <strong>modelling</strong>: noticing that something has <em>states</em> and <em>moves between states</em>. Grids (cells and their neighbours), words that differ by one letter, lock combinations, board positions, "minimum number of operations to turn X into Y": all of these are graphs. Once you've named the nodes and edges, the algorithm is usually standard:</p>
+<table>
+<tr><th>Question</th><th>Tool</th></tr>
+<tr><td>connected? how many components? flood fill?</td><td>DFS or BFS (either)</td></tr>
+<tr><td>fewest steps, every move costing the same</td><td><strong>BFS</strong></td></tr>
+<tr><td>spreading from many places at once ("minutes until…")</td><td><strong>multi-source BFS</strong></td></tr>
+<tr><td>moves costing 0 or 1</td><td>0-1 BFS (Chapter 4.3)</td></tr>
+<tr><td>arbitrary non-negative costs</td><td>Dijkstra (Chapter 4.3)</td></tr>
+</table>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: BFS visits in order of distance</h2>
+<p>BFS processes nodes in non-decreasing distance from the start, because the queue only ever holds nodes at distance d followed by nodes at distance d + 1. So the first time BFS reaches a node is along a shortest path. That one fact is the proof of every BFS shortest-path answer, and why BFS is wrong as soon as edges have different weights.</p>
+<p>DFS goes deep first. It's the natural tool for "explore everything reachable", connectivity, cycle detection and anything that wants a recursion: backtracking and topological order.</p>
+<p><strong>Multi-source BFS:</strong> put every source in the queue at distance 0. That's the same as adding a virtual super-source joined to all of them, so one BFS gives every node its distance to the <em>nearest</em> source in O(V + E), instead of running a BFS per source.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>from collections import deque
+def bfs(starts):
+    dist = {s: 0 for s in starts}         # mark on ENQUEUE
+    q = deque(starts)
+    while q:
+        u = q.popleft()
+        for v in neighbours(u):           # grid: 4 directions + bounds check
+            if v not in dist:             # implicit: generate on demand
+                dist[v] = dist[u] + 1
+                q.append(v)
+    return dist</code></pre>
+<p>The invariant: <code>dist</code> holds every node discovered so far with its final shortest distance; the queue holds the discovered nodes not yet expanded, in order of distance. Process "len(q) nodes per round" when you need to know where one layer ends (minutes, levels, semesters).</p>
+<p>For grids, write the neighbour loop once with a direction array, and check bounds before indexing. In Python use an explicit stack or a deque rather than recursion: a 300 × 300 grid is 90,000 cells deep in the worst case.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: word ladder</h2>
+<ol>
+<li><strong>Model:</strong> nodes are words; an edge joins words that differ in exactly one position. We want the fewest edges from begin to end, all costing 1, so <strong>BFS</strong>.</li>
+<li><strong>Brute force on the graph:</strong> build every edge by comparing all pairs: O(N² L). With N = 5,000 words that is 25 million comparisons before the search starts.</li>
+<li><strong>Bottleneck:</strong> building edges we may never use.</li>
+<li><strong>Transformation:</strong> make the graph <strong>implicit</strong>. Generate a word's neighbours when you pop it, by trying all 26 letters at each position and keeping those in a hash set. That's O(26 L) per word, so O(N · 26 · L) overall.</li>
+<li><strong>Further:</strong> bidirectional BFS from both ends, always expanding the smaller frontier. With branching factor b and distance d, that's about 2·b<sup>d/2</sup> nodes instead of b<sup>d</sup>.</li>
+<li><strong>Test:</strong> end not in the list (0), begin equal to end, and an unreachable end.</li>
+</ol>
+<p>The move to remember: <strong>"generate neighbours on demand"</strong> makes huge or infinite state spaces searchable. It's how you solve open-the-lock, the sliding puzzle and minimum genetic mutation.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Mark on enqueue, not on dequeue,</strong> or a node can enter the queue many times. It stays correct, but can be far slower.</li>
+<li><strong>State must include everything that matters.</strong> With "you may break at most k walls", the state is (row, col, walls used), not (row, col). Getting the state right is the hard part of most "BFS with a twist" problems.</li>
+<li><strong>Mutating the input</strong> (setting visited cells to '0') saves memory, but ask first, or restore it afterwards.</li>
+<li><strong>Bipartite check:</strong> BFS or DFS 2-colouring; an edge between two same-coloured nodes means an odd cycle.</li>
+<li><strong>Clone a graph:</strong> BFS or DFS with a map from old node to new node, the same idea as copying a list with random pointers.</li>
+<li><strong>Pacific–Atlantic and surrounded regions:</strong> search <em>from the border inward</em> instead of from every cell outward. Reversing the direction of the search is a common transformation.</li>
+</ul>
+</section>

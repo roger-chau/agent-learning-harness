@@ -1,0 +1,63 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p><strong>Union-find</strong> (disjoint-set union, DSU) answers "are x and y connected?" while edges are <em>added</em> over time: counting components online, detecting the edge that creates a cycle, grouping equivalent items (accounts with shared emails, equal variables, similar strings), and Kruskal's MST. If the problem merges groups and asks about membership, think DSU.</p>
+<p><strong>Minimum spanning trees</strong> appear as "connect everything at minimum total cost": cables, roads, points. Related problems reduce to them: the minimax path between two nodes lies on the MST, and clustering into k groups means cutting the k − 1 most expensive MST edges.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p>Each set is a tree of parent pointers; its root is its name. <code>find</code> walks to the root; <code>union</code> links one root under the other. Two optimisations make each operation effectively O(1) (amortised O(α(n)), where α is the inverse Ackermann function, below 5 for any realistic n):</p>
+<ul>
+<li><strong>Path compression:</strong> during find, point nodes closer to the root (path halving: <code>parent[x] = parent[parent[x]]</code>).</li>
+<li><strong>Union by size or rank:</strong> attach the smaller tree under the larger, so depth stays O(log n) even without compression.</li>
+</ul>
+<p>The limits: DSU can't <em>split</em> sets or delete edges, and it can't give you paths. If deletions are needed, process the operations in reverse (deletions become additions), which is a classic transformation.</p>
+<p><strong>The MST cut property:</strong> for any division of the nodes into two sides, the cheapest edge crossing it belongs to some MST. Kruskal takes edges in increasing weight, keeping those that join different DSU sets. Prim grows one tree, always adding its cheapest outgoing edge. Both are this property applied greedily.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>class DSU:
+    def __init__(self, n):
+        self.p = list(range(n)); self.sz = [1] * n; self.count = n
+    def find(self, x):
+        while self.p[x] != x:
+            self.p[x] = self.p[self.p[x]]   # path halving
+            x = self.p[x]
+        return x
+    def union(self, a, b):
+        a, b = self.find(a), self.find(b)
+        if a == b: return False            # already connected: this edge closes a cycle
+        if self.sz[a] &lt; self.sz[b]: a, b = b, a
+        self.p[b] = a; self.sz[a] += self.sz[b]; self.count -= 1
+        return True
+
+# Kruskal: for w, u, v in sorted(edges): if dsu.union(u, v): total += w
+# Prim on a dense graph: best[v] = cheapest edge from the tree to v; add argmin; update. O(V²)</code></pre>
+<p>The invariant: two nodes are in the same set exactly when the edges processed so far connect them. <code>union</code> returning False is the cycle detector.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: satisfiability of equality equations</h2>
+<ol>
+<li><strong>Model:</strong> variables are nodes, and "a==b" is an edge. Equality is transitive, so the variables forced equal are exactly the connected components.</li>
+<li><strong>The tempting mistake:</strong> processing equations in the given order, checking each "!=" as it arrives. ["a!=c", "a==b", "b==c"] passes the "!=" check before a and c are merged.</li>
+<li><strong>Fix the order:</strong> all equalities first (build the components), then all inequalities (each must cross components). Two passes, O(n α).</li>
+<li><strong>Why DSU and not DFS?</strong> Either works here. DSU is shorter, and it stays correct if equations stream in and you must answer after each one (then ask the follow-up: what if an inequality arrives before its contradicting equalities? Keep the inequalities and re-check them on each union).</li>
+<li><strong>Test:</strong> "a!=a" (false), "a==a" (true), and variables that appear only in inequalities.</li>
+</ol>
+<p>The transferable move: <strong>when constraints have different kinds, ask what order to process them in</strong>. Building before checking, or reversing time to turn deletions into additions, often turns a hard problem into a simple one.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Recursive find</strong> in Python on a long chain overflows the stack before compression kicks in. Use the iterative version.</li>
+<li><strong>Union of roots, not nodes:</strong> <code>p[a] = b</code> on non-roots corrupts the structure.</li>
+<li><strong>Mapping keys to indices:</strong> for strings (emails, names) keep a dict from key to int, or use a dict-based DSU.</li>
+<li><strong>Accounts merge:</strong> union every email with the account's first email; group by root; sort each group.</li>
+<li><strong>Number of islands II</strong> (land added cell by cell, report islands after each): DSU over cells, the online version of flood fill.</li>
+<li><strong>Kruskal versus Prim:</strong> Kruskal is O(E log E), best for sparse edge lists. Array Prim is O(V²), best for dense or implicit complete graphs such as points in the plane.</li>
+<li><strong>Weighted DSU</strong> (each node stores its ratio or offset to its parent) answers "a / b = ?" style queries. Evaluate-division is the standard example.</li>
+</ul>
+</section>

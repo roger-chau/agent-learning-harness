@@ -1,0 +1,65 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>A shortest or cheapest path where edges have <strong>different costs</strong>. Pick the tool by what the weights look like and what constraints sit on the path:</p>
+<table>
+<tr><th>Weights / constraint</th><th>Algorithm</th><th>Cost</th></tr>
+<tr><td>all equal</td><td>BFS</td><td>O(V + E)</td></tr>
+<tr><td>0 or 1</td><td>0-1 BFS (deque)</td><td>O(V + E)</td></tr>
+<tr><td>non-negative</td><td>Dijkstra (binary heap)</td><td>O(E log V)</td></tr>
+<tr><td>negative edges, or "at most k edges"</td><td>Bellman–Ford (k rounds)</td><td>O(kE)</td></tr>
+<tr><td>all pairs, small V</td><td>Floyd–Warshall</td><td>O(V³)</td></tr>
+<tr><td>a DAG</td><td>relax in topological order</td><td>O(V + E)</td></tr>
+</table>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: settle the closest node</h2>
+<p>Dijkstra generalises BFS. Always expand the unsettled node with the smallest tentative distance. With non-negative weights that distance is final: any other route to it would leave the settled region through a node at least as far away, then add non-negative edges.</p>
+<p>That proof tells you exactly when Dijkstra applies: <strong>any path cost that never decreases when you extend the path</strong>. Sums of non-negative weights qualify, and so does the <em>maximum</em> edge on the path (minimum effort), or a product of probabilities ≤ 1 (maximise it by running on −log). Negative edges break the proof, and so does a constraint like "at most k stops" that makes a costlier-but-shorter partial path worth keeping.</p>
+<p>When the constraint breaks it, <strong>enlarge the state</strong>: run Dijkstra on (node, stops used), or use Bellman–Ford, whose round i computes the best cost using at most i edges.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>import heapq
+def dijkstra(g, s):                   # g[u] = [(v, w), ...], w >= 0
+    dist = {s: 0}; h = [(0, s)]
+    while h:
+        d, u = heapq.heappop(h)
+        if d > dist[u]: continue      # stale entry: lazy deletion
+        for v, w in g[u]:
+            nd = d + w
+            if nd < dist.get(v, float('inf')):
+                dist[v] = nd; heapq.heappush(h, (nd, v))
+    return dist
+
+# 0-1 BFS: weight-0 moves to the FRONT, weight-1 moves to the BACK
+# Bellman–Ford with at most k edges: k rounds, each relaxing from a COPY of the previous round</code></pre>
+<p>Invariant: every popped, non-stale (d, u) has d equal to the true distance of u. The heap may hold several entries per node, and lazy deletion is simpler than a decrease-key operation, costing O(E log E) = O(E log V).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: cheapest flights within k stops</h2>
+<ol>
+<li><strong>Clarify:</strong> k stops means at most k + 1 flights. Prices are positive. The graph is directed.</li>
+<li><strong>First idea:</strong> Dijkstra on price. <strong>Attack it:</strong> A→D directly costs 500; A→B→C→D costs 300, but k = 1 allows only 2 flights. Dijkstra settles D at 300 via a route that is too long, and may already have discarded the 500 route. The constraint breaks the "settled is final" proof.</li>
+<li><strong>Diagnose:</strong> the state "at city v" is not enough; "at city v having used i flights" is.</li>
+<li><strong>Option A:</strong> Bellman–Ford, which has exactly that structure. After round i, d[v] is the cheapest price using ≤ i flights. Run k + 1 rounds, <em>relaxing from the previous round's array</em>. Relaxing in place could chain two flights in one round. O(k · E).</li>
+<li><strong>Option B:</strong> Dijkstra on (cost, city, flights). Prune a state if this city was already reached with fewer flights at lower cost.</li>
+<li><strong>Test:</strong> k = 0 (direct flights only), src = dst (cost 0), and an unreachable dst.</li>
+</ol>
+<p>Two lessons: <strong>re-check an algorithm's correctness proof against the problem's extra constraints</strong>, and <strong>when the proof fails, add the missing information to the state.</strong></p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>The copy in Bellman–Ford</strong> when edges are bounded (above).</li>
+<li><strong>Overflow:</strong> INT_MAX + w wraps in C++. Use long long, or INF = 1e18, or check d != INF before relaxing.</li>
+<li><strong>Early exit:</strong> with a single target, return when the target is <em>popped</em>, not when it's first pushed.</li>
+<li><strong>Dense graphs:</strong> with E ≈ V², array Dijkstra (no heap) is O(V²) and beats the heap version.</li>
+<li><strong>Path reconstruction:</strong> keep a parent pointer on each relaxation.</li>
+<li><strong>Negative cycles:</strong> Bellman–Ford detects them with one extra round. Currency arbitrage, a quant favourite, is "is there a negative cycle in −log(rates)?"</li>
+<li><strong>Swim in rising water, minimum effort path:</strong> minimax paths, solvable three ways (Dijkstra with max, binary search plus BFS, or Kruskal with union-find). Say all three.</li>
+</ul>
+</section>

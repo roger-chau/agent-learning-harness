@@ -1,0 +1,55 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Dependencies: "before", "prerequisite", "must be built first", "ordering consistent with these rules", build systems, task scheduling, spreadsheet recalculation, the instruction scheduling you'll do as a compiler engineer. The graph is <strong>directed</strong>, and the questions are: is there a cycle (is it possible at all)? Give a valid order. What's the minimum number of rounds if independent tasks run in parallel?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p>A directed graph has a topological order if and only if it has no cycle. <strong>Kahn's algorithm</strong> constructs one: a node with in-degree 0 has no unmet prerequisites, so it can go first. Remove it, decrement its successors' in-degrees, and repeat. If you run out of in-degree-0 nodes before placing them all, the remaining nodes contain a cycle.</p>
+<p>The <strong>DFS</strong> version: a node's post-order finish time comes after all its descendants', so the reverse post-order is a topological order. Cycle detection uses three colours (unvisited, on the current path, finished); reaching a node that is on the current path means a back edge, which means a cycle.</p>
+<p>Processing Kahn's frontier <em>in layers</em> gives the minimum number of parallel rounds, which equals the longest path in the DAG (the <strong>critical path</strong>). The frontier's data structure decides <em>which</em> valid order you get: a stack or queue gives any order, and a min-heap gives the lexicographically smallest.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>def topo(n, edges):                 # edge (u, v): u before v
+    g = [[] for _ in range(n)]; indeg = [0] * n
+    for u, v in edges:
+        g[u].append(v); indeg[v] += 1
+    frontier = [i for i in range(n) if indeg[i] == 0]   # invariant: all prerequisites placed
+    order = []
+    while frontier:
+        u = frontier.pop()          # heapq.heappop for smallest order; layer by layer for rounds
+        order.append(u)
+        for v in g[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                frontier.append(v)
+    return order if len(order) == n else None   # None: there is a cycle</code></pre>
+<p><strong>Read the edge direction twice.</strong> In "[a, b] means take b before a", the edge is b → a. Getting this backwards still produces an order, just the reverse one, and passes symmetric examples. This is the single most common bug.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: alien dictionary</h2>
+<ol>
+<li><strong>Clarify:</strong> the words are sorted by an unknown alphabet. Return any consistent letter order (our version: the smallest), or "" if the input is contradictory.</li>
+<li><strong>What information do we have?</strong> Sortedness constrains only <em>adjacent</em> words. That's a key reduction: n − 1 comparisons, not n².</li>
+<li><strong>What does one comparison give?</strong> The first position where the two words differ: a before b means letter x precedes y. Nothing after that position tells us anything.</li>
+<li><strong>Edge case to find early:</strong> if there is no differing position and the first word is longer ("abc" before "ab"), the input is invalid. Interviewers plant this.</li>
+<li><strong>Now it's a solved problem:</strong> a graph on letters, then a topological sort. A cycle means "".</li>
+<li><strong>Test:</strong> a single word (its letters in any order: in ours, sorted), duplicate constraints (don't double-count in-degree), and letters that appear but are unconstrained.</li>
+</ol>
+<p>The habit: <strong>turn the story into a graph explicitly</strong>, saying "nodes are letters, edges come from first mismatches". Then the algorithm is a lookup, and you spend your time on the edge cases where the points are.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Edge direction</strong> (see above), and <strong>duplicate edges</strong> inflating in-degrees.</li>
+<li><strong>Disconnected nodes</strong> with no edges must still appear in the order.</li>
+<li><strong>Recursive DFS in Python</strong> on 10⁵ nodes hits the recursion limit; Kahn is iterative by nature.</li>
+<li><strong>Longest path in a DAG</strong> (or DP over a DAG in general): process nodes in topological order and relax successors. This is how you get critical paths, the longest increasing path in a matrix, and the number of paths.</li>
+<li><strong>Minimum semesters with at most k courses per term</strong> is NP-hard in general. The interview version uses bitmask DP over small n. Know where the easy problem ends.</li>
+<li><strong>Compiler connection:</strong> list scheduling of instructions is Kahn's algorithm with a priority (critical-path length) on the frontier. You'll meet it again in the GPU course's compiler part.</li>
+</ul>
+</section>

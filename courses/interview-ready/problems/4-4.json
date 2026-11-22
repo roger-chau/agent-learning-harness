@@ -1,0 +1,226 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "DSU or not?",
+   "statement": "<p>Which problems suit union-find?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "Count components as edges arrive one by one",
+      "Shortest path between two nodes",
+      "Find the edge that closes a cycle",
+      "Merge accounts sharing an email"
+     ],
+     "answer": [
+      0,
+      2,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Merging groups, membership queries."
+   ],
+   "solution": "<p>DSU knows connectivity, not distances.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Redundant edge",
+   "statement": "<p>Edges in order: [[1, 2], [2, 3], [3, 4], [1, 4], [1, 5]].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which edge does union-find report?",
+     "options": [
+      "[1, 4]",
+      "[1, 5]",
+      "[1, 2]"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The first union whose endpoints share a root."
+   ],
+   "solution": "<p>After [1, 2], [2, 3], [3, 4], nodes 1 and 4 are already connected, so [1, 4] closes the cycle.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Count components",
+   "statement": "<p>n = 8 nodes; unions: (0, 1), (2, 3), (1, 3), (4, 5), (0, 2), (6, 6).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Successful unions?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Components at the end?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "(0, 2) is already connected via 1–3."
+   ],
+   "solution": "<p>(0, 1), (2, 3), (1, 3) and (4, 5) succeed; (0, 2) and (6, 6) don't. 8 − 4 = 4 components: {0, 1, 2, 3}, {4, 5}, {6}, {7}.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Why both optimisations?",
+   "statement": "<p>Union-find costs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "With neither path compression nor union by size, the worst case per find is…",
+     "options": [
+      "O(n)",
+      "O(log n)",
+      "O(1)"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "With union by size alone…",
+     "options": [
+      "O(log n)",
+      "O(n)",
+      "O(α(n))"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "With both (amortised)…",
+     "options": [
+      "O(α(n)), effectively constant",
+      "O(log n)",
+      "O(n)"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Chains, balanced depth, then flattening."
+   ],
+   "solution": "<p>Linking a chain gives O(n); size-balanced trees have depth ≤ log₂ n; adding compression gives the inverse-Ackermann bound.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "MST",
+   "statement": "<p>Points [[0, 0], [2, 2], [3, 10], [5, 2], [7, 0]], Manhattan distances.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum total cost to connect all points?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Prim from (0, 0): its cheapest link is to (2, 2) at 4."
+   ],
+   "solution": "<p>20: (0,0)–(2,2) costs 4, (2,2)–(5,2) 3, (5,2)–(7,0) 4, and (2,2)–(3,10) 9.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Cut property",
+   "statement": "<p>Why is Kruskal's greedy choice safe?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "The cheapest edge crossing any cut is in some MST; Kruskal's edge is the cheapest crossing the cut between its endpoints' components",
+      "Greedy is always optimal",
+      "Sorting guarantees it"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Exchange: swap it into any MST that lacks it."
+   ],
+   "solution": "<p>If an MST omitted that edge, adding it creates a cycle that crosses the cut again through an edge at least as expensive; swapping gives a spanning tree no worse.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Choose Kruskal or Prim",
+   "statement": "<p>n = 10⁴ points in the plane, all pairs as candidate edges.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Edges in the complete graph (millions)?",
+     "answer": 49.995,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Better choice?",
+     "options": [
+      "Array Prim, O(n²) time and O(n) memory",
+      "Kruskal on all edges",
+      "BFS"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "n(n − 1)/2."
+   ],
+   "solution": "<p>About 50M edges: storing and sorting them is heavy. Array Prim never materialises them.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Reverse time",
+   "statement": "<p>Edges are <em>removed</em> one at a time; after each removal, report the number of components.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Standard approach with DSU?",
+     "options": [
+      "Process the removals in reverse as additions, starting from the final graph, then reverse the answers",
+      "DSU supports deletions directly",
+      "Recompute BFS each time"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "DSU can only merge."
+   ],
+   "solution": "<p>Offline reversal turns deletions into unions. It's the same move as \"process the constraints in the right order\".</p>"
+  }
+ ]
+}

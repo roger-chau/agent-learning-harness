@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "BFS gives shortest paths when…",
+   "options": [
+    "every edge has the same cost",
+    "edges have arbitrary costs",
+    "the graph is a tree"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Multi-source BFS is equivalent to…",
+   "options": [
+    "one BFS from a virtual super-source",
+    "BFS from each source",
+    "DFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "An implicit graph means…",
+   "options": [
+    "neighbours are generated on demand",
+    "it has no edges",
+    "it's undirected"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Mark visited on…",
+   "options": [
+    "enqueue",
+    "dequeue",
+    "either, with the same cost"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "\"At most k walls removed\" changes the state to…",
+   "options": [
+    "(cell, walls used)",
+    "cell",
+    "(cell, direction)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Union-find supports…",
+   "options": [
+    "merging sets and connectivity queries",
+    "deleting edges",
+    "shortest paths"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "union(a, b) returning False means…",
+   "options": [
+    "a and b were already connected (cycle edge)",
+    "an error",
+    "a and b are new"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Find in Python should be…",
+   "options": [
+    "iterative, with path halving",
+    "recursive",
+    "a BFS"
+   ],
+   "answer": 0,
+   "explanation": "Recursion depth."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "For points in the plane (complete graph), prefer…",
+   "options": [
+    "array Prim",
+    "Kruskal on all pairs",
+    "Floyd–Warshall"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Equality and inequality constraints: process…",
+   "options": [
+    "all equalities first, then check the inequalities",
+    "in input order",
+    "inequalities first"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

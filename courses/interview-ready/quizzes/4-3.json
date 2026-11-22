@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Dijkstra requires…",
+   "options": [
+    "non-decreasing path costs (e.g. non-negative weights)",
+    "a DAG",
+    "unit weights"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Lazy deletion means…",
+   "options": [
+    "skip popped entries with d > dist[u]",
+    "never push duplicates",
+    "delete from the heap middle"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "0-1 BFS pushes 0-weight moves to…",
+   "options": [
+    "the front of the deque",
+    "the back",
+    "a heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "\"At most k flights\" is naturally solved by…",
+   "options": [
+    "k + 1 rounds of Bellman–Ford with a copy",
+    "plain Dijkstra",
+    "DFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "When an extra constraint breaks a proof…",
+   "options": [
+    "add the missing information to the state",
+    "ignore it",
+    "use DFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

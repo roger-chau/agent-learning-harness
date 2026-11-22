@@ -1,0 +1,113 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Fewest moves in an unweighted state space:",
+   "options": [
+    "BFS",
+    "Dijkstra",
+    "DFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Minutes for infection to spread from many sources:",
+   "options": [
+    "multi-source BFS",
+    "BFS per source",
+    "union-find"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Valid order of tasks with prerequisites:",
+   "options": [
+    "topological sort",
+    "MST",
+    "Dijkstra"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Cheapest path with non-negative weights:",
+   "options": [
+    "Dijkstra",
+    "BFS",
+    "Kahn"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Weights 0 and 1 only:",
+   "options": [
+    "0-1 BFS",
+    "Bellman–Ford",
+    "Floyd"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Cheapest path with at most k edges:",
+   "options": [
+    "Bellman–Ford rounds with a copy",
+    "plain Dijkstra",
+    "BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Detect the edge that closes a cycle:",
+   "options": [
+    "union-find",
+    "topological sort",
+    "BFS levels"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Connect all points at minimum cost:",
+   "options": [
+    "minimum spanning tree",
+    "shortest-path tree",
+    "BFS tree"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q9",
+   "type": "single",
+   "prompt": "Minimise the maximum step on a path:",
+   "options": [
+    "Dijkstra with max, binary search + BFS, or Kruskal",
+    "only BFS",
+    "DP over pairs"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}
