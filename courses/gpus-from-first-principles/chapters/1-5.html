@@ -80,3 +80,36 @@ function main() {
 </ul>
 <div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Appendix H</strong> (Hardware and Software for VLIW and EPIC) covers predication as a general compiler technique, including if-conversion. GPUs inherited the idea.</div>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: if-conversion, step by step</h3>
+<p><strong>Source:</strong> <code>if (v &gt; t) { y = v - t; } else { y = 0; }</code> (a soft threshold).</p>
+<p><strong>Branchy machine code</strong> (schematic): compare, branch if false, subtract, jump, move zero, join: about 5 instructions, two of them control flow, and a divergent warp runs both sides.</p>
+<p><strong>Predicated machine code:</strong></p>
+<pre>SETP.GT p, v, t      // p = v &gt; t
+FADD    d, v, -t     // compute the then-value for every lane
+SEL     y, d, 0, p   // y = p ? d : 0</pre>
+<p>Three instructions, no control flow, 100% SIMD efficiency. Better still, this particular one is <code>y = max(v - t, 0)</code>: two instructions (FADD, FMNMX). Recognising that a conditional is really arithmetic (max, min, abs, clamp, multiply by a 0/1 predicate) is the most useful branch-free skill.</p>
+
+<h3>Example 2: deciding by cost model</h3>
+<p><strong>Setup.</strong> A particle update: if the particle is outside a boundary (probability $q$ per lane, independently), reflect it (30 instructions); otherwise nothing. Branch overhead 2 instructions; predication runs the 30 instructions on every lane plus 1 select.</p>
+<p><strong>Branch:</strong> $2 + 30 \cdot P(\text{any lane outside}) = 2 + 30\,(1 - (1-q)^{32})$.</p>
+<p><strong>Predicate:</strong> 31.</p>
+<p><strong>Compare.</strong> The branch is cheaper whenever $30\,(1 - (1-q)^{32}) &lt; 29$, i.e. $(1-q)^{32} &gt; 1/30$, i.e. $q &lt; 1 - (1/30)^{1/32} = 10.1\%$. For a few percent of particles out of bounds, branch; for most of them out, predicate. And if particles are sorted spatially, so that out-of-bounds particles cluster in a few warps, the branch wins by far: the probability term becomes the fraction of warps touching the boundary.</p>
+
+<h3>Example 3: border handling for a 3 × 3 filter, three ways</h3>
+<p><strong>Branch per pixel:</strong> <code>if (border) slowPath(); else fastPath();</code>. Warps along the left and right image edges diverge (Problem 3: about 6% of warps for 32-wide rows), and the slow path must be written and tested separately.</p>
+<p><strong>Clamp per read:</strong> every neighbour coordinate becomes <code>min(max(x+dx, 0), W-1)</code>: 2 extra instructions per coordinate, 9 reads × 2 coordinates = 36 extra instructions per pixel, for every pixel, but zero divergence and one code path.</p>
+<p><strong>Pad the input:</strong> copy the image into a buffer one pixel larger on each side, with replicated edges, once. Then the filter reads without any checks. Costs one extra pass over memory, saves every per-read clamp.</p>
+<p><strong>Which wins</strong> depends on the arithmetic per pixel. For a 3 × 3 blur (9 multiply-adds), 36 clamp instructions per pixel more than quadruple the instruction count, and padding is better if the image is reused. For a heavy filter, clamping is noise. Real libraries use all three; milestone A1 uses clamping because it's correct and simple.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> Hennessy &amp; Patterson (7th ed.), Appendix H, sections on predicated instructions and if-conversion.</li>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Best Practices Guide</em>, "Control Flow" (branching and divergence, branch predication).</li>
+<li><strong>Optional:</strong> J. Allen, K. Kennedy, C. Porterfield, J. Warren, "Conversion of Control Dependence to Data Dependence", POPL 1983: the original if-conversion paper.</li>
+</ul>
+</section>

@@ -73,3 +73,33 @@ function main() {
 <li><strong>Index overflow.</strong> In CUDA C++ the built-ins are 32-bit unsigned integers. For buffers with more than $2^{31}$ elements, compute indices in 64-bit, or <code>y * width + x</code> silently wraps. JavaScript in our simulator won't overflow, but real code does.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: indexing an interleaved image without off-by-one errors</h3>
+<p><strong>Task.</strong> Convert an RGB image of width $W$ and height $H$ (3 bytes per pixel, row-major) to grayscale, one thread per output pixel, with 32 × 8 blocks.</p>
+<p><strong>Step 1, coordinates.</strong> $x = \text{blockIdx.x} \cdot 32 + \text{threadIdx.x}$, $y = \text{blockIdx.y} \cdot 8 + \text{threadIdx.y}$.</p>
+<p><strong>Step 2, guard.</strong> <code>if (x &lt; W &amp;&amp; y &lt; H)</code>. Both conditions: a grid rounded up in both dimensions overhangs on two sides.</p>
+<p><strong>Step 3, addresses.</strong> The output index is $p = yW + x$. The input bytes are at $3p$, $3p+1$, $3p+2$. Writing $3(yW + x)$ rather than $3yW + x$ is the classic bug: the second forgets that every pixel, not every row, is 3 bytes.</p>
+<p><strong>Step 4, check the corners.</strong> Pixel $(W-1, H-1)$ reads bytes $3(HW - 1) \ldots 3HW - 1$: the last three bytes of the buffer. Pixel $(0,0)$ reads bytes 0–2. If both corners are right and the formula is linear, everything between is right. Checking the extreme indices is the fastest way to validate any indexing formula.</p>
+
+<h3>Example 2: choosing a grid for a fixed-size machine</h3>
+<p><strong>Setup.</strong> The GW-1 has 16 SMs and holds 2,048 threads per SM. You want a grid-stride loop over $n = 10^7$ elements, with 256-thread blocks.</p>
+<p><strong>A full machine</strong> is $16 \times 2048 / 256 = 128$ blocks: 32,768 threads.</p>
+<p><strong>Iterations per thread</strong>: $10^7 / 32768 = 305.2$, so 305 or 306. The first $10^7 - 305 \times 32768 = 5{,}760$ threads run 306.</p>
+<p><strong>Why not exactly one wave?</strong> Launching, say, 4 × 128 blocks gives the scheduler slack: if some SMs are slower (other work, clocks), the extra blocks rebalance. Launching exactly one block per resident slot is fastest only when every block takes the same time. Part 5's tail effects make this quantitative.</p>
+
+<h3>Example 3: mapping a 2-D problem to a 1-D grid, and back</h3>
+<p><strong>Setup.</strong> You launch a 1-D grid over $W \times H$ pixels: $t = \text{blockIdx.x} \cdot B + \text{threadIdx.x}$, then $x = t \bmod W$, $y = \lfloor t / W \rfloor$.</p>
+<p><strong>Cost.</strong> One integer division and one modulo per thread. On GPUs integer division by a non-constant is a sequence of about 20 instructions, so the 2-D launch saves real work in short kernels. If $W$ is a power of two, $x = t \mathbin{\&amp;} (W-1)$ and $y = t \gg \log_2 W$ cost one instruction each.</p>
+<p><strong>Warp shape.</strong> With the 1-D mapping a warp covers 32 consecutive pixels of a row (or wraps from the end of one row to the start of the next when $W$ isn't a multiple of 32). With 16 × 16 blocks it covers two half-rows. Both are fine for elementwise work; for stencils (a pixel and its neighbours) the 2-D shape reuses more data, as Part 2 shows.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Thread Hierarchy" and the "Compute Capabilities" table of grid and block limits.</li>
+<li><strong>Required:</strong> W. Hwu, D. Kirk, I. El Hajj, <em>Programming Massively Parallel Processors</em> (4th ed.), Chapters 2–3: data-parallel execution, multidimensional grids and data, image kernels.</li>
+<li><strong>Optional:</strong> M. Harris, "CUDA Pro Tip: Write Flexible Kernels with Grid-Stride Loops", NVIDIA Developer Blog (2013).</li>
+</ul>
+</section>

@@ -1,0 +1,346 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Branch or select",
+   "statement": "<p>An if/else with sides of 3 and 4 instructions. A branch costs 2 instructions of overhead; predication costs 1 select.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Branch, divergent warp?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Predicated, any warp?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Branch, uniform warp, averaged over warps that take each side equally often?",
+     "answer": 5.5,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Divergent: both sides plus overhead."
+   ],
+   "solution": "<p>(a) $3 + 4 + 2 = 9$. (b) $3 + 4 + 1 = 8$. (c) $(3 + 2 + 4 + 2)/2 = 5.5$. Predication wins only if enough warps would diverge.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "The break-even point",
+   "statement": "<p>Both sides cost $k$ instructions; a branch has 3 instructions of overhead; predication runs both sides plus 1 select. A fraction $f$ of warps diverge.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "For k = 5, the f above which predication is cheaper?",
+     "answer": 0.6,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For k = 10?",
+     "answer": 0.8,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "For k = 1, is predication cheaper even at f = 0? (1 = yes, 0 = no)",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Branch: $(1-f)(k+3) + f(2k+3) = k + 3 + fk$. Predicated: $2k + 1$.",
+    "Solve $2k + 1 < k + 3 + fk$."
+   ],
+   "solution": "<p>Predication wins when $k(1 - f) < 2$, i.e. $f > 1 - 2/k$: (a) 0.6, (b) 0.8. (c) For $k = 1$: $1 - 2 = -1 &lt; 0$, so predication wins always ($3$ vs $4$). Short sides: predicate. Long sides: branch unless divergence is very likely.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Border checks, 32 × 8 blocks",
+   "statement": "<p>A 1024 × 1024 image, 32 × 8 blocks, so each warp is one row of 32 pixels. The kernel does <code>if (x == 0 || x == W-1 || y == 0 || y == H-1) border(); else interior();</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Total warps?",
+     "answer": 32768,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Warps that diverge?",
+     "answer": 2044,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Warps that are uniformly on the border?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "A warp diverges if it holds both border and interior pixels.",
+    "Rows 0 and 1023 are all border."
+   ],
+   "solution": "<p>(a) $1024 \\times 32 = 32{,}768$. (b) The first and last warp of each interior row (rows 1–1022) hold one border pixel: $2 \\times 1022 = 2044$. (c) Rows 0 and 1023: 32 warps each, all border. About 6% of warps diverge.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Border checks, 16 × 16 blocks",
+   "statement": "<p>Same image and kernel, 16 × 16 blocks: each warp covers two half-rows of 16 pixels (rows y and y + 1, 16 consecutive x).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps that diverge?",
+     "answer": 1148,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Warps touching column 0 or column 1023: all of them diverge.",
+    "Warps covering rows 0–1 or 1022–1023 away from the side columns: half border, half interior."
+   ],
+   "solution": "<p>Left and right edges: 512 row-pairs × 2 sides = 1,024 warps, all mixed. Top and bottom: the row pair (0, 1) or (1022, 1023) in the 62 interior column groups, mixed too: 124. Total 1148, fewer than the 2044 with 32 × 8, because a warp covers two rows: one warp per row-pair per side instead of one per row. Block shape changes divergence, not just memory access.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "A rare, expensive side",
+   "statement": "<p>Each lane needs a 500-instruction fix-up with probability 0.001, else 5 instructions of normal work. A branch costs 2 instructions of overhead.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Predicated (both sides always, plus 1 select): instructions per warp?",
+     "answer": 506,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Branching: expected instructions per warp?",
+     "answer": 22.754462120236624,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Which is faster, and by how much?",
+     "answer": 22.237396662081068,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "P(warp needs the fix-up) = 1 − 0.999³²."
+   ],
+   "solution": "<p>(a) $500 + 5 + 1 = 506$. (b) $7 + 0.0315 \\times 500 = 22.8$. (c) Branching, 22× faster. Never predicate the expensive rare case.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 1,
+   "title": "What the compiler will do",
+   "statement": "<p>Short conditionals usually become selects (if-conversion).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which is most likely to compile to a select instruction?",
+     "options": [
+      "<code>v = v &lt; 0 ? 0 : v;</code>",
+      "<code>if (v &lt; 0) v = expensiveFunction(v);</code>",
+      "<code>while (v &lt; 0) v += step;</code>",
+      "<code>for (k = 0; k &lt; n; k++) s += a[k];</code>"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "In this course's simulator, which construct is counted as a branch?",
+     "options": [
+      "<code>Math.max</code>",
+      "a ternary",
+      "<code>if</code>",
+      "<code>Math.abs</code>"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "Short, side-effect-free, both sides cheap."
+   ],
+   "solution": "<p>(a) The ternary with trivial sides. A call to an expensive function, or any loop, stays a branch. (b) <code>if</code>, <code>while</code> and <code>for</code> are branches; ternaries and Math functions are treated as predicated.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "What clamping reads",
+   "statement": "<p>A 3 × 3 blur over a 1024 × 1024 image clamps neighbour coordinates to the image (clamp-to-edge).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Neighbour reads (of the 9 per pixel) whose coordinates had to be clamped, over the whole image?",
+     "answer": 12284,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "As a fraction of all reads, in %?",
+     "answer": 0.1301659478081597,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Corner pixels have 5 out-of-image neighbours; other edge pixels 3."
+   ],
+   "solution": "<p>(a) 4 corners × 5 + 4 × 1,022 edge pixels × 3 = 12,284. (b) 0.130%. Clamping costs a couple of min/max instructions on every read, and re-reads a few edge pixels; in exchange no warp diverges.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "A chain of cases",
+   "statement": "<p>A lane's case c ∈ {0, 1, 2, 3} is uniform random. Case costs: 3, 5, 8, 12 instructions. Option P: compute all four and select with 3 selects. Option B: <code>if (c==0) … else if (c==1) … else if (c==2) … else …</code>, with 2 instructions per test that any lane reaches.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Option P, per warp?",
+     "answer": 31,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Option B, per warp, assuming every warp contains all four cases?",
+     "answer": 34,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Option B after sorting lanes so each warp has one case: average per warp?",
+     "answer": 11.5,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "With all cases present, all three tests run.",
+    "Sorted: case 0 needs 1 test, case 1 two, cases 2 and 3 three."
+   ],
+   "solution": "<p>(a) $3 + 5 + 8 + 12 + 3 = 31$. (b) All bodies and all 3 tests: $28 + 6 = 34$. (c) $(5 + 9 + 14 + 18)/4 = 11.5$. Random data: predication wins narrowly. Sorted data: branching wins by almost 3×. The right code depends on the data's arrangement, not only the code.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Rules of thumb",
+   "statement": "<p>Pick the best strategy.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Short and data-dependent",
+     "options": [
+      "Branch",
+      "Predicate",
+      "Restructure the data"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Long but warp-uniform (depends only on blockIdx)",
+     "options": [
+      "Branch",
+      "Predicate",
+      "Restructure the data"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Long and data-dependent",
+     "options": [
+      "Branch",
+      "Predicate",
+      "Restructure the data"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "The chapter's Reality section."
+   ],
+   "solution": "<p>(a) Predicate: both sides are cheap. (b) Branch: no warp diverges, so the branch costs two instructions. (c) Restructure so warps agree (sort, bin or compact); otherwise you pay both long sides.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Branch-free idioms",
+   "statement": "<p>Rewrite without branches.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which compute <code>i</code> clamped to [0, n−1]?",
+     "options": [
+      "<code>Math.min(Math.max(i, 0), n - 1)</code>",
+      "<code>Math.max(Math.min(i, n - 1), 0)</code>",
+      "<code>Math.min(i, n - 1)</code>",
+      "<code>i &lt; 0 ? 0 : (i &gt; n - 1 ? n - 1 : i)</code>"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Try i = −5 and i = n + 5."
+   ],
+   "solution": "<p>The first two are both clamps (for $n \\ge 1$ the order doesn't matter), and the nested ternary is a predicated clamp. <code>Math.min(i, n-1)</code> alone doesn't handle negatives.</p>"
+  }
+ ]
+}

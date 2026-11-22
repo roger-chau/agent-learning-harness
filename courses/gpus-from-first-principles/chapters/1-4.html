@@ -44,3 +44,40 @@
 <p>Hardware has also tried to recover the lost lanes directly. One of this Part's paper chapters, <em>Dynamic Warp Formation</em>, regroups threads from different warps that sit at the same instruction. And NVIDIA's Ada generation added <em>Shader Execution Reordering</em> for ray tracing, which regroups threads by the work they're about to do.</p>
 <div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 4</strong>, the section on conditional branching in GPUs, describes the mask stack and post-dominator reconvergence in the book's own terms.</div>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: tracing the reconvergence stack</h3>
+<p><strong>Code</strong> (a 4-lane warp, for readability): <code>A; if (c) { B; } else { C; } D;</code> with c true for lanes 0 and 2.</p>
+<p><strong>Trace.</strong> The stack starts with one entry: (mask 1111, next A).</p>
+<ol>
+<li>Run A with mask 1111. At the branch, lanes disagree. Replace the top with the reconvergence entry (1111, D), then push (0101 → lanes 1 and 3, next C) and (1010 → lanes 0 and 2, next B).</li>
+<li>Pop (1010, B): run B for lanes 0 and 2. Reaching D, pop.</li>
+<li>Pop (0101, C): run C for lanes 1 and 3. Reaching D, pop.</li>
+<li>Top is (1111, D): run D with every lane.</li>
+</ol>
+<p><strong>Cost:</strong> A + B + C + D issue slots, with B and C at half efficiency. A nested divergent branch inside B would push two more entries above the B entry and pop them before C runs: the stack depth equals the nesting depth, and each level halves (or worse) the active lanes.</p>
+
+<h3>Example 2: fixing a divergent condition by remapping</h3>
+<p><strong>Setup.</strong> A kernel processes complex numbers stored as interleaved floats (re, im, re, im, …). One thread per float, and the code does <code>if (i % 2 == 0) handleReal(); else handleImag();</code>. Each handler is 20 instructions.</p>
+<p><strong>As written:</strong> every warp has 16 even and 16 odd lanes: 40 instructions per warp at 50% efficiency.</p>
+<p><strong>Remap:</strong> let thread $t$ of a 64-thread group handle element <code>2t</code> if it's in the first warp of the group and <code>2(t - 32) + 1</code> if it's in the second. Now warp 0 does all the real parts and warp 1 all the imaginary ones: 20 instructions per warp, and no divergence. Same work, half the instructions.</p>
+<p><strong>The price</strong> is in memory: lane $k$ of warp 0 now reads element $2k$, so the warp's addresses are 8 bytes apart instead of 4, and it touches twice as many sectors (Part 2). Often the better fix is <em>one thread per complex number</em>, handling both parts. When a condition depends on the thread index, look for a mapping that makes it depend on the warp index instead.</p>
+
+<h3>Example 3: expected divergence cost of a data-dependent branch</h3>
+<p><strong>Setup.</strong> Lanes independently take the then path (cost $a$) with probability $p$, else the else path (cost $b$).</p>
+<p><strong>Derivation.</strong> A warp pays $a$ if all lanes are true, $b$ if all are false, and $a + b$ otherwise:</p>
+<div class="eq">$$E[\text{cost}] = p^{32} a + (1-p)^{32} b + \big(1 - p^{32} - (1-p)^{32}\big)(a + b)$$</div>
+<p><strong>Read it.</strong> For any $p$ not very close to 0 or 1, both 32nd powers vanish and the cost is $a + b$: <em>a data-dependent branch costs the sum of both paths in almost every warp</em>. For $p = 0.01$: $(0.99)^{32} = 0.725$, so 27.5% of warps still pay for the rare path. Only below about $p = 0.002$ does the rare path mostly disappear ($0.998^{32} = 0.938$).</p>
+<p><strong>Rule.</strong> The ideal cost is $pa + (1-p)b$ per lane-average. The gap between that and the formula above is what sorting, compaction or warp-uniform remapping can recover.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> Hennessy &amp; Patterson (7th ed.), Chapter 4, "Conditional Branching in GPUs": masks, the branch synchronisation stack and reconvergence.</li>
+<li><strong>Required:</strong> W. Fung, I. Sham, G. Yuan, T. Aamodt, "Dynamic Warp Formation and Scheduling for Efficient GPU Control Flow", MICRO 2007, sections 1–3 (this Part's paper chapter).</li>
+<li><strong>Optional:</strong> NVIDIA, "Inside Volta: The World's Most Advanced Data Center GPU" (2017), the section on independent thread scheduling.</li>
+<li><strong>Optional:</strong> T. Aamodt, W. Fung, T. Rogers, <em>General-Purpose Graphics Processor Architectures</em> (Morgan &amp; Claypool, 2018), Chapter 3: SIMT core design, including stack-less reconvergence.</li>
+</ul>
+</section>

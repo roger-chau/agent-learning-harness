@@ -82,3 +82,37 @@
 <p>One more reality: CPUs and GPUs are converging at the edges. AVX-512 added per-lane masks, which pushes SIMD toward SIMT's convenience. Intel's ISPC compiler offers a SIMT-style "program one lane" model on top of CPU SIMD. And GPUs added warp-level instructions such as shuffles and votes that deliberately expose the vector again, because sometimes the programmer can use it better than the illusion can. Part 3 uses those.</p>
 <div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 4</strong> (Data-Level Parallelism in Vector, SIMD and GPU Architectures): its vector-architecture and GPU sections are this chapter in depth, including the full terminology table. <strong>Appendix G</strong> goes deeper into vector processors and strip-mining.</div>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: the same loop, written both ways</h3>
+<p><strong>Task.</strong> $y_i = a x_i + y_i$ (SAXPY) for $n = 1000$.</p>
+<p><strong>SIMD (16-wide).</strong> The programmer writes about vectors: a loop of $\lfloor 1000/16 \rfloor = 62$ iterations, each loading 16 floats from x and 16 from y, one vector FMA, one vector store; then a tail of 8 elements, either a scalar loop or one masked vector iteration. Three pieces of code: the main loop, the tail and the setup that computes where the tail begins.</p>
+<p><strong>SIMT.</strong> The programmer writes about one element: <code>i = blockIdx.x * blockDim.x + threadIdx.x; if (i &lt; n) y[i] = a * x[i] + y[i];</code>. Launch $\lceil 1000/256 \rceil = 4$ blocks of 256 threads (32 warps). One piece of code.</p>
+<p><strong>What the hardware does in each case is nearly identical:</strong> 32-lane (or 16-lane) loads, an FMA, a store, with lanes past the end switched off. The difference is who writes the bookkeeping. That's the sense in which a warp is a SIMD instruction stream that the hardware assembles from threads.</p>
+
+<h3>Example 2: lane efficiency of a launch, exactly</h3>
+<p><strong>Setup.</strong> Kernel launches of size $n = 33$, $n = 100$ and $n = 10^6$, block size 128.</p>
+<p><strong>Method.</strong> Warps launched: $w = \lceil n/32 \rceil$ (blocks are multiples of 32, and warps entirely past $n$ still exist inside the last block, so count lanes per block: $\lceil n/128 \rceil \times 128$).</p>
+<ul>
+<li>$n = 33$: one block, 128 lanes, efficiency $33/128 = 25.8\%$. Three of the four warps are almost or completely empty.</li>
+<li>$n = 100$: one block, $100/128 = 78.1\%$.</li>
+<li>$n = 10^6$: $7813$ blocks, $10^6/1{,}000{,}064 = 99.99\%$.</li>
+</ul>
+<p><strong>Interpretation.</strong> Tails cost a bounded amount per launch: at most one block's worth of lanes. They matter for small launches and for code that launches once per small piece of work (one launch per row of a small matrix, say), which is a common performance bug: batch the pieces into one launch.</p>
+
+<h3>Example 3: the cost of hiding the vector</h3>
+<p><strong>Setup.</strong> Each thread reads <code>x[perm[i]]</code> for a random permutation <code>perm</code>.</p>
+<p><strong>In SIMD</strong> you'd have to write a gather instruction, and you'd see the cost in the source. <strong>In SIMT</strong> it's an ordinary load, and it compiles and runs correctly. But a warp's 32 addresses are now scattered across 32 different 32-byte sectors, where a contiguous load would touch 4. The warp's load moves 8× the bytes it uses.</p>
+<p><strong>Lesson.</strong> SIMT changes what's <em>expressible</em> without changing what's <em>cheap</em>. The performance model of every kernel in this course is still the vector: which lanes are active (Chapters 1.3–1.5) and which addresses they touch together (Part 2).</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> Hennessy &amp; Patterson, <em>Computer Architecture</em> (7th ed.), Chapter 4, sections 4.1–4.4: vector architectures, SIMD extensions and GPUs, with the vendor-neutral terminology table.</li>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Programming Model" (kernels, thread hierarchy) and "Hardware Implementation: SIMT Architecture".</li>
+<li><strong>Optional:</strong> E. Lindholm, J. Nickolls, S. Oberman, J. Montrym, "NVIDIA Tesla: A Unified Graphics and Computing Architecture", <em>IEEE Micro</em> 2008: where the word SIMT comes from (this Part's paper chapter).</li>
+<li><strong>Optional:</strong> M. Pharr, W. Mark, "ispc: A SPMD Compiler for High-Performance CPU Programming", InPar 2012: SIMT's programming model on CPU SIMD.</li>
+</ul>
+</section>

@@ -1,0 +1,369 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Covering an HD image",
+   "statement": "<p>A 1920 × 1080 image, blocks of 16 × 16 threads, one thread per pixel.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "gridDim.x?",
+     "answer": 120,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "gridDim.y?",
+     "answer": 68,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Threads with no pixel?",
+     "answer": 15360,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Round up in each dimension.",
+    "68 × 16 = 1088 rows of threads."
+   ],
+   "solution": "<p>(a) $1920/16 = 120$. (b) $\\lceil 1080/16 \\rceil = 68$. (c) The grid covers $1920 \\times 1088$ pixels: 8 extra rows of 1,920 threads, $15{,}360$ threads that the guard must stop.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Row-major addressing",
+   "statement": "<p>An RGB image of width 640 is stored row-major with 3 bytes per pixel.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Byte index of the blue channel (c = 2) of pixel (x, y) = (37, 12)?",
+     "answer": 23153,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Which pixel comes right after (639, 0) in memory? Give its y.",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Pixel index $y W + x$, times 3, plus the channel.",
+    "The row ends at x = 639."
+   ],
+   "solution": "<p>(a) $(12 \\times 640 + 37) \\times 3 + 2 = 7717 \\times 3 + 2 = 23,153$. (b) After the last pixel of row 0 comes pixel (0, 1): rows are laid end to end, so y = 1.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 1,
+   "title": "Who am I?",
+   "statement": "<p>A 2-D launch with blockDim = (16, 8). A thread has blockIdx = (3, 2) and threadIdx = (5, 7). The image is 200 pixels wide.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Its x coordinate?",
+     "answer": 53,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Its y coordinate?",
+     "answer": 23,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "The linear (row-major) index of its pixel?",
+     "answer": 4653,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "$x = \\text{blockIdx.x} \\cdot \\text{blockDim.x} + \\text{threadIdx.x}$."
+   ],
+   "solution": "<p>$x = 3 \\times 16 + 5 = 53$, $y = 2 \\times 8 + 7 = 23$, index $23 \\times 200 + 53 = 4{,}653$.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "A square image, a wide block",
+   "statement": "<p>A 1000 × 1000 image with blocks of 32 × 8.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of blocks?",
+     "answer": 4000,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Threads launched?",
+     "answer": 1024000,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Fraction doing work, in %?",
+     "answer": 97.65625,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$\\lceil 1000/32 \\rceil \\times \\lceil 1000/8 \\rceil$."
+   ],
+   "solution": "<p>(a) $32 \\times 125 = 4{,}000$ blocks. (b) $4000 \\times 256 = 1{,}024{,}000$ threads. (c) $97.66\\%$: only the x-direction overhangs, by 24 columns (1,024 − 1,000).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "A grid-stride loop, exactly",
+   "statement": "<p>A grid-stride loop over $n = 10{,}000$ elements runs with 20 blocks of 64 threads.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "The stride?",
+     "answer": 1280,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Maximum iterations any thread runs?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "How many threads run that many?",
+     "answer": 1040,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "How many warps diverge on the final loop test?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Stride = total threads.",
+    "Thread $t$ handles $t, t + S, t + 2S, \\ldots$ while below $n$.",
+    "Which warp contains the first thread that runs one iteration fewer?"
+   ],
+   "solution": "<p>(a) $S = 1280$. (b, c) $10000 = 7 \\times 1280 + 1040$, so threads $0$–$1039$ run 8 iterations and the rest 7. (d) Thread 1040 is lane 16 of global warp 32: that warp's lanes 0–15 continue and 16–31 stop, so it diverges. Every other warp is uniform. Only one warp out of 40 pays, and only once.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Three billion elements",
+   "statement": "<p>A 1-D kernel over $3 \\times 10^9$ elements uses 256 threads per block and computes <code>int i = blockIdx.x * blockDim.x + threadIdx.x;</code> with a 32-bit signed int.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Blocks needed (one thread per element)?",
+     "answer": 11718750,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "The first index that doesn't fit in a 32-bit signed int?",
+     "answer": 2147483648,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "What happens in practice?",
+     "options": [
+      "The launch fails",
+      "Indices past that point wrap to negative values and access the wrong memory",
+      "CUDA promotes the arithmetic to 64-bit automatically",
+      "Nothing: the grid limit prevents it"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "The grid x-limit is $2^{31} - 1$ blocks.",
+    "$2^{31} = 2{,}147{,}483{,}648$."
+   ],
+   "solution": "<p>(a) $\\lceil 3\\times10^9/256 \\rceil = 11,718,750$ blocks, well inside the x limit, so the launch succeeds. (b) $2^{31}$. (c) The product is computed in 32 bits and wraps (formally undefined behaviour for signed ints), so threads past 2.1 billion index garbage. Compute the index in 64 bits: <code>size_t i = size_t(blockIdx.x) * blockDim.x + threadIdx.x</code>.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "A 3-D volume",
+   "statement": "<p>A 256 × 256 × 128 volume (x × y × z), stored with x fastest, then y, then z. Blocks are 8 × 8 × 8.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Total number of blocks?",
+     "answer": 16384,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Linear index of voxel (x, y, z) = (10, 20, 30)?",
+     "answer": 1971210,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Index $= (z \\cdot H + y) \\cdot W + x$."
+   ],
+   "solution": "<p>(a) $32 \\times 32 \\times 16 = 16{,}384$. (b) $(30 \\times 256 + 20) \\times 256 + 10 = 1,971,210$.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "A very tall image",
+   "statement": "<p>A 64 × 2,000,000 image (width × height) with 64 × 16 blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "gridDim.y needed for a direct 2-D launch?",
+     "answer": 125000,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Can that launch run in CUDA?",
+     "options": [
+      "Yes",
+      "No: gridDim.y is limited to 65,535"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "multi",
+     "prompt": "Which fixes work?",
+     "options": [
+      "Swap the roles: map rows to blockIdx.x",
+      "Use a grid-stride loop over y with a smaller grid",
+      "Use 1024 × 1 blocks with the same grid",
+      "Launch a 1-D grid over all pixels and recover (x, y) by division"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Limits: x up to $2^{31}-1$, y and z up to 65,535."
+   ],
+   "solution": "<p>(a) $2{,}000{,}000/16 = 125{,}000 > 65{,}535$, so (b) the launch fails. (c) Moving the large dimension to x, looping over y with a grid-stride loop, or a flat 1-D launch all work. Changing the block shape doesn't help: 1024 × 1 blocks need 2,000,000 blocks in y.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "When the grid-stride loop pays",
+   "statement": "<p>A kernel spends 50 instructions per thread on setup (index arithmetic, loading parameters, computing a table pointer) and 10 per element. A grid-stride loop adds 2 instructions of loop overhead per element. $n = 2^{24}$.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Total instructions with one thread per element?",
+     "answer": 1006632960,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Total with a grid-stride loop over 32,768 threads (the GW-1 full)?",
+     "answer": 202964992,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Ratio (a) / (b)?",
+     "answer": 4.9596383597029385,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "One thread per element pays setup $n$ times.",
+    "Grid-stride pays it 32,768 times, and 12 per element."
+   ],
+   "solution": "<p>(a) $2^{24} \\times 60 = 1,006,632,960$. (b) $32768 \\times 50 + 2^{24} \\times 12 = 202,964,992$. (c) 4.96×. The heavier the per-thread setup relative to the per-element work, the more a machine-sized grid wins, and it also makes the launch size independent of $n$.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "4K",
+   "statement": "<p>A 3840 × 2160 frame with 32 × 8 blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of blocks?",
+     "answer": 32400,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Threads with no pixel?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Both dimensions divide evenly?"
+   ],
+   "solution": "<p>$3840/32 = 120$ and $2160/8 = 270$: 32,400 blocks, no overhang. Standard video sizes are friendly to power-of-two blocks in x, less so in y (1080 isn't a multiple of 16).</p>"
+  }
+ ]
+}

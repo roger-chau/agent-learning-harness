@@ -1,0 +1,346 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "The sum of both paths",
+   "statement": "<p>An if/else has 10 instructions on the then path and 6 on the else path. Half the lanes of a warp take each side.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Instructions the divergent warp issues for the if/else?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "SIMD efficiency, in %?",
+     "answer": 50,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Instructions a warp issues if all its lanes take the then path?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Useful lane-slots: 16 × 10 + 16 × 6. Issued: 16 × 32."
+   ],
+   "solution": "<p>(a) $10 + 6 = 16$. (b) Useful: $16 \\times 10 + 16 \\times 6 = 256$; issued $16 \\times 32 = 512$: 50%. (c) 10: uniform warps pay only for their own path.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "One slow lane, again",
+   "statement": "<p>In a warp, 30 lanes run a loop 5 times and 2 lanes run it 50 times. The body is one instruction.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Loop iterations the warp executes?",
+     "answer": 50,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "SIMD efficiency, in %?",
+     "answer": 15.625,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Useful lane-slots over issued lane-slots."
+   ],
+   "solution": "<p>(a) 50. (b) $(150 + 100)/1600 = 15.6\\%$.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 1,
+   "title": "Which conditions diverge?",
+   "statement": "<p>A block of 64 threads (2 warps).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which conditions make at least one warp diverge?",
+     "options": [
+      "threadIdx.x % 2 == 0",
+      "threadIdx.x < 16",
+      "(threadIdx.x / 32) % 2 == 0",
+      "threadIdx.x < 32",
+      "threadIdx.x % 64 < 48"
+     ],
+     "answer": [
+      0,
+      1,
+      4
+     ]
+    }
+   ],
+   "hints": [
+    "Check each warp: lanes 0–31 and 32–63."
+   ],
+   "solution": "<p>Even/odd lanes split every warp. <code>&lt; 16</code> splits warp 0. <code>(x/32)%2</code> and <code>&lt; 32</code> are constant within each warp. <code>% 64 &lt; 48</code> is true for 32–47 and false for 48–63: warp 1 splits.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Nested divergence",
+   "statement": "<p>In a full warp: <code>if (lane &lt; 16) { A; if (lane % 2) B; else C; } else { D; }</code>. A, B, C and D cost 4, 3, 5 and 6 instructions.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Instructions issued?",
+     "answer": 18,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "SIMD efficiency, in %?",
+     "answer": 38.888888888888886,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The then side runs A, B and C (B and C diverge too).",
+    "Useful: A on 16 lanes, B and C on 8 each, D on 16."
+   ],
+   "solution": "<p>(a) $4 + 3 + 5 + 6 = 18$. (b) Useful $16\\cdot4 + 8\\cdot3 + 8\\cdot5 + 16\\cdot6 = 224$; issued $18 \\times 32 = 576$: $38.9\\%$. B and C run on a quarter of the warp each.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "The guard",
+   "statement": "<p>A 1-D launch with 256-thread blocks and the guard <code>if (i &lt; n)</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "For n = 1000: how many warps diverge at the guard?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For n = 1024?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "For n = 1000: global index of the warp that diverges?",
+     "answer": 31,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Only a warp containing both i &lt; n and i ≥ n diverges."
+   ],
+   "solution": "<p>(a) $1000/32 = 31.25$: warp 31 holds 992–1023, split at 1000. Warps 0–30 are all true; warp 31 is the only one that straddles n. (b) None: 1024 is a multiple of 32, so every warp is uniform. (c) 31.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Data decides",
+   "statement": "<p>Each lane independently takes the then path (20 instructions) with probability 0.1, else the else path (4 instructions).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Probability a warp is uniform, in %?",
+     "answer": 3.433683820292515,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected instructions issued per warp?",
+     "answer": 23.3132632359415,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "If the data were sorted so every warp is uniform, expected instructions per warp?",
+     "answer": 5.6,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "Speedup from sorting (ignoring its cost)?",
+     "answer": 4.163082720703839,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Uniform: all false or all true.",
+    "Mixed warps pay 24."
+   ],
+   "solution": "<p>(a) $0.9^{32} + 0.1^{32} = 3.43\\%$. (b) $0.0343 \\times 4 + 0.9657 \\times 24 = 23.31$. (c) A tenth of warps pay 20 and the rest 4: 5.6. (d) 4.16×. A 10% branch makes almost every warp diverge; sorting turns that back into the work actually needed.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Reconvergence points",
+   "statement": "<p>Where do diverged lanes rejoin?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "For <code>if (c) { X; } else { Y; } Z;</code>, the immediate post-dominator of the branch is…",
+     "options": [
+      "X",
+      "Y",
+      "Z",
+      "the end of the kernel"
+     ],
+     "answer": 2
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "For <code>for (k = 0; k &lt; m[i]; k++) { X; } Y;</code> with m[i] varying per lane, lanes rejoin…",
+     "options": [
+      "after each iteration",
+      "at Y, after the warp's longest-running lane finishes",
+      "never",
+      "at X"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "The first instruction every path must pass through."
+   ],
+   "solution": "<p>(a) Z: both paths flow into it. (b) Y: lanes that finish early are masked until the last lane leaves the loop.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Escape-time fractals",
+   "statement": "<p>A Mandelbrot-style kernel: each lane iterates until its point escapes. Suppose iteration counts are independent and uniform on 1, …, 100.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected iterations per lane?",
+     "answer": 50.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected iterations a warp executes (the maximum of 32 lanes)?",
+     "answer": 97.44307155659256,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Expected SIMD efficiency, in %?",
+     "answer": 51.82513152889565,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$E[\\max] = \\sum_{k \\ge 1} P(\\max \\ge k)$.",
+    "$P(\\max \\ge k) = 1 - ((k-1)/100)^{32}$."
+   ],
+   "solution": "<p>(a) 50.5. (b) $\\sum_{k=1}^{100} \\big(1 - ((k-1)/100)^{32}\\big) = 97.44$. (c) $51.8\\%$. In real images neighbouring points have similar counts, so 2-D blocks that keep a warp's pixels close together do much better than this random model: spatial coherence is a divergence optimisation.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Sort the rays?",
+   "statement": "<p>A ray tracer shades 1M rays. Half hit material A (200 cycles of shading), half hit B (50 cycles), randomly mixed. Sorting rays by material costs the equivalent of 20 cycles per warp.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cycles per warp unsorted (assume every warp has both materials)?",
+     "answer": 250,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Average cycles per warp after sorting, including the sort?",
+     "answer": 145,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Speedup?",
+     "answer": 1.7241379310344827,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Sorted warps are uniform: half pay 200, half 50."
+   ],
+   "solution": "<p>(a) $200 + 50 = 250$. (b) $(200 + 50)/2 + 20 = 145$. (c) 1.72×. This is the trade-off behind Shader Execution Reordering: spend a little on data movement to buy back lanes.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Independent thread scheduling",
+   "statement": "<p>Volta and later give every thread its own program counter.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which statements are true?",
+     "options": [
+      "Divergent paths still cost the sum of both paths",
+      "The two paths of a divergent branch may now interleave",
+      "Reconvergence is guaranteed at the immediate post-dominator",
+      "A spin-lock taken by one lane of a warp no longer has to deadlock",
+      "Warp-synchronous code without __syncwarp is safe"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "The Reality section."
+   ],
+   "solution": "<p>The issue hardware is unchanged, so divergence still serialises. Paths may interleave, reconvergence isn't guaranteed where the old stack would put it, and starvation-free lock algorithms become possible. Implicit-lockstep code is exactly what became unsafe.</p>"
+  }
+ ]
+}

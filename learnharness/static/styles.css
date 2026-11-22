@@ -512,6 +512,7 @@ svg .d-arrowhead { fill: var(--muted); }
 .hp { font-size: .84rem; color: var(--muted); margin: 8px 0 0 !important; }
 .hp span { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .08em; color: var(--indigo-ink); background: var(--indigo-soft); border-radius: 999px; padding: 1px 7px; margin-right: 4px; }
 .ch-head .hp { margin: -12px 0 22px !important; }
+.ch-head .ch-meta + .hp { margin: 10px 0 22px !important; }
 .paper-ref { font-family: var(--font-ui); font-size: .95rem; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius-lg); padding: 14px 16px; margin: 0 0 1.4em; }
 .paper-ref .k { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--rose-ink); margin-bottom: 4px; }
 .reading { counter-reset: r; list-style: none; padding-left: 0 !important; }

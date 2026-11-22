@@ -41,3 +41,37 @@
 <li><strong>Not quite lockstep anymore.</strong> Since Volta (2017), NVIDIA threads have <em>independent thread scheduling</em>: the lanes of a warp can sit at different points of the program after a branch. Code that silently assumed lockstep must now say so explicitly with <code>__syncwarp()</code>. The next chapter explains why.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: drawing the warps of a 2-D block</h3>
+<p><strong>Setup.</strong> blockDim = (24, 4): 96 threads, 3 warps.</p>
+<p><strong>Method.</strong> Linearise ($t = x + 24y$), then cut every 32:</p>
+<ul>
+<li>Warp 0: $t = 0..31$: all of row 0 ($x = 0..23$) and row 1, $x = 0..7$.</li>
+<li>Warp 1: $t = 32..63$: row 1, $x = 8..23$, and row 2, $x = 0..15$.</li>
+<li>Warp 2: $t = 64..95$: row 2, $x = 16..23$, and all of row 3.</li>
+</ul>
+<p><strong>Consequence.</strong> Every warp touches two rows of an image, in pieces of unequal length. With width 24 it's unavoidable; with width 32 each warp is one row, and with 16 exactly two half-rows. That's why block widths are powers of two: the warp shape becomes regular, which simplifies both divergence (1.4) and memory access (Part 2).</p>
+
+<h3>Example 2: how many warps does a scheduler need?</h3>
+<p><strong>Setup.</strong> A kernel's inner loop: one global load (latency 400 cycles), then 12 independent arithmetic instructions on previous data, then 4 instructions that depend on the load. The SM has 4 schedulers, each issuing one instruction per cycle.</p>
+<p><strong>Per warp, per iteration:</strong> 17 instructions, so $C = 17$ cycles of issue, and one 400-cycle wait that only the 12 independent instructions can overlap.</p>
+<p><strong>Requirement.</strong> While one warp waits, others must fill 400 cycles of issue slots. A warp needs $17 + 400$ cycles per iteration in the worst case, and uses 17 of them; so the scheduler needs $417/17 \approx 24.5$ warps.</p>
+<p><strong>Available.</strong> 64 resident warps / 4 schedulers = 16 at most. Utilisation is at most $16/24.5 = 65\%$. Unrolling the loop twice (two independent loads per iteration) roughly halves the requirement, to $434/34 \approx 12.8$: now the scheduler can stay busy. This is the arithmetic behind "issue slot utilisation" in a profiler.</p>
+
+<h3>Example 3: the slowest lane, quantified</h3>
+<p><strong>Setup.</strong> A hash-table lookup kernel: each lane probes until it finds its key. Probe counts per lane are 1 with probability 0.7, 2 with 0.2, 3 with 0.08 and 10 with 0.02.</p>
+<p><strong>Per lane:</strong> $E[\text{probes}] = 0.7 + 0.4 + 0.24 + 0.2 = 1.54$.</p>
+<p><strong>Per warp:</strong> the warp runs the maximum over its 32 lanes. $P(\max \le 3) = 0.98^{32} = 0.524$, $P(\max \le 2) = 0.9^{32} = 0.034$, $P(\max \le 1) = 0.7^{32} \approx 0$. So $E[\max] = 1 + P(\max \ge 2) + P(\max \ge 3) + 7\,P(\max = 10)$ $= 1 + 1 + 0.966 + 7 \times 0.476 = 6.30$ probes.</p>
+<p><strong>Interpretation.</strong> The warp does 4× the per-lane average. A 2% tail of slow lanes dominates. Real GPU hash tables (and any data-dependent loop) are designed to cut the tail, for example by bounding probe lengths, rather than to improve the average.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Hardware Implementation" (SIMT architecture, hardware multithreading) and the section on warp-level primitives.</li>
+<li><strong>Required:</strong> Hennessy &amp; Patterson (7th ed.), Chapter 4, section 4.4: the multithreaded SIMD processor and its warp scheduler.</li>
+<li><strong>Optional:</strong> Y. Lin, V. Grover, "Using CUDA Warp-Level Primitives", NVIDIA Developer Blog (2018): independent thread scheduling and the <code>_sync</code> intrinsics.</li>
+</ul>
+</section>

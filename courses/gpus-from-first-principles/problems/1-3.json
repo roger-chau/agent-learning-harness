@@ -1,0 +1,344 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Which warp, which lane",
+   "statement": "<p>blockDim = (16, 8). Thread (threadIdx.x, threadIdx.y) = (5, 3).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Linear thread index t?",
+     "answer": 53,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Warp?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Lane?",
+     "answer": 21,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "$t = x + y \\cdot B_x$."
+   ],
+   "solution": "<p>$t = 5 + 3 \\times 16 = 53$, warp $\\lfloor 53/32 \\rfloor = 1$, lane $53 - 32 = 21$. Warp 1 holds rows 2 and 3 of the block.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "A block of 100",
+   "statement": "<p>A block of 100 threads (1-D).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Active lanes in the last warp?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Fraction of the block's issue capacity wasted, in %?",
+     "answer": 21.875,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Four warps hold 128 lanes."
+   ],
+   "solution": "<p>(a) 4, (b) $100 - 96 = 4$, (c) $28/128 = 21.9\\%$ of lane-slots are empty in every instruction the block issues.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 1,
+   "title": "An awkward shape",
+   "statement": "<p>blockDim = (20, 3).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps per block?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Active lanes in warp 1?",
+     "answer": 28,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "threadIdx.x of lane 0 of warp 1?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "threadIdx.y of lane 0 of warp 1?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "60 threads; warp 1 starts at t = 32.",
+    "$x = t \\bmod 20$, $y = \\lfloor t / 20 \\rfloor$."
+   ],
+   "solution": "<p>60 threads make 2 warps; warp 1 holds $t = 32..59$, 28 lanes. $t = 32$ is $x = 12$, $y = 1$: warp 1 starts mid-row, so its lanes straddle rows 1 and 2 unevenly.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Three dimensions",
+   "statement": "<p>blockDim = (8, 4, 4). Thread (3, 2, 1).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Linear index t?",
+     "answer": 51,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Warp?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Lane?",
+     "answer": 19,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "$t = x + y B_x + z B_x B_y$."
+   ],
+   "solution": "<p>$t = 3 + 16 + 32 = 51$: warp 1, lane 19. Each warp here is exactly one z-slice ($8 \\times 4 = 32$).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Enough warps?",
+   "statement": "<p>Each warp does $C = 25$ cycles of independent work per memory access; memory latency is $L = 600$ cycles. An SM has 4 schedulers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps per scheduler needed to keep it busy?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Only 48 warps are resident on the SM. Scheduler utilisation, in %?",
+     "answer": 48.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$(C + L)/C$.",
+    "48 warps over 4 schedulers."
+   ],
+   "solution": "<p>(a) $(25 + 600)/25 = 25$. (b) 12 per scheduler: each issues in at most $12/25 = 48\\%$ of cycles. The fix is more independent work per warp (bigger C, or ILP), or more warps if limits allow.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Resident warps and the block limit",
+   "statement": "<p>An SM holds at most 2,048 threads and 16 blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Resident warps with blocks of 64 threads?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With 96?",
+     "answer": 48,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "With 128?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Which limit binds first: threads or blocks?"
+   ],
+   "solution": "<p>(a) 16 blocks × 64 = 1,024 threads = 32 warps: the block limit binds. (b) 16 × 96 = 1,536 threads = 48 warps. (c) 16 × 128 = 2,048 threads = 64 warps: both limits meet. Small blocks can leave half the SM empty.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "ILP instead of warps",
+   "statement": "<p>As in the chapter: $L = 400$, $C = 20$. Now each warp has two independent loads in flight per iteration (instruction-level parallelism 2), so each warp keeps two requests outstanding during a latency period.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps per scheduler needed (fractional)?",
+     "answer": 10.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Smallest whole number that suffices?",
+     "answer": 11,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each warp now covers twice the work per latency period: divide by 2."
+   ],
+   "solution": "<p>$420/(2 \\times 20) = 10.5$, so 11 warps per scheduler, inside the limit of 16. Two independent loads per warp did what 10 extra warps would have done. Volkov's paper (Part 2) turns this into a design principle.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "The slowest lane decides",
+   "statement": "<p>Each lane's load independently hits in cache (30 cycles) with probability 0.99, or misses (400 cycles).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Fraction of warp loads that take 400 cycles, in %?",
+     "answer": 27.501966404214663,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Average load latency seen by a thread in isolation, in cycles?",
+     "answer": 33.7,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "A warp waits for its slowest lane: P(at least one miss) = 1 − 0.99³²."
+   ],
+   "solution": "<p>(a) $1 - 0.99^{32} = 27.5\\%$ of warp loads wait the full 400 cycles. (b) One thread alone would average $30 + 0.01 \\times 370 = 33.7$ cycles. A 1% miss rate per lane becomes a 27% stall rate per warp.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Warp latency in expectation",
+   "statement": "<p>Same model as the previous problem.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected latency of a warp load, in cycles?",
+     "answer": 131.75727569559425,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Per-lane miss rate that would make half of all warp loads miss, in %?",
+     "answer": 2.142793791229991,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "$E = 30 + 370 \\cdot P(\\text{any miss})$.",
+    "Solve $1 - (1-p)^{32} = 0.5$."
+   ],
+   "solution": "<p>(a) $30 + 370 \\times 0.2750 = 131.8$ cycles, nearly 4× the per-thread average. (b) $(1-p)^{32} = 0.5 \\Rightarrow p = 1 - 0.5^{1/32} = 2.14\\%$. Lockstep amplifies rare events: this is why GPU code is designed so that a warp's lanes behave alike.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Lockstep, officially",
+   "statement": "<p>Since Volta, NVIDIA warps have independent thread scheduling.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Code that exchanges data between lanes through shared memory, assuming they run in lockstep, must now…",
+     "options": [
+      "Do nothing: lanes of a warp are still in lockstep",
+      "Use __syncwarp() (or *_sync intrinsics) to synchronise the lanes explicitly",
+      "Use __syncthreads() for every exchange",
+      "Be rewritten with atomics"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "To be portable across vendors, warp-size-dependent code should use…",
+     "options": [
+      "32",
+      "warpSize",
+      "blockDim.x",
+      "64"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "The chapter's Reality section."
+   ],
+   "solution": "<p>(a) <code>__syncwarp()</code> and the <code>*_sync</code> intrinsics name the lanes that must participate; <code>__syncthreads()</code> works but synchronises the whole block, which is more than needed. (b) <code>warpSize</code>: AMD wavefronts are 64 wide on CDNA.</p>"
+  }
+ ]
+}

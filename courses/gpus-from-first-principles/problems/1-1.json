@@ -1,0 +1,377 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Tails, two ways",
+   "statement": "<p>A loop processes $n = 1000$ floats.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "With 16-wide SIMD vectors: how many full vectors?",
+     "answer": 62,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "How many elements are left for the tail?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "With warps of 32: how many warps are launched?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "How many lanes of the last warp pass the guard <code>i &lt; n</code>?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$\\lfloor n / 16 \\rfloor$ full vectors; the rest is the tail.",
+    "Warps: $\\lceil n / 32 \\rceil$."
+   ],
+   "solution": "<p>(a, b) $\\lfloor 1000/16 \\rfloor = 62$ vectors cover 992 elements, leaving 8 for a scalar or masked tail. (c, d) $\\lceil 1000/32 \\rceil = 32$ warps cover 1,024 threads; the last warp holds threads 992–1023, of which 992–999 pass the guard. The tail is the same 8 elements either way: SIMT just turns the special case into threads that do nothing.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Launching for n",
+   "statement": "<p>A 1-D kernel is launched over $n = 10{,}000$ elements with 256 threads per block, one thread per element.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of blocks?",
+     "answer": 40,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Threads launched that have no element?",
+     "answer": 240,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Fraction of launched threads doing useful work, in %?",
+     "answer": 97.65625,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Round up: $\\lceil n / 256 \\rceil$."
+   ],
+   "solution": "<p>(a) $\\lceil 10000/256 \\rceil = 40$ blocks, (b) $40 \\times 256 - 10000 = 240$ idle threads, (c) $10000/10240 = 97.66\\%$. For large $n$ the waste is negligible; it only matters when $n$ is small or the launch is repeated many times on small pieces.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Scalar tail or masked tail",
+   "statement": "<p>A SIMD loop over $n = 1000$ floats uses 16-wide vectors. Each vector iteration costs 4 instructions. A scalar tail loop costs 4 instructions per element. AVX-512-style masking lets the last, partial vector run as one masked vector iteration instead.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Instructions with a scalar tail?",
+     "answer": 280,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Instructions with a masked last vector?",
+     "answer": 252,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Instructions saved by masking, in %?",
+     "answer": 10.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "62 full vectors and 8 tail elements."
+   ],
+   "solution": "<p>(a) $62 \\times 4 + 8 \\times 4 = 280$. (b) $63 \\times 4 = 252$. (c) $10.0\\%$ fewer. Masks are SIMD borrowing SIMT's trick: per-lane enable bits instead of special-case code.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Strip-mining",
+   "statement": "<p>A vector machine has a maximum vector length (MVL) of 64. Following Hennessy &amp; Patterson, a loop of length $n$ is strip-mined: first a piece of length $n \\bmod \\text{MVL}$, then full pieces of length MVL.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "For $n = 1000$: total number of pieces?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Length of the first piece?",
+     "answer": 40,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "For $n = 1024$: total number of pieces?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$1000 = 40 + 15 \\times 64$."
+   ],
+   "solution": "<p>(a, b) $1000 \\bmod 64 = 40$, then $(1000-40)/64 = 15$ full pieces: 16 in all. (c) $1024 = 16 \\times 64$ exactly, so 16 full pieces and no odd one (a zero-length first piece is skipped). A GPU grid does the same job: blocks are the strips, and the guard handles the odd piece.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 1,
+   "title": "Speaking three dialects",
+   "statement": "<p>Match the terms used by CUDA, AMD and Hennessy &amp; Patterson.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "H&amp;P's \"multithreaded SIMD processor\" is CUDA's…",
+     "options": [
+      "warp",
+      "SM (streaming multiprocessor)",
+      "thread block",
+      "lane"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "AMD's \"wavefront\" is CUDA's…",
+     "options": [
+      "thread",
+      "warp",
+      "block",
+      "grid"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "AMD's \"LDS\" (local data share) is CUDA's…",
+     "options": [
+      "local memory",
+      "shared memory",
+      "L2 cache",
+      "register file"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "The terminology table in the chapter's Reality section."
+   ],
+   "solution": "<p>(a) The SM: a processor that runs SIMD instruction streams (warps) and multithreads among them. (b) A wavefront is AMD's warp, 64 lanes wide on CDNA. (c) LDS is shared memory. Note the trap: CUDA's \"local memory\" is per-thread spill space in DRAM, not anything local to the SM.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Expected waste in the last warp",
+   "statement": "<p>Launch sizes $n$ are effectively random, so $n \\bmod W$ is uniform over $0, \\ldots, W-1$, where $W$ is the warp width.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected idle lanes in the last warp for $W = 32$?",
+     "answer": 15.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For $W = 64$?",
+     "answer": 31.5,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "If $n \\bmod W = r > 0$, the last warp has $W - r$ idle lanes; if $r = 0$, none.",
+    "Average $(W - r) \\bmod W$ over $r$."
+   ],
+   "solution": "<p>For $r = 0$ there's no waste; for $r = 1, \\ldots, W-1$ the waste is $W - r$, which takes each value $1, \\ldots, W-1$ once. The mean is $\\frac{1}{W}\\sum_{k=1}^{W-1} k = \\frac{W-1}{2}$: 15.5 lanes for 32, 31.5 for 64. Wider warps waste more per launch: one of the costs AMD weighs with 64-wide wavefronts.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Many short arrays",
+   "statement": "<p>You must process 10,000 independent arrays of 20 floats each (200,000 elements in all) with an elementwise operation.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "One warp per array: fraction of lanes doing work, in %?",
+     "answer": 62.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Warps launched that way?",
+     "answer": 10000,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Flatten instead (one thread per element over all 200,000): warps launched?",
+     "answer": 6250,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "A warp has 32 lanes; an array has 20 elements.",
+    "$200{,}000 / 32$."
+   ],
+   "solution": "<p>(a) $20/32 = 62.5\\%$, (b) 10,000 warps. (c) Treating the data as one flat array of 200,000 elements needs $200000/32 = 6{,}250$ warps, all full: 37.5% fewer warps for the same work. Mapping the problem's natural structure (one array) onto the hardware's (one warp) is often wrong; flattening is a standard fix.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "GW-1 peak, and what masking costs",
+   "statement": "<p>The GW-1 has 16 SMs, each issuing one 32-lane FMA instruction per cycle at 1.5 GHz. An FMA counts as 2 FLOPs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Peak FP32 rate in GFLOP/s?",
+     "answer": 1536,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "A kernel's warps have on average 20 of 32 lanes active. Useful GFLOP/s if it issues an FMA every cycle?",
+     "answer": 960.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "$16 \\times 32 \\times 2 \\times 1.5 \\times 10^9$.",
+    "Masked lanes take the issue slot but do no work."
+   ],
+   "solution": "<p>(a) $16 \\times 32 \\times 2 \\times 1.5 = 1{,}536$ GFLOP/s. (b) Issue slots are spent per warp, not per lane: at 20 active lanes the useful rate is $1536 \\times 20/32 = 960$ GFLOP/s. Lane efficiency multiplies straight into achieved throughput.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Why wide, and how wide",
+   "statement": "<p>A toy energy model: fetching and decoding one instruction costs 20 pJ, whatever its width; each active lane operation costs 2 pJ; masked lanes cost nothing. Compute energy per useful operation.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Width 1 (a scalar core), any n?",
+     "answer": 22.0,
+     "unit": "pJ",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Width 32, n = 1,024 elements (no tail)?",
+     "answer": 2.625,
+     "unit": "pJ",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Width 32, n = 40 elements?",
+     "answer": 3.0,
+     "unit": "pJ",
+     "tolerance": "1%"
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "Width 64, n = 40 elements?",
+     "answer": 2.5,
+     "unit": "pJ",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Instructions needed: $\\lceil n / W \\rceil$.",
+    "Energy = 20 × instructions + 2 × n, divided by n."
+   ],
+   "solution": "<p>(a) $20 + 2 = 22$ pJ: the overhead dominates. (b) 32 instructions: $(640 + 2048)/1024 = 2.625$ pJ. (c) 2 instructions: $(40 + 80)/40 = 3.00$ pJ. (d) 1 instruction: $(20+80)/40 = 2.50$ pJ. Width amortises the instruction overhead, which is the whole economic argument for SIMD and SIMT. Under this model even a mostly empty wide instruction wins; what it doesn't capture is the cost of the idle lanes' hardware, and of divergence (Chapter 1.4).</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "What the hardware takes over",
+   "statement": "<p>Which of these does SIMT hardware handle so that the programmer writes nothing special?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select all that apply.",
+     "options": [
+      "Tails: elements past the end of a vector",
+      "Per-lane addresses (gathers and scatters)",
+      "Masking lanes for an if",
+      "Restoring all lanes after an if/else",
+      "Making scattered addresses as cheap as contiguous ones",
+      "Making a divergent if/else cost only one path"
+     ],
+     "answer": [
+      0,
+      1,
+      2,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Correctness versus cost: which ones are about cost?"
+   ],
+   "solution": "<p>The first four are correctness features the hardware provides. The last two are costs it can't remove: scattered addresses still need more memory transactions (Part 2) and divergent paths still run one after the other (Chapter 1.4). SIMT hides the vector in the programming model, not in the performance model.</p>"
+  }
+ ]
+}
