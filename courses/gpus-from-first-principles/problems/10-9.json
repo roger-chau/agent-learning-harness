@@ -1,0 +1,312 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Amdahl",
+   "statement": "<p>A fraction p of an application is accelerated by s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "p = 0.8, s = 20?",
+     "answer": 4.166666666666667,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "p = 0.95, s = 20?",
+     "answer": 10.256410256410252,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "p = 0.8, s → ∞?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "1/((1 − p) + p/s)."
+   ],
+   "solution": "<p>4.17×, 10.26× and 5×: the untouched part dominates.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Budget first",
+   "statement": "<p>An application: 40 ms copying data, 50 ms in kernels, 10 ms host code. You make the kernels 2× faster.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "New total, in ms?",
+     "answer": 75,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Overall speedup?",
+     "answer": 1.3333333333333333,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Only the kernel part changes."
+   ],
+   "solution": "<p>75 ms: 1.33×. Overlapping the copies (Chapter 7.3) would have been worth more.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Decomposition choice",
+   "statement": "<p>Pick output- or input-centric.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Histogram of 10⁹ values into 256 bins",
+     "options": [
+      "Output-centric (thread per bin)",
+      "Input-centric with privatised bins"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Image blur",
+     "options": [
+      "Output-centric (thread per pixel)",
+      "Input-centric scatter"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Electrostatic potential",
+     "options": [
+      "Output-centric gather",
+      "Input-centric scatter"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Few outputs and many inputs versus balanced."
+   ],
+   "solution": "<p>256 bins can't occupy a GPU, so histograms go input-centric with privatisation; blur and potential maps gather.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Dynamic parallelism threshold",
+   "statement": "<p>A device-side launch costs 5 µs; a thread processes a small region inline at 0.01 µs per element.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Region size above which a child launch is worth it (break-even, ignoring the child's parallel speedup)?",
+     "answer": 500,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Compare inline time with launch cost."
+   ],
+   "solution": "<p>Below about 500 elements inline is cheaper than even launching; real thresholds are higher once the child's own overhead is included.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Unified memory faults",
+   "statement": "<p>A kernel touches 1 GB of managed memory that starts on the host; each 64 KB fault migration costs 20 µs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Faults?",
+     "answer": 16384,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fault time, in ms?",
+     "answer": 327.68,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Explicit prefetch at 25 GB/s, in ms?",
+     "answer": 42.94967296,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Pages migrate on demand."
+   ],
+   "solution": "<p>16,384 faults ≈ 328 ms, against 43 ms for a prefetch: prefetch hints matter.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 1,
+   "title": "Library or custom",
+   "statement": "<p>When should you write your own kernel instead of calling a library?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "To fuse operations the library runs separately",
+      "For an unusual data type or shape it handles badly",
+      "Always",
+      "When a measurement shows the library is the bottleneck and a better design exists"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Evidence first."
+   ],
+   "solution": "<p>Fusion, special types and measured gaps; not by default.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Strong scaling",
+   "statement": "<p>A problem of fixed size takes 100 ms on 1 GPU; 5 ms of it is serial setup.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Best time on 8 GPUs with perfect scaling of the rest, in ms?",
+     "answer": 16.875,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Speedup?",
+     "answer": 5.925925925925926,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Amdahl again."
+   ],
+   "solution": "<p>16.88 ms, 5.93× on 8 GPUs (before communication costs).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Which bound first",
+   "statement": "<p>A new kernel does 10 GFLOP and moves 2 GB on a GPU with 20 TFLOP/s and 1 TB/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Compute time, in ms?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Memory time, in ms?",
+     "answer": 2.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "First optimisation target?",
+     "options": [
+      "Bytes",
+      "FLOPs"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Compare the two bounds before writing code."
+   ],
+   "solution": "<p>Memory-bound by 4×: reduce bytes (fusion, layout, precision) first.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "Cooperative groups",
+   "statement": "<p>grid.sync() is safe only when…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "all blocks are guaranteed resident (cooperative launch)",
+      "blocks are small",
+      "always"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Chapter 3.4."
+   ],
+   "solution": "<p>A grid-wide barrier deadlocks unless every block runs at once.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 3,
+   "title": "Designing from scratch",
+   "statement": "<p>Compute, for 10⁶ queries, the 10 nearest of 10⁶ reference points in 3-D.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Sensible components?",
+     "options": [
+      "Spatial binning of reference points (like cutoff binning)",
+      "Per-query top-10 in registers or a small sorting network",
+      "A dense 10⁶ × 10⁶ distance matrix in memory",
+      "Gather: a thread (or warp) per query"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Combine the chapter's patterns."
+   ],
+   "solution": "<p>Bin, gather per query, keep a running top-k in registers. A 10¹² dense matrix (4 TB) is out.</p>"
+  }
+ ]
+}

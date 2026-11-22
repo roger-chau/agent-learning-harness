@@ -1,0 +1,284 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Stencil intensity",
+   "statement": "<p>7-point stencil, FP32, 13 FLOPs per point, minimum traffic one read and one write.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Intensity at best, FLOP/byte?",
+     "answer": 1.625,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "8 bytes per point."
+   ],
+   "solution": "<p>1.6 FLOP/byte: memory-bound on every GPU.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "3-D tile halos",
+   "statement": "<p>A block of 1,024 threads loads a T³ tile with a halo of 1 (one point per thread).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Largest T with (T + 2)³ ≤ 1,024?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fraction of loaded points that are outputs, in %?",
+     "answer": 51.2,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "10³ = 1,000."
+   ],
+   "solution": "<p>T = 8: 512 of 1,000 loaded points are outputs, 51%. 3-D halos are expensive.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Register tiling along z",
+   "statement": "<p>Thread coarsening in z keeps z − 1, z, z + 1 in registers; x/y neighbours come from global memory (cache).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Global loads per point, naive?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With register tiling in z?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "With the current plane also in shared memory?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Count what's loaded per step."
+   ],
+   "solution": "<p>7 → 5 → about 1 (plus plane halos).</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Parallelism after coarsening",
+   "statement": "<p>N = 512 grid, 32 × 32 thread tiles over (x, y), each thread walking C_z planes. GPU holds 32,768 threads at once.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Threads with C_z = 512 (all of z)?",
+     "answer": 262144,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With C_z = 8 at N = 32: threads launched?",
+     "answer": 4096,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Threads = N² × N / C_z."
+   ],
+   "solution": "<p>(a) 262,144 threads at N = 512: plenty of parallelism even coarsened over all of z. (b) At N = 32 with C_z = 8: 4,096 threads, an eighth of what the GPU can hold, so latency isn't hidden; that's why the simulator's coarsened kernel only wins at N = 64.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Temporal blocking",
+   "statement": "<p>A tile advances k time steps in shared memory before writing back. Each step needs a halo of 1 more point.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "DRAM traffic per point per time step, relative to one step at a time, for k = 4 (ignoring halo)?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "2-D tile of 32 × 32 outputs after k = 4 steps: input tile side?",
+     "answer": 40,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Read once, write once per k steps."
+   ],
+   "solution": "<p>(a) 1/k = 0.25. (b) 40 × 40: the halo grows by 1 per step per side, so temporal blocking trades redundant halo work for DRAM traffic.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 1,
+   "title": "Boundaries",
+   "statement": "<p>N³ grid with boundary points copied.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Interior points for N = 64?",
+     "answer": 238328,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fraction that are boundary, in %?",
+     "answer": 9.0850830078125,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "(N − 2)³."
+   ],
+   "solution": "<p>238,328 interior; 9.1% boundary.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Higher order",
+   "statement": "<p>A 13-point stencil reads 2 neighbours in each direction (±1, ±2).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Loads per point naive?",
+     "answer": 13,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With z register tiling (5 z-values in registers)?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "4 z-neighbours become register shifts."
+   ],
+   "solution": "<p>13 → 9; the saving grows with stencil order, which is why seismic codes tile along z.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Bandwidth bound",
+   "statement": "<p>One Jacobi step of a 512³ FP32 grid on a 1 TB/s GPU.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum time per step, in ms?",
+     "answer": 1.073741824,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "1,000 steps, in s?",
+     "answer": 1.073741824,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "8 bytes per point."
+   ],
+   "solution": "<p>1.07 ms per step; 1.07 s for 1,000 steps: temporal blocking is the only way past this.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "Choosing coarsening",
+   "statement": "<p>When does thread coarsening help?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "When the naive grid has more threads than the GPU holds",
+      "When it removes redundant loads or work",
+      "When the grid is already too small to fill the GPU",
+      "When it increases registers past the occupancy cliff"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    }
+   ],
+   "hints": [
+    "Trade parallelism for reuse."
+   ],
+   "solution": "<p>Coarsen when parallelism is in surplus and the merged work shares data; not when it starves the GPU or spills.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Shared-plane variant",
+   "statement": "<p>A 32 × 32 thread tile stages the current z-plane (with x/y halos) in shared memory each step.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Floats loaded per step per block (plane tile with halo)?",
+     "answer": 1152,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Global loads per output point?",
+     "answer": 1.125,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The 4 corners aren't needed by a 7-point stencil."
+   ],
+   "solution": "<p>1152 loads for 1,024 outputs: 1.12 per point, against 7 naive.</p>"
+  }
+ ]
+}

@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Why do 3-D stencils gain little from cubic shared-memory tiles?",
+   "options": [
+    "Not enough FLOPs",
+    "Halos are a large fraction of a small 3-D tile (block size caps T at about 8–10)",
+    "Bank conflicts"
+   ],
+   "answer": 1,
+   "explanation": "Surface-to-volume is unfavourable in 3-D."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Register tiling along z means…",
+   "options": [
+    "each thread keeps its z − 1, z, z + 1 values in registers and shifts them",
+    "storing the grid in registers",
+    "using tensor cores"
+   ],
+   "answer": 0,
+   "explanation": "One new load per step instead of three."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Thread coarsening trades…",
+   "options": [
+    "registers for shared memory",
+    "parallelism for reuse",
+    "accuracy for speed"
+   ],
+   "answer": 1,
+   "explanation": "Fewer threads, each doing more, sharing data."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "In the simulator, the coarsened stencil lost at N = 32 and won at N = 64. Why?",
+   "options": [
+    "Bug in the simulator",
+    "At N = 32 too few threads remained to hide latency",
+    "N = 64 has fewer boundary points"
+   ],
+   "answer": 1,
+   "explanation": "Coarsening needs surplus parallelism."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Temporal blocking reduces…",
+   "options": [
+    "FLOPs",
+    "DRAM traffic per time step, at the cost of growing halos",
+    "registers"
+   ],
+   "answer": 1,
+   "explanation": "Several steps per load."
+  }
+ ]
+}

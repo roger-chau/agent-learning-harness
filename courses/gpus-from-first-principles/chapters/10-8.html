@@ -1,0 +1,65 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>PMPP closes its patterns with two full applications: reconstructing an MRI image from non-Cartesian scanner data, and computing the electrostatic potential of a molecule on a 3-D grid (used to place ions in molecular dynamics). Neither is a textbook kernel. Both are "for every output, sum a function of every input": $O(\text{outputs} \times \text{inputs})$ work with simple maths in the middle. What decisions turn such a computation into a fast GPU kernel?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: gather, not scatter</h2>
+<p>There are two ways to organise "every input contributes to every output":</p>
+<ul>
+<li><strong>Scatter</strong>: a thread per input (atom, k-space sample) adds its contribution to every output. Natural from the physics ("each atom creates a field"), but every addition is a write to a shared output: atomics, contention, and float results that depend on timing.</li>
+<li><strong>Gather</strong>: a thread per output reads every input and accumulates privately in a register, writing once. No atomics, deterministic, and the inputs are read-only, so they can be cached or broadcast.</li>
+</ul>
+<p>Gather is almost always the right GPU choice, even when it means each thread recomputes something per input. In the exercise, a scatter version spends 44 µs serialising atomics; the gather version takes 4.5 µs.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: the MRI kernel, step by step</h2>
+<p>The MRI reconstruction's core, $F^H d$, computes for each image voxel a sum over all k-space samples of $\cos$ and $\sin$ of a phase. PMPP's optimisation steps generalise to any such kernel:</p>
+<ol>
+<li><strong>Loop interchange</strong> so the outer loop is over outputs (gather) and the inner over inputs.</li>
+<li><strong>Register accumulation</strong>: the output stays in registers for the whole inner loop.</li>
+<li><strong>Constant or shared memory for the inputs</strong>: every thread reads input k at the same time, so a broadcast serves the warp. Inputs are processed in chunks that fit in 64 KB of constant memory (or a shared tile), one chunk per launch or per tile.</li>
+<li><strong>Struct-of-arrays versus array-of-structs</strong> for the inputs, chosen to match the broadcast path (Chapter 2.3).</li>
+<li><strong>Hardware trigonometry</strong> (<code>__sinf</code>, <code>__cosf</code>) on the special function units, after checking the accuracy is acceptable against a reference: one of PMPP's lessons is to validate fast maths with an application-level error metric (image quality), not a rule of thumb.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: electrostatics</h2>
+<p>Direct Coulomb summation (DCS) computes $V(\mathbf{r}) = \sum_a q_a / |\mathbf{r} - \mathbf{r}_a|$ at every grid point. Two optimisations stack on the gather:</p>
+<ul>
+<li><strong>Thread coarsening with reuse</strong>: neighbouring grid points in x share $dy^2 + dz^2$ for every atom. A thread computing 4 points in x loads each atom once and does the shared part once, cutting loads per atom–point pair from about 4 to about 1 in the simulator. The cost is registers and fewer threads.</li>
+<li><strong>Cutoff binning</strong>: physically, distant atoms matter little (with suitable methods for the long-range part). Sort atoms into spatial bins; each output block visits only the bins within the cutoff radius. Work falls from $O(\text{points} \times \text{atoms})$ to $O(\text{points} \times \text{atoms per neighbourhood})$: an algorithmic change worth far more than any kernel tuning, but one that needs a scan and a scatter to build the bins (Part 3) and makes per-block work uneven.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>These two applications come from the VMD molecular visualisation package and the Illinois MRI work that motivated much early CUDA research; PMPP's authors were involved in both.</li>
+<li>The same structure appears in N-body simulation, kernel density estimation, attention (every query against every key, Chapter 7.2) and radio astronomy imaging. The decisions repeat: gather, register accumulation, broadcast inputs, coarsening, and an algorithmic cutoff (tree codes, fast multipole methods, sparse attention) when $O(n^2)$ is too much.</li>
+<li>When outputs are few and inputs many, gather parallelism runs out; then split the inputs across blocks and reduce the partial outputs (split-K again, Chapter 5.4).</li>
+</ul>
+<p><strong>Companion reading:</strong> PMPP 4th ed., Chapters 17 (Iterative MRI reconstruction) and 18 (Electrostatic potential map).</p>
+</section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: converting a scatter loop to a gather</h3>
+<p><strong>Scatter (as the physics is usually written):</strong> for each atom, for each grid point, pot[point] += q / r. Parallelising the outer loop puts every thread's writes on shared outputs: atomics.</p>
+<p><strong>Interchange:</strong> for each grid point, for each atom, v += q / r; then pot[point] = v. Same arithmetic, same order of terms per output (so even the same rounding, if the atom order is fixed), parallel over points, private accumulation, one write each. The interchange is legal because the only dependence is the reduction into each output, which a register carries.</p>
+
+<h3>Example 2: binning arithmetic</h3>
+<p><strong>Setup:</strong> 10⁵ atoms in a 100 Å cube, bins of 4 Å (25³ = 15,625 bins, about 6.4 atoms each), cutoff 12 Å.</p>
+<p><strong>Per output block</strong> (a 4 Å region of grid points), the bins within 12 Å of the region form a cube of (2 × 3 + 1)³ = 343 bins: about 2,200 atoms, against 10⁵ for direct summation: 45× less work, before any kernel optimisation. Building the bins costs a histogram, a scan and a scatter over 10⁵ atoms (Part 3): microseconds. Algorithm first, kernel second.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> PMPP 4th ed., Chapters 17 (Iterative MRI reconstruction) and 18 (Electrostatic potential map).</li>
+<li><strong>Required:</strong> J. Stone et al., "Accelerating Molecular Modeling Applications with Graphics Processors", <em>J. Comput. Chem.</em> 2007.</li>
+<li><strong>Optional:</strong> S. Stone et al., "Accelerating Advanced MRI Reconstructions on GPUs", <em>J. Parallel Distrib. Comput.</em> 2008.</li>
+</ul>
+</section>

@@ -3277,6 +3277,373 @@
      "id": "p9-checkpoint",
      "title": "Final checkpoint",
      "summary": "Cumulative quiz across the whole course."
+    }
+   ],
+   "hp": "App J",
+   "pmpp": "Ch 22, 23, App. A"
+  },
+  {
+   "id": "p10",
+   "n": 10,
+   "title": "Parallel patterns (PMPP)",
+   "summary": "Convolution, stencils, merge, sorting networks, sparse matrices, graph traversal, deep learning layers and two full case studies: the rest of Programming Massively Parallel Processors.",
+   "hp": "",
+   "pmpp": "Ch 7, 8, 12–19, 21, 22",
+   "items": [
+    {
+     "type": "chapter",
+     "id": "10-1",
+     "title": "Convolution",
+     "summary": "Tiling with halos, constant memory, and when caches already did the work.",
+     "exercises": [
+      "10-1-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "neighbourhoods overlap"
+      ],
+      [
+       "The smallest idea",
+       "a weighted sum of neighbours"
+      ],
+      [
+       "Add one block",
+       "tiles with halos"
+      ],
+      [
+       "The whole machine",
+       "sectors versus time"
+      ],
+      [
+       "Reality",
+       "separable filters, CNNs"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-2",
+     "title": "Stencils",
+     "summary": "3-D halos, thread coarsening and register tiling, and the parallelism they cost.",
+     "exercises": [
+      "10-2-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "grids and time steps"
+      ],
+      [
+       "The smallest idea",
+       "the 7-point stencil"
+      ],
+      [
+       "Add one block",
+       "why 3-D tiles disappoint"
+      ],
+      [
+       "The whole machine",
+       "coarsening and register tiling"
+      ],
+      [
+       "Reality",
+       "temporal blocking"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-3",
+     "title": "Merge",
+     "summary": "Co-rank: splitting a sequential-looking merge evenly across threads.",
+     "exercises": [
+      "10-3-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "dependent steps"
+      ],
+      [
+       "The smallest idea",
+       "co-rank by binary search"
+      ],
+      [
+       "Add one block",
+       "tiled merge"
+      ],
+      [
+       "The whole machine",
+       "balanced by construction"
+      ],
+      [
+       "Reality",
+       "merge path"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-4",
+     "title": "Sorting networks and merge sort",
+     "summary": "Bitonic sort in shared memory, and merging runs across blocks.",
+     "exercises": [
+      "10-4-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "comparison-only keys"
+      ],
+      [
+       "The smallest idea",
+       "data-independent networks"
+      ],
+      [
+       "Add one block",
+       "merge sort across blocks"
+      ],
+      [
+       "The whole machine",
+       "barriers and banks"
+      ],
+      [
+       "Reality",
+       "choosing a sort"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-5",
+     "title": "Sparse matrices",
+     "summary": "COO, CSR, ELL, JDS and hybrids; scalar versus vector SpMV; load balance.",
+     "exercises": [
+      "10-5-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "mostly zeros"
+      ],
+      [
+       "The smallest idea",
+       "formats"
+      ],
+      [
+       "Add one block",
+       "scalar versus vector CSR"
+      ],
+      [
+       "The whole machine",
+       "imbalance"
+      ],
+      [
+       "Reality",
+       "libraries, 2:4 sparsity"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-6",
+     "title": "Graph traversal",
+     "summary": "Level-synchronous BFS with frontiers, privatised queues and direction optimisation.",
+     "exercises": [
+      "10-6-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "irregular everything"
+      ],
+      [
+       "The smallest idea",
+       "level by level"
+      ],
+      [
+       "Add one block",
+       "frontier queues"
+      ],
+      [
+       "The whole machine",
+       "hubs and direction"
+      ],
+      [
+       "Reality",
+       "graph libraries"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-7",
+     "title": "Convolution layers as GEMM",
+     "summary": "im2col, implicit GEMM, and why deep learning runs on matrix multiplies.",
+     "exercises": [
+      "10-7-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "seven nested loops"
+      ],
+      [
+       "The smallest idea",
+       "im2col"
+      ],
+      [
+       "Add one block",
+       "training is GEMMs too"
+      ],
+      [
+       "The whole machine",
+       "implicit GEMM"
+      ],
+      [
+       "Reality",
+       "Winograd, FFT, layouts"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-8",
+     "title": "Case studies: MRI and electrostatics",
+     "summary": "Gather versus scatter, register accumulation, coarsening and cutoff binning.",
+     "exercises": [
+      "10-8-a"
+     ],
+     "blocks": [
+      [
+       "The real problem",
+       "all inputs to all outputs"
+      ],
+      [
+       "The smallest idea",
+       "gather, not scatter"
+      ],
+      [
+       "Add one block",
+       "the MRI kernel"
+      ],
+      [
+       "The whole machine",
+       "electrostatics"
+      ],
+      [
+       "Reality",
+       "the same shape elsewhere"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-9",
+     "title": "Computational thinking",
+     "summary": "Decomposition, algorithm choice, dynamic parallelism and the system around the kernel.",
+     "exercises": [],
+     "blocks": [
+      [
+       "The real problem",
+       "problems arrive unshaped"
+      ],
+      [
+       "The smallest idea",
+       "decomposition decides"
+      ],
+      [
+       "Add one block",
+       "dynamic parallelism"
+      ],
+      [
+       "The whole machine",
+       "unified memory and friends"
+      ],
+      [
+       "Reality",
+       "Amdahl"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p10-checkpoint",
+     "title": "Part 10 checkpoint",
+     "summary": "Ten questions across the parallel patterns."
     },
     {
      "type": "exam",
@@ -3294,9 +3661,7 @@
       ]
      ]
     }
-   ],
-   "hp": "App J",
-   "pmpp": "Ch 22, 23, App. A"
+   ]
   }
  ]
 }

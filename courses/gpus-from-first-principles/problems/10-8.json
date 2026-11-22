@@ -1,0 +1,287 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Gather or scatter",
+   "statement": "<p>Direct Coulomb summation, 10⁶ grid points, 10⁴ atoms.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Interactions?",
+     "answer": 10000000000.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Atomic updates in the scatter version?",
+     "answer": 10000000000.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "In the gather version?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Every pair."
+   ],
+   "solution": "<p>10¹⁰ interactions either way; scatter turns each into an atomic, gather into a register add.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Coarsening reuse",
+   "statement": "<p>A thread computes c consecutive x-points; per atom it loads 4 values and computes dy² + dz² once.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Loads per atom–point pair for c = 1?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For c = 4?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "For c = 8?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "4/c."
+   ],
+   "solution": "<p>4/c loads per pair. Registers and parallelism limit c.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Time estimate",
+   "statement": "<p>10¹⁰ interactions, each about 10 FLOP-equivalents (including a reciprocal square root), on a 20 TFLOP/s GPU.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Time, in ms?",
+     "answer": 5.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Compute-bound."
+   ],
+   "solution": "<p>5 ms: compute-bound, so coarsening and fast maths matter.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Cutoff binning",
+   "statement": "<p>Atoms uniform in a 100 Å box; cutoff 12 Å.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Fraction of the box within a 12 Å sphere?",
+     "answer": 0.007238229473870882,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Speedup in interactions versus direct summation?",
+     "answer": 138.15533254504805,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Sphere volume / box volume."
+   ],
+   "solution": "<p>0.72% of atoms per point: about 138× fewer interactions (minus binning overheads).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "MRI inputs in constant memory",
+   "statement": "<p>k-space samples of 3 floats (kx, ky, kz) plus 2 for the complex value; 64 KB of constant memory.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Samples per chunk?",
+     "answer": 3276,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Chunks for 100,000 samples?",
+     "answer": 31,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "20 bytes per sample."
+   ],
+   "solution": "<p>3276 per chunk, 31 chunks (launches or tiles).</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Fast maths accuracy",
+   "statement": "<p>__sinf has absolute error about 2⁻²¹·⁴ for |x| ≤ π but grows for large arguments.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best validation?",
+     "options": [
+      "Assume it's fine",
+      "Compare the application's output (image quality, e.g. PSNR) against a full-precision reference",
+      "Check one value"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Application metric."
+   ],
+   "solution": "<p>PMPP validates fast trig against image quality, the metric that matters.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 1,
+   "title": "Register accumulation",
+   "statement": "<p>In a gather kernel the output…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "should be…",
+     "options": [
+      "accumulated in a register and written once",
+      "written after every input",
+      "kept in shared memory"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "One write."
+   ],
+   "solution": "<p>Register accumulation turns millions of writes into one.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Few outputs, many inputs",
+   "statement": "<p>100 outputs, 10⁸ inputs each.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Problem with a thread per output?",
+     "options": [
+      "Only 100 threads: the GPU is mostly idle",
+      "Atomics"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "Split inputs across blocks and reduce partial results (split-K)",
+      "Bigger blocks"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Parallelism."
+   ],
+   "solution": "<p>Split the input dimension and reduce: the same move as split-K GEMM.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Arithmetic of a coarsened DCS",
+   "statement": "<p>c = 4 points per thread; per atom: 4 loads, then per point 1 subtraction, 1 FMA (x² + d²), 1 reciprocal square root, 1 FMA (accumulate q·r).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Instructions per atom per thread (loads + shared dy,dz part of 3 + 4 per point)?",
+     "answer": 23,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Per atom–point pair?",
+     "answer": 5.75,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Shared work amortised over 4 points."
+   ],
+   "solution": "<p>23 instructions per atom per thread, 5.75 per pair, versus 11 uncoarsened.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Same structure",
+   "statement": "<p>Which share DCS's \"every output sums over every input\" structure?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "N-body gravity",
+      "Attention",
+      "Kernel density estimation",
+      "Vector addition"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "O(outputs × inputs)."
+   ],
+   "solution": "<p>N-body, attention and KDE; vector addition is one-to-one.</p>"
+  }
+ ]
+}

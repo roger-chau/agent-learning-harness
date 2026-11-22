@@ -1,0 +1,322 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Format sizes",
+   "statement": "<p>A 100,000 × 100,000 matrix with 1,000,000 non-zeros, FP32 values, 32-bit indices.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "COO bytes?",
+     "answer": 12000000,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "CSR bytes?",
+     "answer": 8400004,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Dense bytes?",
+     "answer": 40000000000,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "COO: row, col, value per entry."
+   ],
+   "solution": "<p>COO 12 MB, CSR 8.4 MB, dense 40 GB.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "ELL padding",
+   "statement": "<p>1,000 rows: 990 with 10 non-zeros, 10 with 500.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "ELL slots (rows × longest row)?",
+     "answer": 500000,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fraction wasted, in %?",
+     "answer": 97.02,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Hybrid with ELL width 10: entries in COO?",
+     "answer": 4900,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Pad to the longest row."
+   ],
+   "solution": "<p>500,000 slots for 14,900 values: 97.0% padding. Hybrid ELL(10) + COO puts 4,900 overflow entries in COO.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Scalar CSR divergence",
+   "statement": "<p>A warp handles 32 rows with lengths 1, 1, …, 1 and one row of 64.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Loop iterations the warp runs?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "SIMD efficiency, in %?",
+     "answer": 4.638671875,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The longest lane decides."
+   ],
+   "solution": "<p>64 iterations, 4.6% efficiency: why scalar CSR suffers on skewed rows.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Vector CSR waste",
+   "statement": "<p>A warp per row.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Lane efficiency for rows of 8 non-zeros, in %?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For rows of 100?",
+     "answer": 78.125,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Iterations = ⌈len/32⌉."
+   ],
+   "solution": "<p>25% for 8-entry rows; 78% for 100 (4 iterations of 32). Use 4 or 8 lanes per row for short rows.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "SpMV time bound",
+   "statement": "<p>CSR SpMV with 10⁸ non-zeros, FP32, on 1 TB/s; assume x reads hit cache.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes (vals + colIdx)?",
+     "answer": 800000000.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time bound, in ms?",
+     "answer": 0.8,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "GFLOP/s at that bound?",
+     "answer": 250.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "8 bytes per non-zero, 2 FLOPs."
+   ],
+   "solution": "<p>0.8 GB, 0.8 ms, 250 GFLOP/s: SpMV runs at about 2–5% of a modern GPU's FP32 peak, all of it bandwidth.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Merge-based balance",
+   "statement": "<p>Split nnz = 10⁶ non-zeros evenly over 10,000 threads; rows located by binary search over rowPtr (100,001 entries).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Non-zeros per thread?",
+     "answer": 100,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Search steps per thread (about log₂ 100,001)?",
+     "answer": 17,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Co-rank over (rows, non-zeros)."
+   ],
+   "solution": "<p>100 non-zeros each, 17 search steps: perfect balance however skewed the rows.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 1,
+   "title": "JDS",
+   "statement": "<p>Jagged diagonal storage…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "sorts rows by…",
+     "options": [
+      "index",
+      "length, so warps get rows of similar length",
+      "value"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Reduce divergence and padding."
+   ],
+   "solution": "<p>Sorting rows by length groups similar rows into warps; a permutation maps results back.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "2:4 sparsity",
+   "statement": "<p>Ampere's structured sparsity: in every group of 4 weights, 2 are zero.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Fraction of weights stored?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Peak tensor speedup claimed?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Half the multiplies."
+   ],
+   "solution": "<p>Half the values (plus 2-bit indices) and up to 2× math throughput, because the pattern is fixed and hardware-friendly, unlike arbitrary sparsity.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "The x gather",
+   "statement": "<p>Vector CSR, rows of 64 random columns over an n-vector x.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors per warp load of x with random columns (32 lanes)?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Best lever?",
+     "options": [
+      "Reorder the matrix (e.g. RCM) so columns cluster",
+      "Use FP64",
+      "More threads"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Random gathers."
+   ],
+   "solution": "<p>About 32 sectors per warp load; reordering for bandwidth reduction clusters columns so gathers share sectors and hit cache.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Pick a format",
+   "statement": "<p>Choose.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Building a matrix incrementally from unordered (i, j, v) triples",
+     "options": [
+      "COO",
+      "ELL",
+      "JDS"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Rows of almost identical length, GPU SpMV",
+     "options": [
+      "ELL",
+      "COO"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "General-purpose storage and SpMV",
+     "options": [
+      "CSR",
+      "Dense"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Construction versus computation."
+   ],
+   "solution": "<p>COO to build, ELL for regular rows, CSR as the general format.</p>"
+  }
+ ]
+}

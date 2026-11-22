@@ -24,7 +24,7 @@ def quiz_answers(item_id):
 def test_catalog_and_course(client):
     cat = client.get("/api/catalog").json()
     gpu = next(c for c in cat if c["slug"] == SLUG)
-    assert gpu["status"] == "available" and gpu["stats"]["chapters"] == 41
+    assert gpu["status"] == "available" and gpu["stats"]["chapters"] == 50
     c = client.get(f"/api/courses/{SLUG}").json()
     states = {i["id"]: i["state"] for p in c["parts"] for i in p["items"]}
     assert states["0-1"] == "open"

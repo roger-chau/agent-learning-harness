@@ -1,0 +1,61 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Radix sort (Chapter 3.5) is unbeatable for integer and float keys, but it needs keys whose bits order correctly. Strings, composite keys, or any type with only a comparison function need a <strong>comparison sort</strong>. Sequential comparison sorts (quicksort, heapsort) are full of data-dependent decisions that a GPU handles badly. Which comparison sorts parallelise well?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: sorting networks</h2>
+<p>A <strong>sorting network</strong> is a fixed sequence of compare-exchange operations that sorts any input. Because the sequence doesn't depend on the data, every thread knows its pair at every step: no divergence in the control flow, only in which way each pair is swapped (a predicated select). Lab 6 used a tiny one (odd-even transposition) to keep 8 values in registers.</p>
+<p><strong>Bitonic sort</strong> is the classic network for GPUs. A sequence is <em>bitonic</em> if it rises then falls. A "bitonic merge" of length k turns a bitonic sequence into a sorted one in $\log_2 k$ steps of $k/2$ independent compare-exchanges at distances $k/2, k/4, \ldots, 1$. Building sorted runs of 2, 4, 8, …, n by merging alternately ascending and descending runs sorts everything in</p>
+<div class="eq">$$\frac{\log_2 n\,(\log_2 n + 1)}{2} \text{ steps of } \frac{n}{2} \text{ compare-exchanges each}$$</div>
+<p>For n = 512: 45 steps of 256 comparisons. Total work is $O(n \log^2 n)$, more than merge sort's $O(n \log n)$, but every step is perfectly parallel. That trade is usually right for data that fits in shared memory.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: merge sort across blocks</h2>
+<p>A block sorts what fits in its shared memory (512–2,048 keys) with a network. Beyond that, sorted runs are merged pairwise: run lengths double each round, so $n$ keys in runs of $r$ need $\log_2(n/r)$ rounds of the parallel merge from Chapter 10.3. Each round reads and writes all keys once, so the cost is about $2 \times 4n$ bytes × the number of rounds, plus the initial block sort.</p>
+<p>Early rounds have many short runs (many independent merges); late rounds have few long ones, where the co-rank partitioning of Chapter 10.3 splits each merge across many threads so the GPU stays full. Without that, the last round would be one merge on a handful of threads.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>In the simulator the bitonic block sort takes about 2.8 µs for 4,096 keys in 8 blocks, against about 180 µs if one thread per block did an insertion sort. Two costs show up in the stats:</p>
+<ul>
+<li><strong>Barriers:</strong> one after every step, 45 per block. Steps with distance j &lt; 32 involve only pairs inside a warp, so those barriers could be replaced by <code>__syncwarp</code> or by doing those steps in registers with shuffles (each lane holding keys and exchanging with lane ℓ ⊕ j).</li>
+<li><strong>Bank conflicts:</strong> at distance j, the two words of a pair are j apart, and for large j the indices of a warp's lanes map to few banks. Padding or a swizzled layout removes them, as in Chapter 2.5.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Production GPU sorts use radix sort wherever keys allow (it does $O(n)$ work per digit pass) and merge-based sorts otherwise; small segments (sorting many short lists, as in top-k or beam search) use networks in registers and shared memory.</li>
+<li><strong>Odd-even merge sort</strong> (Batcher) is another network with slightly fewer comparators than bitonic; bitonic is preferred for its simple, regular indexing.</li>
+<li>Comparison sorts on GPUs are memory-bound in the merge rounds: the number of rounds, not the comparisons, decides the time. Larger initial runs (more keys per block, registers plus shared memory) cut rounds.</li>
+</ul>
+<p><strong>Companion reading:</strong> PMPP 4th ed., Chapter 13 (Sorting), the merge sort and sorting network sections; K. Batcher, "Sorting networks and their applications", AFIPS 1968.</p>
+</section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: bitonic sort of 8 keys, step by step</h3>
+<p><strong>Input:</strong> [5, 1, 7, 3, 8, 2, 6, 4].</p>
+<ul>
+<li><strong>k = 2, j = 1:</strong> pairs (0,1) up, (2,3) down, (4,5) up, (6,7) down → [1, 5, 7, 3, 2, 8, 6, 4].</li>
+<li><strong>k = 4, j = 2:</strong> pairs (0,2), (1,3) up; (4,6), (5,7) down → [1, 3, 7, 5, 6, 8, 2, 4]. <strong>j = 1:</strong> (0,1), (2,3) up; (4,5), (6,7) down → [1, 3, 5, 7, 8, 6, 4, 2]: now one ascending and one descending run of 4, a bitonic sequence.</li>
+<li><strong>k = 8:</strong> all up. j = 4: (0,4), (1,5), (2,6), (3,7) → [1, 3, 4, 2, 8, 6, 5, 7]. j = 2: → [1, 2, 4, 3, 5, 6, 8, 7]. j = 1: → [1, 2, 3, 4, 5, 6, 7, 8]. ✓</li>
+</ul>
+<p>6 steps = 3 · 4 / 2, each with 4 independent compare-exchanges.</p>
+
+<h3>Example 2: networks in registers for top-k</h3>
+<p><strong>Task:</strong> for each of 10⁵ queries, keep the 16 smallest scores out of 4,096. A warp per query: each lane scans 128 scores and keeps its own best 16 sorted in registers (insertion with compile-time indices, Lab 6's lesson). Then the warp merges 32 sorted lists of 16 with a bitonic network across lanes using shuffles: no shared memory, no barriers. This is how GPU top-k for beam search and nearest-neighbour search is built, and it's why sorting networks matter more in practice than their $O(n\log^2 n)$ suggests.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> PMPP 4th ed., Chapter 13 (Sorting), merge sort and the comparison-sort sections.</li>
+<li><strong>Required:</strong> K. Batcher, "Sorting networks and their applications", AFIPS 1968.</li>
+<li><strong>Optional:</strong> J. Johnson, M. Douze, H. Jégou, "Billion-scale similarity search with GPUs" (FAISS), 2017, the k-selection section.</li>
+</ul>
+</section>

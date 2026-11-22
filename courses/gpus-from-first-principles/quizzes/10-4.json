@@ -1,0 +1,64 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A sorting network is…",
+   "options": [
+    "a fixed sequence of compare-exchanges that sorts any input",
+    "a GPU interconnect",
+    "a neural network"
+   ],
+   "answer": 0,
+   "explanation": "Data-independent schedule."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Bitonic sort's work is…",
+   "options": [
+    "O(n log n)",
+    "O(n log² n)",
+    "O(n)"
+   ],
+   "answer": 1,
+   "explanation": "More than merge sort, but perfectly parallel."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Beyond one block, GPU merge sort…",
+   "options": [
+    "merges sorted runs pairwise in log rounds, each a parallel merge",
+    "uses one huge network",
+    "falls back to the CPU"
+   ],
+   "answer": 0,
+   "explanation": "Co-rank merges per round."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Which barriers in a block bitonic sort can become __syncwarp?",
+   "options": [
+    "Those for steps where every pair is inside one warp's data",
+    "None",
+    "All"
+   ],
+   "answer": 0,
+   "explanation": "Small-distance steps."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Is bitonic sort stable?",
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "answer": 1,
+   "explanation": "Add the index as a tiebreaker if needed."
+  }
+ ]
+}

@@ -1,0 +1,130 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Tiled convolution with T × T outputs and radius R loads per output about…",
+   "options": [
+    "(T + 2R)²/T²",
+    "(2R + 1)²",
+    "1/T"
+   ],
+   "answer": 0,
+   "explanation": "Tile plus halo."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Register tiling in a 3-D stencil saves…",
+   "options": [
+    "the two z-neighbour loads per point",
+    "all loads",
+    "FLOPs"
+   ],
+   "answer": 0,
+   "explanation": "Values shift through registers."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Co-rank partitioning makes a merge…",
+   "options": [
+    "balanced regardless of data",
+    "coalesced",
+    "stable"
+   ],
+   "answer": 0,
+   "explanation": "Equal outputs per thread."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Bitonic sort is preferred for small segments because…",
+   "options": [
+    "its schedule is data-independent",
+    "it does the least work",
+    "it's stable"
+   ],
+   "answer": 0,
+   "explanation": "Fixed compare-exchanges."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Vector CSR improves on scalar CSR by…",
+   "options": [
+    "coalescing reads within a row",
+    "removing the x gather",
+    "using atomics"
+   ],
+   "answer": 0,
+   "explanation": "Lanes read consecutive entries."
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Frontier-based BFS avoids…",
+   "options": [
+    "touching all vertices every level",
+    "atomics",
+    "kernel launches"
+   ],
+   "answer": 0,
+   "explanation": "Work-efficient."
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "im2col lowers a convolution layer to…",
+   "options": [
+    "a GEMM",
+    "a scan",
+    "a histogram"
+   ],
+   "answer": 0,
+   "explanation": "Y = W X."
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Gather is preferred over scatter because…",
+   "options": [
+    "no atomics, deterministic results",
+    "fewer FLOPs",
+    "less code"
+   ],
+   "answer": 0,
+   "explanation": "Private accumulation."
+  },
+  {
+   "id": "q9",
+   "type": "multi",
+   "prompt": "Which are load-balancing techniques from this Part?",
+   "options": [
+    "Splitting work evenly and binary-searching boundaries",
+    "Binning items by size",
+    "A warp or block for heavy items",
+    "Bigger L2"
+   ],
+   "answer": [
+    0,
+    1,
+    2
+   ],
+   "explanation": "Co-rank, binning and hierarchy."
+  },
+  {
+   "id": "q10",
+   "type": "single",
+   "prompt": "Coarsening helps when…",
+   "options": [
+    "parallelism is in surplus and merged work shares data",
+    "the grid is too small",
+    "registers are scarce"
+   ],
+   "answer": 0,
+   "explanation": "Trade parallelism for reuse."
+  }
+ ]
+}

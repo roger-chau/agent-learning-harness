@@ -1,0 +1,290 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Vertex-centric cost",
+   "statement": "<p>A graph with n = 10⁶ vertices and D = 1,000 levels (a long chain-like graph).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Thread-visits with vertex-centric BFS (n per level)?",
+     "answer": 1000000000.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With frontiers (each vertex once)?",
+     "answer": 1000000.0,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "n × D versus n."
+   ],
+   "solution": "<p>10⁹ versus 10⁶: frontiers make BFS work-efficient.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Frontier atomics",
+   "statement": "<p>A level discovers 50,000 new vertices.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Atomics on the global queue counter, unprivatised?",
+     "answer": 50000,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With per-block queues, 200 blocks?",
+     "answer": 200,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "One reservation per block."
+   ],
+   "solution": "<p>50,000 versus 200 global atomics.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Degree imbalance",
+   "statement": "<p>A frontier of 32 vertices in one warp: 31 have degree 3, one has degree 30,000.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Loop iterations for the warp?",
+     "answer": 30000,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "SIMD efficiency, in %?",
+     "answer": 3.1346875,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The hub dominates."
+   ],
+   "solution": "<p>30,000 iterations at 3.13% efficiency: hubs need a warp or block, or edge-level balancing.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Direction optimisation",
+   "statement": "<p>A level's frontier has 40% of the vertices; the graph has average degree 16.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Edges examined top-down (frontier edges), as a fraction of all edges?",
+     "answer": 0.4,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Bottom-up checks unvisited vertices and stops at the first parent found. Typically…",
+     "options": [
+      "more edges",
+      "far fewer edges when the frontier is large"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Early exit."
+   ],
+   "solution": "<p>Top-down examines 40% of all edges; bottom-up stops at the first frontier neighbour, often after 1–2 checks.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 1,
+   "title": "Claiming vertices",
+   "statement": "<p>Two threads discover the same unvisited vertex u at the same time.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "With atomicCAS(level, u, −1, d + 1)…",
+     "options": [
+      "both append u",
+      "exactly one gets −1 back and appends u",
+      "neither appends"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "CAS succeeds once."
+   ],
+   "solution": "<p>One CAS succeeds; the other sees d + 1 and skips. Every vertex enters the queue once.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "BFS levels",
+   "statement": "<p>Path graph 0 – 1 – 2 – … – 9 plus an edge 0 – 9.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Level of vertex 5 from source 0?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Level of vertex 7?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Number of levels (deepest)?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Go around either way."
+   ],
+   "solution": "<p>Vertex 5 is 5 steps either way; 7 is 3 steps via 9 (0→9→8→7); deepest level 5.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Edge-level balancing",
+   "statement": "<p>A frontier of 1,000 vertices with 1,000,000 total edges; 4,096 threads, each taking a contiguous range of edges.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Edges per thread?",
+     "answer": 245,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "What tells each thread which vertex its edges belong to?",
+     "options": [
+      "An exclusive scan of degrees plus a binary search",
+      "Atomics",
+      "Sorting"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Scan of degrees + binary search."
+   ],
+   "solution": "<p>245 edges each; an exclusive scan of the frontier's degrees plus a binary search gives each thread its vertex (co-rank again).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Bandwidth bound",
+   "statement": "<p>BFS over a graph with 10⁸ edges stored in CSR (4-byte column indices), each edge examined once.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes for colIdx?",
+     "answer": 400000000.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time at 1 TB/s, in ms (colIdx only)?",
+     "answer": 0.4,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Plus random level[] accesses."
+   ],
+   "solution": "<p>0.4 ms for the index stream alone; the random level[] checks (32-byte sectors per 4-byte access) usually cost more.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "Order",
+   "statement": "<p>Is the frontier queue's order deterministic?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "Yes",
+      "No: atomic appends happen in timing order; levels are deterministic, queue order isn't"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Atomics."
+   ],
+   "solution": "<p>Results (levels) are deterministic; the order of discovery within a level isn't.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 3,
+   "title": "Kernel launches",
+   "statement": "<p>Level-synchronous BFS on a graph with diameter 50, each level a launch costing 5 µs plus work.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Launch overhead total, in µs?",
+     "answer": 250,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "For a road network (diameter in thousands), the fix?",
+     "options": [
+      "Bigger blocks",
+      "Persistent kernel with a device-side work queue (or CUDA Graphs)",
+      "More levels"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Diameter × launch cost."
+   ],
+   "solution": "<p>250 µs here; road networks have thousands of levels with tiny frontiers, so launch overhead dominates and persistent or graph-based execution is needed.</p>"
+  }
+ ]
+}

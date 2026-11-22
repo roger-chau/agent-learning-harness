@@ -1,0 +1,60 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Convolution slides a small filter over an image (or a signal, or a volume) and replaces every element with a weighted sum of its neighbourhood. Blur, sharpen, edge detection, the layers of a convolutional network: all are convolutions. Every output reads $(2R+1)^2$ inputs for a filter of radius $R$, and neighbouring outputs read almost the same inputs. A naive kernel fetches each input $(2R+1)^2$ times. How much of that can be shared, and what does sharing cost?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p>For a 2-D image $N$ and a filter $F$ of radius $R$ (size $(2R+1) \times (2R+1)$):</p>
+<div class="eq">$$P[y][x] = \sum_{j=-R}^{R} \sum_{i=-R}^{R} F[j+R][i+R]\; N[y+j][x+i]$$</div>
+<p>Inputs outside the image are <strong>ghost cells</strong>, treated as 0 here (other policies: clamp to edge as in Part 1, or mirror). The direct kernel gives each output a thread that loops over the filter: $(2R+1)^2$ FMAs and as many input loads. Its arithmetic intensity, if every load went to DRAM, is about 0.25 FLOP/byte, whatever the filter size.</p>
+<p>Two observations change that. The <strong>filter</strong> is tiny and every thread reads the same element at the same time: on real GPUs it goes in <strong>constant memory</strong>, whose cache broadcasts one value to a whole warp per cycle (in the simulator, a broadcast load or a copy in shared memory has the same effect). And the <strong>inputs</strong> overlap: a $T \times T$ tile of outputs needs only a $(T+2R) \times (T+2R)$ tile of inputs.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: tiling with halos</h2>
+<p>Each block loads its input tile, including the <strong>halo</strong> of width $R$ around it, into shared memory once, synchronises, then computes every output from shared memory. Global loads per output fall from $(2R+1)^2$ to</p>
+<div class="eq">$$\frac{(T+2R)^2}{T^2}$$</div>
+<p>For $T = 16$, $R = 2$: $400/256 = 1.56$ loads per output instead of 25, a 16× reduction. Two ways to organise the threads:</p>
+<ul>
+<li><strong>Threads = input tile</strong> ($(T+2R)^2$ threads): each loads one input, then only the inner $T^2$ compute. Simple, but $1 - T^2/(T+2R)^2$ of the threads (36% here) idle during compute.</li>
+<li><strong>Threads = output tile</strong> ($T^2$ threads): the block loads the bigger input tile in a strided loop (each thread loads 1–2 elements), then every thread computes. That's what the exercise uses.</li>
+</ul>
+<p>The halo is the cost of tiling: inputs on tile edges are loaded by up to four blocks. Small tiles with large filters spend most of their loads on halos; the ratio above tells you when tiling stops paying.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>Run both versions in the simulator and look at <code>transactions</code> (sectors moved between SMs and L2) and <code>dramBytes</code>. The tiled kernel moves about a twelfth of the naive kernel's sectors, yet DRAM bytes are identical and the time barely changes: on a small image the L2 cache already serves the repeated reads (Chapter 2.4). Tiling paid off in L2 traffic, not DRAM traffic.</p>
+<p>When does it matter? When the repeated reads can't all hit in cache: big images processed in an order with long reuse distances, 3-D convolutions (Chapter 10.2's stencils), many channels, or when L2 bandwidth is the limiting roof (Part 5's SOL). A related trick, <strong>caching the halo</strong>, loads only the inner tile into shared memory and reads halo elements straight from global memory, relying on L1/L2 for them: less shared memory and simpler indexing, at the price of a few uncoalesced edge loads.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Separable filters</strong> (Gaussian blur, Sobel) factor into a horizontal and a vertical 1-D pass: $2(2R+1)$ FMAs per output instead of $(2R+1)^2$, with one extra write and read of the intermediate image.</li>
+<li><strong>Convolutional neural networks</strong> convolve many input channels with many filters at once. That's a GEMM in disguise (Chapter 10.7), and libraries implement it that way, or with FFT or Winograd transforms for some filter sizes.</li>
+<li><strong>Constant memory</strong> is 64 KB on NVIDIA GPUs and is cached per SM; it's fast only when a warp's lanes read the same address. A filter indexed by thread-dependent offsets serialises.</li>
+</ul>
+<p><strong>Companion reading:</strong> PMPP 4th ed., Chapter 7 (Convolution).</p>
+</section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: choosing the tile for a 7 × 7 filter</h3>
+<p><strong>Options</strong> (R = 3): T = 8 → $(14/8)^2 = 3.06$ loads per output; T = 16 → $(22/16)^2 = 1.89$; T = 26 (a 32 × 32 input tile with 1,024 threads loading one element each) → $(32/26)^2 = 1.51$.</p>
+<p><strong>Shared memory:</strong> 22² × 4 = 1.9 KB for T = 16; 32² × 4 = 4 KB for T = 26: both small. <strong>Threads:</strong> T = 16 with 256 threads loading 484 inputs means two loads per thread for most threads; T = 26 with 1,024 threads has 33% of them idle during compute.</p>
+<p><strong>Choice:</strong> T = 16 with output-sized blocks and a strided load loop is the usual balance: 13× fewer loads than naive, every thread computing. Going to T = 26 saves another 20% of loads at the cost of idle threads and fewer resident blocks. Halo arithmetic first, then thread utilisation.</p>
+
+<h3>Example 2: is the convolution compute- or memory-bound after tiling?</h3>
+<p><strong>5 × 5 filter, T = 16, FP32:</strong> per output 25 FMAs = 50 FLOPs, and about 1.56 × 4 bytes loaded plus 4 written, roughly 10 bytes from DRAM if the tiles' halos don't hit in cache. Intensity ≈ 5 FLOP/byte, above the GW-1's ridge of 3: compute-bound. Untiled, intensity against L2 traffic is 50/(25 × 4) = 0.5. So tiling moved the kernel across the ridge, which is when instruction efficiency (shared loads per FMA, register reuse) starts to matter, exactly as in GEMM.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> PMPP 4th ed., Chapter 7 (Convolution: constant memory, tiled convolution with halos, caching halos).</li>
+<li><strong>Required:</strong> V. Podlozhnyuk, "Image Convolution with CUDA", NVIDIA whitepaper (2007): separable filters on GPUs.</li>
+<li><strong>Optional:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Constant Memory".</li>
+</ul>
+</section>

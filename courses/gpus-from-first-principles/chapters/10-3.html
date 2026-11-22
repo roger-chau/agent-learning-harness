@@ -1,0 +1,66 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Merging two sorted lists is the heart of merge sort, of database joins, and of combining sorted runs from many sources. Sequentially it's trivial: two pointers, compare, advance. But each step depends on the previous one: which pointer moved. How do thousands of threads each produce a piece of the output without first walking through everything before it?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: co-rank</h2>
+<p>Split the <em>output</em> evenly: thread t produces outputs $k_0 \ldots k_1 - 1$. The question is where in A and B those outputs come from. For any output position k, exactly $i$ of the first k outputs come from A and $j = k - i$ from B. That $i$ is the <strong>co-rank</strong> of k, and it can be found by binary search, without merging anything:</p>
+<ul>
+<li>if $j &gt; 0$, $i &lt; m$ and $B[j-1] \ge A[i]$, then $A[i]$ should have come before $B[j-1]$: too few from A, so $i$ must grow;</li>
+<li>otherwise $i$ is large enough; search lower.</li>
+</ul>
+<p>The search runs over $i \in [\max(0, k - n), \min(k, m)]$ and takes $O(\log \min(m, n))$ steps. The tie rule ($\ge$, with A winning ties) makes the merge <strong>stable</strong>, which matters for sorting (Chapter 3.5's radix sort needed stability too).</p>
+<p>With both co-ranks of its slice, a thread merges its two sub-arrays $A[i_0..i_1)$ and $B[j_0..j_1)$ sequentially into $C[k_0..k_1)$. No thread depends on another: the work is split exactly evenly in the output, whatever the data looks like.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: tiled merge</h2>
+<p>The basic version reads A and B with scattered, data-dependent addresses: each thread's sub-arrays start wherever its co-ranks land. The <strong>tiled merge</strong> fixes this at block level:</p>
+<ol>
+<li>The block computes the co-ranks of its own output range (one thread does the search, or a few cooperate).</li>
+<li>The block loads its slices of A and B into shared memory, <strong>coalesced</strong>.</li>
+<li>Threads compute co-ranks <em>within the shared tiles</em> and merge from shared memory.</li>
+</ol>
+<p>If the block's slices are too big for shared memory, it processes them in rounds: load a tile from each input, merge as many outputs as are guaranteed to be complete, keep the leftovers. PMPP's <strong>circular buffer</strong> version keeps the unconsumed part of each tile in place instead of reloading it, so every input element is read from global memory exactly once.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>Work: the merge itself is $O(m + n)$; the co-rank searches add $O(T \log n)$ for T threads, negligible when each thread produces dozens of outputs. Memory: the minimum is one read of A and B and one write of C. The basic kernel's scattered reads waste sectors; the tiled kernel reaches the minimum.</p>
+<p>The sequential merge inside each thread is branchy: whether A or B advances depends on the data, so lanes of a warp diverge every iteration. That's tolerable because each lane's loop body is short and the whole kernel is memory-bound. The exercise's simulator run shows the effect in <code>divergentBranches</code>, and runs in about 1.3 µs where one thread doing everything would take over 300 µs.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Merge sort</strong> on GPUs merges runs pairwise in $\log_2(\text{runs})$ rounds, each a parallel merge like this one (next chapter). Libraries such as CUB and Thrust use merge-based sorts for comparison-sorted types where radix sort doesn't apply.</li>
+<li><strong>Merge path</strong> (Green, McColl and Bader) is the same idea drawn as a path through the grid of A × B comparisons: co-ranks are the points where the path crosses each thread's diagonal.</li>
+<li>Co-rank-style partitioning generalises: any computation whose output can be split evenly but whose input boundaries depend on the data (sparse matrix–vector products with uneven rows, Chapter 10.5) can use a binary search to find each thread's inputs.</li>
+</ul>
+<p><strong>Companion reading:</strong> PMPP 4th ed., Chapter 12 (Merge).</p>
+</section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: a binary search for co-rank, traced</h3>
+<p><strong>A</strong> = [1, 4, 4, 7, 9, 12], <strong>B</strong> = [2, 4, 5, 8, 10], k = 6. Range: i ∈ [max(0, 6 − 5), min(6, 6)] = [1, 6].</p>
+<ol>
+<li>i = 3, j = 3: is B[2] = 5 ≥ A[3] = 7? No, so i ≤ 3: hi = 3.</li>
+<li>i = 2, j = 4: is B[3] = 8 ≥ A[2] = 4? Yes: too few from A, lo = 3.</li>
+<li>lo = hi = 3: i = 3, j = 3.</li>
+</ol>
+<p><strong>Check:</strong> the first 6 outputs are 1, 2, 4, 4, 4, 5: three from A (1, 4, 4) and three from B (2, 4, 5), with A's 4s before B's 4. ✓</p>
+
+<h3>Example 2: merge sort's total traffic</h3>
+<p><strong>Sort 2²² floats</strong>: blocks sort runs of 1,024 in shared memory (one read, one write), then $\log_2(2^{22}/2^{10}) = 12$ merge rounds, each reading and writing all keys. Traffic: $13 \times 2 \times 16$ MiB = 416 MiB; at 1 TB/s, 0.44 ms. A radix sort of the same keys (4 passes of read and write after a histogram pass) moves $9 \times 16$ MiB = 144 MiB. Merge sort's extra rounds are why radix sort wins whenever keys allow it, and why bigger initial runs (fewer rounds) matter for merge sort.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> PMPP 4th ed., Chapter 12 (Merge: co-rank, tiled merge, circular buffers).</li>
+<li><strong>Required:</strong> O. Green, R. McColl, D. Bader, "GPU Merge Path: A GPU Merging Algorithm", ICS 2012.</li>
+<li><strong>Optional:</strong> NVIDIA CUB documentation, DeviceMergeSort.</li>
+</ul>
+</section>

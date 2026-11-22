@@ -1,0 +1,319 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Direct convolution cost",
+   "statement": "<p>A 7 × 7 filter (R = 3) on a 2048 × 2048 FP32 image, naive kernel.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FMAs per output?",
+     "answer": 49,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Input loads per output?",
+     "answer": 49,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Total FMAs (millions)?",
+     "answer": 205.520896,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "(2R + 1)²."
+   ],
+   "solution": "<p>49 FMAs and 49 loads per output; 206 M FMAs. Intensity against loads is 2 FLOPs per 4 bytes whatever the filter size: the loads must be shared.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Tile reuse",
+   "statement": "<p>16 × 16 output tiles, filter radius R.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Global loads per output for R = 2?",
+     "answer": 1.5625,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For R = 4?",
+     "answer": 2.25,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Reduction versus naive for R = 2?",
+     "answer": 16.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "(T + 2R)² / T²."
+   ],
+   "solution": "<p>(a) 400/256 = 1.56. (b) 576/256 = 2.25. (c) 25/1.56 = 16×.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Idle threads",
+   "statement": "<p>The \"threads = input tile\" design: (T + 2R)² threads load, T² compute.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Fraction idle during compute for T = 16, R = 2, in %?",
+     "answer": 36.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For T = 28, R = 2 (32 × 32 = 1,024 threads)?",
+     "answer": 23.4375,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "1 − T²/(T + 2R)²."
+   ],
+   "solution": "<p>36% and 23.4%: bigger tiles waste fewer threads, but blocks are capped at 1,024 threads.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Shared memory per tile",
+   "statement": "<p>FP32 input tiles with halos.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes for T = 32, R = 3?",
+     "answer": 5776,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Blocks per SM by shared memory on the GW-1 (64 KB)?",
+     "answer": 11,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "38 × 38 floats."
+   ],
+   "solution": "<p>5,776 bytes (5,888 allocated): 11 blocks fit by shared memory, so another limit (threads) binds first.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Separable filters",
+   "statement": "<p>A 9 × 9 Gaussian is separable.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FMAs per output, 2-D?",
+     "answer": 81,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "As two 1-D passes?",
+     "answer": 18,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "The price of the separable version?",
+     "options": [
+      "Less accuracy",
+      "An intermediate image written and read once",
+      "More threads"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "2(2R + 1)."
+   ],
+   "solution": "<p>81 versus 18 FMAs, at the cost of one extra write and read of the intermediate image: worth it for large filters.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Constant memory",
+   "statement": "<p>The filter lives in constant memory.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "A warp where every lane reads <code>F[k]</code> for the same k…",
+     "options": [
+      "costs one broadcast",
+      "serialises 32 ways"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "A warp reading <code>F[lane]</code>…",
+     "options": [
+      "costs one broadcast",
+      "serialises: constant memory broadcasts one address per cycle"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Constant cache: one address per warp per cycle."
+   ],
+   "solution": "<p>Constant memory is ideal when all lanes read the same element, as in convolution's filter loop; divergent indices serialise.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 3,
+   "title": "Halo traffic in 3-D",
+   "statement": "<p>A 3-D convolution, R = 1, cubic tiles of T³ outputs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Loads per output for T = 8?",
+     "answer": 1.953125,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Smallest T with at most 1.25 loads per output?",
+     "answer": 26,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "(T + 2)³ / T³."
+   ],
+   "solution": "<p>(a) 1000/512 = 1.95. (b) T = 26: 17576 outputs per tile, far more than a block's 1,024 threads, so 3-D needs coarsening (Chapter 10.2).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Ghost cells",
+   "statement": "<p>A 5 × 5 filter on a 64 × 64 image with zero ghost cells.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Outputs whose window reaches outside the image?",
+     "answer": 496,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Interior: outputs at least 2 from every edge."
+   ],
+   "solution": "<p>4,096 − 60² = 496 outputs need ghost cells. Branching for them diverges only in edge warps; loading zeros into the shared tile handles them without branches in the compute loop.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "When tiling doesn't show",
+   "statement": "<p>In the simulator, tiling cut SM↔L2 sectors 12× but the time barely changed.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why?",
+     "options": [
+      "Tiling is broken",
+      "L2 already served the repeated reads, and L2 bandwidth wasn't the limit",
+      "The filter was too small"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "multi",
+     "prompt": "When would tiling matter?",
+     "options": [
+      "Large images with long reuse distances",
+      "3-D convolutions",
+      "When L2 SOL is high",
+      "When the kernel is launch-bound"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Which roof was binding?"
+   ],
+   "solution": "<p>The cache absorbed the reuse; tiling pays when the cache can't (big working sets, 3-D) or when L2 bandwidth binds.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Layers as GEMMs",
+   "statement": "<p>A CNN layer: 64 input channels, 128 filters of 3 × 3, 56 × 56 outputs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "GEMM K dimension (C·K²)?",
+     "answer": 576,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "GFLOPs?",
+     "answer": 0.462422016,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Chapter 10.7's lowering."
+   ],
+   "solution": "<p>K = 576; FLOPs = 2·128·576·3136 = 0.46 GFLOP.</p>"
+  }
+ ]
+}

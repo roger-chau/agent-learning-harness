@@ -1,0 +1,55 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Graphs (road networks, social networks, the web, circuits, the dependency graph of a build) are the least GPU-friendly data there is. Degrees vary from 1 to millions, neighbours are scattered across memory, and the amount of work changes from one step to the next. Yet breadth-first search, shortest paths and PageRank on billion-edge graphs are routinely run on GPUs. How?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: level-synchronous BFS</h2>
+<p>BFS from a source visits vertices in order of distance. In parallel, process one whole <strong>level</strong> at a time: all vertices at distance d are independent, so one kernel launch expands all of them, producing the vertices at distance d + 1. The kernel boundary is the barrier between levels (Chapter 3.4).</p>
+<p>The simplest version is <strong>vertex-centric</strong>: every level, launch a thread for <em>every</em> vertex; a thread whose vertex is at the current level marks its unvisited neighbours. Correct, but each level touches all n vertices, so a graph with D levels costs $O(nD)$ work even though BFS needs only $O(n + e)$.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: frontiers</h2>
+<p>Keep the current level's vertices in a <strong>frontier queue</strong>, and launch threads only for them. Each thread expands its vertex's neighbours; a neighbour u is claimed by whichever thread first changes <code>level[u]</code> from −1, with <code>atomicCAS</code>, so every vertex enters the next frontier exactly once; the claimer appends it with <code>atomicAdd</code> on the queue's counter. Total work is now $O(n + e)$.</p>
+<p>The appends are the contention point: every discovered vertex does one atomic on the same counter. The fix is Chapter 3.3's: <strong>privatise</strong> the queue per block in shared memory (append there, then reserve space in the global queue once per block with one atomic and copy the block's batch out). PMPP's privatised frontier does exactly that.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: imbalance and direction</h2>
+<ul>
+<li><strong>Degree imbalance.</strong> One thread per frontier vertex means a hub with a million neighbours keeps one thread busy while its warp waits (divergence, Chapter 1.4). Fixes: assign a warp or a block to high-degree vertices, or flatten the work to one thread per <em>edge</em> using a scan of the frontier's degrees plus a binary search (the co-rank idea again), as in load-balanced BFS libraries.</li>
+<li><strong>Direction optimisation.</strong> When the frontier is a large fraction of the graph, it's cheaper to go <em>bottom-up</em>: each unvisited vertex checks whether any neighbour is in the frontier, and stops at the first one found. Beamer's direction-optimising BFS switches between top-down and bottom-up per level, often cutting edge examinations several-fold on social graphs.</li>
+<li><strong>Memory.</strong> Every neighbour access is a gather; BFS is latency- and bandwidth-bound, with intensity near zero. Graph reordering, so that neighbours have nearby ids, is the main lever for cache hits.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>GPU graph libraries (Gunrock, NVIDIA's cuGraph) are built on these primitives: frontiers, advance (expand edges), filter (compact the next frontier) and load-balanced edge assignment.</li>
+<li>Results such as BFS levels are deterministic, but the order of vertices in the frontier queue isn't: atomics append in timing order. Algorithms that need a specific order sort or scan instead.</li>
+<li>For graphs that don't fit in one GPU's memory, frontiers are exchanged between GPUs each level, and communication dominates: a multi-GPU and distributed topic, beyond this course.</li>
+</ul>
+<p><strong>Companion reading:</strong> PMPP 4th ed., Chapter 15 (Graph traversal); S. Beamer, K. Asanović, D. Patterson, "Direction-Optimizing Breadth-First Search", SC 2012.</p>
+</section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: one BFS level, traced</h3>
+<p><strong>Graph:</strong> edges 0–1, 0–2, 1–3, 2–3, 3–4. Source 0. Level 0 frontier: [0].</p>
+<p><strong>Level 0 launch</strong> (1 thread): neighbours 1 and 2: both CAS from −1 to 1 succeed; next frontier [1, 2] (order depends on timing).</p>
+<p><strong>Level 1</strong> (2 threads): thread for 1 sees 0 (level 0, skip) and 3 (CAS succeeds, level 2, appended); thread for 2 sees 0 (skip) and 3 (CAS fails: already 2). Next frontier [3]. <strong>Level 2:</strong> 3's neighbours 1, 2 (visited) and 4 (level 3). <strong>Level 3:</strong> 4 has nothing new. Four launches, each vertex appended once, levels [0, 1, 1, 2, 3].</p>
+
+<h3>Example 2: the cost of a hub</h3>
+<p><strong>Social graph:</strong> one vertex has 2 × 10⁶ followers. When it enters the frontier, a thread-per-vertex kernel gives it one thread: 2 × 10⁶ sequential iterations, about a millisecond on its own while everything else finishes in microseconds. <strong>Fix:</strong> classify frontier vertices by degree (a scan and compaction, Part 3): small ones a thread each, medium a warp, huge ones a whole block or several blocks over edge ranges. Gunrock and similar libraries implement exactly this "TWC" (thread–warp–CTA) mapping.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> PMPP 4th ed., Chapter 15 (Graph traversal: vertex- and edge-centric BFS, frontiers, privatisation).</li>
+<li><strong>Required:</strong> D. Merrill, M. Garland, A. Grimshaw, "Scalable GPU Graph Traversal", PPoPP 2012.</li>
+<li><strong>Optional:</strong> Y. Wang et al., "Gunrock: A High-Performance Graph Processing Library on the GPU", PPoPP 2016.</li>
+</ul>
+</section>

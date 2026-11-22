@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Why gather instead of scatter?",
+   "options": [
+    "No atomics and deterministic results",
+    "Fewer FLOPs",
+    "Less memory"
+   ],
+   "answer": 0,
+   "explanation": "Private accumulation."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Thread coarsening in DCS reuses…",
+   "options": [
+    "each atom's load and dy² + dz² across several x-points",
+    "the output",
+    "constant memory"
+   ],
+   "answer": 0,
+   "explanation": "Shared per-atom work."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Cutoff binning changes…",
+   "options": [
+    "the algorithm's complexity",
+    "the precision",
+    "the launch"
+   ],
+   "answer": 0,
+   "explanation": "Work proportional to neighbourhoods."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Fast intrinsic maths should be validated by…",
+   "options": [
+    "an application-level error metric",
+    "intuition",
+    "the compiler"
+   ],
+   "answer": 0,
+   "explanation": "Image quality, energies."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "With few outputs and huge inputs, use…",
+   "options": [
+    "split the inputs and reduce partial results",
+    "a thread per output",
+    "atomics only"
+   ],
+   "answer": 0,
+   "explanation": "Split-K."
+  }
+ ]
+}

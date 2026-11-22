@@ -1,0 +1,67 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Every chapter so far handed you a problem already shaped for a GPU. Real problems arrive as a scientific question or a product requirement. Before any kernel exists, someone must decide what to parallelise, how to decompose the data, which algorithm to use, and whether the GPU is even the right tool. PMPP calls this <strong>computational thinking</strong>. It's also what senior interviews probe: not "write a reduction", but "here's a problem; how would you approach it?"</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: decomposition decides everything</h2>
+<p>Three questions, asked in order:</p>
+<ol>
+<li><strong>What are the outputs, and can they be computed independently?</strong> If yes, a thread (or warp, or block) per output is the default: <em>output-centric</em> decomposition, which gives gathers and no atomics (Chapter 10.8). If outputs depend on each other (scan, BFS levels, a recurrence), look for the associative structure that turns the dependence into a tree (Part 3) or into rounds (Chapter 10.6).</li>
+<li><strong>How much work per output, and how uneven?</strong> Uniform work maps to a simple grid. Skewed work (sparse rows, graph degrees, variable-length sequences) needs balancing: split by work instead of by output, bin by size, or partition with a binary search (Chapters 10.3, 10.5).</li>
+<li><strong>What does each output read, and how much is shared?</strong> Shared inputs mean tiling and reuse (convolution, GEMM, stencils); private inputs mean the problem is bandwidth-bound and the layout must coalesce.</li>
+</ol>
+<p>Then an <strong>algorithm selection</strong> step: the best sequential algorithm is often not the best parallel one (bitonic versus quicksort, Chapter 10.4), and an algorithmic change (cutoff binning, FlashAttention) beats any amount of kernel tuning.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: dynamic parallelism</h2>
+<p>Some problems discover their work as they go: adaptive mesh refinement refines only where the solution varies, a quadtree subdivides only crowded regions, a recursive algorithm spawns subproblems of data-dependent size. <strong>CUDA dynamic parallelism</strong> lets a kernel launch child kernels from the device, without a round trip to the host: a thread that finds a crowded region launches a grid for it.</p>
+<p>It costs real overhead (each device-side launch takes microseconds, and too many small child grids waste the GPU), so the usual patterns are: launch children only above a work threshold and handle small pieces inline; or avoid it altogether by flattening the recursion into rounds with work queues (as BFS frontiers do). In practice, queue-based "persistent" designs are more common than deep dynamic parallelism, but knowing both is part of choosing.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: the system around the kernel</h2>
+<p>PMPP's advanced-practices chapter collects the features that change how whole applications are organised:</p>
+<ul>
+<li><strong>Unified memory</strong>: one pointer valid on host and device, with pages migrated on demand. It simplifies porting, but page faults are expensive; prefetch hints (<code>cudaMemPrefetchAsync</code>) and access advice recover performance.</li>
+<li><strong>Streams, events and graphs</strong> for overlap and launch overhead (Chapter 7.3, Part 5).</li>
+<li><strong>Peer-to-peer and multi-GPU</strong> transfers over NVLink or PCIe, the starting point for distributed computing (MPI and NCCL, deliberately left for a separate course).</li>
+<li><strong>Cooperative groups</strong> for explicit synchronisation scopes, from tiles of a warp up to a whole grid (Chapter 3.4).</li>
+</ul>
+<p>The habit that ties them together: estimate the whole application's time budget (transfers, launches, kernels, host work) before optimising any one part. A kernel made 2× faster inside an application that spends 80% of its time copying data saves 10%.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>Amdahl's law is the arithmetic of this chapter: if a fraction $p$ of the time is accelerated by $s$, the speedup is $1 / ((1 - p) + p/s)$. Profile the whole application (Nsight Systems) before deciding what to port.</li>
+<li>Good decompositions are reused: libraries (CUB, Thrust, cuBLAS, cuSPARSE, cuDNN, cuGraph) package the patterns of this course. Writing your own is right when you need fusion, a special data type, or a shape the library handles badly, and a measurement shows it.</li>
+<li>The PMPP authors' closing advice applies to this course too: the hardware will change; the reasoning (bytes, FLOPs, parallelism, locality, balance) won't.</li>
+</ul>
+<p><strong>Companion reading:</strong> PMPP 4th ed., Chapters 19 (Parallel programming and computational thinking), 21 (CUDA dynamic parallelism) and 22 (Advanced practices and future evolution).</p>
+</section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: from a problem statement to a plan</h3>
+<p><strong>Problem:</strong> "For each of 10⁷ GPS points, find which of 10⁵ city districts (polygons) contains it."</p>
+<ol>
+<li><strong>Outputs:</strong> one district id per point, independent: a thread per point (gather).</li>
+<li><strong>Work per output:</strong> testing all 10⁵ polygons is 10¹² tests. Uneven too: polygons have 4 to 10,000 vertices. Algorithm first: a uniform grid (binning, Chapter 10.8) over the map, each cell listing the polygons that overlap it; a point tests only its cell's few candidates.</li>
+<li><strong>Inputs:</strong> polygon vertices are read-only and shared by nearby points: sort points by cell (radix sort on the cell id, Chapter 3.5) so a warp's points test the same polygons, turning scattered reads into broadcasts and keeping lanes on the same branch.</li>
+<li><strong>Budget:</strong> sort 10⁷ keys (sub-millisecond), binning (small), tests (a few per point): milliseconds in total, against hours for the naive version.</li>
+</ol>
+
+<h3>Example 2: deciding not to use the GPU</h3>
+<p><strong>Problem:</strong> parse a 2 GB CSV once, then compute 50 summary statistics. Parsing is branch-heavy and sequential per line; the statistics are trivial reductions. The data must cross PCIe (2 GB at 25 GB/s = 80 ms) for perhaps 10 ms of GPU work, while a multithreaded CPU parser streams it from disk at about the same speed. Unless the data is already on the GPU (part of a larger GPU pipeline), the GPU adds a copy and complexity for little gain. Saying so, with these numbers, is also computational thinking.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> PMPP 4th ed., Chapters 19, 21 and 22.</li>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "CUDA Dynamic Parallelism" and "Unified Memory Programming".</li>
+<li><strong>Optional:</strong> G. Amdahl, "Validity of the single processor approach to achieving large scale computing capabilities", AFIPS 1967.</li>
+</ul>
+</section>

@@ -1,0 +1,325 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Counting steps",
+   "statement": "<p>Bitonic sort of n keys.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Steps for n = 512?",
+     "answer": 45,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For n = 2048?",
+     "answer": 66,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Compare-exchanges in total for n = 512?",
+     "answer": 11520,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "log₂n(log₂n + 1)/2 steps of n/2."
+   ],
+   "solution": "<p>45, 66, and 11,520 comparisons for 512 keys.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Work versus merge sort",
+   "statement": "<p>Compare comparisons for n = 2²⁰.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bitonic: (n/2)·log₂n(log₂n+1)/2?",
+     "answer": 110100480,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Merge sort ≈ n log₂ n?",
+     "answer": 20971520,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Ratio?",
+     "answer": 5.25,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Network work is O(n log² n)."
+   ],
+   "solution": "<p>Ratio ≈ 5.2: bitonic does over 5× the comparisons at this size, so it's used for blocks that fit on chip, with merging beyond.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Pair indexing",
+   "statement": "<p>Thread t's pair at distance j is i = ⌊t/j⌋·2j + (t mod j) and i + j.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "j = 4, t = 5: i?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "j = 16, t = 37: i?",
+     "answer": 69,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "j = 1, t = 9: i?",
+     "answer": 18,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Pairs at distance j come in groups of 2j."
+   ],
+   "solution": "<p>9 (with 13), 69 (with 85), 18 (with 19).</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Barriers you can drop",
+   "statement": "<p>512 keys, 256 threads (8 warps). Steps with distance j involve pairs within the same warp's data when the pair indices of a warp's lanes stay within 64 consecutive keys.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Steps with j ≤ 32?",
+     "answer": 39,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Steps needing a block-wide barrier (j ≥ 64)?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "List the (k, j) pairs."
+   ],
+   "solution": "<p>Steps with small j can use __syncwarp (or registers and shuffles); only the large-distance steps need __syncthreads.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Merge rounds",
+   "statement": "<p>Sort 2²⁴ keys: blocks sort runs of 2,048, then pairwise merges.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Merge rounds?",
+     "answer": 13,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bytes moved by the merge rounds (FP32 keys, read + write each round)?",
+     "answer": 1744830464,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "log₂(n/run)."
+   ],
+   "solution": "<p>13 rounds, 1.62 GiB: the rounds, not the comparisons, dominate the time.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 1,
+   "title": "Data independence",
+   "statement": "<p>Which property makes sorting networks GPU-friendly?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "Fewest comparisons",
+      "The comparison sequence doesn't depend on the data",
+      "Stability"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Fixed schedule."
+   ],
+   "solution": "<p>Every thread knows its pair at every step; only the swap direction depends on data (a select).</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Bank conflicts in bitonic",
+   "statement": "<p>Lanes 0–31 at distance j = 32 read words i = ⌊t/32⌋·64 + (t mod 32): for t = 0..31, i = 0..31, and partners 32..63.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Conflict degree reading the i words?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "At j = 64, the partner words i + 64 for i = 0..31: degree?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Consecutive words, distinct banks."
+   ],
+   "solution": "<p>Both are 32 consecutive words: conflict-free. Conflicts appear in other steps where lanes' i values are spread with even strides; padding or swizzling fixes them.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Stable or not",
+   "statement": "<p>Sorting (key, payload) pairs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Is bitonic sort stable?",
+     "options": [
+      "Yes",
+      "No: equal keys can be reordered by the network"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "How do libraries make it stable when needed?",
+     "options": [
+      "Sort by (key, original index)",
+      "Use more threads"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Compare-exchanges don't track origin."
+   ],
+   "solution": "<p>Not stable; append the original index as a tiebreaker.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Registers instead of shared memory",
+   "statement": "<p>Each lane holds 4 keys; steps with distance below 4 stay in a lane's registers; distances 4–127 use shuffles across lanes (128 keys per warp).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "For a warp sorting 128 keys, total steps?",
+     "answer": 28,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Steps done entirely within a lane's registers (j ∈ {1, 2})?",
+     "answer": 13,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Count (k, j) pairs with j < 4."
+   ],
+   "solution": "<p>The in-register steps need no communication at all; the rest use shuffles, still no barriers or shared memory.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Choosing a sort",
+   "statement": "<p>Pick the best fit.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "10⁸ 32-bit integer keys",
+     "options": [
+      "Bitonic",
+      "Radix sort",
+      "Insertion sort"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Many independent lists of 64 floats (top-k per query)",
+     "options": [
+      "Radix sort per list",
+      "A sorting network per warp",
+      "Merge sort on the host"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "10⁷ strings with a comparison function",
+     "options": [
+      "Radix sort",
+      "Merge sort (networks for initial runs)",
+      "Counting sort"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Key type and size."
+   ],
+   "solution": "<p>Radix for big integer arrays, networks for small segments, merge sort for comparison-only keys.</p>"
+  }
+ ]
+}

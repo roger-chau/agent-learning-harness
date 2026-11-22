@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "CSR stores…",
+   "options": [
+    "values and column indices by row, plus row offsets",
+    "a dense matrix",
+    "only the diagonal"
+   ],
+   "answer": 0,
+   "explanation": "rowPtr has m + 1 entries."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Vector CSR is better than scalar CSR when…",
+   "options": [
+    "rows are long: lanes read consecutive entries",
+    "rows have 1 entry",
+    "the matrix is dense"
+   ],
+   "answer": 0,
+   "explanation": "Coalescing across a row."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "ELL's weakness is…",
+   "options": [
+    "padding to the longest row",
+    "no coalescing",
+    "atomics"
+   ],
+   "answer": 0,
+   "explanation": "One long row inflates everything."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Load imbalance across rows is fixed by…",
+   "options": [
+    "splitting non-zeros evenly with a binary search over rowPtr",
+    "more registers",
+    "bigger blocks"
+   ],
+   "answer": 0,
+   "explanation": "Merge-based SpMV."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "SpMV is limited by…",
+   "options": [
+    "memory bandwidth",
+    "FP32 compute",
+    "tensor cores"
+   ],
+   "answer": 0,
+   "explanation": "About 2 FLOPs per 8 bytes."
+  }
+ ]
+}

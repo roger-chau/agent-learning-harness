@@ -1,0 +1,63 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Most large matrices in science and engineering are <strong>sparse</strong>: a finite-element stiffness matrix, a social graph's adjacency matrix or a pruned neural-network layer has a few non-zeros per row out of millions of columns. Storing the zeros would be absurd, so the matrix is stored in a compressed format. But compression scatters the data: which format lets a GPU's warps read it efficiently, and how do you handle rows of very different lengths?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: formats</h2>
+<p>Sparse matrix–vector multiplication (SpMV), $y = Ax$, reads every non-zero once and does one FMA with it: intensity below 0.25 FLOP/byte, memory-bound. So the format decides the speed. The classic formats, for nnz non-zeros in an $m \times n$ matrix:</p>
+<ul>
+<li><strong>COO</strong>: three arrays (row, column, value) per non-zero. Simple and flexible (easy to append), but one thread per non-zero needs atomics to accumulate y.</li>
+<li><strong>CSR</strong>: values and column indices sorted by row, plus <code>rowPtr</code> ($m + 1$ offsets). Compact ($8 \cdot \text{nnz} + 4m$ bytes), the standard format.</li>
+<li><strong>ELL</strong>: pad every row to the longest row's length $L$ and store column-major ($L$ "columns" of m entries). Lane i reading row i's k-th entry and lane i + 1 reading row i + 1's are adjacent: perfectly coalesced, no rowPtr. But padding costs $m \cdot L - \text{nnz}$ wasted slots, catastrophic if one row is long.</li>
+<li><strong>Hybrid ELL + COO</strong>: ELL for the first $L'$ entries of each row (with $L'$ chosen from the length distribution), COO for the overflow.</li>
+<li><strong>JDS</strong> (jagged diagonal): sort rows by length, then store like ELL without padding; threads handling rows of similar length sit in the same warp, so divergence and padding both shrink.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: scalar versus vector CSR</h2>
+<p><strong>Scalar CSR</strong> assigns one thread per row. Lanes of a warp read their rows' entries at the same time, but those rows start at unrelated offsets: lane ℓ reads <code>vals[rowPtr[r+ℓ] + k]</code>, so a warp's 32 reads hit 32 different places. And rows of different lengths make lanes finish at different times: divergence, exactly like the loop of Chapter 1.4.</p>
+<p><strong>Vector CSR</strong> assigns one warp per row. Lanes read entries ℓ, ℓ + 32, … of the same row: consecutive addresses, coalesced. A shuffle reduction combines the lanes' partial sums (Chapter 3.1). It wastes lanes when rows are short (a row of 5 non-zeros keeps 27 lanes idle), so it suits rows of dozens of entries or more; for short rows, a few lanes per row (2, 4, 8 or 16) is the compromise.</p>
+<p>The gather <code>x[colIdx[k]]</code> stays irregular in every format: its addresses depend on the sparsity pattern. Reordering rows and columns (for example by reverse Cuthill–McKee) so that non-zeros cluster near the diagonal makes those gathers hit nearby sectors and the cache.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>On the exercise's matrix (rows of 48–80 non-zeros), the scalar kernel moves about 3.2 sectors per non-zero and the vector kernel about 1.4, and the vector kernel runs about 4× faster in the simulator. The remaining traffic is mostly the x gather.</p>
+<p>The deeper problem is <strong>load imbalance</strong>: in a power-law graph a few rows have millions of entries. One warp per row then leaves one warp doing almost all the work. Two fixes from earlier chapters: split work by <em>non-zeros</em> instead of rows, with each thread finding its rows by binary search over <code>rowPtr</code> (the co-rank idea of Chapter 10.3, called "merge-based SpMV"), or bin rows by length and launch a different kernel per bin.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li>cuSPARSE and its AMD equivalent choose algorithms per matrix; many also support blocked formats (BSR) that store small dense blocks, letting SpMV use vector loads and even tensor cores for structured sparsity.</li>
+<li>NVIDIA's Ampere and later tensor cores support <strong>2:4 structured sparsity</strong>: in every group of 4 weights, 2 are zero, giving up to 2× throughput for pruned networks with a fixed, hardware-friendly pattern.</li>
+<li>Sparse matrix–<em>matrix</em> products and sparse attention are harder still: the output's sparsity pattern must be computed first, typically with a scan to allocate space (Chapter 3.2).</li>
+</ul>
+<p><strong>Companion reading:</strong> PMPP 4th ed., Chapter 14 (Sparse matrix computation); N. Bell, M. Garland, "Implementing Sparse Matrix-Vector Multiplication on Throughput-Oriented Processors", SC 2009.</p>
+</section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: choosing a format from the row-length histogram</h3>
+<p><strong>Matrix:</strong> 10⁶ rows; 95% have 4–8 non-zeros, 5% have 20–40, and 10 rows have about 50,000.</p>
+<ul>
+<li><strong>ELL:</strong> padded to 50,000 per row: 5 × 10¹⁰ slots for about 8 × 10⁶ values. Impossible.</li>
+<li><strong>Hybrid ELL(8) + COO:</strong> ELL holds 8 × 10⁶ slots (mostly full); COO holds the overflow, about 1.5 × 10⁶ entries, processed with atomics or a segmented reduction.</li>
+<li><strong>CSR with binned kernels:</strong> short rows with 4 lanes per row, medium rows with a warp, the 10 huge rows with a block each (or split across blocks with a final reduction).</li>
+</ul>
+<p>Either of the last two works; the decision comes from the histogram, not from the format's reputation.</p>
+
+<h3>Example 2: SpMV as a roofline point</h3>
+<p><strong>CSR, FP32:</strong> per non-zero, 4 bytes of value + 4 of column index + (if it misses) a 32-byte sector for x[col]; 2 FLOPs. With x cached: intensity 2/8 = 0.25. With every x access missing: 2/40 = 0.05. On a GPU with 2 TB/s and 60 TFLOP/s, that's 500 versus 100 GFLOP/s, both under 1% of peak. The x gather's cache behaviour (set by the matrix's ordering) is a 5× effect; storing values in FP16 or using 16-bit column offsets within blocks are the remaining levers.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> PMPP 4th ed., Chapter 14 (Sparse matrix computation: COO, CSR, ELL, JDS, hybrid).</li>
+<li><strong>Required:</strong> N. Bell, M. Garland, "Implementing Sparse Matrix-Vector Multiplication on Throughput-Oriented Processors", SC 2009.</li>
+<li><strong>Optional:</strong> D. Merrill, M. Garland, "Merge-based Parallel Sparse Matrix-Vector Multiplication", SC 2016.</li>
+</ul>
+</section>

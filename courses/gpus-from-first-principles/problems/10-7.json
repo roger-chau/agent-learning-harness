@@ -1,0 +1,282 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "GEMM shape",
+   "statement": "<p>C = 64, H = W = 56, M = 128 filters of 3 × 3, stride 1, no padding.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Rows of X (C·K²)?",
+     "answer": 576,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Columns of X (Ho·Wo)?",
+     "answer": 2916,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "GFLOPs?",
+     "answer": 0.429981696,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Y = W X: (M × CK²)(CK² × HoWo)."
+   ],
+   "solution": "<p>576 rows, 2,916 columns, 0.43 GFLOP.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "im2col blow-up",
+   "statement": "<p>Same layer, FP16.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Input bytes?",
+     "answer": 401408,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "X bytes?",
+     "answer": 3359232,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Ratio?",
+     "answer": 8.368622448979592,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "X duplicates inputs up to K² times."
+   ],
+   "solution": "<p>401 KB versus 3.36 MB: 8.4× the input. Implicit GEMM avoids writing it.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Intensity after lowering",
+   "statement": "<p>The GEMM Y = W X above, FP16, assuming each matrix moves once.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FLOP per byte?",
+     "answer": 101.0964247020585,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "2MNK / (2(MK + KN + MN))."
+   ],
+   "solution": "<p>About 101 FLOP/byte: compute-bound on tensor cores, which is why the lowering pays despite the copy.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Batch",
+   "statement": "<p>A batch of 32 images through the same layer.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Columns of X?",
+     "answer": 93312,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Effect on GEMM efficiency?",
+     "options": [
+      "Worse",
+      "Better: a wider N fills the GPU and reuses W more"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Images concatenate along N."
+   ],
+   "solution": "<p>93,312 columns: big GEMMs run near peak, small ones don't.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Backward GEMMs",
+   "statement": "<p>Training the layer.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "∂L/∂W is…",
+     "options": [
+      "(∂L/∂Y) Xᵀ",
+      "Wᵀ (∂L/∂Y)",
+      "X Y"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "∂L/∂X needs, after the GEMM…",
+     "options": [
+      "col2im: scatter-add the K² copies back",
+      "nothing",
+      "a transpose only"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Matrix calculus of Y = WX."
+   ],
+   "solution": "<p>Weight gradient (∂L/∂Y)Xᵀ, input gradient Wᵀ(∂L/∂Y) followed by col2im, a scatter-add.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Coalescing in im2col",
+   "statement": "<p>Thread-per-column versus thread-per-row mappings of X's writes.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Thread-per-column: sectors per warp write (FP32)?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Thread-per-row (rows HoWo floats apart): sectors?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Consecutive lanes, consecutive addresses?"
+   ],
+   "solution": "<p>4 versus 32: the simulator showed coalescing 0.87 versus 0.18.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 1,
+   "title": "Winograd",
+   "statement": "<p>Winograd F(2×2, 3×3) computes a 2 × 2 output tile with 16 multiplies instead of 36.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Reduction in multiplies?",
+     "answer": 2.25,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "36/16."
+   ],
+   "solution": "<p>2.25×, at some cost in numerical accuracy (larger transforms amplify rounding).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Padding and stride",
+   "statement": "<p>Output size with padding p and stride s: Ho = ⌊(H + 2p − K)/s⌋ + 1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "H = 224, K = 7, p = 3, s = 2?",
+     "answer": 112,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "H = 56, K = 3, p = 1, s = 1?",
+     "answer": 56,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Plug in."
+   ],
+   "solution": "<p>112 (the classic first layer) and 56 (\"same\" padding).</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Implicit GEMM addressing",
+   "statement": "<p>Implicit GEMM loads tile element (row r of X, column c) straight from the input.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "For r = (ch·K + ky)·K + kx and c = oy·Wo + ox, the input address is…",
+     "options": [
+      "inp[(ch·H + oy + ky)·W + ox + kx]",
+      "inp[r·HoWo + c]",
+      "inp[c]"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The im2col definition."
+   ],
+   "solution": "<p>The tile loader computes this index instead of reading X: same GEMM, no materialised matrix.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Layout",
+   "statement": "<p>Tensor-core implicit GEMM prefers…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "NCHW",
+      "NHWC (channels contiguous)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Contiguous reduction dimension."
+   ],
+   "solution": "<p>NHWC keeps the reduction dimension (channels) contiguous for vector loads into MMA tiles.</p>"
+  }
+ ]
+}

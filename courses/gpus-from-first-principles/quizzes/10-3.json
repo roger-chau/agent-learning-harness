@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "The co-rank of k is…",
+   "options": [
+    "the number of the first k outputs that come from A",
+    "the rank of k in A",
+    "k / 2"
+   ],
+   "answer": 0,
+   "explanation": "j = k − i come from B."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Co-rank is found by…",
+   "options": [
+    "a linear scan",
+    "a binary search over i",
+    "a prefix sum"
+   ],
+   "answer": 1,
+   "explanation": "O(log) per thread."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Splitting the output evenly guarantees…",
+   "options": [
+    "equal work per thread regardless of the data",
+    "no divergence",
+    "coalesced reads"
+   ],
+   "answer": 0,
+   "explanation": "Work balance, not access pattern."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "The tiled merge improves…",
+   "options": [
+    "load balance",
+    "coalescing of reads by staging tiles in shared memory",
+    "the co-rank search"
+   ],
+   "answer": 1,
+   "explanation": "Scattered reads become coalesced tile loads."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Stability in a merge means…",
+   "options": [
+    "equal keys keep their input order (A's before B's)",
+    "the merge never fails",
+    "deterministic timing"
+   ],
+   "answer": 0,
+   "explanation": "Needed for stable merge sort."
+  }
+ ]
+}

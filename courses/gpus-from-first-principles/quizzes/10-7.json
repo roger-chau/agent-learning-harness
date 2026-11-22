@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "im2col turns a convolution layer into…",
+   "options": [
+    "a GEMM Y = W X",
+    "an FFT",
+    "a reduction"
+   ],
+   "answer": 0,
+   "explanation": "Filters as rows, input patches as columns."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "The cost of explicit im2col is…",
+   "options": [
+    "memory: X is up to K² times the input",
+    "extra FLOPs",
+    "precision"
+   ],
+   "answer": 0,
+   "explanation": "Duplicated inputs."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Implicit GEMM…",
+   "options": [
+    "computes im2col addresses while loading tiles, never writing X",
+    "skips the GEMM",
+    "uses FFTs"
+   ],
+   "answer": 0,
+   "explanation": "Same math, no buffer."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "A training step of a conv layer needs…",
+   "options": [
+    "three GEMMs (forward, weight gradient, input gradient)",
+    "one GEMM",
+    "no GEMMs"
+   ],
+   "answer": 0,
+   "explanation": "Plus col2im."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Why did tensor cores matter so much for CNNs?",
+   "options": [
+    "CNN layers are GEMMs after lowering",
+    "CNNs use FP64",
+    "CNNs are memory-bound"
+   ],
+   "answer": 0,
+   "explanation": "Compute-bound GEMMs at high intensity."
+  }
+ ]
+}

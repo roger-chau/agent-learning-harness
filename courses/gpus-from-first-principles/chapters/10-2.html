@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>Simulating heat, fluids, waves or electromagnetic fields means solving partial differential equations on a grid. Discretised, every step updates each grid point from a fixed pattern of its neighbours: a <strong>stencil</strong>. It looks like a convolution with fixed weights, but the grids are 3-D and huge, the weights are few, and the computation repeats for thousands of time steps. Stencils are among the most memory-bound workloads on any machine: a 7-point stencil does 7 FLOPs per point and, naively, reads 7 values.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea</h2>
+<p>The <strong>7-point stencil</strong> in 3-D updates each interior point from itself and its six face neighbours:</p>
+<div class="eq">$$\text{out}[z][y][x] = c_0\, u[z][y][x] + c_1 \big(u[z][y][x\pm1] + u[z][y\pm1][x] + u[z\pm1][y][x]\big)$$</div>
+<p>Boundary points are handled by the boundary condition (here: copied). With one thread per point, the six neighbour loads are mostly cache hits for x and y (the neighbours were just loaded by adjacent lanes or warps) but the z-neighbours are a whole plane away, $4N^2$ bytes: for $N = 512$ that's 1 MB per plane, so z-reuse needs the cache to hold three planes. The minimum traffic is one read and one write per point, 8 bytes for 7–13 FLOPs: intensity around 1 FLOP/byte at best, memory-bound everywhere.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: tiling, and why it disappoints</h2>
+<p>Tile it like convolution: a block loads a $T^3$ tile plus a halo of 1 into shared memory. The reuse ratio is $T^3 / (T+2)^3$. With 1,024 threads per block, $T \le 10$ (since $10^3 = 1000$): $1000/1728 = 58\%$ of the loaded points are outputs, and 42% is halo. A 2-D image tile of 32 × 32 had a halo overhead of 12%; in 3-D, halos are a much larger fraction because surface grows with dimension. Shared-memory tiling of 3-D stencils is limited by block size, and the gain is modest.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine: coarsening and register tiling</h2>
+<p><strong>Thread coarsening</strong> gives each thread several outputs. For stencils the natural choice is a column in z: launch a 2-D tile of threads over (x, y), and let each thread walk through $C_z$ consecutive z-planes. Two things happen:</p>
+<ul>
+<li>The z-neighbours become <strong>register tiling</strong>: the thread holds $u[z-1]$, $u[z]$ and $u[z+1]$ in registers, and each step shifts them and loads one new value. The two z-neighbour loads per point disappear.</li>
+<li>The x and y neighbours come from the current plane, which a 2-D tile of 32 × 32 threads (or a shared-memory copy of the plane) serves with only a thin halo: the 2-D halo ratio, not the 3-D one.</li>
+</ul>
+<p>Loads per point fall from 7 to 5 with registers alone, and to about 1 when the current plane is also staged in shared memory (PMPP's full version). The price is parallelism: the grid has $C_z$ times fewer threads. With too few threads the GPU can't hide latency, and the coarsened kernel is slower: in the simulator, a 32³ grid coarsened over all of z runs 14× slower than the naive one, because 8 blocks can't fill 16 SMs. Coarsening pays only when the naive grid has more threads than the GPU can hold at once (here, at 64³), so choose $C_z$ to leave about one full wave of threads.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Temporal blocking</strong> fuses several time steps: a tile is advanced k steps in shared memory before being written back, cutting DRAM traffic by about k, at the cost of a halo that grows by one point per step.</li>
+<li><strong>Higher-order stencils</strong> (13-, 25-point, as in seismic imaging) read more neighbours per point; register tiling along z then saves even more.</li>
+<li>Production codes (e.g. in climate and seismic modelling) generate stencil kernels with DSLs or compilers (Halide-style schedules, Devito, the polyhedral model) rather than writing each by hand.</li>
+</ul>
+<p><strong>Companion reading:</strong> PMPP 4th ed., Chapter 8 (Stencil).</p>
+</section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: loads per point, three designs</h3>
+<p><strong>Naive:</strong> 7 loads per point (centre and 6 neighbours), some hitting cache.</p>
+<p><strong>Register tiling in z</strong> (a thread per (x, y) column): each step loads $u[z+1]$ and the 4 in-plane neighbours: 5.</p>
+<p><strong>Plus a shared plane tile</strong> (32 × 32 threads, plane loaded with its 1-point x/y halo each step): $(34^2 - 4)/1024 = 1.12$ loads per point, the 4 being the corners a 7-point stencil never reads. That's within 12% of the one-read minimum, using only 4.6 KB of shared memory, against the 58%-useful cubic tile of Chapter 10.2's block 3.</p>
+
+<h3>Example 2: sizing coarsening for the machine</h3>
+<p><strong>Setup.</strong> N = 256, a GPU holding 108 SMs × 2,048 = 221,184 threads.</p>
+<p><strong>Naive:</strong> 256³ = 16.8 M threads: 76 waves. <strong>Coarsened over all of z:</strong> 65,536 threads: 30% of one wave, too few to hide latency. <strong>Coarsened with C_z = 32:</strong> 524,288 threads, 2.4 waves: enough parallelism, and 30 of every 32 z-loads shared. Rule: choose the largest C_z that still leaves at least one or two full waves of threads.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> PMPP 4th ed., Chapter 8 (Stencil: tiling, thread coarsening, register tiling).</li>
+<li><strong>Required:</strong> P. Micikevicius, "3D Finite Difference Computation on GPUs using CUDA", GPGPU 2009.</li>
+<li><strong>Optional:</strong> K. Datta et al., "Stencil Computation Optimization and Auto-tuning on State-of-the-Art Multicore Architectures", SC 2008.</li>
+</ul>
+</section>

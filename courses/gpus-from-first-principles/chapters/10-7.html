@@ -1,0 +1,67 @@
+<section class="blk" data-n="01">
+<h2>The real problem</h2>
+<p>A convolutional network layer convolves C input channels with M filters, each C × K × K, producing M output maps. Written as loops it's a seven-deep nest (batch, output channel, input channel, output row and column, filter row and column) with irregular reuse. The GPU's best kernel by far is the GEMM of Part 4. Can a convolution layer become one?</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The smallest idea: im2col</h2>
+<p>Each output value is a dot product: a filter (C·K·K weights) with the C·K·K input values under it. So:</p>
+<ul>
+<li>lay out every filter as a <strong>row</strong> of a matrix $W$ (M × CK²);</li>
+<li>lay out, for every output position, the input values under the filter as a <strong>column</strong> of a matrix $X$ (CK² × HoWo): this is <strong>im2col</strong>, "image to columns";</li>
+<li>then the whole layer is one matrix product, $Y = W X$ (M × HoWo).</li>
+</ul>
+<p>FLOPs: $2 \cdot M \cdot CK^2 \cdot H_oW_o$, all in a GEMM that libraries run at near peak, on tensor cores. The cost is memory: X duplicates each input value up to K² times (neighbouring output positions share inputs). For a 3 × 3 filter, X is about 9× the size of the input.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Add one block: training, too</h2>
+<p>Training needs two more products per layer, and both are GEMMs with the same matrices:</p>
+<ul>
+<li>gradient with respect to the weights: $\partial L / \partial W = (\partial L / \partial Y)\, X^\top$;</li>
+<li>gradient with respect to the input: $\partial L / \partial X = W^\top (\partial L / \partial Y)$, then <strong>col2im</strong> scatters it back, summing the K² copies of each input position (a scatter-add, which needs atomics or a gather formulation).</li>
+</ul>
+<p>So a convolutional network's forward and backward passes are three GEMMs per layer. That's why GPUs, and then tensor cores, made deep learning practical, and why Part 4's GEMM ladder is the most important kernel in this course.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>The whole machine</h2>
+<p>The explicit im2col writes and re-reads a matrix about K² times the input's size: pure memory traffic before the GEMM starts. In the exercise, mapping threads to consecutive <em>columns</em> of X makes the writes coalesce (about 0.87); mapping them to rows strides every write by the row length (about 0.18 coalescing, 5× the sectors).</p>
+<p>Production libraries avoid materialising X altogether: <strong>implicit GEMM</strong> computes the im2col indices on the fly while loading GEMM tiles into shared memory, so the tile loader reads the input directly. The GEMM's tiling (Part 4) still applies; only the address computation in the loads changes. cuDNN and CUTLASS's convolution kernels work this way.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Reality</h2>
+<ul>
+<li><strong>Other algorithms</strong>: FFT-based convolution wins for large filters; <strong>Winograd</strong> transforms cut multiplications for 3 × 3 filters by about 2.25× at some cost in numerical accuracy. Libraries benchmark and pick per layer (cuDNN's autotuner), which is one source of non-determinism (Chapter 9.1).</li>
+<li><strong>Data layout</strong> matters: NHWC (channels last) suits tensor-core implicit GEMM better than NCHW, which is why frameworks convert layouts.</li>
+<li>Modern vision models increasingly use attention (Chapter 7.2), which is matrix multiplication without the im2col step; the GEMM is the constant.</li>
+</ul>
+<p><strong>Companion reading:</strong> PMPP 4th ed., Chapter 16 (Deep learning); S. Chetlur et al., "cuDNN: Efficient Primitives for Deep Learning" (2014).</p>
+</section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: im2col by hand</h3>
+<p><strong>Input:</strong> one channel, 3 × 3: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]; K = 2; output 2 × 2.</p>
+<p><strong>X</strong> (4 rows for (ky, kx) ∈ {(0,0), (0,1), (1,0), (1,1)}, 4 columns for output positions (0,0), (0,1), (1,0), (1,1)):</p>
+<pre>row (0,0): 1 2 4 5
+row (0,1): 2 3 5 6
+row (1,0): 4 5 7 8
+row (1,1): 5 6 8 9</pre>
+<p>With filter W = [1, 0, 0, 1] (main diagonal), Y = W X = [1 + 5, 2 + 6, 4 + 8, 5 + 9] = [6, 8, 12, 14]: each output is top-left plus bottom-right of its window. ✓ Notice 5 appears four times in X: the K² duplication.</p>
+
+<h3>Example 2: where the time goes in a lowered layer</h3>
+<p><strong>Layer:</strong> C = 256, M = 256, 3 × 3, 28 × 28 outputs, batch 32, FP16, on a GPU with 300 TFLOP/s (tensor) and 2 TB/s.</p>
+<p><strong>GEMM:</strong> 2 × 256 × 2,304 × 25,088 = 29.6 GFLOP → 0.10 ms at peak. <strong>Explicit X:</strong> 2,304 × 25,088 × 2 bytes = 116 MB, written then read: 232 MB → 0.12 ms. The copy costs more than the GEMM. Implicit GEMM removes it, which is why it's the default in cuDNN and CUTLASS for tensor-core convolutions.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> PMPP 4th ed., Chapter 16 (Deep learning: convolutional layers, GEMM formulation, cuDNN).</li>
+<li><strong>Required:</strong> S. Chetlur et al., "cuDNN: Efficient Primitives for Deep Learning" (2014).</li>
+<li><strong>Optional:</strong> A. Lavin, S. Gray, "Fast Algorithms for Convolutional Neural Networks" (Winograd), CVPR 2016.</li>
+<li><strong>Optional:</strong> NVIDIA CUTLASS documentation, "Implicit GEMM Convolution".</li>
+</ul>
+</section>

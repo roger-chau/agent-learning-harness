@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Amdahl's law says…",
+   "options": [
+    "speedup is limited by the fraction not accelerated",
+    "parallel speedup is unlimited",
+    "GPUs are always faster"
+   ],
+   "answer": 0,
+   "explanation": "1/((1 − p) + p/s)."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "The first decomposition question is…",
+   "options": [
+    "what are the outputs and are they independent?",
+    "how many registers?",
+    "which GPU?"
+   ],
+   "answer": 0,
+   "explanation": "Output-centric by default."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Dynamic parallelism is best for…",
+   "options": [
+    "data-dependent subdivision with substantial child work",
+    "every loop",
+    "replacing all host launches"
+   ],
+   "answer": 0,
+   "explanation": "Launch overhead is real."
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Unified memory performance depends on…",
+   "options": [
+    "avoiding repeated page faults, e.g. with prefetch",
+    "nothing: it's free",
+    "FP64"
+   ],
+   "answer": 0,
+   "explanation": "Faults are expensive."
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Before optimising a kernel, estimate…",
+   "options": [
+    "the whole application's time budget",
+    "only the kernel's FLOPs",
+    "the code length"
+   ],
+   "answer": 0,
+   "explanation": "Optimise what dominates."
+  }
+ ]
+}
