@@ -111,6 +111,32 @@ class Progress:
             self.data = {"courses": data["courses"], "qa": data.get("qa") or {}}
             self.save()
 
+    # ---- spaced repetition ---------------------------------------------------
+    def review(self, slug: str) -> dict:
+        """card_id -> {due, interval (days), ease, reps, lapses, first}"""
+        return self.data["courses"].setdefault(slug, {"items": {}}).setdefault("review", {})
+
+    def review_grade(self, slug: str, card_id: str, grade: int, now: float) -> dict:
+        """SM-2-style update. grade: 0 again, 1 hard, 2 good, 3 easy."""
+        grade = max(0, min(3, int(grade)))
+        with self._lock:
+            r = self.review(slug)
+            c = r.get(card_id) or {"interval": 0.0, "ease": 2.5, "reps": 0, "lapses": 0, "first": now}
+            if grade == 0:
+                c.update(interval=0.0, reps=0, lapses=c.get("lapses", 0) + 1, ease=max(1.3, c["ease"] - 0.2), due=now + 600)
+            else:
+                if c["reps"] == 0:
+                    iv = {1: 0.5, 2: 1.0, 3: 3.0}[grade]
+                elif c["reps"] == 1:
+                    iv = {1: 1.5, 2: 3.0, 3: 6.0}[grade]
+                else:
+                    iv = c["interval"] * {1: 1.2, 2: c["ease"], 3: c["ease"] * 1.3}[grade]
+                c["ease"] = max(1.3, min(3.0, c["ease"] + {1: -0.15, 2: 0.0, 3: 0.15}[grade]))
+                c.update(interval=iv, reps=c["reps"] + 1, due=now + iv * 86400)
+            r[card_id] = c
+            self.save()
+            return dict(c)
+
     def _item(self, slug: str, item_id: str) -> dict:
         c = self.data["courses"].setdefault(slug, {"items": {}})
         return c["items"].setdefault(item_id, {"exercises": {}, "quiz": None, "completed_at": None})

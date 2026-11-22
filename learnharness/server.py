@@ -148,6 +148,84 @@ def get_item(slug: str, item_id: str):
     }
 
 
+# ---------- Spaced repetition ----------
+REVIEW_NEW_PER_DAY = 15
+
+
+def _review_pool(slug: str) -> dict:
+    """Cards from items the learner has completed: quiz questions, and solved coding problems."""
+    c = _course(slug)
+    states = progress.states(slug)
+    pool = {}
+    for it in c["order"]:
+        st = states.get(it["id"]) or {}
+        if st.get("state") == "complete":
+            q = content.quiz(slug, it["id"])
+            for qq in (q or {}).get("questions", []):
+                pool[f"q~{it['id']}~{qq['id']}"] = {"kind": "quiz", "item": it, "q": qq}
+        for pid, rec in ((st.get("coding") or {}).items()):
+            if rec.get("solved"):
+                pr = content.coding(slug, pid)
+                if pr:
+                    pool[f"c~{pid}"] = {"kind": "code", "item": it, "p": pr}
+    return pool
+
+
+def _card_public(cid: str, card: dict) -> dict:
+    it = card["item"]
+    base = {"id": cid, "kind": card["kind"], "item": {"id": it["id"], "title": it["title"]}}
+    if card["kind"] == "quiz":
+        q = card["q"]
+        return base | {"type": q["type"], "prompt": q["prompt"], "options": q.get("options", [])}
+    pr = card["p"]
+    return base | {"title": pr["title"], "difficulty": pr.get("difficulty", ""), "statement": pr["statement"]}
+
+
+@app.get("/api/courses/{slug}/review")
+def review_queue(slug: str):
+    pool = _review_pool(slug)
+    rec = progress.review(slug)
+    now = time.time()
+    due = sorted((cid for cid in pool if cid in rec and rec[cid].get("due", 0) <= now), key=lambda k: rec[k]["due"])
+    today = now - now % 86400
+    started_today = sum(1 for v in rec.values() if v.get("first", 0) >= today)
+    new = [cid for cid in pool if cid not in rec][:max(0, REVIEW_NEW_PER_DAY - started_today)]
+    cards = [_card_public(cid, pool[cid]) for cid in due + new]
+    upcoming = sorted(v["due"] for k, v in rec.items() if k in pool and v.get("due", 0) > now)
+    return {"due": len(due), "new": len(new), "total": len(pool), "seen": sum(1 for k in rec if k in pool),
+            "next_due": upcoming[0] if upcoming else None, "cards": cards}
+
+
+class ReviewIn(BaseModel):
+    grade: int | None = None
+    answer: object = None
+
+
+@app.post("/api/courses/{slug}/review/{card_id}")
+def review_answer(slug: str, card_id: str, body: ReviewIn):
+    pool = _review_pool(slug)
+    card = pool.get(card_id)
+    if not card:
+        raise HTTPException(404, "no such review card")
+    out = {}
+    grade = body.grade
+    if card["kind"] == "quiz":
+        q = card["q"]
+        if body.answer is not None:
+            ok = content.grade_quiz({"questions": [q]}, {q["id"]: body.answer})["correct"] == 1
+            out |= {"correct": ok, "answer": q["answer"], "explanation": q.get("explanation", "")}
+            if grade is None:
+                grade = 2 if ok else 0
+    elif grade is None:  # code card: reveal the key idea before self-grading
+        pr = card["p"]
+        return {"pattern": pr.get("pattern", ""), "complexity": pr.get("complexity", ""), "hints": pr.get("hints", [])[:1],
+                "explanation": (pr.get("solution") or {}).get("explanation", "")}
+    if grade is None:
+        raise HTTPException(400, "grade or answer required")
+    out["record"] = progress.review_grade(slug, card_id, grade, time.time())
+    return out
+
+
 # ---------- Coding problems ----------
 CODING_REVEAL_AFTER = 3
 

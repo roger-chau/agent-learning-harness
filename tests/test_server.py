@@ -326,3 +326,32 @@ def test_mock_interview_uses_interviewer_prompt(client, monkeypatch):
     # ordinary chapters still use the default tutor prompt (system not overridden)
     r = client.post("/api/courses/interview-ready/items/13-1/ask", json={"question": "hi"})
     assert r.status_code == 200 and seen["system"] is None
+
+
+def test_spaced_repetition_review(client, monkeypatch):
+    monkeypatch.setenv("GROUNDWORK_UNLOCK", "1")
+    from learnharness import content
+    slug = "interview-ready"
+    assert client.get(f"/api/courses/{slug}/review").json()["total"] == 0
+    q = content.quiz(slug, "0-1")
+    answers = {x["id"]: x["answer"] for x in q["questions"]}
+    r = client.post(f"/api/courses/{slug}/items/0-1/quiz", json={"answers": answers}).json()
+    assert client.get(f"/api/courses/{slug}/items/0-1").json()["state"]["state"] == "complete"
+    rv = client.get(f"/api/courses/{slug}/review").json()
+    assert rv["total"] == len(q["questions"]) and rv["new"] == len(q["questions"]) and rv["due"] == 0
+    c0, c1 = rv["cards"][0], rv["cards"][1]
+    assert "answer" not in c0 and c0["kind"] == "quiz"
+    qid0 = c0["id"].split("~")[2]
+    right = next(x["answer"] for x in q["questions"] if x["id"] == qid0)
+    wrong = (right + 1) % len(c0["options"]) if isinstance(right, int) else []
+    import time
+    t0 = time.time()
+    a = client.post(f"/api/courses/{slug}/review/{c0['id']}", json={"answer": wrong}).json()
+    assert a["correct"] is False and a["record"]["due"] - t0 < 700
+    qid1 = c1["id"].split("~")[2]
+    right1 = next(x["answer"] for x in q["questions"] if x["id"] == qid1)
+    b = client.post(f"/api/courses/{slug}/review/{c1['id']}", json={"answer": right1}).json()
+    assert b["correct"] is True and abs(b["record"]["interval"] - 1.0) < 1e-9
+    rv2 = client.get(f"/api/courses/{slug}/review").json()
+    assert rv2["seen"] == 2 and rv2["new"] == len(q["questions"]) - 2
+    assert client.post(f"/api/courses/{slug}/review/nope", json={"grade": 2}).status_code == 404

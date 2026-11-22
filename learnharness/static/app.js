@@ -194,6 +194,7 @@
             <div class="chips">${c.chips.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}</div>
             <div class="btn-row">
               ${p.next ? `<a class="btn btn-primary" href="#/c/${slug}/${p.next}">${p.complete ? "Continue" : "Start the course"} ${ARROW}</a>` : `<span class="pill">All written chapters complete</span>`}
+              <a class="btn btn-ghost" id="rv-btn" href="#/c/${slug}/review" hidden>Review</a>
             </div>
             <p class="save-note">Progress saves automatically on this computer.
               <button type="button" class="linkish" id="pg-export">Download a backup</button> ·
@@ -251,6 +252,10 @@
         </div>
       </section>`;
     setupBackup();
+    api(`/api/courses/${slug}/review`).then((r) => {
+      const b = $("#rv-btn"); if (!b || !r.total) return;
+      b.hidden = false; b.textContent = r.due + r.new ? `Review · ${r.due} due${r.new ? `, ${r.new} new` : ""}` : "Review · nothing due";
+    }).catch(() => {});
   }
 
   // ---------- Reader ----------
@@ -1007,6 +1012,72 @@ make submit     # record the results here (Groundwork must be running)</code></p
 
   // ---------- Router ----------
   let navSeq = 0;
+  // ---------- Spaced repetition ----------
+  // Cards are quiz questions from completed chapters and coding problems you've solved. Quiz cards
+  // are graded automatically; coding cards are recall prompts you grade yourself after revealing
+  // the key idea. Scheduling (SM-2 style) is stored with your progress on the server.
+  async function renderReview(slug) {
+    navSeq++; window.scrollTo(0, 0);
+    main.innerHTML = `<div class="container" style="padding:48px 16px"><div class="empty-card">Loading…</div></div>`;
+    let q;
+    try { q = await api(`/api/courses/${slug}/review`); } catch (e) { main.innerHTML = `<div class="container" style="padding:48px 16px"><div class="empty-card">${esc(e.message)}</div></div>`; return; }
+    let i = 0, done = 0;
+    const shell = (inner) => {
+      main.innerHTML = `<div class="container review-page">
+        <div class="crumbs"><a href="#/">Courses</a> / <a href="#/c/${slug}">Course</a> / <span>Review</span></div>
+        <h1 class="display" style="font-size:var(--text-2xl)">Review</h1>
+        <p class="muted">${q.total} card${q.total === 1 ? "" : "s"} from what you've completed · ${q.seen} seen so far · today: ${q.due} due, ${q.new} new. Short daily sessions beat long occasional ones.</p>
+        <div id="rv-card">${inner}</div></div>`;
+      typeset($("#rv-card"));
+    };
+    const next = () => {
+      if (i >= q.cards.length) {
+        const when = q.next_due ? new Date(q.next_due * 1000).toLocaleString() : null;
+        shell(`<div class="empty-card"><b>All caught up.</b> ${done ? `You reviewed ${done} card${done > 1 ? "s" : ""}.` : ""} ${q.total ? (when ? `Next card is due ${esc(when)}.` : "") : "Complete chapters (quizzes) and solve coding problems to build your deck."}
+          <p style="margin-top:12px"><a class="btn btn-ghost btn-sm" href="#/c/${slug}">Back to the course</a></p></div>`);
+        return;
+      }
+      const c = q.cards[i];
+      const head = `<div class="rv-meta muted small">Card ${i + 1} of ${q.cards.length} · from <a href="#/c/${slug}/${esc(c.item.id)}">${esc(c.item.title)}</a></div>`;
+      if (c.kind === "quiz") {
+        shell(`<div class="prob rv">${head}<div class="pp-prompt">${c.prompt}</div>
+          <form id="rv-form">${c.options.map((o, k) => `<label class="opt"><input type="${c.type === "multi" ? "checkbox" : "radio"}" name="rv" value="${k}"> <span>${o}</span></label>`).join("")}
+          <div class="quiz-actions"><button class="btn btn-primary btn-sm" type="submit">Check</button></div></form><div id="rv-out"></div></div>`);
+        $("#rv-form").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const picked = [...document.querySelectorAll('#rv-form input[name="rv"]')].filter((x) => x.checked).map((x) => +x.value);
+          if (!picked.length) return;
+          const r = await api(`/api/courses/${slug}/review/${encodeURIComponent(c.id)}`, { method: "POST", body: JSON.stringify({ answer: c.type === "multi" ? picked : picked[0] }) });
+          const ans = [].concat(r.answer).map((k) => c.options[k]).join("; ");
+          $("#rv-form").querySelector("button").disabled = true;
+          $("#rv-out").innerHTML = `<div class="case ${r.correct ? "ok" : "bad"}">${r.correct ? "✓ Correct" : `✗ Answer: ${ans}`}${r.explanation ? `<br><span class="muted small">${r.explanation}</span>` : ""}</div>
+            <p class="muted small">${r.correct ? "Scheduled further out." : "You'll see this again in about 10 minutes."}</p>
+            <div class="quiz-actions"><button class="btn btn-primary btn-sm" id="rv-next" type="button">Next</button></div>`;
+          typeset($("#rv-out")); done++;
+          $("#rv-next").addEventListener("click", () => { i++; next(); }); $("#rv-next").focus();
+        });
+      } else {
+        shell(`<div class="prob rv">${head}<div class="prob-head"><b>${esc(c.title)}</b><span class="pill-diff">${esc(c.difficulty)}</span></div>
+          <div class="prob-stmt">${c.statement}</div>
+          <p class="small"><b>Recall before revealing:</b> say the signal, the pattern, the complexity, and sketch the solution in a few lines. (To practise properly, <a href="#/c/${slug}/${esc(c.item.id)}">re-solve it</a> without looking.)</p>
+          <div class="quiz-actions"><button class="btn btn-primary btn-sm" id="rv-reveal" type="button">Reveal</button></div><div id="rv-out"></div></div>`);
+        $("#rv-reveal").addEventListener("click", async (e) => {
+          e.currentTarget.disabled = true;
+          const r = await api(`/api/courses/${slug}/review/${encodeURIComponent(c.id)}`, { method: "POST", body: JSON.stringify({}) });
+          $("#rv-out").innerHTML = `<div class="prob-sol"><p><b>Pattern:</b> ${esc(r.pattern)} · <b>Target:</b> ${esc(r.complexity)}</p>${r.hints.length ? `<p><b>Key hint:</b> ${r.hints[0]}</p>` : ""}${r.explanation}</div>
+            <p class="small">How well did you recall it?</p>
+            <div class="quiz-actions">${["Again", "Hard", "Good", "Easy"].map((g, k) => `<button class="btn ${k === 2 ? "btn-primary" : "btn-ghost"} btn-sm" type="button" data-g="${k}">${g}</button>`).join("")}</div>`;
+          typeset($("#rv-out"));
+          $("#rv-out").querySelectorAll("[data-g]").forEach((b) => b.addEventListener("click", async () => {
+            await api(`/api/courses/${slug}/review/${encodeURIComponent(c.id)}`, { method: "POST", body: JSON.stringify({ grade: +b.dataset.g }) });
+            done++; i++; next();
+          }));
+        });
+      }
+    };
+    next();
+  }
+
   function route() {
     hideReadBar();
     stopExamTimer();
@@ -1016,6 +1087,7 @@ make submit     # record the results here (Groundwork must be running)</code></p
     if (window.GWTerminal && window.GWTerminal.stopAll) window.GWTerminal.stopAll();
     const h = location.hash.replace(/^#/, "") || "/";
     const parts = h.split("/").filter(Boolean);
+    if (parts[0] === "c" && parts[1] && parts[2] === "review") return renderReview(parts[1]);
     if (parts[0] === "c" && parts[1] && parts[2] && !parts[2].startsWith("b")) return renderItem(parts[1], parts[2]);
     if (parts[0] === "c" && parts[1]) { navSeq++; window.scrollTo(0, 0); return renderCourse(parts[1]); }
     if (parts[0] === "about") { navSeq++; window.scrollTo(0, 0); return renderAbout(); }

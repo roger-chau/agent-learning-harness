@@ -687,3 +687,6 @@ svg .d-arrowhead { fill: var(--muted); }
 .mm-row label, .drill-setup label { white-space: nowrap; }
 .mm-row input.field { width: 90px; }
 .ask-fab.mock { background: var(--accent-ink); color: var(--bg); }
+.review-page { padding: 40px 16px 80px; max-width: 820px; }
+.prob.rv { margin-top: 18px; }
+.rv-meta { margin-bottom: 8px; }
