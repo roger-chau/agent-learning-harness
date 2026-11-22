@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "20 tests at 5% (all null): P(≥ 1 false positive) ≈",
+   "options": [
+    "64%",
+    "5%",
+    "100%"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Sharpe t-stat ≈",
+   "options": [
+    "SR·√T",
+    "SR·T",
+    "SR/√T"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Best of many random strategies…",
+   "options": [
+    "looks impressive by luck",
+    "is the best strategy",
+    "is unbiased"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Survivorship bias makes backtests…",
+   "options": [
+    "too optimistic",
+    "too pessimistic",
+    "unbiased"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Overfit strategies show…",
+   "options": [
+    "sharp performance spikes in parameter space",
+    "smooth plateaus",
+    "no variance"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

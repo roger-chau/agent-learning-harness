@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"How would you estimate p from these flips?", "what's the standard error of your average?", "how many samples do you need?", "is this estimator biased?". Quant researcher interviews (and quant-dev ones at research-heavy firms) test whether you can turn data into an estimate with an honest uncertainty, the core of every trading signal.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: an estimate is worthless without its standard error</h2>
+<ul>
+<li><strong>Maximum likelihood:</strong> choose the parameter that makes the observed data most probable. Maximise the log-likelihood; set its derivative to zero. Bernoulli: p̂ = k/n. Exponential: λ̂ = 1/x̄. Normal: μ̂ = x̄, σ̂² = (1/n)Σ(x − x̄)², which is biased low; the unbiased version divides by n − 1.</li>
+<li><strong>Standard error of a mean:</strong> σ/√n. Halving the error needs 4× the data. For a proportion: √(p(1 − p)/n).</li>
+<li><strong>Central limit theorem:</strong> sums and means of many independent terms are approximately normal, so a 95% interval is about estimate ± 1.96 SE.</li>
+<li><strong>Bias–variance:</strong> MSE = bias² + variance. A slightly biased estimator with much lower variance can win (shrinkage, regularisation).</li>
+<li><strong>Bootstrap:</strong> when the formula for the SE is hard, resample the data with replacement, recompute the statistic, and use the spread of the results.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>1. Model: what distribution generated the data? What's the parameter?
+2. Estimate: MLE (or method of moments) → θ̂.
+3. Uncertainty: SE from a formula (σ/√n, √(p(1−p)/n), Fisher information) or the bootstrap.
+4. Interval: θ̂ ± 1.96·SE (if approximately normal).
+5. Sanity: is n large enough? Are the observations independent? (Correlated data → fewer effective samples.)</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "is this coin biased? 60 heads in 100"</h2>
+<ol>
+<li><strong>Estimate:</strong> p̂ = 0.60.</li>
+<li><strong>SE:</strong> √(0.6 × 0.4 / 100) ≈ 0.049. A 95% interval is 0.60 ± 0.096, about [0.50, 0.70], so it barely includes 0.5.</li>
+<li><strong>Test of p = 0.5:</strong> under the null, SE = 0.05, so z = 0.10/0.05 = 2.0, a two-sided p-value ≈ 0.046. Borderline.</li>
+<li><strong>Sample size to detect p = 0.55 reliably:</strong> you need the difference (0.05) to be about 2.8 SE (for 5% significance with 80% power), so SE ≈ 0.018 and n ≈ 0.25 / 0.018² ≈ 780 flips.</li>
+<li><strong>Trading framing:</strong> a strategy with a true 55% hit rate needs hundreds of trades before you can tell it from luck. That's why researchers are sceptical of short track records.</li>
+</ol>
+<p>The habit: <strong>always pair an estimate with its standard error, and ask how many samples you'd need</strong>.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Autocorrelated data:</strong> daily returns of an overlapping-window signal aren't independent; the effective n is smaller and the SE larger.</li>
+<li><strong>Fat tails:</strong> the CLT converges slowly for heavy-tailed returns; the sample variance is noisy.</li>
+<li><strong>The n − 1 correction</strong> matters for small samples only.</li>
+<li><strong>MLE of a uniform's upper bound</strong> is the sample max (biased low); the unbiased fix is max × (n + 1)/n. This is the classic \"German tank problem\".</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Wasserman, <em>All of Statistics</em>, chapters 6, 9 and 10 (estimation, MLE, tests).</li>
+<li>* Green book, chapter 4's statistics questions; Joshi's statistics questions.</li>
+<li>Simulate 10,000 samples of size 30 and check that the 95% interval covers the true mean about 95% of the time.</li>
+<li>Bootstrap the SE of a median and compare it with the normal-theory SE of a mean.</li>
+</ul>
+</section>

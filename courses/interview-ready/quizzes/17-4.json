@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Model ___ rather than prices.",
+   "options": [
+    "returns",
+    "levels",
+    "volumes"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "AR(1) half-life:",
+   "options": [
+    "ln 0.5 / ln φ",
+    "1/φ",
+    "φ/2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Time-series validation:",
+   "options": [
+    "walk-forward with purging",
+    "shuffled k-fold",
+    "train = test"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Volatility clustering means…",
+   "options": [
+    "squared returns are autocorrelated",
+    "returns are",
+    "prices mean-revert"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Strong backtest, chance-level live performance: first suspect…",
+   "options": [
+    "leakage / look-ahead",
+    "bad luck",
+    "the broker"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

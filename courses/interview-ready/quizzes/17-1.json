@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "SE of a mean:",
+   "options": [
+    "σ/√n",
+    "σ/n",
+    "σ"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Halving the SE needs…",
+   "options": [
+    "4× the data",
+    "2× the data",
+    "√2× the data"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "A p-value is…",
+   "options": [
+    "P(data this extreme | null)",
+    "P(null | data)",
+    "P(effect is real)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "MSE =",
+   "options": [
+    "bias² + variance",
+    "bias + variance",
+    "variance only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Autocorrelated samples…",
+   "options": [
+    "carry less information than n i.i.d. ones",
+    "carry more",
+    "the same"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

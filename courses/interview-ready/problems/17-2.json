@@ -1,0 +1,236 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "One regressor",
+   "statement": "<p>x = [1, 2, 3, 4], y = [2, 4, 6, 8].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Slope?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Intercept?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": "100%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "R²?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [
+    "Perfect line."
+   ],
+   "solution": "<p>y = 2x exactly.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "From correlations",
+   "statement": "<p>ρ = 0.6, σ_y = 20%, σ_x = 15%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Slope b = ρσ_y/σ_x?",
+     "answer": 0.8,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "R²?",
+     "answer": 0.36,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "b = ρ σ_y / σ_x."
+   ],
+   "solution": "<p>0.8 and 0.36.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Hedge ratio",
+   "statement": "<p>Stock volatility 30%, index volatility 15%, correlation 0.7.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum-variance hedge ratio?",
+     "answer": 1.4,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fraction of variance removed (ρ²)?",
+     "answer": 0.49,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Regression slope."
+   ],
+   "solution": "<p>Short 1.4 units of index per unit of stock; it removes 49% of the variance.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Omitted variable",
+   "statement": "<p>True model y = 1·x + 2·z; Cov(x, z)/Var(x) = 0.5; z is omitted.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected estimated slope on x?",
+     "answer": 2.0,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "β + γ·Cov(x, z)/Var(x)."
+   ],
+   "solution": "<p>2: double the true effect.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Attenuation",
+   "statement": "<p>x is measured with noise: Var(true x) = 1, Var(noise) = 0.25; true slope 2.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected estimated slope (β · var/(var + noise))?",
+     "answer": 1.6,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Noise in x biases toward zero."
+   ],
+   "solution": "<p>1.6.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Ridge vs lasso",
+   "statement": "<p>Regularisation.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Sets some coefficients exactly to zero:",
+     "options": [
+      "lasso (L1)",
+      "ridge (L2)",
+      "OLS"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Best for many small, correlated effects:",
+     "options": [
+      "ridge",
+      "lasso",
+      "neither"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Geometry of the penalty."
+   ],
+   "solution": "<p>L1 has corners (sparsity); L2 shrinks smoothly.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Small R²",
+   "statement": "<p>A return-prediction signal has R² = 0.01 out of sample on daily data.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Correlation with next-day returns (√R²)?",
+     "answer": 0.1,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Valuable?",
+     "options": [
+      "potentially very: an information coefficient of 0.1 is strong in finance",
+      "no, too small",
+      "only if R² > 0.5"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Information coefficient."
+   ],
+   "solution": "<p>Signals with correlations of 0.03–0.1 underpin many profitable strategies once diversified.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Spurious regression",
+   "statement": "<p>Regressing one independent random walk on another (levels, 1,000 steps).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Typical result?",
+     "options": [
+      "a \"significant\" t-statistic most of the time",
+      "insignificant",
+      "R² = 0 exactly"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "regress returns (differences), or test for cointegration",
+      "add more data",
+      "use lasso"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Non-stationarity."
+   ],
+   "solution": "<p>Granger–Newbold: levels of random walks give spurious significance.</p>"
+  }
+ ]
+}

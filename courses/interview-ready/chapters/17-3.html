@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"You tested 100 strategies and the best has a Sharpe of 2. Is it real?", "what's a p-value?", "how do you avoid overfitting a backtest?". The biggest practical risk in quant research is fooling yourself, and interviewers probe it directly.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: the more you search, the more impressive luck looks</h2>
+<ul>
+<li><strong>p-value:</strong> P(data at least this extreme | null hypothesis). It is <em>not</em> P(null | data).</li>
+<li><strong>Power:</strong> P(rejecting the null | a real effect of a given size). Small samples have low power, and significant results from them overestimate the effect size.</li>
+<li><strong>Multiple testing:</strong> with m independent tests at level α, P(at least one false positive) = 1 − (1 − α)ᵐ. With 20 tests at 5%, that's 64%. Bonferroni tests each at α/m; the Benjamini–Hochberg procedure controls the false discovery rate.</li>
+<li><strong>Selection bias in Sharpe ratios:</strong> the maximum of N zero-skill strategies' Sharpe ratios grows like σ_SR·√(2 ln N). Deflate the best Sharpe by the number of trials you ran (the deflated Sharpe ratio).</li>
+<li><strong>Sharpe significance:</strong> with an annualised Sharpe SR over T years, t ≈ SR·√T. A Sharpe of 1 needs about 4 years for t ≈ 2.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Before testing:  write down the hypothesis, the test, and the number of variants you'll try.
+Hold out:       a test set you touch ONCE (or walk-forward periods), never used to choose parameters.
+Adjust:         for the number of trials (Bonferroni/BH, deflated Sharpe).
+Report:         effect size + SE + the number of trials, not just "p &lt; 0.05".
+Sanity:         does the effect survive costs, different periods, different markets, small parameter changes?</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "best of 100 backtests has Sharpe 2.0 over 3 years"</h2>
+<ol>
+<li><strong>Noise in a Sharpe estimate:</strong> SE ≈ √(1/T) ≈ 0.58 for T = 3 years (ignoring higher moments).</li>
+<li><strong>Expected max under zero skill:</strong> about 0.58 × √(2 ln 100) ≈ 0.58 × 3.03 ≈ 1.76. A best-of-100 Sharpe of 2.0 is only slightly above what pure luck delivers.</li>
+<li><strong>Conclusion:</strong> weak evidence. The strategy needs out-of-sample confirmation: fresh data, other markets, or live paper trading.</li>
+<li><strong>Further checks:</strong> parameter stability (does Sharpe collapse when a lookback moves from 20 to 22 days?), transaction costs, capacity, and economic rationale (why should this work?).</li>
+</ol>
+<p>The habit: <strong>always ask how many things were tried before this one was shown to you</strong>, including by other researchers and in published papers.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Look-ahead bias:</strong> using data not available at decision time (restated fundamentals, close prices for open trades, survivor-only universes).</li>
+<li><strong>Survivorship bias:</strong> testing only on stocks that exist today inflates returns.</li>
+<li><strong>p-hacking:</strong> trying specifications until p &lt; 0.05; garden of forking paths.</li>
+<li><strong>\"Statistically significant\" ≠ economically significant:</strong> a tiny edge may not survive costs.</li>
+<li><strong>Regime changes:</strong> a stationarity assumption hides behind every backtest.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Bailey &amp; López de Prado, "The Deflated Sharpe Ratio" (2014), and "The Probability of Backtest Overfitting".</li>
+<li>* Harvey, Liu &amp; Zhu, "…and the Cross-Section of Expected Returns" (2016): multiple testing in finance.</li>
+<li>Generate 100 random-noise strategies over 3 years; record the best Sharpe; repeat 1,000 times.</li>
+<li>Andrew Gelman, "The garden of forking paths" (essay).</li>
+</ul>
+</section>

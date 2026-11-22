@@ -2648,14 +2648,147 @@
    "id": "p17",
    "n": 17,
    "title": "Statistics and machine learning",
-   "summary": "MLE, regression, tests, bias–variance, time series, backtest overfitting.",
+   "summary": "Estimation with honest error bars, regression, multiple testing and backtest overfitting, and time-series validation.",
    "items": [
     {
      "type": "chapter",
      "id": "17-1",
-     "title": "Statistics and machine learning",
-     "summary": "MLE, regression, tests, bias–variance, time series, backtest overfitting.",
-     "status": "planned"
+     "title": "Estimation and uncertainty",
+     "summary": "MLE, standard errors, the CLT, bias–variance and the bootstrap.",
+     "blocks": [
+      [
+       "The signal",
+       "estimate p"
+      ],
+      [
+       "The core idea",
+       "estimate + SE"
+      ],
+      [
+       "The invariant and template",
+       "model, estimate, interval"
+      ],
+      [
+       "A thinking trace",
+       "60 heads in 100"
+      ],
+      [
+       "Traps and variations",
+       "autocorrelation, tails, tanks"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "17-2",
+     "title": "Regression",
+     "summary": "OLS as projection; R²; collinearity; omitted variables; ridge and lasso.",
+     "coding": [
+      "ols-fit"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "factor models, hedges"
+      ],
+      [
+       "The core idea",
+       "projection"
+      ],
+      [
+       "The invariant and template",
+       "formulas and assumptions"
+      ],
+      [
+       "A thinking trace",
+       "a coefficient flips sign"
+      ],
+      [
+       "Traps and variations",
+       "spurious, outliers, numerics"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "17-3",
+     "title": "Testing and overfitting",
+     "summary": "p-values, power, multiple testing, deflated Sharpe, look-ahead and survivorship.",
+     "blocks": [
+      [
+       "The signal",
+       "is it real?"
+      ],
+      [
+       "The core idea",
+       "search inflates luck"
+      ],
+      [
+       "The invariant and template",
+       "pre-register, hold out, adjust"
+      ],
+      [
+       "A thinking trace",
+       "best of 100 backtests"
+      ],
+      [
+       "Traps and variations",
+       "look-ahead, p-hacking"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "17-4",
+     "title": "Time series and validation",
+     "summary": "Stationarity, AR(1) half-lives, volatility clustering, walk-forward validation.",
+     "coding": [
+      "max-drawdown"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "ordered data"
+      ],
+      [
+       "The core idea",
+       "respect time"
+      ],
+      [
+       "The invariant and template",
+       "AR(1), Sharpe, drawdown"
+      ],
+      [
+       "A thinking trace",
+       "70% in CV, 50% live"
+      ],
+      [
+       "Traps and variations",
+       "√252, overlap, ML"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p17-checkpoint",
+     "title": "Part 17 checkpoint",
+     "summary": "Statistics for quants: estimates, errors and honesty."
     }
    ]
   },

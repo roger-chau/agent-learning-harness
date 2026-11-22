@@ -1,0 +1,101 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "SE of a proportion:",
+   "options": [
+    "√(p(1−p)/n)",
+    "p/n",
+    "√p"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "OLS slope:",
+   "options": [
+    "Cov/Var",
+    "ρ only",
+    "σ_y/σ_x"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Centre data before OLS because…",
+   "options": [
+    "of catastrophic cancellation",
+    "it changes the slope",
+    "style"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "20 tests at 5%:",
+   "options": [
+    "64% chance of a false positive",
+    "5%",
+    "1%"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Sharpe of 1 needs ~__ years for t = 2:",
+   "options": [
+    "4",
+    "1",
+    "16"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Best of 1,000 random strategies (3 years):",
+   "options": [
+    "Sharpe ≈ 2 from luck",
+    "≈ 0",
+    "≈ 5"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Max drawdown of [100, 120, 90, 130, 65, 140]:",
+   "options": [
+    "50%",
+    "25%",
+    "35%"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Valid time-series CV:",
+   "options": [
+    "walk-forward + purge",
+    "shuffle",
+    "none"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

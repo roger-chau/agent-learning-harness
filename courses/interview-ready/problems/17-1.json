@@ -1,0 +1,224 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "MLE",
+   "statement": "<p>Maximum likelihood estimates.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bernoulli, 37 successes in 100: p̂?",
+     "answer": 0.37,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Exponential with sample mean 4: λ̂?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Uniform(0, θ) with sample max 9.6 from n = 4: unbiased estimate of θ (max·(n + 1)/n)?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [
+    "Maximise the likelihood."
+   ],
+   "solution": "<p>k/n; 1/x̄; the MLE is 9.6 (biased low); the unbiased version is 12.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Standard errors",
+   "statement": "<p>Compute.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "SE of a mean with σ = 20, n = 400?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "SE of a proportion p̂ = 0.6, n = 100?",
+     "answer": 0.04898979485566356,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Factor more data to halve the SE?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "σ/√n."
+   ],
+   "solution": "<p>1; 0.049; 4×.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Coin test",
+   "statement": "<p>60 heads in 100 flips; null p = 0.5.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "z-score (using the null SE 0.05)?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Two-sided p-value (≈)?",
+     "answer": 0.0455,
+     "unit": "",
+     "tolerance": "3%"
+    }
+   ],
+   "hints": [
+    "(0.6 − 0.5)/0.05."
+   ],
+   "solution": "<p>z = 2, p ≈ 0.046.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Sample size",
+   "statement": "<p>Detect p = 0.55 vs 0.5 at 5% two-sided with 80% power.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Required n (≈ (1.96 + 0.84)² × 0.25 / 0.05²)?",
+     "answer": 783.9999999999998,
+     "unit": "",
+     "tolerance": "3%"
+    }
+   ],
+   "hints": [
+    "(z_α/2 + z_β)² σ² / δ²."
+   ],
+   "solution": "<p>About 784 flips.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "CI",
+   "statement": "<p>Mean daily P&amp;L $1,200 with SD $8,000 over 250 days.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "SE of the mean ($)?",
+     "answer": 505.9644256269407,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Lower end of the 95% CI ($)?",
+     "answer": 208.3097257711962,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "±1.96 SE."
+   ],
+   "solution": "<p>SE ≈ 506; the CI is about [208, 2,192]. Positive, but wide.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Bias–variance",
+   "statement": "<p>Estimator A: bias 0, variance 4. Estimator B: bias 1, variance 1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "MSE of A?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "MSE of B?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "MSE = bias² + variance."
+   ],
+   "solution": "<p>B wins despite its bias: that's why shrinkage works.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Effective sample size",
+   "statement": "<p>250 daily observations with lag-1 autocorrelation ρ = 0.5 (AR(1)).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Approximate effective n (n(1 − ρ)/(1 + ρ))?",
+     "answer": 83.33333333333333,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Correlated samples carry less information."
+   ],
+   "solution": "<p>About 83 effective observations, so standard errors are about 1.7× larger than i.i.d. formulas say.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Bootstrap",
+   "statement": "<p>You want the SE of the median of 50 skewed observations.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Procedure?",
+     "options": [
+      "resample 50 with replacement many times, compute medians, take their SD",
+      "use σ/√n",
+      "use the IQR"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "No simple formula."
+   ],
+   "solution": "<p>The bootstrap distribution of the statistic approximates its sampling distribution.</p>"
+  }
+ ]
+}

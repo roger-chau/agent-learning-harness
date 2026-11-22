@@ -1,0 +1,205 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Multiple testing",
+   "statement": "<p>20 independent tests at α = 0.05, all nulls true.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(at least one false positive)?",
+     "answer": 0.6415140775914581,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bonferroni per-test level?",
+     "answer": 0.0025,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "1 − (1 − α)ᵐ."
+   ],
+   "solution": "<p>0.64; α/m = 0.0025.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Sharpe t-stat",
+   "statement": "<p>Annualised Sharpe SR over T years: t ≈ SR·√T.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "SR = 1, T = 4?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Years for t = 2 with SR = 0.5?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "√T."
+   ],
+   "solution": "<p>2; 16 years.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Max of noise",
+   "statement": "<p>N zero-skill strategies over 3 years (Sharpe SE ≈ 1/√3).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected best Sharpe for N = 100 (≈ SE·√(2 ln N))?",
+     "answer": 1.752173923252311,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For N = 1,000?",
+     "answer": 2.1459660262893476,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Extreme-value approximation."
+   ],
+   "solution": "<p>≈ 1.75 and ≈ 2.15: a best-of-1,000 Sharpe above 2 is expected from noise.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "p-value meaning",
+   "statement": "<p>Your test gives p = 0.03.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which statements are correct?",
+     "options": [
+      "If the null were true, data this extreme would occur about 3% of the time",
+      "There's a 97% chance the effect is real",
+      "There's a 3% chance the null is true",
+      "It says nothing about the effect size"
+     ],
+     "answer": [
+      0,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "A p-value conditions on the null."
+   ],
+   "solution": "<p>P(null | data) needs a prior (Bayes, Part 13.2).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Winner's curse in research",
+   "statement": "<p>A study with low power finds a significant effect.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Its estimated effect size is likely…",
+     "options": [
+      "exaggerated",
+      "accurate",
+      "understated"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Significance filters for lucky draws."
+   ],
+   "solution": "<p>Only overestimates clear the significance bar at low power (type M error).</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Survivorship",
+   "statement": "<p>Backtesting on today's index members over 20 years.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Bias?",
+     "options": [
+      "upward: firms that failed or were dropped are excluded",
+      "downward",
+      "none"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Who's missing?"
+   ],
+   "solution": "<p>Use point-in-time constituents.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Benjamini–Hochberg",
+   "statement": "<p>m = 5 sorted p-values [0.001, 0.01, 0.02, 0.04, 0.2], FDR q = 0.05.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of discoveries?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Largest k with p_(k) ≤ k·q/m."
+   ],
+   "solution": "<p>Thresholds 0.01, 0.02, 0.03, 0.04, 0.05: p_(4) = 0.04 ≤ 0.04 ✓, p_(5) = 0.2 &gt; 0.05, so 4 discoveries.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Parameter stability",
+   "statement": "<p>A strategy's Sharpe: 2.1 with a 20-day lookback, 0.3 with 19 days and 0.4 with 22 days.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Interpretation?",
+     "options": [
+      "likely overfit: the performance is a spike, not a plateau",
+      "robust",
+      "use 20 days"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Real effects are smooth in parameters."
+   ],
+   "solution": "<p>Prefer strategies whose performance is stable across nearby parameters.</p>"
+  }
+ ]
+}

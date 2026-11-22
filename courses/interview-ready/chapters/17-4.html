@@ -1,0 +1,55 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Are returns predictable?", "what's mean reversion and how fast?", "how do you cross-validate a trading model?", "what's wrong with a random train/test split here?". Financial data is a time series: ordered, autocorrelated and non-stationary. Methods that assume i.i.d. samples quietly break.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: respect time</h2>
+<ul>
+<li><strong>Stationarity:</strong> prices are (close to) random walks, so they're non-stationary; returns are closer to stationary. Model returns, or spreads that are stationary (cointegration).</li>
+<li><strong>AR(1):</strong> xₜ = φxₜ₋₁ + εₜ. With |φ| &lt; 1 it mean-reverts, with a half-life of ln 0.5 / ln φ and a stationary variance of σ²/(1 − φ²). φ = 1 is a random walk.</li>
+<li><strong>Autocorrelation</strong> of returns is usually tiny; the autocorrelation of <em>squared</em> returns (volatility clustering) is strong. That's why GARCH models volatility, and why risk changes over time.</li>
+<li><strong>Validation:</strong> never shuffle time-series data into folds. Use walk-forward validation (train on the past, test on the next block, roll forward), with a gap (\"purging\") so overlapping labels don't leak.</li>
+<li><strong>Features at time t</strong> may use only information available at t. Check every join and resample for leakage.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>AR(1) fit:     regress x_t on x_{t−1} → φ̂;  half-life = ln(0.5)/ln(φ̂)
+Sharpe:        SR = mean(r)/std(r) · √(periods per year)     (daily: √252)
+Max drawdown:  max over t of (running peak − value)/running peak   (judged problem)
+Walk-forward:  for each block k: fit on [0, t_k − gap), test on [t_k, t_{k+1}); aggregate the test results</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "your model has 70% accuracy in cross-validation, 50% live"</h2>
+<ol>
+<li><strong>First suspect leakage.</strong> A live hit rate at chance level after a strong backtest almost always means information leaked in research.</li>
+<li><strong>Random k-fold on time series:</strong> neighbouring days land in train and test; with autocorrelated features and overlapping labels (e.g. 5-day returns), the model effectively sees the test answers.</li>
+<li><strong>Look-ahead in features:</strong> a rolling mean computed with a centred window, normalisation using full-sample statistics, or fundamentals timestamped by period rather than release date.</li>
+<li><strong>Fix:</strong> walk-forward validation with purging and an embargo; point-in-time data; recompute every feature as of decision time.</li>
+<li><strong>Then the remaining gap:</strong> costs, slippage, and regime change. Expect live Sharpe to be a fraction of the backtest's even when everything is done right.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Annualising Sharpe with √252</strong> assumes i.i.d. returns; autocorrelated returns make it misleading.</li>
+<li><strong>Overlapping returns</strong> inflate t-statistics (use Newey–West standard errors).</li>
+<li><strong>Non-stationary features</strong> (raw price levels) produce spurious fits. Use differences, returns and z-scores over rolling windows.</li>
+<li><strong>ML in finance</strong> has a low signal-to-noise ratio: simple, regularised models with strong validation usually beat complex ones.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Marcos López de Prado, <em>Advances in Financial Machine Learning</em>, chapters 7 (cross-validation with purging) and 11–12 (backtesting).</li>
+<li>* Tsay, <em>Analysis of Financial Time Series</em>, chapters 2–3 (AR models, volatility).</li>
+<li>Fit an AR(1) to a spread series; compute its half-life; compare with a simulation.</li>
+<li>Re-run any classifier with shuffled k-fold vs walk-forward on daily data; compare the scores.</li>
+</ul>
+</section>

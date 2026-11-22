@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Derive the OLS estimator", "what does R² tell you?", "two highly correlated features: what happens to the coefficients?", "why regularise?". Regression is the workhorse of quantitative research: factor models, signal combination, hedge ratios.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: projection</h2>
+<p>OLS minimises Σ(y − Xβ)², giving β̂ = (XᵀX)⁻¹Xᵀy: the projection of y onto the column space of X. With one regressor: b = Cov(x, y)/Var(x) = ρ·σ_y/σ_x, and a = ȳ − b x̄. The judged problem in this chapter implements exactly this, stably.</p>
+<ul>
+<li><strong>R²</strong> = the fraction of variance explained (= ρ² with one regressor). In finance, an R² of 0.01 for predicting returns can be very valuable; don't dismiss small R².</li>
+<li><strong>Coefficient SE:</strong> σ_ε / (√n · σ_x) for one regressor. Collinear regressors inflate the SEs (the variance inflation factor), so coefficients become unstable even when predictions are fine.</li>
+<li><strong>Omitted variable bias:</strong> if y depends on z, z is left out, and z correlates with x, then b absorbs z's effect: E[b̂] = β + γ·Cov(x, z)/Var(x).</li>
+<li><strong>Regularisation:</strong> ridge (L2) shrinks coefficients and stabilises collinear fits; lasso (L1) sets some exactly to zero (feature selection). Choose λ by cross-validation.</li>
+<li><strong>Hedge ratio:</strong> regressing an asset's returns on a hedge instrument's returns gives the minimum-variance hedge ratio b = ρ σ_asset / σ_hedge.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>One regressor:   b = Σ(x − x̄)(y − ȳ) / Σ(x − x̄)²,   a = ȳ − b·x̄,   R² = ρ²
+Many:            β̂ = (XᵀX)⁻¹ Xᵀ y     (solve with QR/Cholesky; never invert explicitly)
+Ridge:           β̂ = (XᵀX + λI)⁻¹ Xᵀ y
+Assumptions to state: linearity, exogeneity (E[ε | X] = 0), homoskedastic and independent errors (for the textbook SEs)</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "your signal's regression coefficient flipped sign when you added a feature"</h2>
+<ol>
+<li><strong>Setup:</strong> regressing returns on momentum gives b = +0.3. Adding volatility makes momentum's coefficient −0.1.</li>
+<li><strong>Hypothesis 1, omitted variable bias:</strong> momentum correlates with volatility, and volatility predicts returns. The first regression attributed volatility's effect to momentum.</li>
+<li><strong>Hypothesis 2, collinearity:</strong> if momentum and volatility are highly correlated, the individual coefficients have huge SEs, and the sign flip may be noise. Check the SEs and the VIF.</li>
+<li><strong>Diagnose:</strong> correlation between the features; the coefficient SEs before and after; out-of-sample prediction with each model.</li>
+<li><strong>Act:</strong> if the goal is prediction, regularise and judge by out-of-sample error; if the goal is attribution, accept that the data can't separate collinear effects.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Regressing on a variable that contains y</strong> (or is built from future data) gives a spuriously high R².</li>
+<li><strong>Two random walks regressed on each other</strong> show a \"significant\" relation (spurious regression). Use returns, or test for cointegration.</li>
+<li><strong>Outliers</strong> dominate least squares: robust regression (Huber), or winsorise.</li>
+<li><strong>Errors-in-variables:</strong> noise in x biases b toward zero (attenuation).</li>
+<li><strong>Numerics:</strong> centre the data; QR rather than normal equations (the condition number gets squared).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Hastie, Tibshirani &amp; Friedman, <em>The Elements of Statistical Learning</em>, chapter 3 (linear regression, ridge, lasso).</li>
+<li>* Wooldridge, <em>Introductory Econometrics</em>, chapters 2–3 (omitted variables, collinearity).</li>
+<li>Fit OLS on two highly correlated features 1,000 times on resampled data; histogram the coefficients.</li>
+<li>Regress two independent random walks; count how often |t| > 2.</li>
+</ul>
+</section>

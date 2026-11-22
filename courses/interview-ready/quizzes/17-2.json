@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "One-regressor slope:",
+   "options": [
+    "Cov(x, y)/Var(x)",
+    "Var(x)/Cov",
+    "ρ"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Collinearity mainly…",
+   "options": [
+    "inflates coefficient SEs",
+    "biases predictions",
+    "lowers R²"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Omitting a correlated variable…",
+   "options": [
+    "biases the included coefficients",
+    "has no effect",
+    "lowers variance only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Noise in x biases the slope…",
+   "options": [
+    "toward zero",
+    "away from zero",
+    "not at all"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Lasso differs from ridge by…",
+   "options": [
+    "producing sparse coefficients",
+    "being unbiased",
+    "not needing λ"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

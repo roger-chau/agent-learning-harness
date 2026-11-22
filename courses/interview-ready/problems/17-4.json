@@ -1,0 +1,212 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "AR(1)",
+   "statement": "<p>x_t = 0.9·x_(t−1) + ε_t, Var(ε) = 1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Half-life (periods)?",
+     "answer": 6.578813478960585,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Stationary variance?",
+     "answer": 5.263157894736843,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "ln 0.5 / ln φ; σ²/(1 − φ²)."
+   ],
+   "solution": "<p>6.58 periods; 5.263.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Sharpe",
+   "statement": "<p>Daily mean return 0.05%, daily SD 1%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Daily Sharpe?",
+     "answer": 0.05,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Annualised (√252)?",
+     "answer": 0.7937253933193773,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "mean/SD × √252."
+   ],
+   "solution": "<p>0.05 and 0.79.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Drawdown",
+   "statement": "<p>Prices [100, 120, 90, 130, 65, 140].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Max drawdown?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "130 → 65."
+   ],
+   "solution": "<p>50%, which isn't the drop from the first peak (25%).</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Validation",
+   "statement": "<p>Daily features with 5-day forward-return labels.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Valid validation schemes?",
+     "options": [
+      "walk-forward with a ≥ 5-day purge gap",
+      "random 5-fold shuffle",
+      "train on 2015–2019, test on 2020–2021 once",
+      "test on the training period"
+     ],
+     "answer": [
+      0,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Respect time; overlapping labels leak."
+   ],
+   "solution": "<p>Shuffled folds leak through overlapping labels and autocorrelation.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Volatility clustering",
+   "statement": "<p>Daily returns show autocorrelation ≈ 0.01; squared returns ≈ 0.2.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Implication?",
+     "options": [
+      "returns are hard to predict, but volatility is predictable (GARCH)",
+      "returns are predictable",
+      "nothing"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Second moments persist."
+   ],
+   "solution": "<p>Risk models exploit volatility persistence.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Look-ahead",
+   "statement": "<p>Which features leak future information?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "z-score using the full-sample mean and SD",
+      "a 20-day trailing mean",
+      "fundamentals indexed by fiscal period end (not release date)",
+      "yesterday's close"
+     ],
+     "answer": [
+      0,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Available at decision time?"
+   ],
+   "solution": "<p>Full-sample statistics and period-end timestamps use information not yet known.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Random walk test",
+   "statement": "<p>Fitting AR(1) to log prices gives φ̂ = 0.998 on 1,000 days.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Implied half-life (days)?",
+     "answer": 346.2269010494912,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Conclusion?",
+     "options": [
+      "indistinguishable from a random walk; don't trade mean reversion on this",
+      "strong mean reversion",
+      "trending"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "φ̂ is biased low near 1 in finite samples."
+   ],
+   "solution": "<p>Half-life ≈ 346 days, and near-unit-root estimates are biased toward mean reversion (Dickey–Fuller).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Annualisation caveat",
+   "statement": "<p>A strategy's daily returns have lag-1 autocorrelation +0.3.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "√252 annualisation of Sharpe…",
+     "options": [
+      "overstates it (positive autocorrelation adds variance at longer horizons)",
+      "understates it",
+      "is exact"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Var of a sum with positive autocorrelation."
+   ],
+   "solution": "<p>Use the variance of aggregated returns (Lo, 2002).</p>"
+  }
+ ]
+}
