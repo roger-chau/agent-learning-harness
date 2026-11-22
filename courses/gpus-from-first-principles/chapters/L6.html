@@ -1,0 +1,39 @@
+<section class="blk" data-n="01">
+<h2>Why this lab</h2>
+<p>A GPU compiler engineer's daily work is reading what <code>nvcc</code> produced and asking why. A performance engineer needs the same skill to tell "my algorithm is slow" apart from "the compiler did something I didn't expect". This lab gives you three effects you can see in the SASS and measure on the clock: instruction-level parallelism standing in for occupancy, an array that silently ends up in local memory, and fusion.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>What to do</h2>
+<p>Open <code>labs/L6-compiler/l6.cu</code>. Before writing anything, run <code>make regs</code> and <code>make sass-poly_naive</code> and look at the code you were given.</p>
+<ul>
+<li><strong>A. ILP versus occupancy.</strong> <code>poly_naive</code> evaluates a degree-32 polynomial 16 times per element with Horner's rule. That is 512 dependent FMAs. The shared-memory request leaves room for only one 128-thread block per SM: 4 warps, one per scheduler. Predict the fraction of FP32 peak from the FMA latency and issue rate (Chapter 6.4). Then write <code>poly_ilp</code>, which evaluates 4 elements per thread with their FMAs interleaved. The result must be bit-identical, since each element sees the same FMAs in the same order.</li>
+<li><strong>B. Local memory.</strong> <code>sort8_local</code> is an insertion sort for a run-time length k. Its array is indexed with run-time values, so it lives in local memory: <code>make regs</code> shows a 32-byte stack frame, and <code>make sass-sort8_local</code> counts the LDL and STL instructions. Write <code>sort8_regs</code> for exactly 8 values, using only compile-time indices: a sorting network built from <code>cmp_swap</code>. The program checks with <code>cudaFuncGetAttributes</code> that it uses no local memory.</li>
+<li><strong>C. Fusion.</strong> Three elementwise kernels write two temporaries that nobody needs. Write <code>fused</code>, one pass with <code>float4</code> accesses, and predict the speedup from the bytes moved. Do the same operations in the same order, so the result is bit-identical. This is what a fusion pass in a compiler like XLA, TorchInductor or Triton does.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Read the machine code</h2>
+<ul>
+<li><code>make sass-poly_ilp</code>: count the FFMAs. Does the count match 4 × 32 × the inner loop's unrolling? Find where the four chains interleave.</li>
+<li><code>make ptx</code>, then find <code>sort8_local</code>'s <code>.local</code> array and its <code>ld.local</code> and <code>st.local</code>. Is local memory "slow memory"? It's cached in L1, so the honest answer depends on the hit rate: check it with <code>make ncu</code>.</li>
+<li>In <code>sort8_regs</code>'s SASS, find the FMNMX instructions. How many should there be for your network?</li>
+<li>Compare your fused kernel's SASS with the three originals: what did fusion remove besides memory traffic?</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Going further</h2>
+<ul>
+<li>Sweep ILP from 1 to 8 in A. Where does it stop helping, and how do the registers per thread change? Then remove the shared-memory request: does ILP still matter at full occupancy? This is Volkov's paper (Part 2) measured on your own card.</li>
+<li>Replace odd-even transposition (28 comparators) with Batcher's network (19 comparators). Is it faster, and if not, why not?</li>
+<li>Add <code>__launch_bounds__(256, 4)</code> to Lab 4's register-tiled GEMM, which forces fewer than 64 registers per thread. Measure the spills and the time.</li>
+<li>Write C's fused kernel in Triton (Python, on your card) and compare its PTX with yours.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Passing</h2>
+<p>All results bit-exact, and <code>sort8_regs</code> uses no local memory. <code>poly_ilp</code> reaches at least 70% of FP32 peak and is at least 1.6× faster than the naive version. <code>sort8_regs</code> reaches at least 60% of peak bandwidth and is at least 1.5× faster than the local-memory sort. The fused kernel reaches at least 70% of peak bandwidth and is at least 2.5× faster than three passes. The report quotes SASS for each claim.</p>
+</section>

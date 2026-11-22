@@ -2274,6 +2274,83 @@
      }
     },
     {
+     "type": "lab",
+     "id": "L6",
+     "title": "Lab 6: Reading what the compiler did",
+     "summary": "ILP standing in for occupancy, an array that lands in local memory, and kernel fusion, each read from the SASS and measured.",
+     "dir": "labs/L6-compiler",
+     "hours": 4,
+     "blocks": [
+      [
+       "Why this lab",
+       "the compiler's output is the truth"
+      ],
+      [
+       "What to do",
+       "ILP, local memory, fusion"
+      ],
+      [
+       "Read the machine code",
+       "PTX and SASS, instruction by instruction"
+      ],
+      [
+       "Going further",
+       "Volkov, Batcher, launch bounds, Triton"
+      ],
+      [
+       "Passing",
+       "targets and the report"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "poly_ilp_pct",
+       "op": ">=",
+       "value": 70,
+       "label": "poly_ilp, % of FP32 peak"
+      },
+      {
+       "metric": "ilp_speedup",
+       "op": ">=",
+       "value": 1.6,
+       "label": "poly_ilp / poly_naive"
+      },
+      {
+       "metric": "sort_regs_pct",
+       "op": ">=",
+       "value": 60,
+       "label": "sort8_regs, % of peak bandwidth"
+      },
+      {
+       "metric": "sort_speedup",
+       "op": ">=",
+       "value": 1.5,
+       "label": "sort8_regs / sort8_local"
+      },
+      {
+       "metric": "fused_pct",
+       "op": ">=",
+       "value": 70,
+       "label": "Fused kernel, % of peak bandwidth"
+      },
+      {
+       "metric": "fusion_speedup",
+       "op": ">=",
+       "value": 2.5,
+       "label": "Fused / three passes"
+      }
+     ],
+     "writeup": {
+      "min_words": 300,
+      "prompts": [
+       "A: your predicted fraction of peak for poly_naive, worked from latency and issue rate, against the measured one. Quote the SASS of the interleaved chains.",
+       "B: why sort8_local's array is in local memory (quote the PTX), its L1 hit rate, and why it's still slower.",
+       "C: bytes moved by each version and the predicted speedup, against the measured one.",
+       "One thing the compiler did that surprised you, with the SASS that shows it."
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p6-checkpoint",
      "title": "Part 6 checkpoint",
