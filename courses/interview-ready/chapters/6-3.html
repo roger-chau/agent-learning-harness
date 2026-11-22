@@ -57,6 +57,9 @@ for w in weights: reach |= reach &lt;&lt; w     # 0/1 subset sums in O(n · C / 
 <li><strong>Combination sum IV</strong> (count ordered sequences): capacity outside, items inside.</li>
 <li><strong>Pseudo-polynomial:</strong> O(n · C) is polynomial in the <em>value</em> of C, not its number of bits. Knapsack is NP-hard, so if C is 10⁹ the table is impossible. Mention this; quant and systems interviewers like hearing it.</li>
 </ul>
+
+
+<div class="callout maths"><strong>Maths shortcut.</strong> Counting subsets with a given sum is a polynomial-coefficient question: the answer is the coefficient of xᵗ in Π(1 + x^aᵢ). The knapsack DP is exactly that multiplication, one factor per item.</div>
 </section>
 
 <section class="blk" data-n="06">

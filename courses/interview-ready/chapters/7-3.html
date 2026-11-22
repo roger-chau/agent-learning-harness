@@ -53,6 +53,9 @@ def go(i, tight, started, state):
 <li><strong>Digit DP traps:</strong> forgetting the started flag (leading zeros counted as digits), and computing f(L − 1) wrongly when L = 0.</li>
 <li><strong>Closed forms instead:</strong> counting 1s has a per-position formula; numbers with distinct digits below 10ᵏ is a product of permutations. Use the formula when you can derive it, and the DP when the property is messy.</li>
 </ul>
+
+
+<div class="callout maths"><strong>Maths shortcut.</strong> Many digit-DP counts have closed forms: numbers below 10ᵏ with distinct digits are 9·9·8·… products, and the count of digit 1 has a per-position formula. Derive the formula when the property is simple; use the DP when it isn't.</div>
 </section>
 
 <section class="blk" data-n="06">

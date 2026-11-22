@@ -50,6 +50,9 @@
 <li><strong>Generate parentheses:</strong> prune with counts (open ≤ n, close ≤ open). The number of results is the Catalan number C(2n, n)/(n + 1).</li>
 <li><strong>When to switch to DP:</strong> if you only need the <em>count</em> or the <em>best</em>, and states repeat, memoise. Counting N-queens can't be memoised easily; counting combinations to a target can (that's coin change).</li>
 </ul>
+
+
+<div class="callout maths"><strong>Maths shortcut.</strong> Know the counts you are enumerating: 2ⁿ subsets, n! permutations, n!/(a!b!…) for multisets, C(n, k) combinations and the Catalan number C(2n, n)/(n + 1) for balanced parentheses. They tell you whether brute force is the intended solution.</div>
 </section>
 
 <section class="blk" data-n="06">

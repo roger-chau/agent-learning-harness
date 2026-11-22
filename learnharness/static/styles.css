@@ -403,6 +403,7 @@ a.toc-item:hover { background: var(--surface-2); text-decoration: none; color: v
 .ch-body .callout { font-family: var(--font-ui); font-size: .96rem; border: 1px solid var(--rule); border-left: 3px solid var(--primary); background: var(--surface); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 12px 16px; margin: 1.4em 0; }
 .ch-body .callout.key { border-left-color: var(--saffron); }
 .ch-body .callout.companion { border-left-color: var(--indigo); }
+.ch-body .callout.maths { border-left-color: var(--accent-ink); }
 .ch-body .callout b:first-child { display: block; font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
 .ch-body .eq { font-family: var(--font-ui); background: var(--surface-2); border: 1px solid var(--rule); border-radius: var(--radius-lg); padding: 14px 18px; margin: 1.2em 0; text-align: center; font-size: 1.1rem; }
 

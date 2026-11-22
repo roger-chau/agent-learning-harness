@@ -46,6 +46,9 @@ for x in nums:
 <li><strong>2-D prefix sums:</strong> $S[r][c]$ = sum of the rectangle above-left; a rectangle sum is four lookups (inclusion–exclusion).</li>
 <li><strong>Variations:</strong> longest subarray with sum k (store the <em>first</em> index of each prefix), equal numbers of 0s and 1s (map 0 → −1, then sum zero), subarray sums divisible by k (prefixes mod k).</li>
 </ul>
+
+
+<div class="callout maths"><strong>Maths shortcut.</strong> Prefix sums work for any operation with an inverse: sums, XOR (XOR is its own inverse), and products of non-zero values mod a prime. Part 8.3 counts subarrays with XOR k exactly like subarray-sum-equals-k.</div>
 </section>
 
 <section class="blk" data-n="06">

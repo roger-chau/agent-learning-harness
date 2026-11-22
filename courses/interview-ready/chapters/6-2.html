@@ -49,6 +49,9 @@ side[i][j] = 1 + min(side[i-1][j], side[i][j-1], side[i-1][j-1])  if grid[i][j] 
 <li><strong>Triangle:</strong> bottom-up from the base needs only one row and no special cases.</li>
 <li><strong>Four-directional movement</strong> means it isn't a DAG and DP is invalid (it would be cyclic). Use Dijkstra.</li>
 </ul>
+
+
+<div class="callout maths"><strong>Maths shortcut.</strong> With no obstacles, the number of right/down paths is C(m + n − 2, m − 1), so no DP is needed, and with a few obstacles in a huge grid, inclusion–exclusion over the first obstacle hit replaces the 10¹⁰-cell table (Part 8.4).</div>
 </section>
 
 <section class="blk" data-n="06">

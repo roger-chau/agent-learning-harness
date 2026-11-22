@@ -56,6 +56,9 @@ for step in steps:
 <li><strong>Course schedule III</strong> (maximum courses before their deadlines): sort by deadline, take each course, and when over time drop the longest taken one. That's a max-heap of durations, and the exchange argument is that dropping the longest frees the most time.</li>
 <li><strong>Reorganise string</strong> (no two adjacent letters equal): possible iff the maximum count ≤ ⌈n/2⌉. Build it with a heap, or fill the even indices first.</li>
 </ul>
+
+
+<div class="callout maths"><strong>Maths shortcut.</strong> The task scheduler's answer is a closed-form bound: max(n_tasks, (m − 1)(n + 1) + k). Whenever a simulation's result depends only on a few counts, look for the formula.</div>
 </section>
 
 <section class="blk" data-n="06">
