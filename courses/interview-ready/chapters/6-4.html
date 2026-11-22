@@ -1,0 +1,62 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Two strings (or arrays), a question about how they align: the longest common subsequence, edit distance, interleaving, matching with wildcards or regular expressions, counting occurrences as a subsequence. Also one string compared with itself (palindromic subsequences). Expect a table indexed by <strong>a prefix of each</strong>, with O(mn) time.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: look at the last characters</h2>
+<p>State: dp[i][j] = the answer for a[:i] and b[:j]. Transition: look at a[i−1] and b[j−1] and ask what can happen to them.</p>
+<ul>
+<li><strong>Both used together</strong> (match or substitute): from dp[i−1][j−1], the diagonal.</li>
+<li><strong>a's character is dropped</strong> (deleted or skipped): from dp[i−1][j], above.</li>
+<li><strong>b's character is dropped</strong> (inserted or skipped): from dp[i][j−1], the left.</li>
+</ul>
+<p>Every two-sequence DP is a choice of which of these three moves are allowed and what each costs. The base row and column answer "against the empty string". Draw the table for two short strings. The arrows <em>are</em> the recurrence, and the table is a DAG of the alignments.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>prev = [base(0, j) for j in range(m + 1)]          # row i = 0
+for i in range(1, n + 1):
+    cur = [base(i, 0)] + [0] * m
+    for j in range(1, m + 1):
+        if a[i-1] == b[j-1]:
+            cur[j] = diag_on_match(prev[j-1])
+        else:
+            cur[j] = combine(prev[j-1] + sub, prev[j] + dele, cur[j-1] + ins)
+    prev = cur</code></pre>
+<table>
+<tr><th>Problem</th><th>On a match</th><th>Otherwise</th><th>Base</th></tr>
+<tr><td>LCS</td><td>1 + ↖</td><td>max(↑, ←)</td><td>0</td></tr>
+<tr><td>Edit distance</td><td>↖</td><td>1 + min(↖, ↑, ←)</td><td>i or j</td></tr>
+<tr><td>Distinct subsequences</td><td>↑ + ↖</td><td>↑</td><td>dp[i][0] = 1</td></tr>
+<tr><td>Shortest common supersequence</td><td>1 + ↖</td><td>1 + min(↑, ←)</td><td>i or j</td></tr>
+</table>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: edit distance</h2>
+<ol>
+<li><strong>Clarify:</strong> three operations, each costing 1. Transforming a into b is symmetric to b into a (insertion and deletion swap roles).</li>
+<li><strong>State:</strong> dp[i][j] = the minimum operations turning a[:i] into b[:j].</li>
+<li><strong>Last characters:</strong> if they're equal, no operation is needed for them: dp[i−1][j−1]. Otherwise the last step is one of: substitute (↖ + 1), delete a's last (↑ + 1), or insert b's last (← + 1).</li>
+<li><strong>Why is that exhaustive?</strong> In any optimal edit script, a[i−1] is either kept or deleted. If kept, it is matched with b[j−1] (equal or substituted), or b[j−1] was inserted after it. Those are the three cases. Being able to say this is what proves the recurrence.</li>
+<li><strong>Base:</strong> dp[i][0] = i (delete everything) and dp[0][j] = j (insert everything).</li>
+<li><strong>Memory:</strong> two rows. The full table is needed only to reconstruct the edits.</li>
+<li><strong>Test:</strong> "horse" → "ros" is 3, and the empty string against "abc" is 3.</li>
+</ol>
+<p>The habit: <strong>justify the recurrence with a case split on what happens to the last element</strong>, and check that the cases are exhaustive and don't overlap (essential for counting problems).</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Off-by-one indices:</strong> dp has dimensions (n + 1) × (m + 1), and dp[i][j] reads a[i−1]. Write that down at the top of the code.</li>
+<li><strong>Rolling arrays need the diagonal:</strong> with one row, save the old dp[j−1] before overwriting it, or keep two rows.</li>
+<li><strong>Counting must not double-count:</strong> distinct subsequences adds two disjoint cases (use s[i−1] or not). LCS-style max can overlap freely, but counts can't.</li>
+<li><strong>Longest common substring</strong> (contiguous): dp[i][j] = 1 + dp[i−1][j−1] on a match, else 0, and the answer is the max over the table. Don't confuse it with the subsequence version.</li>
+<li><strong>Regular expression and wildcard matching:</strong> the same table, with '*' allowing ↑ (match one more) or a skip. Quant firms ask these.</li>
+<li><strong>Interleaving string:</strong> dp[i][j] = whether a[:i] and b[:j] interleave into c[:i+j]. A boolean two-sequence DP.</li>
+<li><strong>Large inputs:</strong> LCS of two 10⁵-length strings is 10¹⁰ cells, which is too many. Special structure (such as permutations, which reduce to LIS in O(n log n)) is the way out.</li>
+</ul>
+</section>

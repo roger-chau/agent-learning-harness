@@ -1,0 +1,111 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Before coding a DP, state…",
+   "options": [
+    "the five answers: state, transition, base, order, answer",
+    "the complexity only",
+    "the language"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Fewest coins with arbitrary denominations:",
+   "options": [
+    "unbounded min DP",
+    "greedy",
+    "BFS only"
+   ],
+   "answer": 0,
+   "explanation": "BFS also works; DP is standard."
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "LIS in O(n log n):",
+   "options": [
+    "tails array + binary search",
+    "two pointers",
+    "heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Grid with four-directional moves and weights:",
+   "options": [
+    "Dijkstra",
+    "row-major DP"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Dungeon game is solved…",
+   "options": [
+    "backwards from the goal",
+    "forwards with max health",
+    "greedily"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Equal-subset partition:",
+   "options": [
+    "0/1 knapsack feasibility",
+    "unbounded knapsack",
+    "LCS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Coin change II counts…",
+   "options": [
+    "combinations: coins in the outer loop",
+    "permutations: amounts in the outer loop"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Edit distance:",
+   "options": [
+    "two-sequence DP with three moves",
+    "greedy",
+    "knapsack"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q9",
+   "type": "single",
+   "prompt": "Algebra on ± signs turns target sum into…",
+   "options": [
+    "subset counting",
+    "edit distance",
+    "a graph"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

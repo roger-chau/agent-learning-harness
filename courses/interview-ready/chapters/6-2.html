@@ -1,0 +1,52 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>A grid where movement goes in <strong>one general direction</strong> (right and down, or row by row), asking for a count of paths, a best path sum, or the largest square or rectangle. One-directional moves make the grid a DAG, so DP in row-major order is valid. If moves can go back (all four directions), it's a graph search instead: BFS or Dijkstra from Part 4.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p>The state is a cell, and the transition reads the cells you could have come from. Three choices make or break grid DP:</p>
+<ul>
+<li><strong>What the state anchors to:</strong> "paths into (i, j)", "the best square with its bottom-right corner at (i, j)", "the health needed when entering (i, j)". Anchoring the substructure to a corner or endpoint is what makes the transition local.</li>
+<li><strong>Direction:</strong> forward (from the start) or backward (from the goal). Choose the direction in which the state is a <em>single number</em> with optimal substructure.</li>
+<li><strong>Memory:</strong> a row only reads the previous row (and itself), so one array of length C is enough. Mind the update order within the row.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code># Forward, rolling one row. Before updating dp[j], dp[j] = the value above and dp[j-1] = the value to the left (already updated).
+dp = [INIT] * C
+for i in range(R):
+    for j in range(C):
+        dp[j] = combine(grid[i][j], dp[j], dp[j - 1] if j else NONE)
+
+# Square anchored at the bottom-right corner
+side[i][j] = 1 + min(side[i-1][j], side[i][j-1], side[i-1][j-1])  if grid[i][j] == '1' else 0</code></pre>
+<p>Padding the table with an extra row and column of base values removes the boundary <code>if</code>s. In C++ it also avoids reading index −1.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: dungeon game</h2>
+<ol>
+<li><strong>First idea, forward:</strong> dp[i][j] = the maximum health left on reaching (i, j). <strong>Attack it:</strong> one path arrives with 10 health but needed a starting health of 8; another arrives with 3 and needed only 2. Which is better? It depends on what comes next. A single forward number doesn't capture the trade-off between current health and the worst dip so far.</li>
+<li><strong>Diagnose:</strong> the forward state needs two numbers that conflict. That's a sign the direction is wrong.</li>
+<li><strong>Reverse:</strong> need[i][j] = the minimum health on <em>entering</em> (i, j) to survive to the end. It depends only on the future, which has optimal substructure: need[i][j] = max(1, min(need[i+1][j], need[i][j+1]) − d[i][j]).</li>
+<li><strong>Base:</strong> the cells beyond the princess need 1 (pad the table and set the two neighbours of the exit to 1).</li>
+<li><strong>Order:</strong> bottom-right to top-left. The answer is need[0][0].</li>
+<li><strong>Test:</strong> a single positive cell (1), a single −5 (6), and a big reward late in the path that can't save you from an early dip.</li>
+</ol>
+<p>The move: <strong>when a forward state needs two competing numbers, try the backward direction</strong>, where the constraint becomes local. The same idea appears in the "minimum initial fuel or balance" problems in quant interviews.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Obstacles on the first row or column</strong> block everything after them. With a rolling array this is automatic; with explicit base loops it's a classic bug.</li>
+<li><strong>Counting overflow:</strong> unique paths in an m × n grid is C(m + n − 2, m − 1), which overflows 32 bits quickly. Use 64 bits or a modulus.</li>
+<li><strong>Cherry pickup:</strong> two walkers moving together form one DP over (step, row₁, row₂). Never do two separate greedy passes.</li>
+<li><strong>Maximal rectangle:</strong> build histogram heights row by row, then run the Part 2 monotonic-stack histogram on each row: O(RC).</li>
+<li><strong>Triangle:</strong> bottom-up from the base needs only one row and no special cases.</li>
+<li><strong>Four-directional movement</strong> means it isn't a DAG and DP is invalid (it would be cyclic). Use Dijkstra.</li>
+</ul>
+</section>

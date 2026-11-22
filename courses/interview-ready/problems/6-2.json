@@ -1,0 +1,242 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "DP or search?",
+   "statement": "<p>Grid problems.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Minimum path sum, moves right/down:",
+     "options": [
+      "DP in row-major order",
+      "Dijkstra required"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Minimum path sum, moves in 4 directions:",
+     "options": [
+      "Dijkstra",
+      "DP in row-major order"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Is it a DAG?"
+   ],
+   "solution": "<p>Right/down moves form a DAG, so DP works. Four directions form cycles, so use Dijkstra.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Count paths",
+   "statement": "<p>Grid (1 = obstacle) [[0, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [1, 0, 0, 0]].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of right/down paths?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Without any obstacles, a 4 × 4 grid has C(6, 3) paths =",
+     "answer": 20,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Fill row by row."
+   ],
+   "solution": "<p>Rows: [1, 1, 1, 1], [1, 0, 1, 2], [1, 1, 2, 0], [0, 1, 3, 3] → 3.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Min path",
+   "statement": "<p>Grid [[1, 3, 1], [1, 5, 1], [4, 2, 1]].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum path sum?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "1 → 3 → 1 → 1 → 1."
+   ],
+   "solution": "<p>7, along the top row and then down.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Maximal square",
+   "statement": "<p>Matrix rows 11110, 11110, 11111, 01111.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Largest all-1 square's area?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "dp[i][j] means…",
+     "options": [
+      "the side of the largest square with its bottom-right corner at (i, j)",
+      "the count of 1s",
+      "the area so far"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Anchored at a corner."
+   ],
+   "solution": "<p>A 3 × 3 block exists (for example rows 1–3, columns 2–4), so the area is 9.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Dungeon",
+   "statement": "<p>Dungeon [[0, -4], [-6, 10]].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum starting health?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why does a forward max-health DP fail?",
+     "options": [
+      "It ignores the lowest point reached earlier on the path",
+      "It's too slow",
+      "Negative numbers"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Backwards: need at the exit cell = max(1, 1 − 10) = 1."
+   ],
+   "solution": "<p>Right path: 0 → −4 → 10 needs a start of 5 (dips to 1). Down path: 0 → −6 needs 7. Answer 5.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Rolling row",
+   "statement": "<p>Updating <code>dp[j] = g[i][j] + min(dp[j], dp[j−1])</code> left to right in a single array.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Before the update, dp[j] holds…",
+     "options": [
+      "the value for the cell above",
+      "the value for the cell to the left",
+      "garbage"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "dp[j−1] holds…",
+     "options": [
+      "the value for the cell to the left (already this row)",
+      "the cell above-left",
+      "the cell above"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Which cells has the loop already overwritten?"
+   ],
+   "solution": "<p>Left-to-right order makes dp[j−1] the current row and dp[j] the previous row, exactly the two neighbours needed. Square problems also need the diagonal: save it in a variable.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Overflow",
+   "statement": "<p>Unique paths in a 20 × 20 grid without obstacles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "C(38, 19)?",
+     "answer": 35345263800,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fits in 32-bit signed?",
+     "options": [
+      "No",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "About 3.5 × 10¹⁰."
+   ],
+   "solution": "<p>C(38, 19) ≈ 3.53 × 10¹⁰ &gt; 2³¹. Use 64 bits.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Two walkers",
+   "statement": "<p>Cherry pickup: two people walk from the top-left to the bottom-right (right/down) and collect cherries; a shared cell counts once.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Correct approach?",
+     "options": [
+      "One DP over (step, row₁, row₂), moving both walkers together",
+      "Best path greedily, remove its cherries, then the best path again",
+      "BFS"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "States for a 50 × 50 grid (steps × rows × rows ≈ 99 · 50 · 50)?",
+     "answer": 247500,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The greedy two-pass solution fails."
+   ],
+   "solution": "<p>Moving in lockstep, col = step − row, so the state is (step, r₁, r₂): about 2.5 × 10⁵ states with 4 transitions each.</p>"
+  }
+ ]
+}

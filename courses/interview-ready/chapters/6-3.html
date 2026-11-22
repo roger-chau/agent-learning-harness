@@ -1,0 +1,60 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>A set of <strong>items</strong>, each with a <strong>weight</strong> (cost, size, count of zeros…) and maybe a value, a <strong>capacity</strong> or target, and a question about subsets: can we hit the target exactly? What's the maximum value within the capacity? How many ways are there? Partition into equal halves, target sum with ±, coin change, ones and zeroes, and the "last stone weight" variants are all knapsacks in disguise. Recognising the disguise is the skill.</p>
+<p>The capacity has to be <strong>small</strong> (a table over it, roughly 10⁴–10⁶ entries). With huge targets and tiny n (≤ 40), use meet-in-the-middle instead.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: items outside, capacity inside</h2>
+<p>State: dp[c] = the best (or the count, or feasibility) using the items processed so far with capacity c. Process items one at a time. For each, every capacity either uses it or doesn't:</p>
+<p>dp_new[c] = combine(dp_old[c], dp_old[c − w] + v)</p>
+<p>With a single array the <strong>direction of the inner loop</strong> encodes the item rule:</p>
+<ul>
+<li><strong>Downward</strong> (c from high to low): dp[c − w] is still the old value, so each item is used at most once. That's <strong>0/1 knapsack</strong>.</li>
+<li><strong>Upward</strong>: dp[c − w] may already include this item, so items are reusable. That's the <strong>unbounded knapsack</strong>.</li>
+</ul>
+<p>And when <em>counting</em>, the <strong>order of the loops</strong> decides what you count. Items outside counts combinations (each multiset once). Capacity outside counts sequences (order matters).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code># 0/1: each item at most once (DOWNWARD)
+dp = [base] + [init] * C
+for w, v in items:
+    for c in range(C, w - 1, -1):
+        dp[c] = best(dp[c], dp[c - w] + v)
+
+# Unbounded: reuse allowed (UPWARD)
+for w, v in items:
+    for c in range(w, C + 1):
+        dp[c] = best(dp[c], dp[c - w] + v)
+
+# Feasibility as a bitset (Python int or std::bitset)
+reach = 1
+for w in weights: reach |= reach &lt;&lt; w     # 0/1 subset sums in O(n · C / 64)</code></pre>
+<p>Invariant (0/1, after processing item k): dp[c] = the best over subsets of the first k items with total weight ≤ c (or exactly c, depending on the base: "≤" starts every entry at 0, "exactly" starts at −∞ except dp[0]).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: target sum</h2>
+<ol>
+<li><strong>Brute force:</strong> 2ⁿ sign assignments. With n = 20 that's 10⁶, which actually passes. Say so, and then improve, because the follow-up will raise n.</li>
+<li><strong>Memoised search:</strong> state (index, running sum) with sums in [−S, S] gives O(n · S). That's fine, but the state looks awkward.</li>
+<li><strong>Algebra:</strong> let P be the sum of the + numbers and N the sum of the − numbers. Then P − N = target and P + N = S, so <strong>P = (S + target) / 2</strong>.</li>
+<li><strong>Reduction:</strong> the answer is the number of subsets with sum P, a 0/1 knapsack <em>count</em> with a downward inner loop. If S + target is odd or |target| &gt; S, the answer is 0.</li>
+<li><strong>Test:</strong> zeros ([0, 0, 1] and target 1 gives 4, since each 0 can be ±), target 0, and a negative target.</li>
+</ol>
+<p>The move: <strong>do algebra on the objective before choosing a state</strong>. Signs, differences ("minimise |A − B|" means "get a subset as close to S/2 as possible") and complements all reduce to standard knapsacks.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Loop direction</strong> (0/1 versus unbounded) and <strong>loop order</strong> (combinations versus permutations) are the two classic bugs. State them before you code.</li>
+<li><strong>"Exactly c" versus "at most c":</strong> the base cases differ. Get them wrong and an infeasible state looks feasible.</li>
+<li><strong>Last stone weight II:</strong> minimise |A − B| over a two-way split. That's subset sums closest to S/2.</li>
+<li><strong>Bounded knapsack</strong> (item i at most kᵢ times): binary splitting into 1, 2, 4, … copies reduces it to 0/1.</li>
+<li><strong>Combination sum IV</strong> (count ordered sequences): capacity outside, items inside.</li>
+<li><strong>Pseudo-polynomial:</strong> O(n · C) is polynomial in the <em>value</em> of C, not its number of bits. Knapsack is NP-hard, so if C is 10⁹ the table is impossible. Mention this; quant and systems interviewers like hearing it.</li>
+</ul>
+</section>

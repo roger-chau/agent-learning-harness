@@ -1,0 +1,63 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "0/1 knapsack's capacity loop runs…",
+   "options": [
+    "downward",
+    "upward"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Counting combinations of coins: the outer loop is over…",
+   "options": [
+    "coins",
+    "amounts"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Target sum reduces to…",
+   "options": [
+    "counting subsets with sum (S + target)/2",
+    "LIS",
+    "edit distance"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Knapsack DP is…",
+   "options": [
+    "pseudo-polynomial",
+    "polynomial in the bit length",
+    "exponential always"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "A bitset speeds up subset-sum feasibility by…",
+   "options": [
+    "processing 64 sums per machine word",
+    "sorting",
+    "hashing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

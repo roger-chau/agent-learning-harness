@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Grid DP is valid when…",
+   "options": [
+    "moves form a DAG (e.g. right/down)",
+    "any moves",
+    "the grid is square"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Maximal square's transition:",
+   "options": [
+    "1 + min(up, left, diagonal)",
+    "up + left",
+    "max of the neighbours"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "When a forward state needs two competing numbers…",
+   "options": [
+    "try the backward direction",
+    "add more loops",
+    "use a heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Rolling one row needs…",
+   "options": [
+    "care with update order (and saving the diagonal if needed)",
+    "two full tables",
+    "recursion"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Padding the table helps by…",
+   "options": [
+    "removing boundary checks",
+    "saving memory",
+    "sorting"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

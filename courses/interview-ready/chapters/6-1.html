@@ -1,0 +1,66 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Dynamic programming fits when a problem asks for the <strong>best</strong> value, the <strong>number of ways</strong>, or <strong>whether it's possible</strong>, and the brute force makes a sequence of choices whose futures overlap. Two tests settle it:</p>
+<ul>
+<li><strong>Optimal substructure:</strong> an optimal answer is built from optimal answers to smaller versions of the same question.</li>
+<li><strong>Overlapping subproblems:</strong> the brute-force recursion asks the same smaller question many times. Draw the recursion tree for a small input and look for repeated nodes.</li>
+</ul>
+<p>Two common traps: if a greedy works you don't need DP (but prove it, Part 5), and if subproblems never repeat, plain recursion or divide and conquer is enough.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: the five questions</h2>
+<p>Every DP solution answers five questions. Answer them <em>in words</em>, out loud, before writing code. That turns DP from guesswork into a procedure.</p>
+<ol>
+<li><strong>State:</strong> what does dp[i] mean, in one exact sentence? ("dp[i] = the fewest coins summing to i.")</li>
+<li><strong>Transition:</strong> how is dp[i] built from smaller states? Usually by asking "what was the <em>last</em> choice?"</li>
+<li><strong>Base cases:</strong> the smallest states, answered directly.</li>
+<li><strong>Order:</strong> compute each state after everything it depends on.</li>
+<li><strong>Answer:</strong> which state, or which max over states, is the final answer?</li>
+</ol>
+<p>Two implementations of the same idea: <strong>top-down</strong> (recursion plus a memo; fast to write and only visits reachable states) and <strong>bottom-up</strong> (loops over a table; no recursion limit, and easy to shrink to O(1) or O(row) memory). In Python interviews, write the top-down version when you're unsure of the order, and convert if depth or speed matters.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>from functools import cache
+@cache
+def f(i):                       # state: one sentence, written above the function
+    if i &lt; 0: return BAD        # base cases
+    if i == 0: return BASE
+    return best(f(i - step) + cost(step) for step in choices(i))   # last choice
+answer = f(n)
+
+# Bottom-up: the same recurrence, in dependency order
+dp = [BASE] + [INIT] * n
+for i in range(1, n + 1):
+    for step in choices(i):
+        dp[i] = best(dp[i], dp[i - step] + cost(step))</code></pre>
+<p>Invariant: when dp[i] is computed, every dp[j] it reads is final. <strong>Space:</strong> if dp[i] reads only dp[i−1] and dp[i−2], keep two variables (house robber).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: longest increasing subsequence</h2>
+<ol>
+<li><strong>State, first attempt:</strong> dp[i] = the length of the LIS <em>ending exactly at i</em>. Why "ending at"? Because extending a subsequence needs to know its last element. A state of "the best within the first i elements" loses that information.</li>
+<li><strong>Transition:</strong> dp[i] = 1 + max(dp[j] for j &lt; i if a[j] &lt; a[i]), with base 1. The answer is max(dp), because the LIS can end anywhere. That's O(n²).</li>
+<li><strong>Bottleneck:</strong> the inner max scans all j. For n = 10⁵ that's 10¹⁰ operations.</li>
+<li><strong>Change the state:</strong> for each <em>length</em> L, keep the <strong>smallest tail</strong> of any increasing subsequence of length L. A smaller tail dominates a larger one: anything that extends the larger also extends the smaller.</li>
+<li><strong>Structure:</strong> tails is strictly increasing (prove it by contradiction), so finding where x goes is a binary search, and each x updates exactly one entry. That's O(n log n).</li>
+<li><strong>Test:</strong> strictly increasing (n), all equal (1, so use bisect_left because the subsequence must be strictly increasing), and strictly decreasing (1).</li>
+</ol>
+<p>The lessons: <strong>"ending at i" states</strong> keep the information a transition needs, and <strong>dominance</strong> ("this partial solution is never worse than that one") lets you throw states away, often turning O(n²) into O(n log n).</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>The sentinel versus infinity:</strong> in coin change, amount + 1 means impossible and avoids float('inf') and int overflow.</li>
+<li><strong>Answer is max over all states</strong> (LIS, maximum subarray), not the last state. Read your state sentence to decide.</li>
+<li><strong>Memo with mutable arguments:</strong> @cache needs hashable arguments, so pass indices, not lists.</li>
+<li><strong>Recursion depth:</strong> top-down on n = 10⁵ overflows in Python. Go bottom-up.</li>
+<li><strong>Decode ways:</strong> dp[i] = dp[i−1] (if s[i−1] ≠ '0') + dp[i−2] (if s[i−2:i] is 10–26). The zeros are the entire difficulty.</li>
+<li><strong>House robber II</strong> (circular): run the linear version twice, excluding the first house, then the last.</li>
+<li><strong>Maximum subarray (Kadane):</strong> dp[i] = max(a[i], dp[i−1] + a[i]). It's a one-dimensional DP that looks like a greedy.</li>
+</ul>
+</section>

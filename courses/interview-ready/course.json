@@ -857,14 +857,149 @@
    "id": "p6",
    "n": 6,
    "title": "Dynamic programming I",
-   "summary": "State design: 1-D, grid, knapsack, LCS and edit distance.",
+   "summary": "The five questions (state, transition, base, order, answer) applied to 1-D, grid, knapsack and two-sequence DP.",
    "items": [
     {
      "type": "chapter",
      "id": "6-1",
-     "title": "Dynamic programming I",
-     "summary": "State design: 1-D, grid, knapsack, LCS and edit distance.",
-     "status": "planned"
+     "title": "One-dimensional DP",
+     "summary": "The five questions; last-choice transitions; ending-at states and dominance.",
+     "coding": [
+      "house-robber",
+      "coin-change",
+      "word-break",
+      "longest-increasing-subsequence"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "substructure and overlap"
+      ],
+      [
+       "The core idea",
+       "the five questions"
+      ],
+      [
+       "The invariant and template",
+       "top-down and bottom-up"
+      ],
+      [
+       "A thinking trace",
+       "longest increasing subsequence"
+      ],
+      [
+       "Traps and variations",
+       "sentinels, depth, decode ways"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "6-2",
+     "title": "Grid DP",
+     "summary": "DAG grids, anchored states, rolling rows, and solving backwards.",
+     "coding": [
+      "unique-paths-obstacles",
+      "min-path-sum",
+      "maximal-square",
+      "dungeon-game"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "one-directional moves"
+      ],
+      [
+       "The core idea",
+       "anchor, direction, memory"
+      ],
+      [
+       "The invariant and template",
+       "rolling rows"
+      ],
+      [
+       "A thinking trace",
+       "dungeon game"
+      ],
+      [
+       "Traps and variations",
+       "overflow, two walkers"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "6-3",
+     "title": "Knapsack",
+     "summary": "Items outside, capacity inside: loop direction and loop order decide the semantics.",
+     "coding": [
+      "partition-equal-subset",
+      "target-sum",
+      "coin-change-ii",
+      "ones-and-zeroes"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "items, capacity, subsets"
+      ],
+      [
+       "The core idea",
+       "direction and order"
+      ],
+      [
+       "The invariant and template",
+       "0/1, unbounded, bitset"
+      ],
+      [
+       "A thinking trace",
+       "target sum"
+      ],
+      [
+       "Traps and variations",
+       "bases, pseudo-polynomial"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "6-4",
+     "title": "Two-sequence DP",
+     "summary": "Prefix pairs and the last characters: LCS, edit distance, palindromes, counting.",
+     "coding": [
+      "longest-common-subsequence",
+      "edit-distance",
+      "longest-palindromic-subsequence",
+      "distinct-subsequences"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "aligning two sequences"
+      ],
+      [
+       "The core idea",
+       "diagonal, above, left"
+      ],
+      [
+       "The invariant and template",
+       "the recurrence table"
+      ],
+      [
+       "A thinking trace",
+       "edit distance"
+      ],
+      [
+       "Traps and variations",
+       "indices, substrings, regex"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p6-checkpoint",
+     "title": "Part 6 checkpoint",
+     "summary": "Dynamic programming I: design the state and justify it."
     }
    ]
   },

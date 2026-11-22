@@ -1,0 +1,243 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Disguises",
+   "statement": "<p>Which are knapsack problems?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "Partition into two equal-sum subsets",
+      "Assign ± signs to hit a target",
+      "Longest increasing subsequence",
+      "Choose strings within a budget of zeros and ones"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Items, capacity, subset."
+   ],
+   "solution": "<p>LIS is a sequence DP; the others choose subsets under a capacity.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Loop direction",
+   "statement": "<p>One-array knapsack.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Each item at most once:",
+     "options": [
+      "capacity loop downward",
+      "capacity loop upward"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Unlimited copies:",
+     "options": [
+      "upward",
+      "downward"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Does dp[c − w] already include this item?"
+   ],
+   "solution": "<p>Downward reads old values (0/1); upward reads values that may already use the item (unbounded).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Partition",
+   "statement": "<p>nums = [3, 1, 5, 9, 2].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Target half-sum?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Possible?",
+     "options": [
+      "Yes",
+      "No"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Is there a subset summing to 10?"
+   ],
+   "solution": "<p>9 + 1 = 10, so yes: {9, 1} versus {3, 5, 2}.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Target sum algebra",
+   "statement": "<p>nums = [1, 2, 1, 3], target = 3.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "S?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "P = (S + target)/2?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Number of ways?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Count subsets summing to 5."
+   ],
+   "solution": "<p>Subsets with sum 5: {2, 3} and {1, 1, 3}, so 2 ways.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Combinations or permutations?",
+   "statement": "<p>Amount 6, coins [1, 2, 3].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Combinations (coins outer loop)?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Ordered sequences (amount outer loop)?",
+     "answer": 24,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Loop order decides what is counted."
+   ],
+   "solution": "<p>7 multisets ({1⁶}, {1⁴2}, {1²2²}, {2³}, {1³3}, {1 2 3}, {3²}) versus 24 compositions of 6 into parts from {1, 2, 3}.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Zeros",
+   "statement": "<p>Target sum with nums = [0, 0, 1], target = 1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ways?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "±0 counts twice."
+   ],
+   "solution": "<p>Each zero can be + or −: 2 × 2 = 4. The DP's dp[s] += dp[s − 0] handles it (downward, a zero doubles the counts).</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Pseudo-polynomial",
+   "statement": "<p>Subset sum with n = 100 items and target 10¹².</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Is the O(n · target) table feasible?",
+     "options": [
+      "No: 10¹⁴ cells",
+      "Yes"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "With n = 40 and huge values?",
+     "options": [
+      "Meet in the middle: 2 × 2²⁰ sums, sort and match",
+      "Table DP",
+      "Greedy"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Knapsack is polynomial in the value, not the bit length."
+   ],
+   "solution": "<p>The table depends on the target's magnitude. Meet-in-the-middle is O(2^(n/2) · n).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Ones and zeroes",
+   "statement": "<p>strs [\"10\", \"0001\", \"111001\", \"1\", \"0\"], m = 5 zeros, n = 3 ones.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum strings?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Item weights?",
+     "options": [
+      "(zeros, ones) per string, value 1",
+      "string length",
+      "number of 1s only"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Try {10, 0001, 1, 0}."
+   ],
+   "solution": "<p>{\"10\", \"0001\", \"1\", \"0\"} uses 5 zeros and 3 ones: 4 strings.</p>"
+  }
+ ]
+}

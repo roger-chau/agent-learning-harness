@@ -1,0 +1,227 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Moves",
+   "statement": "<p>In two-sequence DP over (i, j):</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Matching a[i−1] with b[j−1] reads…",
+     "options": [
+      "dp[i−1][j−1]",
+      "dp[i−1][j]",
+      "dp[i][j−1]"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Deleting a[i−1] reads…",
+     "options": [
+      "dp[i−1][j]",
+      "dp[i][j−1]",
+      "dp[i−1][j−1]"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Diagonal, above, left."
+   ],
+   "solution": "<p>Diagonal = both consumed; above = a's character consumed; left = b's.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "LCS",
+   "statement": "<p>a = \"AGGTAB\", b = \"GXTXAYB\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "LCS length?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "GTAB."
+   ],
+   "solution": "<p>\"GTAB\": 4.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Edit distance",
+   "statement": "<p>Compute the distances.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "\"sunday\" → \"saturday\"?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "\"horse\" → \"ros\"?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "\"\" → \"abc\"?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Insert 'a', 't'; substitute 'n' → 'r'."
+   ],
+   "solution": "<p>3, 3, 3.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Palindromic subsequence",
+   "statement": "<p>s = \"character\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "LPS length?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Equivalent to…",
+     "options": [
+      "LCS(s, reverse(s))",
+      "LIS(s)",
+      "edit distance to reverse(s)"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "\"carac\"."
+   ],
+   "solution": "<p>\"carac\" (c, a, r, a, c): 5.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Distinct subsequences",
+   "statement": "<p>s = \"aabb\", t = \"ab\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ways?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "2 a's × 2 b's after them."
+   ],
+   "solution": "<p>Each of the 2 a's pairs with each of the 2 later b's: 4.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Substring or subsequence?",
+   "statement": "<p>a = \"abcdxyz\", b = \"xyzabcd\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Longest common substring?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Longest common subsequence?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Contiguous versus not."
+   ],
+   "solution": "<p>Substring \"abcd\" = 4 (reset to 0 on a mismatch). Subsequence is also 4 here; they differ in general.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Cost",
+   "statement": "<p>Two strings of length 10⁴ each.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Table cells (millions)?",
+     "answer": 100,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Memory with rolling rows?",
+     "options": [
+      "O(m) ≈ 10⁴ entries",
+      "10⁸ entries"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "10⁴ × 10⁴."
+   ],
+   "solution": "<p>10⁸ cells: fine in C++ (well under a second), slow in pure Python. Rolling rows keep memory at O(m), but reconstruction needs the full table or Hirschberg.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Exhaustive cases",
+   "statement": "<p>Why are the three edit-distance moves exhaustive?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "In an optimal script, a's last character is either deleted, or kept and aligned with b's last (equal or substituted), or b's last was inserted",
+      "Because there are three operations",
+      "By symmetry"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Case-split on the last characters."
+   ],
+   "solution": "<p>A recurrence is only correct if its cases cover every possibility, and, for counting, are disjoint.</p>"
+  }
+ ]
+}

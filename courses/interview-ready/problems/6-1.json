@@ -1,0 +1,255 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "The five questions",
+   "statement": "<p>Coin change (fewest coins).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "State?",
+     "options": [
+      "dp[a] = the fewest coins summing to exactly a",
+      "dp[a] = the coins used so far",
+      "dp[i] = the i-th coin"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Transition?",
+     "options": [
+      "dp[a] = 1 + min over coins c ≤ a of dp[a − c]",
+      "dp[a] = dp[a − 1] + 1",
+      "dp[a] = max of the coins"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Base?",
+     "options": [
+      "dp[0] = 0",
+      "dp[1] = 1",
+      "dp[0] = 1"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "What is the last coin?"
+   ],
+   "solution": "<p>State, transition by the last coin, and base dp[0] = 0. The answer is dp[amount], or −1 if it is still the sentinel.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Robber",
+   "statement": "<p>House robber.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "nums = [2, 1, 1, 2]?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "nums = [6, 1, 2, 7, 3]?",
+     "answer": 13,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Alternate houses aren't always optimal."
+   ],
+   "solution": "<p>[2, 1, 1, 2]: take both ends = 4 (the alternating choice gives 3). [6, 1, 2, 7, 3]: 6 + 7 = 13.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Greedy fails",
+   "statement": "<p>Coins {1, 3, 4}, amount 6.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Greedy (largest first) uses how many coins?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Optimal?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "4 + 1 + 1 versus 3 + 3."
+   ],
+   "solution": "<p>Greedy takes 4, 1, 1 for 3 coins; DP finds 3 + 3 = 2 coins.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Coin table",
+   "statement": "<p>Coins {3, 7}.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Fewest coins for 20?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For 11 (−1 if impossible)?",
+     "answer": -1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Largest amount that is impossible (the Frobenius number, 3·7 − 3 − 7)?",
+     "answer": 11,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "20 = 7 + 7 + 3 + 3."
+   ],
+   "solution": "<p>20 needs 4 coins. 11 is impossible: neither 11, 4 nor −3 is a multiple of 3. The largest impossible amount is 11.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "LIS",
+   "statement": "<p>nums = [3, 1, 8, 2, 5, 9, 4, 6].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "LIS length?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "The final tails array?",
+     "options": [
+      "[1, 2, 4, 6]",
+      "[1, 2, 5, 9]",
+      "[3, 8, 9]"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Run bisect_left on each x."
+   ],
+   "solution": "<p>Length 4. tails evolves 3 → 1 → 1 8 → 1 2 → 1 2 5 → 1 2 5 9 → 1 2 4 9 → 1 2 4 6. tails isn't necessarily a real subsequence (here it happens to be).</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Top-down or bottom-up?",
+   "statement": "<p>n = 10⁵, dp[i] depends on dp[i−1] and dp[i−2], in Python.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best implementation?",
+     "options": [
+      "Bottom-up with two variables",
+      "Recursive with @cache",
+      "Either is fine"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Recursion depth."
+   ],
+   "solution": "<p>Top-down would recurse 10⁵ deep, past Python's limit. Bottom-up is O(1) memory.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Decode ways",
+   "statement": "<p>Map 'A' to 1 … 'Z' to 26 and count decodings.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "\"226\"?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "\"2101\"?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "\"06\"?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "dp[i] = dp[i−1] if s[i−1] ≠ '0', + dp[i−2] if s[i−2:i] is in 10..26."
+   ],
+   "solution": "<p>226: 2 2 6, 22 6, 2 26 → 3. 2101: only 2 10 1 → 1. 06: a leading zero → 0.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Dominance",
+   "statement": "<p>Why does the O(n log n) LIS keep only the smallest tail for each length?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "Any element that extends a subsequence with a larger tail also extends one with a smaller tail",
+      "Because of sorting",
+      "It's arbitrary"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Compare two subsequences of the same length."
+   ],
+   "solution": "<p>A smaller tail dominates: it is never worse for the future. Throwing dominated states away is a general DP speed-up.</p>"
+  }
+ ]
+}
