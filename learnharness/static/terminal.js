@@ -38,11 +38,13 @@
     }).join("\n");
   }
   function highlightJs(src, nested) {
+    // A fresh regex per call: this function recurses (template strings are highlighted with a
+    // nested call), and sharing one global regex's lastIndex made the outer loop rescan forever.
+    const re = new RegExp(TOKEN.source, TOKEN.flags);
     let out = "", last = 0, m;
-    TOKEN.lastIndex = 0;
-    while ((m = TOKEN.exec(src))) {
+    while ((m = re.exec(src))) {
       out += esc(src.slice(last, m.index));
-      last = TOKEN.lastIndex;
+      last = re.lastIndex;
       if (m[1]) out += `<span class="tk-com">${esc(m[1])}</span>`;
       else if (m[2]) out += m[2][0] === "`" && !nested ? highlightTemplate(m[2]) : `<span class="tk-str">${esc(m[2])}</span>`;
       else if (m[3]) out += `<span class="tk-num">${esc(m[3])}</span>`;

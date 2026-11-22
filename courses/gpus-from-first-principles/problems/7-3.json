@@ -1,0 +1,300 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "PCIe time",
+   "statement": "<p>The simulator's PCIe: 25 GB/s per direction plus 1 µs per copy.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Copy 100 MB host to device, in ms?",
+     "answer": 4.001,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "In 10 chunks, total, in ms?",
+     "answer": 4.01,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Bytes / bandwidth, plus fixed cost per copy."
+   ],
+   "solution": "<p>(a) 4.001 ms. (b) 4.010 ms: chunking costs only the per-copy overhead.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Serial versus pipelined",
+   "statement": "<p>Copy in 4 ms, compute 3 ms, copy out 4 ms for the whole job. Two copy engines (one per direction), one compute engine.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Serial time, in ms?",
+     "answer": 11.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Ideal pipelined time with many chunks, in ms?",
+     "answer": 4.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "With 4 chunks (fill + steady + drain ≈ max + (sum − max)/4), in ms?",
+     "answer": 5.75,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The slowest engine sets the steady state."
+   ],
+   "solution": "<p>(a) 11 ms. (b) 4 ms. (c) about 5.75 ms: with 4 chunks, the first chunk's other stages and the last chunk's drain add a quarter of the rest.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "One copy engine",
+   "statement": "<p>Same job on a GPU with a single copy engine shared by both directions.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ideal pipelined time, in ms?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "The bottleneck is…",
+     "options": [
+      "compute",
+      "the copy engine: 8 ms of copies must serialise"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Uploads and downloads take turns."
+   ],
+   "solution": "<p>8 ms of copies through one engine; compute (3 ms) hides behind them. Lab 7 prints your card's engine count for exactly this reason.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Pinned memory",
+   "statement": "<p>Pageable host memory goes through a staging copy into a pinned buffer before DMA.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why can't the GPU DMA directly from pageable memory?",
+     "options": [
+      "It's too slow",
+      "The OS may move or swap pageable pages; DMA needs physical pages that stay put",
+      "Permissions"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Can cudaMemcpyAsync from pageable memory overlap with kernels?",
+     "options": [
+      "Yes, fully",
+      "Generally no: it behaves synchronously through the staging buffer"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Page locking."
+   ],
+   "solution": "<p>DMA needs pinned (page-locked) memory; from pageable memory the driver stages synchronously, killing overlap. Pin the buffers you stream.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "How many chunks",
+   "statement": "<p>Per chunk overhead: 1 µs per copy (2 copies) + 5 µs launch. Total data stages 4 + 3 + 4 ms as before, with two copy engines.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Approximate time with k = 8 chunks, in ms?",
+     "answer": 4.931,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With k = 1,000?",
+     "answer": 11.007,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Time ≈ max + (sum − max)/k + k × overhead."
+   ],
+   "solution": "<p>(a) 4.93 ms. (b) 11.01 ms: too many chunks drown in overhead (and small kernels stop filling the GPU). The optimum is near $\\sqrt{(\\text{sum} - \\max)/\\text{overhead}} = \\sqrt{7/0.007} \\approx 32$.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 1,
+   "title": "Stream semantics",
+   "statement": "<p>Operations in streams.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which are true?",
+     "options": [
+      "Work within one stream runs in order",
+      "Work in different streams may overlap",
+      "Two kernels in different streams always run at the same time",
+      "The legacy default stream synchronises with other blocking streams"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "May, not must."
+   ],
+   "solution": "<p>Streams allow overlap; whether it happens depends on resources. The legacy default stream implicitly orders with other streams, a common source of accidental serialisation (use per-thread default streams or non-blocking streams).</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "A camera pipeline",
+   "statement": "<p>Frames of 8 MB arrive at 60 fps. Upload at 12 GB/s, processing 6 ms on the GPU, results 1 MB downloaded.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Frame period, in ms?",
+     "answer": 16.666666666666668,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Upload time per frame, in ms?",
+     "answer": 0.6666666666666666,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Does a 2-stream pipeline keep up at 60 fps?",
+     "options": [
+      "Yes: every stage is shorter than the 16.7 ms period",
+      "No"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Throughput is set by the slowest stage."
+   ],
+   "solution": "<p>Period 16.7 ms; upload 0.67 ms, compute 6 ms, download ≈ 0.08 ms: all under the period, so a pipeline sustains 60 fps with latency ≈ the sum of stages (~6.8 ms).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Events between streams",
+   "statement": "<p>Stream A produces a buffer that a kernel in stream B consumes.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Correct synchronisation?",
+     "options": [
+      "cudaDeviceSynchronize between them",
+      "Record an event in A after the producer; cudaStreamWaitEvent(B, event) before the consumer",
+      "Nothing: streams share memory"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Fine-grained, GPU-side."
+   ],
+   "solution": "<p>Events express the dependency on the GPU without stalling the host or other streams; a device-wide sync works but destroys overlap.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Overlap ceiling",
+   "statement": "<p>Ci = 2 ms, T = 10 ms, Co = 2 ms, many chunks, two copy engines.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Pipelined time, in ms?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Speedup over serial?",
+     "answer": 1.4,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Compute dominates."
+   ],
+   "solution": "<p>10 ms, 1.4×: when compute dominates, copies hide entirely, and the only further gain is a faster kernel. Overlap is worth most when the stages are balanced.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "CUDA Graphs",
+   "statement": "<p>A pipeline launches 200 small operations per step.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "CUDA Graphs mainly reduce…",
+     "options": [
+      "kernel execution time",
+      "per-launch CPU overhead, by submitting a recorded graph at once",
+      "PCIe time"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Record once, replay many times."
+   ],
+   "solution": "<p>Launch overhead. With many tiny operations per step it can be the difference between launch-bound and GPU-bound.</p>"
+  }
+ ]
+}

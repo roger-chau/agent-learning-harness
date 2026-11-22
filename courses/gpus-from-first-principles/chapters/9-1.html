@@ -41,3 +41,30 @@
 <li>Nondeterministic atomics are fine for many uses (histograms of integers are exact). The problem is floating-point atomics.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: is this difference a bug?</h3>
+<p><strong>Report:</strong> "My GPU softmax differs from NumPy's by up to 3 × 10⁻⁷ in rows of 4,096."</p>
+<p><strong>Check the scale:</strong> outputs are around 1/4096 ≈ 2.4 × 10⁻⁴ for a flat row, so 3 × 10⁻⁷ absolute is about 10⁻³ relative. FP32 unit roundoff is 6 × 10⁻⁸; a sum of 4,096 exponentials has error up to ~4096 u in the worst case (2.4 × 10⁻⁴ relative) and typically ~√4096 u (4 × 10⁻⁶). 10⁻³ relative is far above both: <em>this is a bug</em>, or NumPy is computing in FP64 while the GPU uses an approximate exponential (<code>__expf</code>, a few ULPs) and an approximate reciprocal. Check those before trusting either side.</p>
+<p><strong>The method:</strong> convert the difference to relative error or ULPs, compare it with what the operation's error analysis allows, and only then decide.</p>
+
+<h3>Example 2: catastrophic cancellation in a GPU reduction</h3>
+<p><strong>Task:</strong> compute $\sum x_i - \sum y_i$ where both sums are ≈ 10⁶ and their difference is ≈ 1, in FP32.</p>
+<p><strong>Each sum</strong> has a relative error of maybe 10⁻⁷ (good tree reduction): an absolute error of ≈ 0.1. The difference inherits both: ≈ 0.14 absolute on a result of 1, a 14% error, even though each sum was accurate to 7 digits.</p>
+<p><strong>Fix:</strong> reduce the differences $x_i - y_i$ directly (if they pair up), or accumulate in FP64, or use compensated summation. The general rule: subtracting nearly equal computed quantities amplifies their relative errors by the ratio of their size to the result's.</p>
+
+<h3>Example 3: making a reduction reproducible across grid sizes</h3>
+<p><strong>Problem:</strong> a sum's last bits change when the grid size changes, because each block's share (and so the tree) depends on the grid.</p>
+<p><strong>Design:</strong> fix a chunk size C independent of the grid (say 4,096 elements). Chunk k always covers elements [kC, (k+1)C) and is reduced with a fixed tree. Blocks take chunks in any order, and write the chunk sums to <code>partial[k]</code>. A final pass sums partials with a fixed tree. The tree now depends only on n and C, so any grid size gives identical bits. The cost is a slightly larger partials array. This is the approach of "reproducible" BLAS reductions, and what Lab 9's "going further" asks for.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> D. Goldberg, "What Every Computer Scientist Should Know About Floating-Point Arithmetic", <em>ACM Computing Surveys</em>, 1991, sections 1–2.</li>
+<li><strong>Required:</strong> N. Higham, <em>Accuracy and Stability of Numerical Algorithms</em> (2nd ed.), Chapter 4 (summation).</li>
+<li><strong>Optional:</strong> NVIDIA, "Floating Point and IEEE 754 Compliance for NVIDIA GPUs" (whitepaper).</li>
+<li><strong>Optional:</strong> PyTorch documentation, "Reproducibility".</li>
+</ul>
+</section>

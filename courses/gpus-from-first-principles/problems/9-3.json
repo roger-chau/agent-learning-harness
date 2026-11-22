@@ -1,0 +1,301 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Cube law",
+   "statement": "<p>Dynamic power P ∝ CV²f, with voltage roughly proportional to frequency.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Power ratio for 1.2× the clock?",
+     "answer": 1.7279999999999998,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Energy per operation ratio (P/f)?",
+     "answer": 1.44,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "P ∝ f³; energy per op ∝ f²."
+   ],
+   "solution": "<p>1.73× the power for 1.2× the speed: each operation costs 1.44× the energy. Boost clocks buy speed at a steep energy price.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Memory-bound at lower clocks",
+   "statement": "<p>A memory-bound kernel runs 10 ms at 1.8 GHz using 200 W, of which 80 W is static and memory. Lowering the core clock to 1.2 GHz keeps it at 10 ms (memory-bound).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Dynamic core power at 1.8 GHz, in W?",
+     "answer": 120,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "At 1.2 GHz (cube law)?",
+     "answer": 35.55555555555555,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Energy saved per run, in J?",
+     "answer": 0.8444444444444446,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Time unchanged; dynamic power scales with f³."
+   ],
+   "solution": "<p>(b) 35.6 W. (c) 0.84 J per run, 42% of the energy, for free. Memory-bound workloads should run at lower clocks.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Data movement energy",
+   "statement": "<p>Horowitz's 45 nm estimates: FP32 multiply 3.7 pJ, add 0.9 pJ, 32-bit SRAM read 5 pJ, 32-bit DRAM read 640 pJ.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "DRAM read / FMA (multiply + add) energy?",
+     "answer": 139.13043478260872,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Energy for SAXPY per element (2 DRAM reads, 1 write ≈ 3 accesses, 1 FMA), in pJ?",
+     "answer": 1924.6,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Data movement dominates."
+   ],
+   "solution": "<p>(a) ≈ 139×. (b) ≈ 1925 pJ, 99.8% of it moving data. Energy efficiency is reuse, exactly like performance.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Power-limited throughput",
+   "statement": "<p>A GPU with a 300 W limit runs a tensor kernel. At 1.98 GHz it would draw 400 W.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Clock that fits 300 W, if power ∝ f³ (in GHz)?",
+     "answer": 1.7989493869038182,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fraction of the advertised peak achieved, in %?",
+     "answer": 90.85602964160698,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "f ∝ P^(1/3)."
+   ],
+   "solution": "<p>(a) 1.80 GHz, (b) 91% of peak. Heavy tensor kernels are often power-limited, not compute-limited; the spec peak assumes a clock you can't hold.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 1,
+   "title": "Benchmark hygiene",
+   "statement": "<p>Comparing two kernels on a laptop GPU.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "What helps?",
+     "options": [
+      "Lock clocks (if allowed) or record them",
+      "Warm up until the clock and temperature stabilise",
+      "Interleave runs",
+      "Run each version once, cold"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Clocks drift with temperature."
+   ],
+   "solution": "<p>Stable clocks, warm-up and interleaving. Single cold runs measure the boost transient.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Energy-optimal clock",
+   "statement": "<p>A compute-bound kernel: time ∝ 1/f, dynamic power ∝ f³, static power 50 W. At f = 1, dynamic power is 100 W and time 1 s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Energy at f = 1, in J?",
+     "answer": 150,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Energy at f = 0.7?",
+     "answer": 120.42857142857142,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Energy-minimising f (solve d/df[(50 + 100f³)/f] = 0)?",
+     "answer": 0.6299605249474366,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "E(f) = (P_static + k f³)/f."
+   ],
+   "solution": "<p>(a) 150 J. (b) 120.4 J. (c) $f^3 = 50/200$, $f = 0.630$: below that, static power over the longer runtime dominates. The energy-optimal clock is well below the fastest.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Thermal throttling",
+   "statement": "<p>Lab 9's 20-second run: first 2 s at 7.1 TFLOP/s, last 2 s at 6.2 TFLOP/s, SM clock 1.95 → 1.71 GHz, temperature 62 → 83 °C.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Throughput loss, in %?",
+     "answer": 12.676056338028163,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Clock ratio?",
+     "answer": 0.8769230769230769,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Compare with the clock drop."
+   ],
+   "solution": "<p>(a) 12.7%, (b) 0.877: throughput tracks the clock almost exactly, as it should for a compute-bound kernel. A benchmark run only in the first 2 s would overstate sustained performance by 15%.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Performance per watt",
+   "statement": "<p>GPU A: 100 TFLOP/s at 400 W. GPU B: 60 TFLOP/s at 200 W.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "A's GFLOP/s per W?",
+     "answer": 250,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "B's?",
+     "answer": 300,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "TFLOP/s / W × 1000."
+   ],
+   "solution": "<p>A 250, B 300 GFLOP/s per W. For a power- or cooling-limited datacenter (or a battery), B does more work per joule even though A is faster.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "What DVFS reacts to",
+   "statement": "<p>A GPU lowers its clock when…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "the power limit is reached",
+      "the temperature limit is reached",
+      "the kernel is memory-bound (some GPUs lower clocks under low core utilisation)",
+      "the kernel uses FP32"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Limits and utilisation."
+   ],
+   "solution": "<p>Power and thermal limits, and on many GPUs also low utilisation. The data type itself doesn't, though heavy tensor work hits power limits sooner.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Embedded budget",
+   "statement": "<p>A Jetson-class module in a 15 W mode runs inference at 30 fps using 12 W.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Energy per frame, in mJ?",
+     "answer": 400.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Frames per joule?",
+     "answer": 2.5,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Power / frame rate."
+   ],
+   "solution": "<p>400 mJ per frame, 2.5 frames per joule. On battery-powered systems this, not latency, is often the spec.</p>"
+  }
+ ]
+}

@@ -36,3 +36,32 @@
 <li>Overlapping only helps if each engine has work: a compute-bound pipeline gains little from hiding copies that are already short.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: drawing the timeline before writing code</h3>
+<p><strong>Job:</strong> 4 chunks, each 1 ms up, 1.5 ms compute, 1 ms down; two copy engines, one compute engine.</p>
+<pre>up:      [c0][c1][c2][c3]
+compute:     [ c0 ][ c1 ][ c2 ][ c3 ]
+down:              [c0]  [c1]  [c2]  [c3]
+time:    0   1   2.5  4    5.5   7  8</pre>
+<p>Compute is the slowest stage (1.5 ms), so after the first upload the compute engine is never idle: total = 1 (first upload) + 4 × 1.5 + 1 (last download) = 8 ms, against 14 ms serial. Drawing this before writing code tells you the number of streams needed (enough that chunk k+1's upload isn't queued behind chunk k's work: two or three), and what to expect in nsys.</p>
+
+<h3>Example 2: the accidental serialisation</h3>
+<p><strong>Code:</strong> chunks are issued on streams s0..s3, but the host buffer comes from <code>malloc</code>, and one <code>cudaMemset</code> is called on the default stream inside the loop.</p>
+<p><strong>Effect:</strong> pageable copies are staged synchronously (no copy/compute overlap), and the legacy default stream synchronises with all blocking streams on every iteration. The nsys timeline shows everything in a single file; the 4 streams bought nothing. <strong>Fix:</strong> <code>cudaMallocHost</code> for the buffers, <code>cudaMemsetAsync</code> on the chunk's own stream (or streams created with <code>cudaStreamNonBlocking</code>). Two lines, and the overlap appears.</p>
+
+<h3>Example 3: latency versus throughput in a serving pipeline</h3>
+<p><strong>Setup.</strong> Requests arrive one at a time; each needs a 2 ms upload, 6 ms of compute and 1 ms download.</p>
+<p><strong>Throughput</strong> with pipelining: one request per 6 ms (compute-bound), about 167 per second. <strong>Latency</strong> per request: still 9 ms at best (the stages of one request can't overlap each other), plus queueing when requests arrive faster than one per 6 ms.</p>
+<p><strong>Batching</strong> 4 requests per kernel might take 9 ms of compute for 4 (better efficiency): throughput 444/s, but each request now waits for a batch to form and for the whole batch: latency rises. LLM serving systems (Part 7's vLLM paper) are largely about this trade-off, made per step with continuous batching.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Asynchronous Concurrent Execution" (streams, events, default stream semantics, pinned memory).</li>
+<li><strong>Required:</strong> M. Harris, "How to Overlap Data Transfers in CUDA C/C++", NVIDIA Developer Blog (2012).</li>
+<li><strong>Optional:</strong> W. Kwon et al., "Efficient Memory Management for Large Language Model Serving with PagedAttention", SOSP 2023 (this Part's paper chapter).</li>
+</ul>
+</section>

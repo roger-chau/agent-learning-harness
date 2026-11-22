@@ -34,3 +34,30 @@
 <li><code>exp</code> is a special-function-unit instruction on GPUs, with lower throughput than FMA. Rarely the limit for memory-bound ops, but it matters in attention.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: designing a fused softmax for a given shape</h3>
+<p><strong>Shape:</strong> 32,768 rows × 1,024 columns, FP32, on a 34-SM GPU at 448 GB/s.</p>
+<p><strong>Mapping:</strong> one warp per row: 32 values per lane, as eight <code>float4</code> loads strided by 128 (lane ℓ loads float4s ℓ, ℓ + 32, …), so each load instruction covers 512 contiguous bytes. Max with an xor-shuffle reduction (5 steps), exponentials in registers, sum with another 5-step reduction, one multiply by the reciprocal, eight <code>float4</code> stores.</p>
+<p><strong>Budget:</strong> about 64 registers per thread (32 values plus addresses); with 256-thread blocks that's 4 blocks per SM: 32 warps, each with 8 × 512 = 4 KB of loads in flight. Little's law needs about 448 GB/s × ~600 ns ≈ 270 KB in flight across the GPU, ≈ 8 KB per SM: met with room to spare.</p>
+<p><strong>Prediction:</strong> 256 MiB of traffic at ~85% of 448 GB/s ≈ 0.7 ms, against ≈ 1.75 ms for the 5-pass version. This is Lab 7's kernel, derived from the constraints rather than guessed.</p>
+
+<h3>Example 2: Welford's update, step by step</h3>
+<p><strong>State:</strong> count n, mean μ, and M₂ (sum of squared deviations). <strong>Add x:</strong> n ← n + 1; δ = x − μ; μ ← μ + δ/n; M₂ ← M₂ + δ(x − μ). Variance = M₂/n.</p>
+<p><strong>Trace on 10⁴+1, 10⁴+2, 10⁴+3:</strong> after the first, (1, 10001, 0). Second: δ = 1, μ = 10001.5, M₂ = 0 + 1 × 0.5 = 0.5. Third: δ = 1.5, μ = 10002, M₂ = 0.5 + 1.5 × 1 = 2. Variance 2/3 ✓, and no number larger than about 10⁴ was ever squared.</p>
+<p><strong>For a GPU,</strong> each lane runs Welford over its values, then lanes merge states with Chan's formula through shuffles (Chapter 3.1's worked example): one pass, numerically stable, fully parallel.</p>
+
+<h3>Example 3: when fusion stops paying</h3>
+<p><strong>Chain:</strong> matmul → bias → GELU → dropout → matmul. The elementwise middle is memory-bound; fusing bias + GELU + dropout into the first matmul's epilogue removes three full read/write passes of the activation.</p>
+<p><strong>But</strong> fusing the GELU <em>into the second matmul's prologue</em> instead would recompute it for every tile that reads each activation: the second GEMM reads each input element N/tile times, so GELU (with its erf) would run that many times. Epilogue fusion applies each op once per output element; prologue fusion multiplies it by the reuse factor. Compilers weigh exactly this when choosing where to fuse.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> M. Milakov, N. Gimelshein, "Online normalizer calculation for softmax" (2018).</li>
+<li><strong>Required:</strong> T. Chan, G. Golub, R. LeVeque, "Algorithms for Computing the Sample Variance" (1983), and B. Welford, "Note on a Method for Calculating Corrected Sums of Squares and Products" (1962).</li>
+<li><strong>Optional:</strong> NVIDIA Apex / PyTorch source for fused LayerNorm kernels; the Triton tutorials "Fused Softmax" and "Layer Normalization".</li>
+</ul>
+</section>

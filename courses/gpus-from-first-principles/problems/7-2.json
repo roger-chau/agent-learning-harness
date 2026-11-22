@@ -1,0 +1,283 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "The size of S",
+   "statement": "<p>One attention head, sequence length N = 8,192, head dimension d = 128.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Elements in S?",
+     "answer": 67108864,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "MiB in FP32?",
+     "answer": 256.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "FLOPs (4N²d)?",
+     "answer": 34359738368,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "S is N × N."
+   ],
+   "solution": "<p>(a) 67,108,864. (b) 256 MiB per head. (c) 3.44e+10 FLOPs.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Naive traffic versus flash traffic",
+   "statement": "<p>Same head, FP32. Naive: read Q, K, V, write O, plus write S, read S, write P, read P. Flash (idealised): read Q, K, V once, write O.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Naive bytes?",
+     "answer": 1090519040,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Flash bytes?",
+     "answer": 16777216,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Ratio?",
+     "answer": 65.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The N² terms dominate the naive version."
+   ],
+   "solution": "<p>(a) 1040 MiB, (b) 16 MiB, (c) 65×. (Real FlashAttention re-reads K and V once per query block, so its traffic is $N/B_r$ times K and V; still far below N².)</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Intensity of the naive N² part",
+   "statement": "<p>Naive attention's S and P traffic: about 16 bytes per score element (FP32 write S, read S, write P, read P), against 4d FLOPs per score (2d for QKᵀ, 2d for PV).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "FLOP per byte for d = 64?",
+     "answer": 16.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For d = 128?",
+     "answer": 32.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "4d / 16."
+   ],
+   "solution": "<p>16 and 32 FLOP/byte: below a tensor-core ridge of ~300 (H100 FP16). The \"GEMM\" workload is memory-bound because of S.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 3,
+   "title": "The rescaling step",
+   "statement": "<p>Running state (m, ℓ, o) = (2, 3.0, [1.5, 0.6]). The next key block has scores [4, 1] and value rows [1, 0] and [0, 1].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "New m?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "α = e^{m − m'}?",
+     "answer": 0.1353352832366127,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "New ℓ?",
+     "answer": 1.4557929180777018,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "New o, first component?",
+     "answer": 1.203002924854919,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "ℓ ← αℓ + Σ e^{s_j − m'}; o ← αo + Σ e^{s_j − m'} v_j."
+   ],
+   "solution": "<p>m' = 4, α = $e^{-2}$ = 0.1353. ℓ = 3α + $e^0$ + $e^{-3}$ = 1.4558. o₁ = 1.5α + 1·1 + $e^{-3}$·0 = 1.2030. Everything already accumulated is multiplied by α; the result is exact (a NumPy check of the full algorithm against direct softmax agrees to 1.1e-16).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "SRAM budget",
+   "statement": "<p>A FlashAttention block holds a Q tile (B_r × d), K and V tiles (B_c × d each) and the score tile (B_r × B_c) on chip, FP16 operands, FP32 scores. d = 128.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes for B_r = B_c = 64?",
+     "answer": 65536,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For B_r = B_c = 128?",
+     "answer": 163840,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Q, K, V in FP16, S in FP32."
+   ],
+   "solution": "<p>(a) 48 KB + 16 KB = 64 KB. (b) 96 KB + 64 KB = 160 KB: fits an H100 SM (228 KB) but not a 2060 Super (64 KB). Tile sizes follow the hardware's on-chip memory.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Causal masking",
+   "statement": "<p>Causal attention: query i attends to keys 0..i. Blocks of 128 on N = 8,192.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Fraction of key blocks a query block must visit, on average?",
+     "answer": 0.5078125,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Approximate speedup over computing the full square then masking?",
+     "answer": 1.9692307692307693,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Query block i visits key blocks 0..i."
+   ],
+   "solution": "<p>(a) $\\sum_{i=1}^{64} i / 64^2 = 2080/4096 ≈ 0.51$. (b) ≈ 1.97×. Only the diagonal blocks need element-wise masks.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Decode is different",
+   "statement": "<p>Generation: one new query per step attends to N = 8,192 cached keys and values, d = 128, FP16.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes of K and V read per step?",
+     "answer": 4194304,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "FLOPs per step?",
+     "answer": 4194304,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Intensity?",
+     "answer": 1.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "One query row."
+   ],
+   "solution": "<p>(a) 4 MiB, (b) 4.2 MFLOP, (c) 1 FLOP/byte: pure bandwidth. Decode attention is a KV-cache streaming problem, which is why its kernels (FlashDecoding, paged attention) split the keys across blocks.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 1,
+   "title": "Exact or approximate",
+   "statement": "<p>FlashAttention's output, compared with standard attention…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "…is",
+     "options": [
+      "an approximation (sparse or low-rank)",
+      "mathematically exact; only rounding differs (summation order)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Online softmax is an algebraic identity."
+   ],
+   "solution": "<p>Exact: the rescaling reproduces softmax exactly. Differences are floating-point order effects, small and testable against a reference.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Memory saved",
+   "statement": "<p>Training a model with 32 heads, N = 4,096, batch 8, storing P (FP16) for the backward pass, versus FlashAttention recomputing it.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "GiB of P per layer stored naively?",
+     "answer": 8.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "heads × N² × batch × 2 bytes."
+   ],
+   "solution": "<p>8 GiB per layer: impossible on most GPUs for many layers. FlashAttention stores only O and the row statistics (m, ℓ) and recomputes P in the backward pass: more FLOPs, far less memory, and faster overall.</p>"
+  }
+ ]
+}

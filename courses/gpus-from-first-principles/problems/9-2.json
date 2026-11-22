@@ -1,0 +1,292 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Constants that differ",
+   "statement": "<p>Hard-coded assumptions.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Lanes in an AMD CDNA wavefront?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bits in a ballot mask there?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Portable lane id is…",
+     "options": [
+      "threadIdx.x & 31",
+      "threadIdx.x % warpSize"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Wavefronts are 64 wide on CDNA."
+   ],
+   "solution": "<p>64 lanes, 64-bit masks. <code>&amp; 31</code> silently breaks on 64-wide hardware.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "The bug that compiles",
+   "statement": "<p>A warp reduction loops <code>for (o = 16; o &gt; 0; o /= 2) v += shfl_down(v, o)</code> and lane 0 writes the result. Run on 64-wide wavefronts.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Result?",
+     "options": [
+      "Correct",
+      "Lane 0 holds the sum of only lanes 0–31; half the data is missing",
+      "Crash"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "Start the offset at warpSize / 2",
+      "Use atomics"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The first offset must cover half the width."
+   ],
+   "solution": "<p>Offsets 16..1 reduce 32 lanes; lanes 32–63 never combine into lane 0. Starting at warpSize/2 fixes it. This exact bug is common in hipified code.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Warps per block",
+   "statement": "<p>A 256-thread block.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps on NVIDIA?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Wavefronts on CDNA?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Shared array sized <code>blockDim.x / 32</code> for per-warp partials on CDNA is…",
+     "options": [
+      "right",
+      "too big but works",
+      "fine for correctness, but loops that assume 8 partials read garbage"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "256/32 and 256/64."
+   ],
+   "solution": "<p>8 and 4. Sizing by 32 over-allocates harmlessly, but code that then reads 8 partials when only 4 were written reads uninitialised memory.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Occupancy on a different GPU",
+   "statement": "<p>A kernel uses 128 registers per thread. An NVIDIA SM has 65,536 registers. In a simplified model of an AMD CDNA compute unit, each of its 4 SIMD units holds up to 4 wavefronts when each lane uses 128 vector registers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "NVIDIA warps per SM (registers only)?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "AMD wavefronts per CU (4 SIMDs × 4)?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Different register files, different granularity."
+   ],
+   "solution": "<p>16 warps of 32 (512 threads) versus 16 wavefronts of 64 (1,024 threads): same register count, different occupancy in threads. Tuning parameters don't transfer; re-tune per target.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 1,
+   "title": "Portable building blocks",
+   "statement": "<p>The most portable way to write a block reduction is…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "hand-written warp shuffles with 32-lane masks",
+      "a library primitive (CUB / hipCUB / your own parameterised by warpSize)",
+      "atomics only"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Let someone else handle the width."
+   ],
+   "solution": "<p>Library primitives, or your Part 3 code parameterised by warpSize. Hand-rolled warp tricks are where the constants hide.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Matrix units",
+   "statement": "<p>Tensor-core code written with WMMA 16 × 16 × 16 fragments.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "On AMD it maps to…",
+     "options": [
+      "nothing: rewrite with MFMA intrinsics or a library (rocWMMA, Composable Kernel)",
+      "the same WMMA API natively on every GPU"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Vendor-specific instructions."
+   ],
+   "solution": "<p>Matrix instructions and their fragment layouts are vendor-specific. rocWMMA offers a WMMA-like API on AMD; portable high-level code uses libraries or compilers (Triton, which targets both).</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Memory model differences",
+   "statement": "<p>Code relying on implicit warp lockstep (no __syncwarp).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Is it safe on Volta+ NVIDIA GPUs?",
+     "options": [
+      "Yes",
+      "No: independent thread scheduling may interleave lanes"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "On AMD (no independent thread scheduling)?",
+     "options": [
+      "It may happen to work, which is worse: it hides the bug until it runs elsewhere",
+      "It always fails"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Portable code states its assumptions."
+   ],
+   "solution": "<p>Unsafe on NVIDIA since Volta; may work on AMD today. Use explicit synchronisation everywhere.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Compilers across targets",
+   "statement": "<p>Triton compiles the same kernel for NVIDIA and AMD.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "What must change per target, in the compiler?",
+     "options": [
+      "Layouts for matrix instructions",
+      "Warp/wavefront width",
+      "Shared-memory size limits",
+      "The kernel's Python source"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "The source stays the same."
+   ],
+   "solution": "<p>Layouts, widths and resource limits are the compiler's job per backend; that's exactly what a GPU compiler engineer builds.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "Testing portability",
+   "statement": "<p>You port a CUDA kernel with hipify.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best first test on AMD?",
+     "options": [
+      "Check it compiles",
+      "Run the full correctness suite, including warp-size-sensitive sizes (e.g. 33, 65, 1000 elements)"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Compiling proves little."
+   ],
+   "solution": "<p>Compilation is the easy part. Tests at sizes that cross warp and wavefront boundaries catch the hidden 32s.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "SYCL sub-groups",
+   "statement": "<p>Intel GPUs let the kernel choose a sub-group size of 8, 16 or 32.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "A reduction written for fixed 32 on a sub-group of 16…",
+     "options": [
+      "works",
+      "reads lanes that don't exist or misses data"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Width as a parameter."
+   ],
+   "solution": "<p>Width must be a parameter of the algorithm, read from the platform, not assumed.</p>"
+  }
+ ]
+}

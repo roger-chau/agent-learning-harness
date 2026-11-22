@@ -1,0 +1,276 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Order changes the answer",
+   "statement": "<p>FP32.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "(10⁸ + 1) − 10⁸?",
+     "answer": 0.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "(10⁸ − 10⁸) + 1?",
+     "answer": 1.0,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "The spacing of FP32 numbers near 10⁸ is 8."
+   ],
+   "solution": "<p>(a) 0: 10⁸ + 1 rounds back to 10⁸. (b) 1. Parallel sums choose an order; different orders give different bits.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "ULPs",
+   "statement": "<p>FP32 has a 24-bit significand.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Spacing (1 ULP) at 1.0?",
+     "answer": 1.1920928955078125e-07,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "At 1,000,000?",
+     "answer": 0.0625,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [
+    "ULP at x = 2^(e − 23) for 2^e ≤ x < 2^(e+1)."
+   ],
+   "solution": "<p>(a) $2^{-23} ≈ 1.19 \\times 10^{-7}$. (b) 10⁶ is between $2^{19}$ and $2^{20}$: ULP $2^{-4} = 0.0625$. Compare results in ULPs or relative error, never with a fixed absolute tolerance.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Determinism checklist",
+   "statement": "<p>Which make a reduction's result bit-identical across runs on the same GPU?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "A fixed reduction tree with the same launch shape",
+      "Float atomicAdd from many blocks",
+      "Per-block partials summed in index order",
+      "Changing the grid size between runs"
+     ],
+     "answer": [
+      0,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Order fixed?"
+   ],
+   "solution": "<p>Fixed trees and fixed-order partial sums are deterministic; atomics and changing launch shapes aren't.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Kahan in numbers",
+   "statement": "<p>Sum 100,000 copies of FP32 0.1 sequentially.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Plain FP32 result (to 2 decimals)?",
+     "answer": 9998.556640625,
+     "unit": "",
+     "tolerance": 0.01
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Kahan result (to 2 decimals)?",
+     "answer": 10000.0,
+     "unit": "",
+     "tolerance": 0.01
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Exact sum of the FP32 values?",
+     "answer": 10000.000149011612,
+     "unit": "",
+     "tolerance": 0.01
+    }
+   ],
+   "hints": [
+    "Simulate it, or reason about the growing ULP."
+   ],
+   "solution": "<p>Plain: 9998.56; Kahan: 10000.00; exact 10000.0001 (FP32's 0.1 is slightly above 0.1). The plain sum's error grows with n; Kahan's stays at a few ULPs.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Tolerances for tests",
+   "statement": "<p>A GPU GEMM (K = 4096, FP32, inputs ~ U(−1, 1)) is compared with a CPU FP64 reference.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best test?",
+     "options": [
+      "Exact equality",
+      "abs(diff) < 1e-6",
+      "Relative error bound scaled by √K or K times FP32 epsilon, or exact inputs (Lab 4)"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "Error grows with reduction length."
+   ],
+   "solution": "<p>A tolerance derived from the reduction length and unit roundoff, or inputs designed so all arithmetic is exact. Fixed tiny absolute tolerances fail randomly; huge ones hide bugs.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "FP16 overflow",
+   "statement": "<p>FP16's maximum is 65,504.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "A dot product of length 4,096 of values around 8, accumulated in FP16…",
+     "options": [
+      "is fine",
+      "overflows: the sum reaches ~262,000"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Sum magnitude?",
+     "answer": 262144,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "8 × 8 × 4096."
+   ],
+   "solution": "<p>262,144 overflows FP16 to inf. Accumulate in FP32; scale inputs if they're large.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Deterministic algorithms in frameworks",
+   "statement": "<p>PyTorch's deterministic mode…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "What does it typically do?",
+     "options": [
+      "Selects kernels without float atomics where possible",
+      "Raises an error for operations with no deterministic implementation",
+      "Makes results identical across different GPU models",
+      "Can be slower"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Same hardware and software."
+   ],
+   "solution": "<p>It picks deterministic kernels, errors where none exist, and costs some speed. It doesn't promise identical bits across GPUs or library versions.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Pairwise error growth",
+   "statement": "<p>Worst-case error bounds for summing n numbers in floating point: sequential ≈ (n − 1)u·Σ|x|, pairwise ≈ ⌈log₂ n⌉u·Σ|x|.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ratio of the bounds for n = 2²⁰?",
+     "answer": 52428.75,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "(n − 1)/log₂ n."
+   ],
+   "solution": "<p>About 52,429×. GPU tree reductions are, as a side effect, far more accurate than a CPU loop: \"the GPU's sum disagrees with the CPU\" often means the CPU is the less accurate one.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "Fused multiply-add",
+   "statement": "<p>Comparing a GPU result with a CPU result of <code>a*b + c</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why might they differ in the last bit?",
+     "options": [
+      "GPU bug",
+      "The GPU compiler contracted to an FMA (one rounding) where the CPU used two roundings",
+      "Endianness"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Contraction."
+   ],
+   "solution": "<p>FMA contraction (default in nvcc). Disable with <code>-fmad=false</code> to compare, but the FMA result is usually the more accurate one.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Reproducing across runs",
+   "statement": "<p>A training run's loss curves differ slightly between two identical launches.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Likely culprits?",
+     "options": [
+      "Atomics in a reduction or embedding backward",
+      "cuDNN/cuBLAS choosing different algorithms (autotuning)",
+      "Random seeds",
+      "The GPU's clock speed"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Order and choices."
+   ],
+   "solution": "<p>Atomic accumulation order, algorithm selection by autotuners, and RNG. Clock speed changes timing, which changes atomic order, but isn't itself a numerical input.</p>"
+  }
+ ]
+}

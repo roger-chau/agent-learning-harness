@@ -47,3 +47,34 @@
 <li>Read each vendor's ISA documentation once (AMD publishes full ISA manuals); the differences teach you what the common model abstracts away.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: porting a block reduction to 64-wide wavefronts</h3>
+<p><strong>CUDA original:</strong> warp-shuffle reduce with offsets 16..1; lane 0 of each warp writes <code>s[threadIdx.x / 32]</code>; warp 0 reduces <code>blockDim.x / 32</code> partials.</p>
+<p><strong>Every 32 that must change:</strong> starting offset → <code>warpSize / 2</code>; <code>threadIdx.x / 32</code> → <code>/ warpSize</code>; the partial count → <code>blockDim.x / warpSize</code>; the full mask <code>0xffffffff</code> → a 64-bit mask (HIP's shuffles take a 64-bit mask, or none); the lane test <code>threadIdx.x &amp; 31</code> → <code>% warpSize</code>. With 256 threads, CDNA has 4 partials, not 8, so the final step reads 4 values.</p>
+<p><strong>Test:</strong> block sizes 64, 128, 256 and 1,024, and n not a multiple of 64. Four sizes catch every one of the hidden constants above.</p>
+
+<h3>Example 2: same algorithm, different tuning</h3>
+<p><strong>A tiled GEMM</strong> tuned on an NVIDIA GPU uses 128 × 128 tiles, 256 threads, 48 KB shared memory per block.</p>
+<p><strong>On a CDNA GPU</strong> with 64 KB of LDS per CU and 64-wide wavefronts: 256 threads is 4 wavefronts; the matrix instructions (MFMA) have different shapes (e.g. 32 × 32 × 8) and fragment layouts, so the warp tile must change; LDS bank structure differs, so the padding or swizzle changes too. The <em>algorithm</em> (block tile, warp tile, register tile, pipelined K loop) transfers unchanged; nearly every <em>constant</em> needs re-tuning. That's why portable libraries are templates with per-target parameter tables, and why compilers like Triton separate the algorithm from the layout.</p>
+
+<h3>Example 3: a portability checklist for code review</h3>
+<ol>
+<li>grep for <code>32</code>, <code>31</code>, <code>0xffffffff</code>, <code>__popc</code> (32-bit), <code>&gt;&gt; 5</code>.</li>
+<li>Find implicit warp-synchronous code: shared-memory exchanges between lanes without <code>__syncwarp</code>.</li>
+<li>Find hard-coded resource limits: shared memory sizes, registers per thread assumptions, occupancy targets.</li>
+<li>Find vendor intrinsics (<code>mma</code>, <code>cp.async</code>, <code>__ldg</code>) and check each has a fallback or a per-target path.</li>
+<li>Check the test matrix covers both widths, odd sizes and the largest block sizes.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> AMD, <em>HIP Programming Guide</em>: "Porting CUDA code to HIP" and the warp-size notes.</li>
+<li><strong>Required:</strong> AMD, "AMD Instinct MI300 / CDNA 3 Instruction Set Architecture" overview chapters (wavefronts, LDS, MFMA).</li>
+<li><strong>Optional:</strong> Khronos, <em>SYCL 2020 Specification</em>, section on sub-groups.</li>
+<li><strong>Optional:</strong> Triton documentation on its AMD backend (how one source targets both vendors).</li>
+</ul>
+</section>

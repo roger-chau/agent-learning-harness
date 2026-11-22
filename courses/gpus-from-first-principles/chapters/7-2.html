@@ -36,3 +36,32 @@
 <li>Exponentials matter here: with small $d$, the exp count ($N^2$) is a real fraction of the work, which FlashAttention-3 works hard to hide.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: FlashAttention's traffic, counted properly</h3>
+<p><strong>Setup.</strong> N = 8,192, d = 128, FP16, query blocks of B_r = 128, key blocks of B_c = 64.</p>
+<p><strong>Q and O:</strong> each read or written once: $2 \times N d \times 2$ bytes = 4 MiB.</p>
+<p><strong>K and V:</strong> every query block streams all of K and V: $N/B_r = 64$ passes × $2 N d \times 2$ bytes = 256 MiB. That's the dominant term, and it's why bigger query blocks (more SRAM) help.</p>
+<p><strong>Naive:</strong> S and P at FP16, written and read: $4 N^2 \times 2$ = 512 MiB, plus the same Q, K, V, O. So flash moves about half as much even here, and far less at longer N because its traffic grows like $N^2 d / B_r$ while naive grows like $N^2$ with a larger constant, and it never needs the N² buffer at all. In practice K and V blocks are often shared through L2 by concurrent query blocks, so real DRAM traffic is lower still.</p>
+
+<h3>Example 2: one query row through the algorithm</h3>
+<p><strong>Scores</strong> for one query against 4 keys, in two blocks of 2: block 1 [1, 3], block 2 [2, 5]. Values are scalars: v = [10, 20, 30, 40].</p>
+<p><strong>Block 1:</strong> m = 3, ℓ = $e^{-2} + 1 = 1.1353$, o = $10e^{-2} + 20 = 21.353$.</p>
+<p><strong>Block 2:</strong> m' = 5, α = $e^{-2}$ = 0.1353. ℓ = 1.1353 × 0.1353 + $e^{-3}$ + 1 = 1.2034. o = 21.353 × 0.1353 + 30$e^{-3}$ + 40 = 44.383.</p>
+<p><strong>Result:</strong> o/ℓ = 36.88. <strong>Direct:</strong> weights $e^{s - 5}$ = [0.0183, 0.1353, 0.0498, 1]; sum 1.2034; weighted values 0.183 + 2.707 + 1.494 + 40 = 44.38; ratio 36.88 ✓.</p>
+
+<h3>Example 3: why the backward pass recomputes</h3>
+<p><strong>Forward</strong> saves only O and the per-row statistics (m, ℓ) — $N$ values each, not $N^2$.</p>
+<p><strong>Backward</strong> needs P to compute gradients. Recomputing P block by block from Q, K and the saved statistics costs about another $2N^2 d$ FLOPs (one more QKᵀ) but no $N^2$ memory traffic. On a GPU where the N² traffic costs far more time than the extra GEMM, recomputation is faster as well as smaller. The general lesson: when memory is the bottleneck, recomputing is cheaper than storing. Activation checkpointing in training applies the same idea at the scale of whole layers.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> T. Dao, D. Fu, S. Ermon, A. Rudra, C. Ré, "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness", NeurIPS 2022, sections 1–3 (and Part 8's paper chapter).</li>
+<li><strong>Required:</strong> A. Vaswani et al., "Attention Is All You Need", NeurIPS 2017, section 3.2.</li>
+<li><strong>Optional:</strong> T. Dao, "FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning" (2023).</li>
+<li><strong>Optional:</strong> T. Dao et al., "Flash-Decoding for long-context inference" (2023 blog post).</li>
+</ul>
+</section>

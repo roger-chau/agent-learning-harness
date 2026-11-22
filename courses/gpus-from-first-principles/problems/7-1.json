@@ -1,0 +1,303 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Passes over memory",
+   "statement": "<p>Row softmax of a 4096 × 4096 FP32 matrix.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Three-kernel version (max; exp-sum writing exponentials; normalise): full-matrix reads + writes?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fused single pass?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Fused time bound on a 512 GB/s GPU, in ms?",
+     "answer": 0.26214400000000004,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Count every read and write of a matrix-sized array."
+   ],
+   "solution": "<p>(a) Read (max), read + write (exp-sum), read + write (normalise): 5. (b) 2. (c) 128 MiB at 512 GB/s: 0.262 ms. 2.5× from fusion alone.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Why subtract the max",
+   "statement": "<p>FP32's largest finite value is about $3.4 \\times 10^{38}$.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Largest x for which $e^x$ is finite in FP32 (to 1 decimal)?",
+     "answer": 88.72283906194683,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Softmax of [1000, 1000] computed naively gives…",
+     "options": [
+      "[0.5, 0.5]",
+      "NaN (inf / inf)",
+      "[1, 0]"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "$\\ln(3.4 \\times 10^{38})$."
+   ],
+   "solution": "<p>(a) 88.7. (b) $e^{1000}$ overflows to inf, and inf/inf is NaN. Subtracting the max makes the largest exponent $e^0 = 1$: no overflow, same result.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Online softmax by hand",
+   "statement": "<p>Process x = [2.0, 5.0, 1.0, 7.0] one at a time with the running pair (m, s), starting from (−∞, 0).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Final m?",
+     "answer": 7.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Final s (sum of $e^{x-m}$)?",
+     "answer": 1.1445519824123644,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Softmax of the 7?",
+     "answer": 0.8737043099539322,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [
+    "Each new element is the pair (x, 1)."
+   ],
+   "solution": "<p>m = 7, s = $e^{-5} + e^{-2} + e^{-6} + 1 = 1.1446$, and softmax(7) = $1/s = 0.8737$. The rescaling step $s e^{m_{old} - m}$ is what let the sum start before the max was known.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Combining partial results",
+   "statement": "<p>Two halves of a row have running pairs (m, s) = (3, 2.0) and (5, 1.5).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Combined m?",
+     "answer": 5.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Combined s?",
+     "answer": 1.7706705664732254,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [
+    "$(m_a, s_a) \\oplus (m_b, s_b) = (m, s_a e^{m_a - m} + s_b e^{m_b - m})$."
+   ],
+   "solution": "<p>m = 5, s = $2e^{-2} + 1.5 = 1.7707$. Because ⊕ is associative, the halves can come from different warps or blocks, in any tree.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "LayerNorm traffic",
+   "statement": "<p>LayerNorm over rows of a 8192 × 4096 FP16 tensor with FP16 gamma/beta.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum DRAM bytes (read x once, write y once; ignore gamma/beta)?",
+     "answer": 134217728,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time bound at 1 TB/s, in µs?",
+     "answer": 134.217728,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "2 bytes per element, read and write."
+   ],
+   "solution": "<p>(a) 128 MiB. (b) 134 µs. A good LayerNorm kernel reaches 80–90% of this; anything near 50% is leaving 2× on the table.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 3,
+   "title": "Variance, two ways",
+   "statement": "<p>Values $10^4 + 1, 10^4 + 2, 10^4 + 3$ in FP32. True population variance: 2/3.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Relative magnitude of the cancellation: $E[x^2]/\\text{Var}$, roughly (order of magnitude)?",
+     "answer": 150000000.0,
+     "unit": "",
+     "tolerance": "50%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Which formula should a FP32 kernel use?",
+     "options": [
+      "E[x²] − E[x]²",
+      "Two-pass (mean, then mean of squared deviations) or Welford"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "$E[x^2] \\approx 10^8$ while Var ≈ 0.67; FP32 keeps about 7 digits."
+   ],
+   "solution": "<p>(a) $10^8 / 0.67 \\approx 1.5 \\times 10^8$: the subtraction must cancel 8 digits, more than FP32 has, so E[x²] − E[x]² is noise (numpy FP32 gives -8 here). (b) Two-pass from registers, or Welford's update, which never forms the huge squares.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Fusing the residual",
+   "statement": "<p>A transformer block computes <code>h = x + attn(x)</code>, then <code>y = LayerNorm(h)</code>, FP16, n elements.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes per element unfused (add kernel reads 2, writes 1; LayerNorm reads 1, writes 1)?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fused add + LayerNorm (reads 2, writes y; h also written because the next residual needs it)?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "2 bytes per FP16 element."
+   ],
+   "solution": "<p>(a) (3 + 2) × 2 = 10. (b) (2 + 2) × 2 = 8; if h isn't needed later, 6. Real transformer kernels fuse bias, residual and norm for exactly these savings.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Block or warp per row",
+   "statement": "<p>Rows of 1,024 FP32 values.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Values per lane with one warp per row?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With one 256-thread block per row?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "For rows of 65,536 values, prefer…",
+     "options": [
+      "a warp per row, all in registers",
+      "a block per row, looping, or online softmax across chunks"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Registers per thread are limited (~255)."
+   ],
+   "solution": "<p>32 values per lane fit in registers; 65,536 per row would need 2,048 per lane. Long rows need a block per row (or several blocks with an online combine).</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "Memory-bound means…",
+   "statement": "<p>A fused GELU kernel runs at 85% of peak bandwidth.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Replacing <code>erff</code> with a faster approximation will…",
+     "options": [
+      "speed it up a lot",
+      "barely change it: memory sets the time",
+      "slow it down"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Where is the bottleneck?"
+   ],
+   "solution": "<p>At 85% of bandwidth the math is hidden behind memory. Cheaper math matters only for compute- or issue-bound kernels.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Reduced precision for memory-bound ops",
+   "statement": "<p>An elementwise kernel over FP32 tensors runs at peak bandwidth.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Speedup from storing the tensors in BF16 (computing in FP32)?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Bytes halve."
+   ],
+   "solution": "<p>2×: for memory-bound kernels, the storage type is the performance knob. Compute in FP32 registers, store narrow.</p>"
+  }
+ ]
+}

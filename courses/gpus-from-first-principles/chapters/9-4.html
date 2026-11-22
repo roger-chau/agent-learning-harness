@@ -34,3 +34,28 @@
 <h2>Your plan</h2>
 <p>The write-up below is your next-90-days plan, and it's for you, not the grader. A plan you wrote yourself, with checkpoints, beats one handed to you. If you want feedback on it, the "Ask" panel is there.</p>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples: interview answers</h2>
+
+<h3>Example 1: "Walk me through a kernel you optimised."</h3>
+<p><strong>Structure</strong> (2–3 minutes): the problem and its size; the first measurement and the bound you computed (roofline); each change, the evidence that motivated it, and the number it produced; where you stopped and why.</p>
+<p><strong>Model answer, in the shape of Lab 4</strong> (the numbers here are illustrative; use your own measurements): "SGEMM at 2048³ on an RTX 2060 Super. cuBLAS reaches about 6.5 TFLOP/s. The naive kernel did 4 instructions per FMA, so it was capped at 25% of peak and measured 0.9 TFLOP/s. Shared-memory tiling cut global loads 32× but left 3 instructions per FMA: 1.6 TFLOP/s. Register tiling with 8 × 8 outputs per thread and float4 shared loads raised the FMA share to 94%; ptxas showed 128 registers, no spills, 25% occupancy, which was fine because each warp had 64 independent FMAs per step: 4.1 TFLOP/s, 63% of cuBLAS. The profile then showed the global-load latency at the tile boundaries; I'd add double buffering next." Every claim has a number and a reason.</p>
+
+<h3>Example 2: "Why is my kernel slow?" (debugging a profile live)</h3>
+<p><strong>Given:</strong> DRAM 20%, L2 85%, issue 30%, many sectors per request on stores.</p>
+<p><strong>Answer:</strong> "L2 is the busiest unit, and stores touch many sectors per request: uncoalesced writes that L2 merges before DRAM, so DRAM looks idle. It's L2-bound on write traffic. I'd check the store indexing; if it's a transpose-like pattern, stage through shared memory so both sides coalesce. I'd expect L2 traffic to drop ~8× and the kernel to become DRAM- or latency-bound." The structure: name the unit, cite the counter, give the mechanism, propose a fix, predict its effect.</p>
+
+<h3>Example 3: a compiler-track question</h3>
+<p><strong>Q:</strong> "When can you not reorder a load above a store?"</p>
+<p><strong>Answer:</strong> "When they may access the same address: a true memory dependence. The compiler needs proof they don't alias: different allocations, <code>__restrict__</code>, or index analysis showing the subscripts differ, for example via the GCD test on affine subscripts. Without proof it must keep the order. On a GPU there's a second layer: across threads, even independent addresses need fences if another thread observes the order, but that's the memory model, not the single-thread dependence." Interviewers look for the distinction between program-order dependences and cross-thread ordering.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Performance track:</strong> the CUTLASS/CuTe documentation and examples; the FlashAttention 2 and 3 papers; the vLLM paper and source.</li>
+<li><strong>Compiler track:</strong> the MLIR "Toy" tutorial; Triton's compiler documentation; LLVM's "Writing an LLVM Pass".</li>
+<li><strong>Both:</strong> W. Hwu, D. Kirk, I. El Hajj, <em>Programming Massively Parallel Processors</em> (4th ed.): the companion textbook to this whole course.</li>
+<li><strong>Interviews:</strong> your own lab write-ups, rehearsed out loud with numbers.</li>
+</ul>
+</section>
