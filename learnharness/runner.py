@@ -29,6 +29,42 @@ HARNESS_PY = r'''
 import json, sys, time, copy, importlib.util, traceback
 spec = importlib.util.spec_from_file_location("solution", sys.argv[1])
 mod = importlib.util.module_from_spec(spec)
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val; self.next = next
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val; self.left = left; self.right = right
+mod.ListNode = ListNode; mod.TreeNode = TreeNode
+def to_list(a):
+    head = None
+    for v in reversed(a): head = ListNode(v, head)
+    return head
+def from_list(h):
+    out = []; seen = 0
+    while h is not None and seen < 10**6:
+        out.append(h.val); h = h.next; seen += 1
+    return out
+def to_tree(a):
+    if not a or a[0] is None: return None
+    root = TreeNode(a[0]); q = [root]; i = 1; k = 0
+    while k < len(q) and i < len(a):
+        node = q[k]; k += 1
+        if i < len(a) and a[i] is not None: node.left = TreeNode(a[i]); q.append(node.left)
+        i += 1
+        if i < len(a) and a[i] is not None: node.right = TreeNode(a[i]); q.append(node.right)
+        i += 1
+    return root
+def from_tree(r):
+    out = []; q = [r]; k = 0
+    while k < len(q):
+        n = q[k]; k += 1
+        if n is None: out.append(None); continue
+        out.append(n.val); q.append(n.left); q.append(n.right)
+    while out and out[-1] is None: out.pop()
+    return out
+CONV_IN = {"list": to_list, "tree": to_tree}
+CONV_OUT = {"list": from_list, "tree": from_tree}
 try:
     spec.loader.exec_module(mod)
 except Exception as e:
@@ -47,7 +83,11 @@ for k, t in enumerate(cfg["tests"]):
                 out.append(norm(getattr(obj, op[0])(*copy.deepcopy(op[1:]))))
         else:
             fn = getattr(mod, cfg["entry"])
-            out = norm(fn(*copy.deepcopy(t["args"])))
+            args = copy.deepcopy(t["args"]); kinds = cfg.get("arg_kinds") or []
+            args = [CONV_IN[kinds[i]](a) if i < len(kinds) and kinds[i] in CONV_IN else a for i, a in enumerate(args)]
+            res = fn(*args)
+            if cfg.get("ret_kind") in CONV_OUT: res = CONV_OUT[cfg["ret_kind"]](res)
+            out = norm(res)
         print(json.dumps({"k": k, "out": out, "ms": round((time.perf_counter() - t0) * 1000, 2)}), flush=True)
     except Exception as e:
         print(json.dumps({"k": k, "error": "".join(traceback.format_exception_only(type(e), e)).strip(), "ms": round((time.perf_counter() - t0) * 1000, 2)}), flush=True)
@@ -55,6 +95,8 @@ for k, t in enumerate(cfg["tests"]):
 
 CPP_PRELUDE = r'''#include <bits/stdc++.h>
 using namespace std;
+struct ListNode { int val; ListNode* next; ListNode(int x = 0, ListNode* n = nullptr) : val(x), next(n) {} };
+struct TreeNode { int val; TreeNode *left, *right; TreeNode(int x = 0, TreeNode* l = nullptr, TreeNode* r = nullptr) : val(x), left(l), right(r) {} };
 '''
 
 CPP_PRINT = r'''
@@ -66,6 +108,13 @@ static void gw_print(const string& s) {
   cout << '"';
   for (char c : s) { if (c == '"' || c == '\\') cout << '\\' << c; else if (c == '\n') cout << "\\n"; else cout << c; }
   cout << '"';
+}
+static void gw_print(ListNode* h) { cout << '['; bool first = true; int guard = 0; while (h && guard++ < 1000000) { if (!first) cout << ','; first = false; cout << h->val; h = h->next; } cout << ']'; }
+static void gw_print(TreeNode* r) {
+  vector<TreeNode*> q{r}; vector<string> out;
+  for (size_t k = 0; k < q.size(); k++) { TreeNode* n = q[k]; if (!n) { out.push_back("null"); continue; } out.push_back(to_string(n->val)); q.push_back(n->left); q.push_back(n->right); }
+  while (!out.empty() && out.back() == "null") out.pop_back();
+  cout << '['; for (size_t i = 0; i < out.size(); i++) { if (i) cout << ','; cout << out[i]; } cout << ']';
 }
 template <class T> static void gw_print(const vector<T>& v) {
   cout << '['; for (size_t i = 0; i < v.size(); i++) { if (i) cout << ','; gw_print(v[i]); } cout << ']';
@@ -90,6 +139,17 @@ static void gw_read(bool& x) { int v; cin >> v; x = v != 0; }
 static void gw_read(char& x) { int v; cin >> v; x = char(v); }
 static void gw_read(string& x) { size_t n; cin >> n; cin.get(); x.resize(n); if (n) cin.read(&x[0], n); }
 template <class T> static void gw_read(vector<T>& v) { size_t n; cin >> n; v.resize(n); for (auto& e : v) gw_read(e); }
+static void gw_read(ListNode*& h) { size_t n; cin >> n; vector<int> a(n); for (auto& x : a) cin >> x; h = nullptr; for (size_t i = n; i-- > 0;) h = new ListNode(a[i], h); }
+static void gw_read(TreeNode*& root) {
+  size_t n; cin >> n; vector<string> a(n); for (auto& x : a) cin >> x;
+  root = nullptr; if (n == 0 || a[0] == "null") return;
+  root = new TreeNode(stoi(a[0])); vector<TreeNode*> q{root}; size_t i = 1, k = 0;
+  while (k < q.size() && i < n) {
+    TreeNode* node = q[k++];
+    if (i < n && a[i] != "null") { node->left = new TreeNode(stoi(a[i])); q.push_back(node->left); } i++;
+    if (i < n && a[i] != "null") { node->right = new TreeNode(stoi(a[i])); q.push_back(node->right); } i++;
+  }
+}
 '''
 
 
@@ -113,6 +173,10 @@ def _cpp_serialise(typ: str, v, out: list) -> None:
     elif t == "string":
         b = v.encode()
         out.append(f"{len(b)} " + v)
+    elif t == "ListNode*":
+        out.append(str(len(v))); out.extend(str(int(x)) for x in v)
+    elif t == "TreeNode*":
+        out.append(str(len(v))); out.extend("null" if x is None else str(int(x)) for x in v)
     else:
         raise ValueError(f"unsupported C++ type {typ}")
 
@@ -183,7 +247,8 @@ def _run_python(problem: dict, code: str, tests: list[dict]) -> dict:
     try:
         (d / "solution.py").write_text(code)
         (d / "harness.py").write_text(HARNESS_PY)
-        cfg = {"entry": (problem.get("entry") or {}).get("python"), "kind": problem.get("kind", "function"), "tests": tests}
+        cfg = {"entry": (problem.get("entry") or {}).get("python"), "kind": problem.get("kind", "function"), "tests": tests,
+               "arg_kinds": problem.get("arg_kinds"), "ret_kind": problem.get("ret_kind")}
         (d / "tests.json").write_text(json.dumps(cfg))
         limit = problem.get("time_limit_ms", 2000) / 1000 * len(tests) + 3
         try:
