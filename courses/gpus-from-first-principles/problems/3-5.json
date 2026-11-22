@@ -1,0 +1,327 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Compaction by hand",
+   "statement": "<p>Keep the positive elements of [5, -2, 8, -1, 3, 7, -4, 0], stably.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Output position of 7?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Output length?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Flags, exclusive scan, scatter."
+   ],
+   "solution": "<p>Flags [1, 0, 1, 0, 1, 1, 0, 0], exclusive scan [0, 1, 1, 2, 2, 3, 4, 4]: 7 (index 5) goes to 3. Output [5, 8, 3, 7], length 4.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Passes",
+   "statement": "<p>LSD radix sort of 32-bit keys with d-bit digits.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "d = 8?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "d = 4?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "d = 11?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "⌈32/d⌉."
+   ],
+   "solution": "<p>4, 8 and 3. With d = 11 the last pass covers only 10 bits; some sorts use 11-bit digits to save a pass at the cost of 2,048-bin histograms.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Sort traffic",
+   "statement": "<p>Sort $2^{24}$ 32-bit keys with 8-bit digits on the GW-1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Straightforward passes (3n accesses each): total bytes?",
+     "answer": 805306368,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time bound, in ms?",
+     "answer": 1.572864,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Onesweep (one histogram pass reading n, then 2n per digit pass): time bound, in ms?",
+     "answer": 1.179648,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "4 passes."
+   ],
+   "solution": "<p>(a) $4 \\times 3 \\times 2^{24} \\times 4 = 805,306,368$ bytes, (b) 1.57 ms. (c) $9n$ accesses: 1.18 ms, 1.33× less traffic.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Tracing LSD radix sort",
+   "statement": "<p>Sort [13, 6, 9, 2] with 2-bit digits (base 4), least significant first, stably.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "After the first pass, the position (0-based) of 6?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "After the first pass, the position of 9?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Low digits: 13 → 1, 6 → 2, 9 → 1, 2 → 2."
+   ],
+   "solution": "<p>First pass (by low digit, stable): [13, 9, 6, 2]. Second pass by the high digit (13 → 3, 9 → 2, 6 → 1, 2 → 0): [2, 6, 9, 13]. Stability kept 13 before 9 after pass one; pass two then fixed their order by the high digit.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "The digit-tile table",
+   "statement": "<p>Two tiles, 2-bit digits. Counts per digit: tile 0 [2, 1, 0, 1], tile 1 [1, 0, 3, 0]. Scan the table in digit-major order.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Global offset of (digit 2, tile 1)?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Of (digit 3, tile 0)?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Order: (0,0), (0,1), (1,0), (1,1), (2,0), …"
+   ],
+   "solution": "<p>Offsets: (d0,t0)=0, (d0,t1)=2, (d1,t0)=3, (d1,t1)=4, (d2,t0)=4, (d2,t1)=4, (d3,t0)=7, (d3,t1)=8. Digit-major order puts all digit-0 keys first, and within a digit, tile 0's before tile 1's, which preserves stability across tiles.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Ranks from a ballot",
+   "statement": "<p>A ballot of lanes whose digit equals d returns the mask <code>0xb275ad35</code> (bit ℓ for lane ℓ). Lane 13 is in it.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Lane 13's rank among those lanes (number of set bits below bit 13)?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Lanes in the group?",
+     "answer": 18,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "popc(mask & ((1 &lt;&lt; 13) − 1))."
+   ],
+   "solution": "<p>Bits 0–12 of the mask: 0110100110101 → 7 set, so rank 7. The group has 18 lanes. One ballot and one popcount give every lane its stable position within the warp.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Sorting floats as integers",
+   "statement": "<p>Radix sort works on unsigned bit patterns.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "The standard transform is…",
+     "options": [
+      "flip the sign bit of every float",
+      "flip the sign bit of positives, all bits of negatives",
+      "take the absolute value",
+      "add 2³¹ to the bit pattern"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why flip all bits of negatives?",
+     "options": [
+      "To make −0 equal +0",
+      "Larger negative magnitudes have larger bit patterns, so their order must be reversed",
+      "To handle NaN",
+      "For speed"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Compare the bit patterns of −1.0 and −2.0."
+   ],
+   "solution": "<p>Positives already order correctly as unsigned once the sign bit is set (putting them above negatives). Negative floats are sign-magnitude: −2.0's pattern is larger than −1.0's, so inverting all their bits reverses that order and clears the sign bit.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Sorting fat records",
+   "statement": "<p>Sort $10^7$ records of 64 bytes by a 32-bit key with 4 radix passes, each moving every element twice (read and write).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes moved sorting the records directly (keys and payloads)?",
+     "answer": 5440000000.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Sorting (key, 32-bit index) pairs, then one gather of the records (read 64, write 64 each)?",
+     "answer": 1920000000.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Each pass moves key + payload."
+   ],
+   "solution": "<p>(a) 5.44 GB. (b) 1.92 GB: 2.8× less. Sort handles, not records.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Stable or fast",
+   "statement": "<p>Compact $2^{24}$ floats keeping half. Scan-based (stable): one pass reads all to count, a second reads all and writes the kept. Atomic-based (unordered): one pass reads all and writes the kept. Ignore the small scan and the atomics' cost.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Scan-based bytes?",
+     "answer": 167772160.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Atomic-based bytes?",
+     "answer": 100663296.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Ratio?",
+     "answer": 1.6666666666666667,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Kept elements: n/2."
+   ],
+   "solution": "<p>(a) $2.5n \\times 4$ = 168 MB, (b) $1.5n \\times 4$ = 101 MB, (c) 1.67×. A single-pass scan (look-back) closes the gap and stays stable; that's what CUB's DeviceSelect does.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "How big a digit?",
+   "statement": "<p>Per-tile histograms live in shared memory (48 KB per block on the GW-1), 4-byte counters.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes for one histogram with d = 8?",
+     "answer": 1024,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With d = 16?",
+     "answer": 262144,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Is d = 16 practical per tile?",
+     "options": [
+      "Yes",
+      "No: the histogram is 5× bigger than a block's shared memory, and mostly empty for small tiles"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "2^d bins."
+   ],
+   "solution": "<p>1 KB versus 256 KB. Large digits save passes but make histograms (and the digit-tile table) huge and sparse. 8 bits is the sweet spot on current GPUs.</p>"
+  }
+ ]
+}

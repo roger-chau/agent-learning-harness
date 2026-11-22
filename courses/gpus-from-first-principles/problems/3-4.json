@@ -1,0 +1,310 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Publishing data",
+   "statement": "<p>A producer writes <code>value</code> and then sets <code>flag = 1</code>; a consumer in another block spins on <code>flag</code> and then reads <code>value</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "The producer needs, between the two writes…",
+     "options": [
+      "nothing",
+      "__syncthreads()",
+      "__threadfence()",
+      "__syncwarp()"
+     ],
+     "answer": 2
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "The consumer's flag reads should be…",
+     "options": [
+      "ordinary loads",
+      "volatile or atomic loads",
+      "shared-memory loads",
+      "texture loads"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Device-wide ordering; and the compiler must not cache the flag in a register."
+   ],
+   "solution": "<p>(a) A device-wide fence orders the value before the flag. __syncthreads only covers the producer's block. (b) Volatile or atomic, or the compiler can hoist the load out of the loop and spin forever on a register.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Scopes",
+   "statement": "<p>What each primitive covers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which make shared-memory writes of one warp visible to another warp of the same block?",
+     "options": [
+      "__syncwarp()",
+      "__syncthreads()",
+      "__threadfence_block() followed by a flag the other warp waits on",
+      "nothing: shared memory is always coherent instantly"
+     ],
+     "answer": [
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Warp scope versus block scope."
+   ],
+   "solution": "<p>__syncthreads (barrier plus visibility) or a block-scope fence with a flag. __syncwarp only covers its own warp. Shared memory is fast, not magically ordered.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "The grid barrier trap",
+   "statement": "<p>A kernel launches 512 blocks; 8 blocks fit per SM on the GW-1's 16 SMs. Every block spins until a global counter reaches 512.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Blocks resident at once?",
+     "answer": 128,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Blocks that can never start?",
+     "answer": 384,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Largest grid a cooperative launch would allow for this kernel?",
+     "answer": 128,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Resident blocks occupy the SMs while spinning."
+   ],
+   "solution": "<p>128 resident blocks spin forever waiting for 384 that need their SMs: deadlock. A cooperative launch refuses grids larger than what fits at once (128 here), which is what makes grid.sync() safe.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 1,
+   "title": "Last block done",
+   "statement": "<p>256 blocks each write a partial, fence, and do <code>old = atomicAdd(counter, 1)</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Value of old seen by the block that finishes last?",
+     "answer": 255,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "The counter starts at 0."
+   ],
+   "solution": "<p>255 = gridDim.x − 1. That block knows every other block has already published its partial (thanks to their fences before the atomic), so it can sum them.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Message passing, litmus test",
+   "statement": "<p>Thread A: <code>data = 1; flag = 1;</code> Thread B: <code>r1 = flag; r2 = data;</code> All start at 0; no fences, ordinary accesses; A and B are in different blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Can B end with r1 = 1 and r2 = 0?",
+     "options": [
+      "No, never",
+      "Yes, under a relaxed model"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "With a fence between A's writes and an acquire (or fence) between B's reads?",
+     "options": [
+      "Still possible",
+      "Forbidden"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Relaxed models allow both store–store and load–load reordering as observed."
+   ],
+   "solution": "<p>(a) Yes: the flag write can become visible first, or B's data read can be satisfied early. (b) Fence on both sides forbids it: this is the message-passing pattern done right.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 3,
+   "title": "Store buffering",
+   "statement": "<p>Thread A: <code>x = 1; r1 = y;</code> Thread B: <code>y = 1; r2 = x;</code> All start at 0.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Without fences, is r1 = r2 = 0 possible?",
+     "options": [
+      "No",
+      "Yes"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "With sequentially consistent fences between each thread's write and read?",
+     "options": [
+      "Still possible",
+      "Forbidden"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Which real CPU allows (a) too?",
+     "options": [
+      "None",
+      "x86 (store buffers)",
+      "Only GPUs"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Each write may sit in a store buffer while the read goes ahead."
+   ],
+   "solution": "<p>(a) Yes: both reads can run before either write is visible. (b) A full (seq_cst) fence forbids it. (c) Even x86, the strongest mainstream CPU model, allows this one; it's the classic reason Dekker-style locks need fences.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Why dynamic tile ids",
+   "statement": "<p>Decoupled look-back: tile i waits for tile i − 1's published prefix.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why take the tile id from an atomic counter instead of blockIdx.x?",
+     "options": [
+      "It's faster",
+      "It guarantees that tile i − 1 was claimed by a block that has already started, so waiting on it can't deadlock",
+      "blockIdx.x isn't available in every kernel",
+      "It makes the result deterministic"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Blocks aren't launched in index order."
+   ],
+   "solution": "<p>If block 7 runs before block 6 is ever scheduled (and occupies the slot block 6 needs), waiting on blockIdx order can deadlock. Claiming ids in order of starting makes every awaited tile belong to a running or finished block.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "A spin loop that never ends",
+   "statement": "<p><code>while (flag == 0) { }</code> where flag is an ordinary global int written by another block.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "The compiler may…",
+     "options": [
+      "insert a fence automatically",
+      "load flag once into a register and spin on the register forever",
+      "convert it to an atomic",
+      "nothing; the loop is fine"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Nothing in the loop body tells the compiler that flag can change."
+   ],
+   "solution": "<p>Hoisting the load is a legal optimisation for an ordinary variable: the loop becomes infinite. Use <code>volatile</code>, <code>atomicAdd(&amp;flag, 0)</code> or <code>cuda::atomic_ref</code> with acquire loads.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Launch boundaries as barriers",
+   "statement": "<p>Scan $2^{20}$ ints. Each kernel launch costs 5 µs of overhead. Three-phase scan: 3 launches, 3n accesses. Single pass: 1 launch, 2n.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Three-phase total time, in µs?",
+     "answer": 39.576,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Single-pass total, in µs?",
+     "answer": 21.384,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Data time at 512 GB/s plus launch overhead."
+   ],
+   "solution": "<p>(a) $15 + 24.6 = 39.6$ µs. (b) $5 + 16.4 = 21.4$ µs: 1.9× faster. For small problems launch overhead dominates, which also motivates CUDA Graphs and persistent kernels.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Choosing a scope",
+   "statement": "<p><code>cuda::atomic&lt;int, scope&gt;</code> takes a thread scope.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "A flag between blocks of the same kernel on one GPU needs…",
+     "options": [
+      "thread_scope_block",
+      "thread_scope_device",
+      "thread_scope_system",
+      "thread_scope_thread"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "A flag between the GPU and a CPU thread, in pinned memory?",
+     "options": [
+      "thread_scope_block",
+      "thread_scope_device",
+      "thread_scope_system"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "The narrowest scope that includes everyone involved."
+   ],
+   "solution": "<p>(a) Device scope. (b) System scope. Narrower scopes are cheaper; wider ones are required for correctness when more agents are involved.</p>"
+  }
+ ]
+}

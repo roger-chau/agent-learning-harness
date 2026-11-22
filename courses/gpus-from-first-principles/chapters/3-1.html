@@ -45,3 +45,39 @@ for (let d = 16; d &gt; 0; d &gt;&gt;= 1) v += __shfl_down_sync(0xffffffff, v, d
 </ul>
 <div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 4</strong> discusses reductions as a loop-carried dependence that parallelises only through associativity, in its section on detecting and enhancing loop-level parallelism.</div>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: Harris's reduction ladder, quantified</h3>
+<p>Mark Harris's classic sequence of reduction kernels is the best single lesson in GPU optimisation. For a block of 256 and $n = 2^{24}$ floats, here is what each step removes.</p>
+<ol>
+<li><strong>Interleaved addressing with modulo.</strong> 47 warp-rounds per block (Problem 2), divergent, and <code>%</code> is slow. Each element is read by its own thread, so there are $2^{24}/256 = 65{,}536$ blocks.</li>
+<li><strong>Interleaved, strided index</strong> (thread t handles element $2st$): no divergence in early rounds, but stride-2s shared accesses: bank conflicts.</li>
+<li><strong>Sequential addressing:</strong> 12 warp-rounds, no conflicts.</li>
+<li><strong>First add during load:</strong> each thread loads two elements and adds them before the tree. Half the blocks, and the tree's first round is gone.</li>
+<li><strong>Unroll the last warp:</strong> the last 5 rounds need no barrier (today: shuffles).</li>
+<li><strong>Many elements per thread</strong> (grid-stride): a few hundred blocks; the tree's cost becomes negligible (Problem 5: about 0.05% of the additions).</li>
+</ol>
+<p><strong>The point:</strong> steps 1–5 shave instruction overhead; step 6 changes the algorithm's shape so that the overhead stops mattering. Harris reported about 30× from first to last on 2007 hardware, reaching near-peak bandwidth. Always ask "what fraction of the work is the part I'm optimising?"</p>
+
+<h3>Example 2: a warp reduction, traced</h3>
+<p><strong>Values</strong> in lanes 0–7 (an 8-lane warp for readability): 3, 1, 4, 1, 5, 9, 2, 6. Sum 31.</p>
+<p><strong>shfl_down, offset 4:</strong> lane ℓ adds lane ℓ + 4: lanes 0–3 become 8, 10, 6, 7. <strong>Offset 2:</strong> lanes 0–1 become 14, 17. <strong>Offset 1:</strong> lane 0 becomes 31. ✓</p>
+<p><strong>shfl_xor, mask 4, 2, 1:</strong> each lane pairs with ℓ ⊕ mask and both add. After mask 4 every lane ℓ holds $v_\ell + v_{\ell \oplus 4}$; after mask 2, the sum of its group of 4; after mask 1, all 8: every lane holds 31.</p>
+<p><strong>Cost:</strong> 3 shuffles + 3 adds either way ($\log_2$ of the width). The xor form costs nothing extra and leaves the result everywhere.</p>
+
+<h3>Example 3: reductions that aren't sums</h3>
+<p><strong>Argmax.</strong> Reduce pairs (value, index) with the operator "keep the larger value; on ties, the smaller index". It's associative (and commutative), so every tree works, and the tie rule makes the result deterministic.</p>
+<p><strong>Mean and variance in one pass.</strong> Reduce triples (count, mean, M2) with Chan's combination rule: for parts A and B, $n = n_A + n_B$, $\delta = \bar x_B - \bar x_A$, $\bar x = \bar x_A + \delta n_B/n$, $M_2 = M_{2,A} + M_{2,B} + \delta^2 n_A n_B/n$. This is associative, so a GPU tree reduction computes a numerically stable variance in one read of the data. The naive $E[x^2] - E[x]^2$ formula is one pass too, but cancels catastrophically when the mean is large compared with the spread (Lab 7, Chapter 9.1).</p>
+<p><strong>Rule:</strong> anything you can phrase as an associative operator on a small state is a reduction, and gets the same fast tree.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> M. Harris, "Optimizing Parallel Reduction in CUDA" (NVIDIA, 2007): the seven-kernel sequence.</li>
+<li><strong>Required:</strong> G. Blelloch, "Prefix Sums and Their Applications" (CMU-CS-90-190, 1990), sections 1–2: work, span and the tree view of reduction and scan.</li>
+<li><strong>Optional:</strong> J. Luitjens, "Faster Parallel Reductions on Kepler", NVIDIA Developer Blog (2014): shuffles and atomics.</li>
+<li><strong>Optional:</strong> T. Chan, G. Golub, R. LeVeque, "Algorithms for Computing the Sample Variance: Analysis and Recommendations", <em>The American Statistician</em>, 1983.</li>
+</ul>
+</section>

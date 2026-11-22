@@ -1,0 +1,334 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Chain versus tree",
+   "statement": "<p>Sum $n = 1024$ numbers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sequential additions?",
+     "answer": 1023,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Rounds in a pairwise tree?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Total additions in the tree?",
+     "answer": 1023,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each round halves the count."
+   ],
+   "solution": "<p>A chain needs 1,023 dependent steps. A tree needs $\\log_2 1024 = 10$ rounds and still $512 + 256 + \\dots + 1 = 1023$ additions: same work, much shorter critical path.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Counting warp-rounds",
+   "statement": "<p>A 256-thread block reduces 256 values in shared memory over 8 rounds. Count, summed over rounds, the warps that have at least one active thread (each such warp issues the round's instructions).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Interleaved addressing (round r: threads with t mod 2^{r+1} = 0)?",
+     "answer": 47,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Sequential addressing (round r: threads t &lt; 128/2^r)?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Interleaved: count the warps holding a multiple of 2, 4, 8, …",
+    "Sequential: 128, 64, 32 active threads, then within one warp."
+   ],
+   "solution": "<p>(a) Per round: [8, 8, 8, 8, 8, 4, 2, 1], total 47. (b) Per round: [4, 2, 1, 1, 1, 1, 1, 1], total 12. Sequential addressing issues 3.9× fewer warp-rounds, with no divergence until the last warp, and no bank conflicts.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 1,
+   "title": "Interleaved, one round",
+   "statement": "<p>256-thread block, interleaved addressing, the round where threads with $t \\bmod 4 = 0$ work.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Active threads?",
+     "answer": 64,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Warps that issue?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Lane efficiency of those warps, in %?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Every warp contains 8 multiples of 4."
+   ],
+   "solution": "<p>64 threads spread over all 8 warps, 8 per warp: every warp issues at 25% efficiency. Sequential addressing would put the same 64 threads in 2 full warps.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Shuffle trees",
+   "statement": "<p>A warp sums 32 values in registers.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Shuffle steps with __shfl_down_sync (offsets 16, 8, 4, 2, 1)?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "After those steps, which lanes hold the full sum?",
+     "options": [
+      "all lanes",
+      "lane 0 only",
+      "lane 31 only",
+      "even lanes"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "To leave the sum in every lane instead, use…",
+     "options": [
+      "__shfl_up_sync",
+      "__shfl_xor_sync (a butterfly)",
+      "__ballot_sync",
+      "__syncwarp"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "With shfl_down, lane ℓ adds lane ℓ + d; lanes near the top read nothing new."
+   ],
+   "solution": "<p>5 steps. With <code>shfl_down</code> only lane 0 accumulates everything (upper lanes receive their own or stale values). With <code>shfl_xor</code> each step exchanges symmetrically, so after 5 steps every lane has the total, which saves a broadcast when every thread needs the result (softmax, LayerNorm).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Sizing a reduction",
+   "statement": "<p>Reduce $n = 2^{26}$ floats on the GW-1 with a full machine: 128 blocks of 256 threads, a grid-stride loop, then one partial per block.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Elements per thread?",
+     "answer": 2048,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Partials written?",
+     "answer": 128,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Fraction of all additions done in the shuffle/shared-memory trees, in %?",
+     "answer": 0.048826635611454186,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "Tree additions: 255 per block, plus 127 to combine the partials."
+   ],
+   "solution": "<p>(a) 2,048. (b) 128. (c) About $(128 \\times 255 + 127)/2^{26} \\approx 0.049\\%$. The tree, with all its barriers and shuffles, is a rounding error; the grid-stride loop is the kernel.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 1,
+   "title": "Is it fast?",
+   "statement": "<p>Reducing $2^{26}$ floats takes 0.60 ms on the GW-1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Lower bound, in ms?",
+     "answer": 0.5242880000000001,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fraction of peak bandwidth, in %?",
+     "answer": 87.38133333333336,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Read 4n bytes once."
+   ],
+   "solution": "<p>(a) 256 MiB at 512 GB/s: 0.524 ms. (b) 87%: at the practical ceiling.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 3,
+   "title": "When floats stop counting",
+   "statement": "<p>Add $2^{25}$ ones in FP32 (round to nearest even).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Result of a sequential loop?",
+     "answer": 16777216,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Result of a pairwise tree?",
+     "answer": 33554432,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "What is $2^{24} + 1$ in FP32?",
+    "In a tree, every partial sum is a power of two."
+   ],
+   "solution": "<p>(a) FP32 has 24 bits of significand: $2^{24} + 1$ isn't representable and rounds (to even) back to $2^{24}$, so the loop sticks at 16,777,216. (b) The tree adds equal powers of two at every level, all exact: 33,554,432. Trees aren't only faster; their error grows like $\\log n$ instead of $n$.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Combining blocks",
+   "statement": "<p>How do you combine per-block partial sums?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which of these give bit-identical float results on every run?",
+     "options": [
+      "A second kernel summing the partials in a fixed order",
+      "Each block atomicAdd-ing its partial into the result",
+      "The last-block-done pattern, where the last block sums the partials in index order",
+      "Each block atomicAdd-ing into one of 8 accumulators chosen by blockIdx % 8, then summing the 8"
+     ],
+     "answer": [
+      0,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Does the order of additions depend on timing?"
+   ],
+   "solution": "<p>Fixed-order sums of the partials are deterministic. Float atomics add in arrival order, which varies, so they aren't, even when spread over several accumulators (Lab 9 measures this).</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Work, span and Brent",
+   "statement": "<p>Reduction of $n = 2^{20}$ values with $p = 32{,}768$ processors (threads). Brent's bound: $T_p \\le W/p + S$, where W is total work and S the span (longest dependent chain).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Work W (additions)?",
+     "answer": 1048575,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Span S (tree rounds)?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Brent's bound on T_p, in steps?",
+     "answer": 51.999969482421875,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "W/p = 32 (rounded)."
+   ],
+   "solution": "<p>(a) $n - 1$. (b) $\\log_2 n = 20$. (c) $\\approx 32 + 20 = 52$ steps, against $10^6$ sequentially. With $p \\ll n$ the work term dominates, which is why each thread should first add many elements sequentially: it doesn't increase W and keeps the tree small.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "A dot product",
+   "statement": "<p>Fused dot product of two FP32 vectors of $2^{26}$ elements on the GW-1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Intensity, FLOP/byte?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Lower bound on time, in ms?",
+     "answer": 1.0485760000000002,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Two reads and two FLOPs per element."
+   ],
+   "solution": "<p>(a) 0.25. (b) 512 MiB / 512 GB/s = 1.049 ms. The reduction tree is free; fusing the multiply into the reduction (instead of writing products and then summing them) saves a third of the traffic.</p>"
+  }
+ ]
+}

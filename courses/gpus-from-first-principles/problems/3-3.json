@@ -1,0 +1,296 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Serialisation",
+   "statement": "<p>Count the serialised updates for one warp atomicAdd.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "All 32 lanes hit the same bin?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Lanes spread evenly over 4 bins (8 each)?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Every lane a different bin?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "The simulator charges the worst same-address count."
+   ],
+   "solution": "<p>32, 8 and 1. Contention, not the number of atomics, sets the cost.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Privatisation",
+   "statement": "<p>A 256-bin histogram of $2^{20}$ pixels with 64 blocks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Global atomics, naive (one per pixel)?",
+     "answer": 1048576,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Global atomics with per-block shared histograms, at most?",
+     "answer": 16384,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each block merges each non-zero bin once."
+   ],
+   "solution": "<p>(a) 1,048,576. (b) 16,384: 64× fewer, and the per-pixel atomics now run in shared memory.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 3,
+   "title": "Random bins",
+   "statement": "<p>32 lanes pick bins independently and uniformly from 256.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected largest number of lanes on one bin (the serialisation)?",
+     "answer": 1.9373934777133834,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "$E[\\max] = \\sum_{k \\ge 1} P(\\max \\ge k)$; compute $P(\\max \\le k)$ exactly or estimate the birthday-style collisions."
+   ],
+   "solution": "<p>$1.94$. The probability of any collision is high ($1 - \\prod_{i<32}(1 - i/256) \\approx 87\\%$), but triple collisions are rare, so a warp on uniform data costs about 2 passes. Skewed data is what hurts.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "A skewed image",
+   "statement": "<p>60% of pixels are 0 (as in Lab 3); the rest are spread over other values. Lanes are independent.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected lanes per warp on bin 0?",
+     "answer": 19.2,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Probability that all 32 lanes are 0?",
+     "answer": 7.958661109946392e-08,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Binomial(32, 0.6)."
+   ],
+   "solution": "<p>(a) $32 \\times 0.6 = 19.2$: the serialisation is about 19–20 per warp atomic, about 10× the uniform case. (b) $7.96e-08$: warps are almost never uniform, so the expensive case is the common case.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Warp aggregation",
+   "statement": "<p>Using <code>__match_any_sync</code> (or ballots), each group of lanes with equal values elects a leader, which adds the group's size with one atomic.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Atomics per warp on a constant image?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "On a warp with 5 distinct values?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Worst case?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "One atomic per distinct value."
+   ],
+   "solution": "<p>1, 5 and 32 (all different, where aggregation only adds overhead). Aggregation targets exactly the skewed case that privatisation can't fix.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Counting runs locally",
+   "statement": "<p>Each thread processes 16 consecutive pixels and does one atomic per run of equal values.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Atomics per thread in a constant region?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "On pixels that alternate between two values?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "A run ends when the value changes."
+   ],
+   "solution": "<p>1 and 16. Real images have long runs (sky, background), so this simple trick removes most of the contention, at the cost of uncoalesced per-thread chunks unless the data is staged through shared memory.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Compare-and-swap loops",
+   "statement": "<p>c threads simultaneously run a CAS loop on the same address; each round exactly one succeeds and the others retry.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Total CAS attempts for c = 32?",
+     "answer": 528,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Rounds until the last one succeeds?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Round k has 32 − k + 1 contenders."
+   ],
+   "solution": "<p>$32 + 31 + \\dots + 1 = 528$ attempts over 32 rounds: quadratic. Native atomics (atomicAdd, atomicMax) are far better than CAS loops whenever they exist.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Allocating output slots",
+   "statement": "<p>$10^6$ threads each append one item to a queue with <code>atomicAdd(count, 1)</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Atomics on the counter?",
+     "answer": 1000000.0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With warp aggregation (one atomic per warp, lanes take base + rank)?",
+     "answer": 31250,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Rank = popc(ballot & lanes below me)."
+   ],
+   "solution": "<p>(a) $10^6$ atomics on one address, all serialised at L2. (b) 31,250. Compilers now do this aggregation automatically for the simple case.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Float atomics",
+   "statement": "<p>Statements about <code>atomicAdd</code> on floats.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which are true?",
+     "options": [
+      "The result can differ between runs in the last bits",
+      "The result is always within a few ulps of the exact sum regardless of n",
+      "Each individual atomic is indivisible",
+      "Changing the grid size can change the result"
+     ],
+     "answer": [
+      0,
+      2,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Order of additions depends on timing."
+   ],
+   "solution": "<p>Each atomic is indivisible, but the sequence order isn't fixed, so the rounding differs between runs and with grid size. The error is that of some sequential sum: it grows with n, not bounded by a few ulps.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Per-warp sub-histograms",
+   "statement": "<p>A block keeps one 256-bin histogram per warp (8 warps) in shared memory instead of one per block.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Shared memory used, in bytes (4-byte bins)?",
+     "answer": 8192,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "On a constant image, the serialisation per warp atomic is…",
+     "options": [
+      "32, as before",
+      "4",
+      "1"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Which collisions do per-warp copies remove?"
+   ],
+   "solution": "<p>8 KB. Per-warp copies stop warps from colliding with each other (fewer cross-warp conflicts at the same counters), but lanes of one warp still hit the same counter: 32. Inside a warp, you need aggregation or run counting.</p>"
+  }
+ ]
+}

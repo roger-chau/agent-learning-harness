@@ -52,3 +52,38 @@ status[tile] = 1;                     const v = value[tile];</code></pre>
 </ul>
 <div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 5</strong>, on memory consistency models and synchronisation. The GPU story is the same ideas at a larger scale.</div>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: why the fence is needed, mechanically</h3>
+<p><strong>Setup.</strong> Producer block on SM 3 writes <code>value = 42</code>, then <code>flag = 1</code>. Consumer on SM 9 spins on <code>flag</code>, then reads <code>value</code>.</p>
+<p><strong>Without a fence, one possible history:</strong> both stores leave SM 3 for L2. They travel to different L2 slices (addresses are hashed across slices), and the flag's slice is less busy, so <code>flag = 1</code> lands first. SM 9 reads flag = 1, then reads <code>value</code>, which arrives from a slice that hasn't received 42 yet: it gets the old value. Nothing was "wrong" in the hardware; the two stores just took independent paths.</p>
+<p><strong>With <code>__threadfence()</code></strong> between them, SM 3 doesn't issue the flag store until the value store is acknowledged as visible device-wide. On the consumer side, an acquire (or a fence after reading the flag) stops the value load from being satisfied early from a stale L1 line. Both halves are needed.</p>
+
+<h3>Example 2: the last-block-done reduction, line by line</h3>
+<pre>partial = blockSum(myShare)
+if (threadIdx.x == 0) {
+  partials[blockIdx.x] = partial      // 1. publish
+  __threadfence()                     // 2. make it visible before...
+  ticket = atomicAdd(counter, 1)      // 3. ...announcing completion
+  isLast = (ticket == gridDim.x - 1)
+}
+__syncthreads()                       // 4. share isLast with the block
+if (isLast) result = blockSum(partials[0 .. gridDim.x-1])   // 5. fixed order: deterministic</pre>
+<p><strong>Why each step:</strong> (2) without the fence, another block could take ticket gridDim.x − 1 and read this block's partial before it's visible. (3) The atomic gives every block a unique ticket, so exactly one is last. (5) The last block sums in index order, so the result is bit-reproducible, unlike float atomics. It's one launch, no grid barrier, no deadlock risk (no block waits for anything).</p>
+
+<h3>Example 3: spotting the deadlock before it happens</h3>
+<p><strong>Proposal.</strong> "Each block computes its tile; then block 0 waits for a flag from every other block and writes a summary." Is it safe?</p>
+<p><strong>Check forward progress:</strong> block 0 spins, occupying a slot. The other blocks only need to <em>run</em>, not to wait for block 0, so even if they're not yet resident, they'll eventually get the slots freed by finished blocks. Block 0's slot is the only one held, and the GPU has more than one. Safe (if wasteful: block 0 burns a slot spinning).</p>
+<p><strong>Variation.</strong> "Block i waits for block i + 1." Now block 0 waits for block 1, which may not be resident; if every slot is held by waiting blocks whose successors aren't resident, nobody progresses. Unsafe in general. <strong>Rule:</strong> a block may wait only for blocks guaranteed to have started, which in practice means lower dynamic tile ids (look-back), or a cooperative launch.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Memory Fence Functions" (with the last-block example) and "Cooperative Groups: grid synchronisation".</li>
+<li><strong>Required:</strong> D. Lustig, S. Sahasrabuddhe, O. Giroux, "A Formal Analysis of the NVIDIA PTX Memory Consistency Model", ASPLOS 2019, sections 1–3.</li>
+<li><strong>Optional:</strong> J. Alglave et al., "GPU Concurrency: Weak Behaviours and Programming Assumptions", ASPLOS 2015: litmus tests run on real GPUs.</li>
+<li><strong>Optional:</strong> Hennessy &amp; Patterson (7th ed.), Chapter 5, section on models of memory consistency.</li>
+</ul>
+</section>

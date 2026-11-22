@@ -50,3 +50,43 @@
 </ul>
 <div class="callout companion"><b>Companion reading</b>H&amp;P 7th ed., <strong>Chapter 5</strong> (Thread-Level Parallelism) covers the atomic primitives (exchange, test-and-set, compare-and-swap) from which locks and other synchronisation are built.</div>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: costing three histogram designs</h3>
+<p><strong>Data.</strong> $2^{24}$ bytes, 60% zeros, 256 bins, the GW-1 with 128 blocks of 256 threads.</p>
+<ul>
+<li><strong>Global atomics:</strong> one per element, $2^{24}$ in all, each warp's atomic serialised about 19–20 ways on bin 0 (Problem 4). All of them go to L2.</li>
+<li><strong>Shared-memory privatisation:</strong> the same $2^{24}$ atomics, but in shared memory (tens of cycles instead of hundreds), still serialised ~19×; then $128 \times 256 = 32{,}768$ global atomics for the merge, negligible.</li>
+<li><strong>Privatisation + warp aggregation:</strong> per warp atomic, the ~19 lanes holding 0 become one update, and the ~13 others mostly hit distinct bins: about 14 shared-memory updates per warp instead of a 19-deep chain on one counter, and they no longer queue behind each other. Add run counting per thread (zeros arrive in long runs in real images) and most of those updates disappear too.</li>
+</ul>
+<p><strong>Lesson:</strong> the cost model is serialisation × atomics × latency of the memory they hit. Privatisation cuts the latency, aggregation cuts the serialisation, and run counting cuts the count. B3's "good on every distribution" needs at least two of them.</p>
+
+<h3>Example 2: building atomicMax for floats from CAS</h3>
+<pre>function atomicMaxFloat(buf, i, v) {
+  let old = buf[i];
+  while (old &lt; v) {
+    const seen = atomicCAS(buf, i, old, v);   // write v only if buf[i] is still old
+    if (seen === old) break;                  // we won
+    old = seen;                               // someone changed it: retry against the new value
+  }
+}</pre>
+<p><strong>Why it's correct:</strong> CAS writes only if nobody changed the value since we read it; otherwise it returns the current value and we re-check. Values only increase, so the loop terminates.</p>
+<p><strong>Why it's usually fast:</strong> the early exit. Once the stored maximum exceeds most candidates, most threads never attempt a CAS. Under heavy contention with increasing values it degrades towards the quadratic worst case (Problem 7).</p>
+<p><strong>The trick most libraries use instead:</strong> for non-negative floats, the IEEE bit pattern orders like an unsigned integer, so <code>atomicMax</code> on the bits as <code>int</code> is a correct float max in one native atomic. Negative floats need the inverted ordering (Chapter 3.5's transform).</p>
+
+<h3>Example 3: an append queue with warp aggregation</h3>
+<p><strong>Task.</strong> Threads that find a match append its index to a global output list.</p>
+<p><strong>Per-thread atomics:</strong> each matching thread does <code>slot = atomicAdd(count, 1)</code>. With 5% matches over $10^7$ threads: 500,000 serialised atomics on one address.</p>
+<p><strong>Aggregated:</strong> <code>m = ballot(match)</code>; the lowest set lane does <code>base = atomicAdd(count, popc(m))</code>; the base is shuffled to all lanes; each matching lane writes at <code>base + popc(m &amp; lanesBelow)</code>. Atomics: one per warp that has any match: with 5% per lane, $1 - 0.95^{32} = 81\%$ of warps, about 253,000. Not a huge saving at 5%; at 50% matches it's 5,000,000 versus 312,500: 16×.</p>
+<p><strong>Order:</strong> output order depends on which warp's atomic arrives first: fine for a work queue, wrong if the consumer needs input order (then use a scan, Chapter 3.5).</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, "Atomic Functions" (including the CAS-based construction of other atomics).</li>
+<li><strong>Required:</strong> N. Podlozhnyuk, "Histogram calculation in CUDA", NVIDIA whitepaper (2007).</li>
+<li><strong>Optional:</strong> E. Adinets, "CUDA Pro Tip: Optimized Filtering with Warp-Aggregated Atomics", NVIDIA Developer Blog (2014).</li>
+</ul>
+</section>

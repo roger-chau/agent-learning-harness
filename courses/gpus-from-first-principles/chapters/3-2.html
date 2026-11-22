@@ -48,3 +48,33 @@ for (let d = 1; d &lt; 32; d *= 2) {
 <li><strong>Floats again:</strong> different trees round differently, so a GPU <code>cumsum</code> can differ from a sequential one in the last bits.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: Blelloch's scan, traced on 8 elements</h3>
+<p><strong>Input:</strong> [3, 1, 7, 0, 4, 1, 6, 3].</p>
+<p><strong>Up-sweep</strong> (reduction, keeping partials in place). Stride 1: positions 1, 3, 5, 7 add their left neighbour: [3, 4, 7, 7, 4, 5, 6, 9]. Stride 2: positions 3, 7 add the value 2 to the left: [3, 4, 7, 11, 4, 5, 6, 14]. Stride 4: position 7 adds position 3: [3, 4, 7, 11, 4, 5, 6, 25].</p>
+<p><strong>Down-sweep.</strong> Set the last element to 0 (the identity): [3, 4, 7, 11, 4, 5, 6, 0]. Stride 4: for the pair (3, 7): left takes the right's value, right takes left + right: position 3 ← 0, position 7 ← 11 + 0 = 11: [3, 4, 7, 0, 4, 5, 6, 11]. Stride 2: pairs (1, 3) and (5, 7): [3, 0, 7, 4, 4, 11, 6, 16]. Stride 1: pairs (0,1), (2,3), (4,5), (6,7): [0, 3, 4, 11, 11, 15, 16, 22].</p>
+<p><strong>Check:</strong> exclusive scan of the input is [0, 3, 4, 11, 11, 15, 16, 22]. ✓ Additions: 7 up, 7 down: $2(n-1)$.</p>
+
+<h3>Example 2: stream compaction of a sparse vector</h3>
+<p><strong>Task.</strong> Convert a dense vector of $n$ floats with about 10% non-zeros to (index, value) pairs.</p>
+<p><strong>Plan.</strong> Each thread handles 8 consecutive elements: counts its non-zeros (in registers); block-scan the counts; the block's total is published, and blocks get their offsets (three-phase or look-back); each thread writes its non-zeros at its offset, in order.</p>
+<p><strong>Traffic.</strong> Three-phase: read $n$ (count), read $n$ again (write phase), write $0.1n$ pairs (8 bytes each): $4n + 4n + 0.8n = 8.8n$ bytes. Single pass: $4n + 0.8n = 4.8n$. For $n = 2^{26}$: 590 MB versus 322 MB, 1.15 ms versus 0.63 ms on the GW-1.</p>
+<p><strong>Note</strong> the per-thread chunk of 8 means each thread's loads are 32 bytes apart: load them as two <code>float4</code>s per thread (still sector-efficient), or stage through shared memory.</p>
+
+<h3>Example 3: why scan needs associativity, and what that excludes</h3>
+<p><strong>Associative:</strong> +, max, min, AND, OR, matrix product, the segmented operator, the "affine map composition" $(a_1, b_1) \circ (a_2, b_2) = (a_1 a_2, a_2 b_1 + b_2)$.</p>
+<p><strong>That last one parallelises a recurrence.</strong> $y_i = a_i y_{i-1} + b_i$ (an IIR filter, a linear RNN, a state-space model) looks sequential. But each step is the affine map $y \mapsto a_i y + b_i$, and composition of affine maps is associative. Scan the pairs $(a_i, b_i)$ with that operator, apply to $y_0$, and every $y_i$ comes out in $O(\log n)$ span. This is exactly how linear-recurrence models such as Mamba are trained on GPUs.</p>
+<p><strong>Not associative:</strong> subtraction, division, floating-point addition (approximately associative: different trees give slightly different results), "keep the most recent non-NaN"... unless rephrased with extra state.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> M. Harris, S. Sengupta, J. Owens, "Parallel Prefix Sum (Scan) with CUDA", <em>GPU Gems 3</em>, Chapter 39 (2007).</li>
+<li><strong>Required:</strong> D. Merrill, M. Garland, "Single-pass Parallel Prefix Scan with Decoupled Look-back", NVIDIA Technical Report NVR-2016-002 (this Part's paper chapter).</li>
+<li><strong>Optional:</strong> G. Blelloch, "Prefix Sums and Their Applications" (1990), sections 3–4: segmented scans and recurrences.</li>
+<li><strong>Optional:</strong> A. Gu, T. Dao, "Mamba: Linear-Time Sequence Modeling with Selective State Spaces" (2023), section 3.3 (hardware-aware parallel scan).</li>
+</ul>
+</section>
