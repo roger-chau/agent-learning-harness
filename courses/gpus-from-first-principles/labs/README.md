@@ -41,6 +41,7 @@ other GPUs. Set `GW_PEAK_GBS` if the reported peak bandwidth looks wrong for you
 | L7-workloads | 7 | Fused softmax and LayerNorm, and a pinned-memory stream pipeline |
 | L8-attention | 8 | Capstone: FlashAttention-style fused attention with WMMA, against a cuBLAS reference |
 | L9-reality | 9 | Deterministic reductions, compensated summation, and clocks and power under sustained load (NVML) |
+| L10-patterns | 10 | Tiled convolution with constant memory, and scalar versus vector CSR SpMV |
 
 `common/gw.h` is the shared harness: error checking, device info, event timing with warm-up
 and median, exactness checks, and `results.json`.

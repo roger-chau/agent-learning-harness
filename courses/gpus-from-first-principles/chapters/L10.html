@@ -1,0 +1,36 @@
+<section class="blk" data-n="01">
+<h2>Why this lab</h2>
+<p>Part 10's patterns, on your card. The simulator showed that tiling a convolution cuts L2 traffic about 12× but barely changes the time, because the cache absorbs the reuse. Real GPUs have bigger L1 caches and a read-only path, so does that still hold? And sparse matrix–vector products are where "coalescing" stops being a textbook word: here you measure what a warp per row buys on a million-row matrix.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>What to do</h2>
+<p>Open <code>labs/L10-patterns/l10.cu</code>.</p>
+<ul>
+<li><strong>A. Convolution</strong> (4096 × 4096, 5 × 5 filter in <code>__constant__</code> memory). Write <code>conv_tiled</code>: 16 × 16 threads per block, a 20 × 20 input tile with halo in shared memory (zeros outside the image), a barrier, then the 25 FMAs from shared memory. Pad the tile's rows by one float, and work out why that matters here.</li>
+<li><strong>B. SpMV</strong> (2²⁰ rows of 32–95 non-zeros, CSR). Write <code>spmv_vector</code>: a warp per row, lanes striding through the row, a shuffle reduction. The given <code>spmv_scalar</code> uses a thread per row.</li>
+</ul>
+<p>Both checks are exact: the data are small integers, so every sum is exact in FP32 whatever the order.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Predict, then measure</h2>
+<ul>
+<li>A: count global loads per output for each version (25 versus 400/256). Is either version memory-bound on your card, or compute-bound at 50 FLOPs per output? Measure L1 and L2 hit rates of <code>conv_naive</code> with <code>make ncu</code>: how much of its reuse do the caches already capture?</li>
+<li>B: for the scalar kernel, how many sectors does a warp touch per step? For the vector kernel? Predict the speedup from sectors alone, then measure sectors per request with Nsight Compute.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Going further</h2>
+<ul>
+<li>A: try a 7 × 7 and a 9 × 9 filter. Tiling should gain more as R grows: does it? Then try a separable 9 × 9 (two 1-D passes).</li>
+<li>B: build a matrix with skewed rows (most with 4 non-zeros, a few with 100,000). Both kernels degrade; implement merge-based SpMV (split non-zeros evenly, binary-search rowPtr) and compare.</li>
+<li>Compare with cuSPARSE's <code>cusparseSpMV</code> (link <code>-lcusparse</code>) on both matrices.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Passing</h2>
+<p>All four checks pass; the tiled convolution is at least 1.1× faster than the naive one; the vector SpMV reaches at least 40% of peak bandwidth and is at least 1.5× faster than the scalar one. The report compares your predictions with the measurements and the profiler's cache hit rates.</p>
+</section>

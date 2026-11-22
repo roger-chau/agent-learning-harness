@@ -3640,6 +3640,64 @@
      ]
     },
     {
+     "type": "lab",
+     "id": "L10",
+     "title": "Lab 10: Convolution and SpMV on your GPU",
+     "summary": "Shared-memory tiles with halos against the caches, and a warp per row against a thread per row on a million-row sparse matrix.",
+     "dir": "labs/L10-patterns",
+     "hours": 4,
+     "blocks": [
+      [
+       "Why this lab",
+       "patterns on real hardware"
+      ],
+      [
+       "What to do",
+       "tiled convolution, vector SpMV"
+      ],
+      [
+       "Predict, then measure",
+       "loads, sectors, hit rates"
+      ],
+      [
+       "Going further",
+       "bigger filters, skewed rows, cuSPARSE"
+      ],
+      [
+       "Passing",
+       "targets and the report"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "conv_speedup",
+       "op": ">=",
+       "value": 1.1,
+       "label": "Tiled / naive convolution"
+      },
+      {
+       "metric": "spmv_vector_pct",
+       "op": ">=",
+       "value": 40,
+       "label": "Vector SpMV, % of peak bandwidth"
+      },
+      {
+       "metric": "spmv_speedup",
+       "op": ">=",
+       "value": 1.5,
+       "label": "Vector / scalar SpMV"
+      }
+     ],
+     "writeup": {
+      "min_words": 250,
+      "prompts": [
+       "Convolution: loads per output predicted for each version, the cache hit rates you measured, and the speedup you got. Why is it smaller than the load ratio?",
+       "SpMV: sectors per request for both kernels and the speedup they predict, against the measured speedup.",
+       "What would you change for a matrix with very uneven rows?"
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p10-checkpoint",
      "title": "Part 10 checkpoint",
