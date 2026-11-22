@@ -1,0 +1,72 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Two DP families that look different but share an idea: <strong>the structure of the input tells you the order of the DP</strong>.</p>
+<ul>
+<li><strong>Tree DP:</strong> optimise or count over a tree: independent sets, vertex covers, cameras, the longest path, "for every node, compute X over the whole tree" (the last is <em>rerooting</em>).</li>
+<li><strong>Digit DP:</strong> "how many integers in [L, R] have property P" with R up to 10¹⁸. You can't iterate the numbers, but you can walk their digits.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea</h2>
+<p><strong>Tree DP</strong> is Part 3's recursive contract with more states: f(v) returns a small tuple, such as (best if v is taken, best if not), and the parent combines its children's tuples. Post-order is the topological order.</p>
+<p><strong>Rerooting</strong> answers "for every root" in O(n) instead of O(n²). Compute the answer for one root bottom-up, then move the root across each edge with an O(1) correction. For the sum of distances: moving from p to its child c brings size[c] nodes one step closer and sends n − size[c] nodes one step farther.</p>
+<p><strong>Digit DP</strong> builds numbers from the most significant digit with a <strong>tight</strong> flag: while the prefix equals N's prefix, the next digit is capped by N's digit. Once it's smaller, every later digit is free (0–9). Add whatever the property needs to the state (a digit sum, a used-digit mask, the previous digit), plus a <strong>started</strong> flag for leading zeros. Count [L, R] as f(R) − f(L − 1).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code># Tree DP, iterative post-order (no recursion limit)
+order, parent = dfs_order(root)
+for v in reversed(order):              # children before parents
+    take[v] = val[v] + sum(skip[c] for c in children(v))
+    skip[v] = sum(max(take[c], skip[c]) for c in children(v))
+
+# Digit DP
+@cache
+def go(i, tight, started, state):
+    if i == len(s): return accept(state, started)
+    hi = int(s[i]) if tight else 9
+    return sum(go(i + 1, tight and d == hi, started or d &gt; 0, step(state, d, started)) for d in range(hi + 1))</code></pre>
+<p>Invariant (digit DP): go(i, tight, …) counts completions of the first i digits that stay ≤ N. Memoising over tight = False states is what makes it fast; tight = True occurs on only one path.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: sum of distances in a tree</h2>
+<ol>
+<li><strong>Brute force:</strong> BFS from every node, O(n²). That's 9 × 10⁸ for n = 3 × 10⁴: too slow.</li>
+<li><strong>One root first:</strong> root at 0. Post-order gives size[v] and down[v] (the sum of distances from v into its subtree): down[v] = Σ over children of (down[c] + size[c]). ans[0] = down[0].</li>
+<li><strong>What changes when the root moves to child c?</strong> The size[c] nodes in c's subtree each get 1 closer; the other n − size[c] each get 1 farther. So ans[c] = ans[p] − size[c] + (n − size[c]).</li>
+<li><strong>Pre-order pass</strong> applies it top-down: O(n) total.</li>
+<li><strong>Test:</strong> a single node (0), a path (the endpoints have the largest sums), and a star.</li>
+</ol>
+<p>The move: <strong>solve for one configuration, then find the O(1) delta to a neighbouring configuration</strong>. Rerooting, sliding windows and the "move the median" arguments are all this.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Recursion depth</strong> on path-shaped trees: use an iterative order, especially in Python.</li>
+<li><strong>Undirected input:</strong> track the parent to avoid walking back up.</li>
+<li><strong>Binary tree cameras:</strong> three states per node (has a camera, covered, needs cover), decided greedily from the leaves.</li>
+<li><strong>Diameter of a general tree:</strong> two BFS passes, or the tree-DP top-two child heights.</li>
+<li><strong>Digit DP traps:</strong> forgetting the started flag (leading zeros counted as digits), and computing f(L − 1) wrongly when L = 0.</li>
+<li><strong>Closed forms instead:</strong> counting 1s has a per-position formula; numbers with distinct digits below 10ᵏ is a product of permutations. Use the formula when you can derive it, and the DP when the property is messy.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/house-robber-iii/" target="_blank" rel="noopener">337. House Robber III</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">(take, skip) per node.</span></li>
+<li><a href="https://leetcode.com/problems/binary-tree-cameras/" target="_blank" rel="noopener">968. Binary Tree Cameras</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Three states from the leaves up.</span></li>
+<li><a href="https://leetcode.com/problems/sum-of-distances-in-tree/" target="_blank" rel="noopener">834. Sum of Distances in Tree</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Rerooting.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-height-trees/" target="_blank" rel="noopener">310. Minimum Height Trees</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Peel leaves, or reroot heights.</span></li>
+<li><a href="https://leetcode.com/problems/tree-diameter/" target="_blank" rel="noopener">1245. Tree Diameter</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">Premium</span><br><span class="lc-note">Two BFS or top-two heights.</span></li>
+<li><a href="https://leetcode.com/problems/number-of-digit-one/" target="_blank" rel="noopener">233. Number of Digit One</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Digit DP or the per-position formula.</span></li>
+<li><a href="https://leetcode.com/problems/numbers-with-repeated-digits/" target="_blank" rel="noopener">1012. Numbers With Repeated Digits</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">n minus the distinct-digit count.</span></li>
+<li><a href="https://leetcode.com/problems/numbers-at-most-n-given-digit-set/" target="_blank" rel="noopener">902. Numbers At Most N Given Digit Set</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Shorter lengths by formula; same length with tight.</span></li>
+<li><a href="https://leetcode.com/problems/non-negative-integers-without-consecutive-ones/" target="_blank" rel="noopener">600. Non-negative Integers without Consecutive Ones</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Digit DP on bits (Fibonacci counts).</span></li>
+</ol>
+</section>

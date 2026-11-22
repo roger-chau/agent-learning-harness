@@ -1,0 +1,222 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Spot interval DP",
+   "statement": "<p>Which problems are interval DP?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "Burst balloons",
+      "Matrix-chain multiplication order",
+      "Longest increasing subsequence",
+      "Minimum cost to merge adjacent stones"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Merging or splitting contiguous pieces with neighbour-dependent costs."
+   ],
+   "solution": "<p>LIS is a 1-D DP over positions.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Balloons",
+   "statement": "<p>nums = [3, 1, 5, 8].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum coins?",
+     "answer": 167,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Which balloon is burst last in the optimal order?",
+     "options": [
+      "8",
+      "3",
+      "1",
+      "5"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Optimal order: 1, 5, 3, 8."
+   ],
+   "solution": "<p>3·1·5 + 3·5·8 + 1·3·8 + 1·8·1 = 15 + 120 + 24 + 8 = 167; 8 goes last.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "First or last?",
+   "statement": "<p>Why condition on the LAST balloon in Burst Balloons?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "Until it bursts, it separates the two sides, and when it does its neighbours are the interval ends",
+      "It's always the largest",
+      "The first is unknowable"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Independence of the subproblems."
+   ],
+   "solution": "<p>Conditioning on the first burst makes the sides adjacent, so they interact.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Cut a stick",
+   "statement": "<p>n = 7, cuts [1, 3, 4, 5].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum cost?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Cost of cutting in the given order 1, 3, 4, 5?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "The first cut costs the full length 7."
+   ],
+   "solution": "<p>Given order: 7 + 6 + 4 + 3 = 20. Best: 16 (for example cut 3 first, then 5, then 1 and 4).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Loop order",
+   "statement": "<p>Filling dp[i][j] for intervals.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which orders are valid?",
+     "options": [
+      "by increasing length",
+      "i descending, j ascending",
+      "i ascending, j ascending",
+      "any order"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    }
+   ],
+   "hints": [
+    "dp[i][j] reads dp[i][k] and dp[k][j] for i < k < j."
+   ],
+   "solution": "<p>i ascending would read dp[k][j] with k &gt; i before it's computed.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Complexity",
+   "statement": "<p>Interval DP with n = 400 and O(n) transitions.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "States (n²/2, thousands)?",
+     "answer": 80,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Total operations (n³/6, millions)?",
+     "answer": 10.666666666666666,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "About 10⁷."
+   ],
+   "solution": "<p>About 1.1 × 10⁷, fine in C++ and borderline in pure Python.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Min cuts",
+   "statement": "<p>s = \"aab\" and s = \"abccbc\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum cuts for \"aab\"?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For \"abccbc\"?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "aa | b; a | b | ccbc? …"
+   ],
+   "solution": "<p>\"aa|b\" = 1. \"abccbc\": a | bccb | c = 2.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Stone game",
+   "statement": "<p>Two players alternately take a pile from either end of a row; dp[i][j] = the maximum score difference the player to move can secure on piles i..j.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Recurrence?",
+     "options": [
+      "max(p[i] − dp[i+1][j], p[j] − dp[i][j−1])",
+      "p[i] + p[j]",
+      "max(dp[i+1][j], dp[i][j−1])"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "After your move, the opponent becomes the player to move."
+   ],
+   "solution": "<p>The difference formulation (negamax) avoids tracking two scores, and is common in game DP.</p>"
+  }
+ ]
+}

@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Rerooting turns \"for every root\" from O(n²) into…",
+   "options": [
+    "O(n)",
+    "O(n log n)",
+    "O(1)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Digit DP's tight flag means…",
+   "options": [
+    "the prefix equals N's prefix, so the next digit is capped",
+    "all digits are 9",
+    "the number is even"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Count in [L, R] as…",
+   "options": [
+    "f(R) − f(L − 1)",
+    "f(R) − f(L)",
+    "f(R) + f(L)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Tree DP's natural order is…",
+   "options": [
+    "post-order (children first)",
+    "BFS",
+    "random"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "For deep trees in Python…",
+   "options": [
+    "use an iterative order",
+    "increase n",
+    "use recursion"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -1,0 +1,232 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Counts",
+   "statement": "<p>The number of outputs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Subsets of 10 elements?",
+     "answer": 1024,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Permutations of 6 distinct elements?",
+     "answer": 720,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Distinct permutations of [1, 1, 2, 2, 3]?",
+     "answer": 30,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Multinomial: 5!/(2!·2!)."
+   ],
+   "solution": "<p>1024, 720 and 30.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Snapshot bug",
+   "statement": "<p><code>out.append(cur)</code> inside the backtracking.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Result?",
+     "options": [
+      "Every entry is the same (usually empty) list",
+      "Correct",
+      "A crash"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "References."
+   ],
+   "solution": "<p>All entries alias one list, which ends empty after the undos. Append <code>cur[:]</code>.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Duplicates",
+   "statement": "<p>Combination sum II with [1, 1, 2], target 3.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Distinct answers?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Without sibling-skipping, [1, 2] appears…",
+     "options": [
+      "twice",
+      "once",
+      "three times"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Each 1 can be the first sibling."
+   ],
+   "solution": "<p>Only [1, 2] (and not [1, 1, 1], which needs three 1s). Without skipping, it is generated once for each 1.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "N-queens",
+   "statement": "<p>Solutions to N-queens.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "n = 4?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "n = 6?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "n = 8?",
+     "answer": 92,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "The known sequence 1, 0, 0, 2, 10, 4, 40, 92."
+   ],
+   "solution": "<p>2, 4 and 92.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Catalan",
+   "statement": "<p>Generate all valid strings of n pairs of parentheses.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "How many for n = 4?",
+     "answer": 14,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "For n = 10?",
+     "answer": 16796,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "C(2n, n)/(n + 1)."
+   ],
+   "solution": "<p>14 and 16,796.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Break or continue?",
+   "statement": "<p>Sorted candidates, current one exceeds the remainder.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which?",
+     "options": [
+      "break: all later candidates are larger",
+      "continue",
+      "return False"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Sortedness."
+   ],
+   "solution": "<p>Sorting turns a per-candidate check into a cut-off for the whole loop.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Most constrained first",
+   "statement": "<p>Sudoku backtracking.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which empty cell should you fill next?",
+     "options": [
+      "the one with the fewest legal digits",
+      "the top-left",
+      "a random one"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Fail early."
+   ],
+   "solution": "<p>Fewer branches at the top of the tree shrinks it exponentially; a cell with 0 options prunes immediately.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Backtrack or DP?",
+   "statement": "<p>Which should use memoisation (DP) instead of plain backtracking?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "Count the ways to reach a target sum with unlimited coins",
+      "List all permutations",
+      "Count the N-queens solutions",
+      "Can s be segmented into dictionary words?"
+     ],
+     "answer": [
+      0,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Do subproblems repeat, and is only a count or a yes/no needed?"
+   ],
+   "solution": "<p>Coin counts and word break have repeating states. Permutations must be listed anyway, and N-queens states rarely repeat usefully.</p>"
+  }
+ ]
+}

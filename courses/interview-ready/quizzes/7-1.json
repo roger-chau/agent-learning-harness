@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Interval DP is ordered by…",
+   "options": [
+    "increasing interval length",
+    "i ascending",
+    "value"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Burst balloons conditions on…",
+   "options": [
+    "the last balloon burst in the interval",
+    "the first",
+    "the largest"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Index stick cutting by…",
+   "options": [
+    "cut points (plus the ends)",
+    "every position 0..n",
+    "cut costs"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Typical cost of interval DP:",
+   "options": [
+    "O(n³)",
+    "O(n log n)",
+    "O(2ⁿ)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "The decomposition test is…",
+   "options": [
+    "after fixing k, the sides are independent",
+    "k is the maximum",
+    "k is in the middle"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

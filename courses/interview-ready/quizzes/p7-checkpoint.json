@@ -1,0 +1,101 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Burst balloons / merge stones:",
+   "options": [
+    "interval DP",
+    "bitmask DP",
+    "greedy"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Visit all of 12 nodes, shortest walk:",
+   "options": [
+    "BFS over (node, mask)",
+    "Dijkstra",
+    "DFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "TSP for 15 cities:",
+   "options": [
+    "Held–Karp O(2ⁿn²)",
+    "brute force",
+    "greedy nearest neighbour"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Sum of distances for every node:",
+   "options": [
+    "rerooting",
+    "BFS per node",
+    "interval DP"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Count integers ≤ 10¹⁸ with a digit property:",
+   "options": [
+    "digit DP",
+    "iterate",
+    "bitmask DP over numbers"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "All distinct permutations of a multiset:",
+   "options": [
+    "sort + skip equal unused twins",
+    "generate all then dedupe (best)",
+    "DP"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "All combinations summing to a target (each once):",
+   "options": [
+    "backtracking with start index and sibling skip",
+    "BFS",
+    "heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Sudoku:",
+   "options": [
+    "backtracking, most-constrained first",
+    "DP",
+    "greedy"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

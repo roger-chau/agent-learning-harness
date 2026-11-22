@@ -1103,14 +1103,162 @@
    "id": "p7",
    "n": 7,
    "title": "Dynamic programming II and backtracking",
-   "summary": "Interval, bitmask, tree and digit DP; search with pruning.",
+   "summary": "Interval DP, bitmask DP, tree and digit DP, and backtracking with pruning.",
    "items": [
     {
      "type": "chapter",
      "id": "7-1",
-     "title": "Dynamic programming II and backtracking",
-     "summary": "Interval, bitmask, tree and digit DP; search with pruning.",
-     "status": "planned"
+     "title": "Interval DP",
+     "summary": "Condition on the event that makes the two sides independent.",
+     "coding": [
+      "burst-balloons",
+      "min-cost-cut-stick",
+      "palindrome-min-cuts"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "merge, split, remove"
+      ],
+      [
+       "The core idea",
+       "the splitting event"
+      ],
+      [
+       "The invariant and template",
+       "by increasing length"
+      ],
+      [
+       "A thinking trace",
+       "burst balloons"
+      ],
+      [
+       "Traps and variations",
+       "order, endpoints, stacking"
+      ],
+      [
+       "Practice on LeetCode",
+       "9 problems"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "7-2",
+     "title": "Bitmask DP",
+     "summary": "Tiny n, sets of items: the future depends on the set, not the order.",
+     "coding": [
+      "shortest-path-all-nodes",
+      "partition-k-subsets",
+      "travelling-salesman"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "n ≤ 20"
+      ],
+      [
+       "The core idea",
+       "set, not order"
+      ],
+      [
+       "The invariant and template",
+       "Held–Karp shape"
+      ],
+      [
+       "A thinking trace",
+       "k equal-sum subsets"
+      ],
+      [
+       "Traps and variations",
+       "precedence, memory, 3ⁿ"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "7-3",
+     "title": "Tree DP and digit DP",
+     "summary": "Post-order tuples, rerooting, and counting numbers digit by digit.",
+     "coding": [
+      "sum-of-distances-in-tree",
+      "number-of-digit-one",
+      "distinct-digit-numbers"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "trees; counts up to 10¹⁸"
+      ],
+      [
+       "The core idea",
+       "rerooting; tight flags"
+      ],
+      [
+       "The invariant and template",
+       "post-order; go(i, tight)"
+      ],
+      [
+       "A thinking trace",
+       "sum of distances"
+      ],
+      [
+       "Traps and variations",
+       "depth, leading zeros"
+      ],
+      [
+       "Practice on LeetCode",
+       "9 problems"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "7-4",
+     "title": "Backtracking",
+     "summary": "Choose, explore, un-choose: one decision per level, no duplicates, early pruning.",
+     "coding": [
+      "permutations-ii",
+      "combination-sum-ii",
+      "n-queens-ii",
+      "word-search"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "all solutions; puzzles"
+      ],
+      [
+       "The core idea",
+       "decision, duplicates, pruning"
+      ],
+      [
+       "The invariant and template",
+       "restore exactly"
+      ],
+      [
+       "A thinking trace",
+       "combination sum II"
+      ],
+      [
+       "Traps and variations",
+       "snapshots, sudoku, Catalan"
+      ],
+      [
+       "Practice on LeetCode",
+       "12 problems"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p7-checkpoint",
+     "title": "Part 7 checkpoint",
+     "summary": "Advanced DP and search: pick the state and the order."
     }
    ]
   },

@@ -1,0 +1,72 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>The question asks for <strong>all</strong> solutions (all subsets, permutations, combinations, partitions, board placements), or for one solution of a constraint puzzle (sudoku, N-queens, word search) where no polynomial algorithm is expected. Output size is often exponential, so the goal isn't polynomial time. It's <strong>generating each answer once, and abandoning dead branches early</strong>.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: choose, explore, un-choose</h2>
+<p>Backtracking is DFS over a tree of partial solutions. Each level makes one decision; each leaf is a complete candidate. Three questions design it:</p>
+<ol>
+<li><strong>What is one decision?</strong> Include element i or not (subsets); which element goes next (permutations); which column for row r's queen (N-queens). The right granularity can remove whole dimensions.</li>
+<li><strong>How do I avoid generating duplicates?</strong> A <em>start index</em> for combinations (non-decreasing order); sort and skip equal siblings; use equal values in left-to-right order for permutations of multisets.</li>
+<li><strong>How do I prune?</strong> Feasibility checks in O(1) (sets or bitmasks for columns and diagonals), bounds ("the remainder is negative, stop"; "the sorted remaining candidates are too large, break"), and necessary conditions checked up front (letter counts in word search).</li>
+</ol>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>def backtrack(state):
+    if is_complete(state):
+        output.append(snapshot(state)); return
+    for choice in choices(state):          # ordered so duplicates are skippable
+        if not feasible(state, choice): continue   # prune
+        apply(state, choice)               # choose
+        backtrack(state)                   # explore
+        undo(state, choice)                # un-choose: restore EXACTLY</code></pre>
+<p>The invariant: on return, the state is exactly as it was on entry. Most backtracking bugs break it: forgetting to undo, undoing the wrong thing, or appending a reference to a mutable list (<code>out.append(cur)</code> instead of <code>cur[:]</code>).</p>
+<p>Count the cost: subsets 2ⁿ · n, permutations n! · n, combinations C(n, k) · k. Saying these numbers is how you show the brute force is the intended solution.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: combination sum II</h2>
+<ol>
+<li><strong>Decision:</strong> which candidate to add next. Combinations ignore order, so impose one: only choose indices at or after the last one (a start index).</li>
+<li><strong>Duplicates in the input</strong> ([1, 1, 2] with target 3) would produce [1, 2] twice, once for each 1. They come from choosing <em>equal values as siblings</em> at the same depth. Sort, then skip cands[i] when i &gt; start and cands[i] == cands[i − 1]. Choosing the second 1 <em>after</em> the first (deeper) is still allowed, so [1, 1, x] is generated once.</li>
+<li><strong>Pruning:</strong> sorted ascending, if cands[i] &gt; remaining then every later candidate is too, so <code>break</code>, not <code>continue</code>.</li>
+<li><strong>Snapshot:</strong> append a copy of the path.</li>
+<li><strong>Test:</strong> all equal values, a target smaller than the minimum, and a target that is exactly one element.</li>
+</ol>
+<p>The habit: <strong>distinguish "the same value at the same depth" (a duplicate) from "the same value deeper" (a legitimate repeat)</strong>. Draw the recursion tree for [1, 1, 2] once and you'll never get it wrong again.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Mutable snapshots:</strong> <code>out.append(cur[:])</code>.</li>
+<li><strong>Restore the grid</strong> after marking a cell in word search, including on success paths if you continue searching.</li>
+<li><strong>Exponential worst cases on purpose:</strong> adversarial inputs (a grid of 'A's searching for "AAAA…B") need pruning by counts or reversal.</li>
+<li><strong>Subsets:</strong> the include/exclude recursion, or iterate masks 0 … 2ⁿ − 1 (bitmask enumeration).</li>
+<li><strong>Sudoku:</strong> choose the empty cell with the fewest candidates first (most-constrained variable). It's dramatically faster.</li>
+<li><strong>Generate parentheses:</strong> prune with counts (open ≤ n, close ≤ open). The number of results is the Catalan number C(2n, n)/(n + 1).</li>
+<li><strong>When to switch to DP:</strong> if you only need the <em>count</em> or the <em>best</em>, and states repeat, memoise. Counting N-queens can't be memoised easily; counting combinations to a target can (that's coin change).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/subsets/" target="_blank" rel="noopener">78. Subsets</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Include/exclude, or bitmasks.</span></li>
+<li><a href="https://leetcode.com/problems/subsets-ii/" target="_blank" rel="noopener">90. Subsets II</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Skip equal siblings.</span></li>
+<li><a href="https://leetcode.com/problems/permutations/" target="_blank" rel="noopener">46. Permutations</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">A used[] array.</span></li>
+<li><a href="https://leetcode.com/problems/permutations-ii/" target="_blank" rel="noopener">47. Permutations II</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Equal values in left-to-right order.</span></li>
+<li><a href="https://leetcode.com/problems/combination-sum/" target="_blank" rel="noopener">39. Combination Sum</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Start index i (reuse allowed), not i + 1.</span></li>
+<li><a href="https://leetcode.com/problems/combination-sum-ii/" target="_blank" rel="noopener">40. Combination Sum II</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Start i + 1, skip equal siblings, break.</span></li>
+<li><a href="https://leetcode.com/problems/generate-parentheses/" target="_blank" rel="noopener">22. Generate Parentheses</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Prune with open/close counts; a Catalan count.</span></li>
+<li><a href="https://leetcode.com/problems/palindrome-partitioning/" target="_blank" rel="noopener">131. Palindrome Partitioning</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Choose the next piece; precompute palindromes.</span></li>
+<li><a href="https://leetcode.com/problems/word-search/" target="_blank" rel="noopener">79. Word Search</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Mark and restore; prune by counts.</span></li>
+<li><a href="https://leetcode.com/problems/n-queens/" target="_blank" rel="noopener">51. N-Queens</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Columns and two diagonal sets.</span></li>
+<li><a href="https://leetcode.com/problems/n-queens-ii/" target="_blank" rel="noopener">52. N-Queens II</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Bitmask version.</span></li>
+<li><a href="https://leetcode.com/problems/sudoku-solver/" target="_blank" rel="noopener">37. Sudoku Solver</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Most-constrained cell first.</span></li>
+</ol>
+</section>

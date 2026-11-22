@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Bitmask DP is feasible when…",
+   "options": [
+    "n is at most about 20",
+    "n is 10⁵",
+    "values are small"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Held–Karp's state is…",
+   "options": [
+    "(visited set, current city)",
+    "(current city)",
+    "(order so far)"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Ascending masks is a valid order because…",
+   "options": [
+    "subsets are numerically smaller than their supersets",
+    "it's sorted",
+    "luck"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "All submasks of all masks costs…",
+   "options": [
+    "3ⁿ",
+    "2ⁿ",
+    "4ⁿ"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Shortest path visiting all nodes uses…",
+   "options": [
+    "BFS over (node, mask)",
+    "Dijkstra on nodes only",
+    "DFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

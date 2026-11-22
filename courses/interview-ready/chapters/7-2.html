@@ -1,0 +1,74 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p><strong>n is tiny</strong>, at most about 20 (often 12–16), and the problem involves <strong>which items are used</strong>: visit every node, assign every task to a worker, partition into groups, choose a subset with pairwise constraints. A subset of n ≤ 20 items fits in an integer mask, and 2²⁰ ≈ 10⁶ masks is affordable. The constraint "n ≤ 15" in an online assessment is often the problem telling you the intended complexity.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: the future depends on the set, not the order</h2>
+<p>Permutation problems look like n! work. The DP insight is that the <strong>remaining problem depends only on which items are used (and maybe where you are now)</strong>, not on the order you used them in. So the state is (mask) or (mask, last), and n! collapses to 2ⁿ or n·2ⁿ.</p>
+<p>Mask operations you need fluently:</p>
+<table>
+<tr><th>Operation</th><th>Code</th></tr>
+<tr><td>is item i in the mask?</td><td><code>m &gt;&gt; i &amp; 1</code></td></tr>
+<tr><td>add i</td><td><code>m | 1 &lt;&lt; i</code></td></tr>
+<tr><td>remove i</td><td><code>m &amp; ~(1 &lt;&lt; i)</code></td></tr>
+<tr><td>lowest set bit</td><td><code>m &amp; -m</code></td></tr>
+<tr><td>size of the set</td><td><code>bin(m).count("1")</code> / <code>__builtin_popcount(m)</code></td></tr>
+<tr><td>enumerate the submasks of m</td><td><code>s = m; while s: …; s = (s - 1) &amp; m</code></td></tr>
+</table>
+<p>Enumerating the submasks of every mask costs 3ⁿ in total (each item is in s, in m but not s, or outside m). That's about 3.5 × 10⁹ for n = 20, so it only works for n ≤ 15 or so.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code># Held–Karp shape: dp[mask][v] = best way to have visited exactly mask, ending at v
+dp = [[INF] * n for _ in range(1 &lt;&lt; n)]
+for s in starts: dp[1 &lt;&lt; s][s] = 0
+for mask in range(1 &lt;&lt; n):                 # increasing masks: every subset comes before its supersets
+    for u in range(n):
+        if dp[mask][u] == INF: continue
+        for v in range(n):
+            if not mask &gt;&gt; v &amp; 1:
+                nm = mask | 1 &lt;&lt; v
+                dp[nm][v] = min(dp[nm][v], dp[mask][u] + w(u, v))</code></pre>
+<p>Order: a superset is numerically larger than its subsets, so ascending masks is a valid topological order. When transitions all cost 1, BFS over (node, mask) does the same job (shortest path visiting all nodes).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: partition to k equal-sum subsets</h2>
+<ol>
+<li><strong>Necessary checks:</strong> the sum must be divisible by k, and no element may exceed the target t. These are cheap early outs.</li>
+<li><strong>Backtracking:</strong> fill k buckets, trying each number in each bucket. That's kⁿ, though pruning (sort descending, skip identical empty buckets) helps a lot.</li>
+<li><strong>Look for the state:</strong> does the arrangement of numbers into buckets matter? If we fill buckets <em>one at a time</em>, the only thing that matters is the set of numbers used. The current bucket's fill is then (sum of mask) mod t, determined by the mask.</li>
+<li><strong>DP:</strong> reachable[mask], extending by any unused number that fits in the current bucket. The answer is reachable[full]. That's O(2ⁿ · n), which is 10⁶ for n = 16.</li>
+<li><strong>Test:</strong> k = 1 (always true), an element greater than t (false), and many duplicates.</li>
+</ol>
+<p>The move: <strong>impose an order (fill buckets one at a time) so the state shrinks to a set</strong>. Canonical orderings remove the symmetry that makes brute force explode.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Operator precedence:</strong> in C++, <code>m &amp; 1 &lt;&lt; i</code> parses as <code>m &amp; (1 &lt;&lt; i)</code>, but <code>m &gt;&gt; i &amp; 1 == 0</code> parses as <code>m &gt;&gt; i &amp; (1 == 0)</code>. Parenthesise.</li>
+<li><strong>Memory:</strong> 2²⁰ × 20 ints is 80 MB. Check before declaring dp[1 &lt;&lt; n][n].</li>
+<li><strong>Assignment problems</strong> (n workers, n jobs): dp[mask] where popcount(mask) is the next worker. That's O(2ⁿ · n) and needs no second index.</li>
+<li><strong>Profile DP</strong> (broken profile, tiling a grid with dominoes): the mask is the boundary between filled and unfilled cells.</li>
+<li><strong>SOS DP</strong> (sum over subsets): computes Σ over all submasks for every mask in O(2ⁿ · n), not 3ⁿ.</li>
+<li><strong>When n ≈ 40:</strong> meet in the middle (2 × 2²⁰), not a 2⁴⁰ mask DP.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/shortest-path-visiting-all-nodes/" target="_blank" rel="noopener">847. Shortest Path Visiting All Nodes</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">BFS over (node, mask).</span></li>
+<li><a href="https://leetcode.com/problems/partition-to-k-equal-sum-subsets/" target="_blank" rel="noopener">698. Partition to K Equal Sum Subsets</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Fill one bucket at a time.</span></li>
+<li><a href="https://leetcode.com/problems/beautiful-arrangement/" target="_blank" rel="noopener">526. Beautiful Arrangement</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">dp[mask] with position = popcount.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-number-of-work-sessions-to-finish-the-tasks/" target="_blank" rel="noopener">1986. Minimum Number of Work Sessions to Finish the Tasks</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">(sessions, current fill) per mask.</span></li>
+<li><a href="https://leetcode.com/problems/find-minimum-time-to-finish-all-jobs/" target="_blank" rel="noopener">1723. Find Minimum Time to Finish All Jobs</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Submask enumeration, or binary search + backtracking.</span></li>
+<li><a href="https://leetcode.com/problems/find-the-shortest-superstring/" target="_blank" rel="noopener">943. Find the Shortest Superstring</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">TSP on overlap weights, then reconstruct.</span></li>
+<li><a href="https://leetcode.com/problems/smallest-sufficient-team/" target="_blank" rel="noopener">1125. Smallest Sufficient Team</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">The mask is over skills, not people.</span></li>
+<li><a href="https://leetcode.com/problems/stickers-to-spell-word/" target="_blank" rel="noopener">691. Stickers to Spell Word</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">The mask over target letters already covered.</span></li>
+</ol>
+</section>

@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Backtracking's invariant:",
+   "options": [
+    "state restored exactly on return",
+    "always sorted",
+    "no recursion"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Combinations without reordering use…",
+   "options": [
+    "a start index",
+    "a used[] array",
+    "BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Duplicate combinations come from…",
+   "options": [
+    "equal values chosen as siblings at the same depth",
+    "deep recursion",
+    "sorting"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "N-queens feasibility in O(1) uses…",
+   "options": [
+    "sets/bitmasks for columns and both diagonals",
+    "scanning the board",
+    "DP"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "If you only need a count and states repeat…",
+   "options": [
+    "memoise (DP)",
+    "backtrack anyway",
+    "use BFS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

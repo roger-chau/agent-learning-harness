@@ -1,0 +1,67 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>The input is a sequence and the operations <strong>merge, split or remove pieces</strong>, with costs that depend on the neighbours at the time: burst balloons, cut a stick, merge stones, matrix-chain multiplication, optimal BST, palindrome partitioning, "remove boxes". If the order of operations matters and greedy fails, and n is small (≤ 500 or so), think <strong>DP over intervals [i, j]</strong>: O(n²) states and O(n) transitions each, O(n³) total.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: pick the event that splits the interval</h2>
+<p>For an interval [i, j], choose one special element k so that, once you condition on it, <strong>the left and right parts no longer interact</strong>. Then dp[i][j] = best over k of dp[i][k] + dp[k][j] + cost(i, k, j).</p>
+<p>The hard part is choosing <em>which</em> event to condition on:</p>
+<ul>
+<li><strong>Burst balloons:</strong> the <em>first</em> balloon burst changes its neighbours' neighbours, so the sides interact. The <em>last</em> balloon burst in (i, j) has neighbours exactly i and j, and it separates the sides for the whole process.</li>
+<li><strong>Cutting a stick:</strong> the <em>first</em> cut costs the full segment length and leaves two independent pieces.</li>
+<li><strong>Matrix chain:</strong> the <em>last</em> multiplication splits the product into a left and right block.</li>
+</ul>
+<p>The test: <strong>after fixing k, can I solve the two sides without knowing anything about each other?</strong> If yes, you've found the decomposition.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>dp = [[0] * n for _ in range(n)]           # dp[i][j] over an interval (often open: (i, j))
+for length in range(2, n):                 # ORDER: by increasing length
+    for i in range(n - length):
+        j = i + length
+        dp[i][j] = best(dp[i][k] + dp[k][j] + cost(i, k, j) for k in range(i + 1, j))
+return dp[0][n - 1]</code></pre>
+<p>Invariant: when dp[i][j] is computed, every strictly shorter interval is final. Iterating by length (not by i, then j) guarantees that. Add sentinels at both ends (1s for balloons; 0 and n for a stick) so boundary intervals need no special case. Index by the <em>interesting points</em> (cut positions), not every coordinate.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: burst balloons</h2>
+<ol>
+<li><strong>Brute force:</strong> try every order, n! of them.</li>
+<li><strong>First decomposition attempt:</strong> pick the first balloon k to burst. Then the left and right parts become adjacent, so the left part's future rewards depend on the right part. <strong>Not independent.</strong> Reject.</li>
+<li><strong>Flip it:</strong> pick the <em>last</em> balloon k to burst in the open interval (i, j). Until k bursts, it stands between the two sides, so they never become neighbours. When k finally bursts, everything else inside is gone, so its neighbours are exactly i and j and it earns a[i]·a[k]·a[j].</li>
+<li><strong>Recurrence:</strong> dp[i][j] = max over k of dp[i][k] + a[i]a[k]a[j] + dp[k][j], with sentinel 1s at both ends.</li>
+<li><strong>Order and cost:</strong> by increasing length, O(n³), which is fine for n ≤ 300.</li>
+</ol>
+<p>The move: <strong>if conditioning on the first event couples the subproblems, try the last one</strong>. Thinking about time backwards is a recurring trick, as in Part 6's dungeon game.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Wrong loop order</strong> (i then j ascending) reads intervals before they're computed. Loop by length, or i descending with j ascending.</li>
+<li><strong>Open versus closed intervals:</strong> decide whether i and j are included and stay consistent. Balloons use open intervals; palindromes use closed ones.</li>
+<li><strong>Stacked DPs:</strong> palindrome partitioning precomputes an interval table, then runs a 1-D DP over it.</li>
+<li><strong>Merge stones with k piles</strong> adds a "number of piles" dimension. Check feasibility first ((n − 1) mod (k − 1) = 0).</li>
+<li><strong>Optimisations:</strong> Knuth's optimisation (O(n²) when the optimal split is monotone) exists. Mention it; rarely required.</li>
+<li><strong>Strange printer and remove boxes:</strong> interval DP with an extra parameter for what's attached to the left end. These are among the hardest common ones.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/burst-balloons/" target="_blank" rel="noopener">312. Burst Balloons</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Condition on the last balloon.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-cost-to-cut-a-stick/" target="_blank" rel="noopener">1547. Minimum Cost to Cut a Stick</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Index by cut points.</span></li>
+<li><a href="https://leetcode.com/problems/palindrome-partitioning-ii/" target="_blank" rel="noopener">132. Palindrome Partitioning II</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Palindrome table + 1-D DP.</span></li>
+<li><a href="https://leetcode.com/problems/longest-palindromic-subsequence/" target="_blank" rel="noopener">516. Longest Palindromic Subsequence</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Interval DP view of Part 6's problem.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-score-triangulation-of-polygon/" target="_blank" rel="noopener">1039. Minimum Score Triangulation of Polygon</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">The triangle on edge (i, j) splits the polygon.</span></li>
+<li><a href="https://leetcode.com/problems/guess-number-higher-or-lower-ii/" target="_blank" rel="noopener">375. Guess Number Higher or Lower II</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Minimax over intervals: worst case of the two sides.</span></li>
+<li><a href="https://leetcode.com/problems/stone-game/" target="_blank" rel="noopener">877. Stone Game</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">dp[i][j] = score difference for the player to move.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-cost-to-merge-stones/" target="_blank" rel="noopener">1000. Minimum Cost to Merge Stones</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Feasibility check, then dp[i][j] with step k − 1.</span></li>
+<li><a href="https://leetcode.com/problems/strange-printer/" target="_blank" rel="noopener">664. Strange Printer</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Merge equal characters at the interval ends.</span></li>
+</ol>
+</section>

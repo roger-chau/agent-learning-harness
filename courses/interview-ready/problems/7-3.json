@@ -1,0 +1,240 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Which DP?",
+   "statement": "<p>Match the problem.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Count integers in [1, 10¹⁸] whose digits sum to 50:",
+     "options": [
+      "digit DP",
+      "tree DP",
+      "interval DP"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "For every node, the farthest distance to another node:",
+     "options": [
+      "rerooting",
+      "digit DP",
+      "bitmask DP"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Huge ranges → digits; every root → reroot."
+   ],
+   "solution": "<p>Digit DP over 18 digits; rerooting in O(n).</p>"
+  },
+  {
+   "id": "p2",
+   "level": 2,
+   "title": "Rerooting",
+   "statement": "<p>Tree edges [[0, 1], [0, 2], [2, 3], [2, 4], [2, 5]].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sum of distances from node 0?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "size of node 2's subtree?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Sum from node 2 (= ans[0] − 4 + 2)?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "From 0: 1 + 1 + 2 + 2 + 2."
+   ],
+   "solution": "<p>ans[0] = 8; moving to 2 brings 4 nodes closer and 2 farther: 8 − 4 + 2 = 6.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Digit ones",
+   "statement": "<p>Count the digit 1 in 0..n.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "n = 13?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "n = 100?",
+     "answer": 21,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "1, 10, 11 (two), 12, 13."
+   ],
+   "solution": "<p>6 for 13; 21 for 100 (20 in 1–99, plus the 1 in 100).</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Distinct digits",
+   "statement": "<p>Integers in [1, n] with no repeated digit.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "n = 100?",
+     "answer": 90,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "All with exactly 2 digits (9 · 9)?",
+     "answer": 81,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "1–9: 9; 10–99: 81; 100: repeated."
+   ],
+   "solution": "<p>9 + 81 = 90.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Tight flag",
+   "statement": "<p>N = 352. You've placed the digits \"3\" and then \"4\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Is the state still tight?",
+     "options": [
+      "No: 34 < 35, so the last digit is free (0–9)",
+      "Yes"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "After \"3\" then \"5\"?",
+     "options": [
+      "Still tight: the last digit ≤ 2",
+      "Free"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Tight while the prefix equals N's prefix."
+   ],
+   "solution": "<p>Once a digit is below N's digit, every later digit is unconstrained.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Leading zeros",
+   "statement": "<p>Counting numbers with distinct digits, treating 007 as digits 0, 0, 7.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What goes wrong?",
+     "options": [
+      "7 is rejected for repeating 0",
+      "Nothing",
+      "Overflow"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "A started flag."
+   ],
+   "solution": "<p>Leading zeros must not count as used digits.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Range trick",
+   "statement": "<p>Count numbers with property P in [L, R].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Standard approach?",
+     "options": [
+      "f(R) − f(L − 1) with f(x) = count in [0, x]",
+      "Run the DP twice with two tight flags only",
+      "Iterate"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Prefix counts."
+   ],
+   "solution": "<p>The same prefix-difference idea as Part 1's prefix sums, applied to counts.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Independent set on a tree",
+   "statement": "<p>Path 1 – 2 – 3 – 4 with values [5, 1, 1, 5]; choose non-adjacent nodes, maximising the sum.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "What does f(v) return?",
+     "options": [
+      "(best with v taken, best with v not taken)",
+      "the best only",
+      "the subtree size"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "5 + 5."
+   ],
+   "solution": "<p>Take the two ends: 10. The pair-returning contract is house robber III.</p>"
+  }
+ ]
+}
