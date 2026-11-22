@@ -611,3 +611,11 @@ svg .d-arrowhead { fill: var(--muted); }
 .tk-op { color: #89ddff; }
 .tk-reg { color: #ffcb6b; }
 .tk-label { color: #f07178; }
+
+/* ---- Reading progress and time estimates ---- */
+.site-header { position: sticky; }
+.read-bar { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: transparent; pointer-events: none; }
+.read-bar span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--indigo), var(--mint-ink)); border-radius: 0 3px 3px 0; transition: width .12s linear; }
+.ch-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: .9rem; margin: 4px 0 0; }
+.ch-meta span { display: inline-flex; align-items: center; gap: 6px; }
+.ch-meta svg { opacity: .8; }

@@ -170,6 +170,23 @@ def asset_path(slug: str, kind: str, rel: str) -> Path:
     return target
 
 
+def estimate(slug: str, it: dict) -> dict:
+    """Rough time estimates in minutes: reading (technical prose at ~180 wpm, plus time per
+    displayed equation and code block) and practice (exercises, problems by level, quiz, write-up)."""
+    html = chapter_html(slug, it["id"])
+    words = len(plain_text(html).split())
+    eqs = html.count('class="eq"') + html.count("<pre>")
+    reading = max(1, round(words / 180 + eqs * 0.5))
+    ps = problems(slug, it["id"]) or {"problems": []}
+    per_level = {1: 5, 2: 10, 3: 20}
+    practice = sum(per_level.get(p.get("level", 1), 5) for p in ps["problems"])
+    practice += 25 * len(it.get("exercises", []))
+    practice += 8 if it.get("has_quiz") else 0
+    wu = it.get("writeup")
+    practice += round(wu.get("min_words", 150) / 10) if wu else 0
+    return {"reading": reading, "practice": practice, "words": words}
+
+
 def plain_text(html: str) -> str:
     """Rough HTML -> text for giving the Q&A agent chapter context."""
     html = re.sub(r"<(script|style)[\s\S]*?</\1>", " ", html, flags=re.I)

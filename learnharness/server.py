@@ -128,6 +128,7 @@ def get_item(slug: str, item_id: str):
         "exercises": it["exercises"],
         "quiz": content.public_quiz(content.quiz(slug, item_id)),
         "problems": content.public_problems(content.problems(slug, item_id)),
+        "estimate": content.estimate(slug, it),
         "state": st,
         "prev": order[idx - 1]["id"] if idx > 0 else None,
         "next": order[idx + 1]["id"] if idx + 1 < len(order) else None,

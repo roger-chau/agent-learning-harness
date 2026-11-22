@@ -8,6 +8,8 @@
   const pad = (n) => String(n).padStart(2, "0");
   const ARROW = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
   const LOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  const CLOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  const PENCIL = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>';
   const CHECK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
 
   // Exercise registry for scripts loaded into the page.
@@ -284,6 +286,7 @@
             <p class="eyebrow">${esc(kicker)}</p>
             <h1 class="ch-title">${esc(it.title)}</h1>
             ${it.summary ? `<p class="ch-sub">${esc(it.summary)}</p>` : ""}
+            ${it.estimate ? `<p class="ch-meta"><span title="Reading time">${CLOCK} ${it.estimate.reading} min read</span>${it.estimate.practice ? `<span title="Exercises, problems and quiz">${PENCIL} about ${fmtMins(it.estimate.practice)} of practice</span>` : ""}${it.problems ? `<span>${it.problems.problems.length} problems</span>` : ""}${it.exercises.length ? `<span>${it.exercises.length} coding ${it.exercises.length > 1 ? "exercises" : "exercise"}</span>` : ""}</p>` : ""}
             ${it.part.hp && it.type === "chapter" ? `<p class="hp"><span>H&amp;P 7e</span> ${esc(it.part.hp)}</p>` : ""}
             ${it.blocks.length ? `<div class="stack ch-chain">${it.blocks.map(([name, tag], i) =>
               `<a class="block ${i === 0 ? "" : i === 4 ? "t-saffron" : "t-indigo"} link" href="#b${i + 1}" data-jump="b${i + 1}">
@@ -319,6 +322,7 @@
       </aside>`;
 
     const body = $("#ch-body");
+    setupReadBar();
     window.GWComponents.mount(body);
     typeset(body);
     body.querySelectorAll("section.blk").forEach((s, i) => { if (!s.id) s.id = `b${i + 1}`; });
@@ -338,6 +342,34 @@
       api(`/api/courses/${slug}/items/${it.id}/read`, { method: "POST" }).then((r) => renderGate(r.state, it)).catch(() => {});
     }
   }
+
+  // Reading progress: a bar under the site header that fills as you scroll through the chapter.
+  let readBarHandler = null;
+  function setupReadBar() {
+    const bar = document.getElementById("read-bar"), fill = bar && bar.firstElementChild;
+    if (!bar) return;
+    if (readBarHandler) { window.removeEventListener("scroll", readBarHandler); window.removeEventListener("resize", readBarHandler); }
+    bar.hidden = false;
+    readBarHandler = () => {
+      const art = document.querySelector("article.chapter, #ch-body");
+      if (!art || !document.body.contains(art)) { bar.hidden = true; return; }
+      const startEl = document.querySelector(".ch-head") || art, endEl = document.getElementById("gate") || art;
+      const start = startEl.getBoundingClientRect().top + window.scrollY;
+      const end = endEl.getBoundingClientRect().bottom + window.scrollY;
+      const span = Math.max(1, end - start - window.innerHeight);
+      const p = Math.min(1, Math.max(0, (window.scrollY - start + 64) / span));
+      fill.style.width = `${(p * 100).toFixed(2)}%`;
+    };
+    window.addEventListener("scroll", readBarHandler, { passive: true });
+    window.addEventListener("resize", readBarHandler);
+    readBarHandler();
+  }
+  function hideReadBar() {
+    const bar = document.getElementById("read-bar");
+    if (bar) bar.hidden = true;
+    if (readBarHandler) { window.removeEventListener("scroll", readBarHandler); window.removeEventListener("resize", readBarHandler); readBarHandler = null; }
+  }
+  const fmtMins = (m) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ""}`);
 
   function loadScript(src) {
     return new Promise((resolve, reject) => {
@@ -651,6 +683,7 @@
 
   // ---------- Router ----------
   function route() {
+    hideReadBar();
     const h = location.hash.replace(/^#/, "") || "/";
     const parts = h.split("/").filter(Boolean);
     if (parts[0] === "c" && parts[1] && parts[2] && !parts[2].startsWith("b")) { window.scrollTo(0, 0); return renderItem(parts[1], parts[2]); }
