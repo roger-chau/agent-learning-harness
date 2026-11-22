@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "\"At least one\" problems: use…",
+   "options": [
+    "the complement",
+    "addition",
+    "multiplication only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "P(ace of spades above king of hearts):",
+   "options": [
+    "1/2 by symmetry",
+    "1/52",
+    "1/13"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Birthday problem crosses 1/2 at…",
+   "options": [
+    "23 people",
+    "183",
+    "50"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "P(no fixed point) for large n →",
+   "options": [
+    "1/e",
+    "0",
+    "1/2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Best self-check:",
+   "options": [
+    "solve it a second way",
+    "trust intuition",
+    "skip"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

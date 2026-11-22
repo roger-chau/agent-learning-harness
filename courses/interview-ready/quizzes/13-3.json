@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Linearity of expectation needs…",
+   "options": [
+    "nothing (no independence)",
+    "independence",
+    "identical distributions"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Expected fixed points of a permutation:",
+   "options": [
+    "1",
+    "n/2",
+    "1/e"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Coupon collector expected time:",
+   "options": [
+    "n·Hₙ",
+    "n²",
+    "n log 2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Tail-sum formula:",
+   "options": [
+    "E[X] = Σ P(X ≥ k)",
+    "E[X] = Σ P(X = k)",
+    "E[X] = max"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Optimal stopping is solved by…",
+   "options": [
+    "backward induction",
+    "forward simulation",
+    "guessing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

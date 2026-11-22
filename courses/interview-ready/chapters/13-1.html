@@ -1,0 +1,59 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Quant interviews (Jane Street, Optiver, SIG, Citadel, Five Rings, IMC, HRT…) open with probability puzzles: dice, cards, coins, random arrangements. They're testing <strong>speed and clean reasoning under pressure</strong>: can you find the slick argument, state it in one sentence, and sanity-check the number? A correct answer reached by an error-prone brute-force count still loses points against a clean symmetry argument.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: count what's easy, not what's asked</h2>
+<p>For equally likely outcomes, P(A) = |A| / |Ω|. The skill is choosing the <em>easiest</em> route to |A|:</p>
+<ul>
+<li><strong>Complement:</strong> "at least one" = 1 − P(none). P(at least one 6 in 4 rolls) = 1 − (5/6)⁴ ≈ 0.518.</li>
+<li><strong>Symmetry:</strong> if the labels are exchangeable, every label is equally likely to be first, last or largest. "The probability the ace of spades is above the king of hearts in a shuffled deck" is ½, no counting needed.</li>
+<li><strong>Sequential multiplication:</strong> deal cards one at a time and multiply conditional probabilities. P(two cards share a suit) = 12/51.</li>
+<li><strong>Inclusion–exclusion:</strong> for "at least one of several overlapping events" (derangements, coverage of all faces).</li>
+<li><strong>Choose the sample space wisely:</strong> ordered vs unordered, as long as numerator and denominator agree.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>1. Define the experiment and Ω (ordered or unordered? equally likely?).
+2. Look for a symmetry that makes the answer immediate.
+3. Otherwise pick the cheapest route: complement, sequential product, or count |A| directly.
+4. Sanity checks: 0 ≤ p ≤ 1; extreme cases (n = 1, n → ∞); does a quick simulation-in-your-head agree?
+5. Say the answer as a fraction AND a decimal ("5/18, about 28%").</code></pre>
+<p>Know these by heart: C(52, 5) = 2,598,960; the birthday problem crosses ½ at 23 people (0.507); (1 − 1/n)ⁿ → 1/e ≈ 0.368; P(no fixed point in a random permutation) → 1/e.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "a random permutation of 1..n: probability that 1 and 2 are adjacent?"</h2>
+<ol>
+<li><strong>Counting route:</strong> glue 1 and 2 into a block: (n − 1)! orders × 2 internal orders, over n!, giving 2/n. That works, but takes care.</li>
+<li><strong>Symmetry route:</strong> look only at where 1 and 2 land: a uniformly random pair of positions out of C(n, 2). Adjacent pairs number n − 1, so the answer is (n − 1)/C(n, 2) = 2/n.</li>
+<li><strong>Sequential route:</strong> place 1 anywhere. With probability 2/n it's at an end (one neighbour), otherwise it has two neighbours. P = (2/n)(1/(n − 1)) + ((n − 2)/n)(2/(n − 1)) = 2/n.</li>
+<li><strong>Sanity:</strong> n = 2 gives 1 ✓; n = 3 gives 2/3 (4 of the 6 permutations have them adjacent) ✓.</li>
+</ol>
+<p>The habit: <strong>try two routes</strong> when time allows. Agreement is the best check you have in an interview, and interviewers love hearing "let me verify that another way".</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Non-equally-likely outcomes:</strong> the sums of two dice are not uniform (7 has probability 6/36).</li>
+<li><strong>Ordered vs unordered mix-ups:</strong> counting "a pair, then three others" in order but dividing by unordered hands.</li>
+<li><strong>"At least one" by adding:</strong> P(at least one 6 in 6 rolls) is not 6 × 1/6 = 1. It's 1 − (5/6)⁶ ≈ 0.665.</li>
+<li><strong>Independence assumptions:</strong> cards dealt without replacement aren't independent.</li>
+<li><strong>Speed drills:</strong> quant first rounds often give 10–20 such questions in 20 minutes. Practise in Part 15's timed drill.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Xinfeng Zhou, <em>A Practical Guide to Quantitative Finance Interviews</em> (the "green book"), chapter 4 sections 4.1–4.2.</li>
+<li>* Mark Joshi et al., <em>Quant Job Interview Questions and Answers</em>, probability chapter.</li>
+<li>Blitzstein & Hwang, <em>Introduction to Probability</em> (free online), chapter 1 exercises.</li>
+<li>Brainstellar.com: the probability section (easy → hard).</li>
+</ul>
+</section>

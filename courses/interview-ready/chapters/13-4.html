@@ -1,0 +1,58 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Waiting-time questions ("expected flips until HH"), variance and risk ("what's the standard deviation of your P&amp;L over 100 bets?"), and approximations ("roughly what's the chance of 60+ heads in 100 flips?"). The tools are <strong>first-step analysis</strong>, the <strong>law of total expectation</strong>, and the <strong>normal approximation</strong>.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: condition on the first step</h2>
+<p>Define the expected remaining time (or win probability) from each <em>state</em>, then write one equation per state by conditioning on what happens next. The system is small and linear.</p>
+<p><strong>Flips until HH:</strong> states S (nothing useful), H (last flip H). E_S = 1 + ½E_H + ½E_S and E_H = 1 + ½·0 + ½E_S, so E_S = 6. For HT: E = 4. HH takes longer because a failure from state H (a T) sends you all the way back, while for HT a failure (an H) keeps you in state H. The general answer is Σ 2^k over the pattern's self-overlaps, which is the judged problem in this chapter.</p>
+<p><strong>Variance:</strong> Var(X) = E[X²] − E[X]². For independent variables, variances add, so the standard deviation of a sum of n i.i.d. bets grows like √n while the mean grows like n. That's why a positive edge wins in the long run: mean / sd ∝ √n.</p>
+<p><strong>Distributions to know cold:</strong> Bernoulli(p) with variance p(1 − p); Binomial(n, p) with mean np and variance np(1 − p); Geometric(p) with mean 1/p; Poisson(λ) with mean and variance λ (rare events, and the limit of the binomial); Uniform(0, 1) with mean ½ and variance 1/12; Normal (68/95/99.7%).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>First-step analysis
+  states s, terminal value at the end; for each non-terminal s:
+  E_s = cost_per_step + Σ P(s → s′) · E_s′          (expected time)
+  p_s = Σ P(s → s′) · p_s′                         (probability of winning)
+  solve the linear system (often by hand: 2–3 states)
+
+Normal approximation of Binomial(n, p)
+  z = (k − 0.5 − np) / √(np(1−p))        (continuity correction for P(X ≥ k))</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "expected die rolls until two sixes in a row"</h2>
+<ol>
+<li><strong>States:</strong> 0 (the last roll isn't a 6), 1 (the last roll is a 6), done.</li>
+<li><strong>Equations:</strong> E₀ = 1 + (1/6)E₁ + (5/6)E₀ and E₁ = 1 + (1/6)·0 + (5/6)E₀.</li>
+<li><strong>Solve:</strong> from the first, E₀/6 = 1 + E₁/6, so E₀ = 6 + E₁. Substituting: E₁ = 1 + (5/6)(6 + E₁), so E₁/6 = 6 and E₁ = 36, giving E₀ = 42.</li>
+<li><strong>Check with the pattern formula:</strong> for "66" with p = 1/6, E = 1/p + 1/p² = 6 + 36 = 42 ✓. (The coin version is 2 + 4 = 6.)</li>
+<li><strong>Sanity:</strong> you need a 6 (about 6 rolls) and then another 6 immediately (probability 1/6), so about 6 attempts of ~7 rolls each, around 42. ✓</li>
+</ol>
+<p>The habit: <strong>name the states by "what part of the goal is already achieved"</strong> (that's exactly KMP's state), then condition on one step.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Too many states:</strong> collapse states by symmetry (only the overlap with the pattern matters).</li>
+<li><strong>Continuity correction</strong> matters for small n; for n = 100 coin flips, P(≥ 60 heads) ≈ 2.8%.</li>
+<li><strong>Poisson approximations:</strong> the chance that no one in a 365-person office shares your birthday is (364/365)³⁶⁴ ≈ e⁻¹ ≈ 0.37.</li>
+<li><strong>Variance of a sum of dependent variables</strong> needs covariances: Var(ΣXᵢ) = ΣVar(Xᵢ) + 2Σ_{i&lt;j}Cov(Xᵢ, Xⱼ). For the number of fixed points of a permutation, the variance is 1.</li>
+<li><strong>Penney's game:</strong> for any pattern your opponent picks, there's a pattern that beats it more often than not. Non-transitive.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Green book, sections 4.5–4.6 (conditional expectation, Markov chain problems).</li>
+<li>* Blitzstein & Hwang, chapters 7 and 9 (joint distributions, conditional expectation).</li>
+<li>Solve "expected flips until HTH" three ways: first-step analysis, the border formula, a martingale (Part 14).</li>
+<li>Simulate the dice-sum and pattern problems in Python and compare with your exact answers.</li>
+</ul>
+</section>

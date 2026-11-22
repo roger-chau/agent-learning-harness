@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Given that…", "a test comes back positive…", "you see heads; what's the chance the coin is biased?", Monty Hall and the two-child problem. Conditioning questions are designed to trigger intuitive wrong answers. Trading is, at its core, updating beliefs on evidence, which is why quant firms ask so many.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: Bayes in odds form</h2>
+<p>P(A | B) = P(B | A) P(A) / P(B). The fastest form for interviews is <strong>odds</strong>:</p>
+<p style="text-align:center"><strong>posterior odds = prior odds × likelihood ratio</strong></p>
+<p>Disease with 1% prevalence, test with 99% sensitivity and a 5% false-positive rate: prior odds 1:99, likelihood ratio 0.99/0.05 = 19.8, posterior odds 19.8:99 ≈ 1:5, so P(disease | +) ≈ 1/6. With independent evidence, multiply the likelihood ratios: a second positive test makes it 19.8 × 19.8 : 99 ≈ 4:1.</p>
+<p><strong>The other workhorse is a tree or table of natural frequencies:</strong> "imagine 10,000 people…". It's harder to get wrong under pressure than the formula.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>1. Write the hypotheses H₁…Hₖ and their priors.
+2. Write P(evidence | Hᵢ) for each, using exactly the information revealed,
+   including HOW it was revealed (the host's rule, the sampling process).
+3. Posterior ∝ prior × likelihood; normalise.
+4. Sanity: does stronger evidence move the posterior the right way and by a sensible amount?</code></pre>
+<p>Step 2's "how it was revealed" is where Monty Hall and the two-child problem live. The protocol that generated the information is part of the evidence.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "two children, at least one is a boy born on a Tuesday"</h2>
+<ol>
+<li><strong>Baseline:</strong> "at least one boy" gives P(two boys) = 1/3 (BB out of BB, BG, GB).</li>
+<li><strong>Model the extra detail:</strong> each child is (sex, day): 14 equally likely types; there are 14² = 196 ordered pairs.</li>
+<li><strong>Count the evidence:</strong> pairs with at least one Tuesday-boy: 196 − 13² = 27.</li>
+<li><strong>Count both boys among them:</strong> boy pairs: 7² = 49, minus those with no Tuesday-boy, 6² = 36, giving 13.</li>
+<li><strong>Answer:</strong> 13/27 ≈ 0.48, close to ½. The more specific the identifying detail, the closer the answer gets to ½, because it nearly picks out one particular child.</li>
+<li><strong>Protocol caveat:</strong> this assumes the statement means "a family selected because it has at least one Tuesday-boy". If the parent just mentioned one child at random, the answer is ½. Say which model you're using.</li>
+</ol>
+<p>The habit: <strong>enumerate the joint outcomes and condition by filtering</strong>. When intuition and counting disagree, counting wins, and the disagreement usually reveals a hidden assumption about the protocol.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Base-rate neglect:</strong> ignoring the prior (the 1% prevalence).</li>
+<li><strong>Confusing P(A|B) with P(B|A)</strong> (the prosecutor's fallacy).</li>
+<li><strong>Monty Hall:</strong> switching wins 2/3 <em>because the host knowingly avoids the car</em>. If the host opens a door at random and happens to show a goat, it's ½.</li>
+<li><strong>Independent vs conditionally independent:</strong> two coin flips from an unknown coin are dependent, since the first flip tells you about the coin.</li>
+<li><strong>Bertrand's box / the double-headed coin:</strong> after seeing heads, the double-headed coin is twice as likely (it has two heads that could be showing).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Green book, section 4.3 (conditional probability and Bayes).</li>
+<li>* Blitzstein & Hwang, chapter 2 (conditional probability), including the Monty Hall and Tuesday-boy discussions.</li>
+<li>3Blue1Brown, "Bayes theorem, the geometry of changing beliefs" (video).</li>
+<li>Practise saying every answer in odds form first.</li>
+</ul>
+</section>

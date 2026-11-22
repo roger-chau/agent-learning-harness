@@ -1,0 +1,237 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Medical test",
+   "statement": "<p>Prevalence 1%, sensitivity 99%, false-positive rate 5%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(disease | positive)?",
+     "answer": 0.16666666666666666,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Likelihood ratio of a positive?",
+     "answer": 19.8,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Odds: 1:99 × 19.8."
+   ],
+   "solution": "<p>0.1667 ≈ 1/6.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Monty Hall",
+   "statement": "<p>Standard rules (the host knows and always opens a goat door, then offers a switch).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(win by switching)?",
+     "answer": 0.6666666666666666,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "If the host opens a random other door and it happens to show a goat?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "The protocol matters."
+   ],
+   "solution": "<p>2/3 vs 1/2.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Two children",
+   "statement": "<p>A family with two children (independent, ½ each).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(two boys | at least one boy)?",
+     "answer": 0.3333333333333333,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "P(two boys | at least one boy born on Tuesday)?",
+     "answer": 0.48148148148148145,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "P(two boys | the older is a boy)?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Enumerate (sex, day) pairs."
+   ],
+   "solution": "<p>1/3, 13/27 and 1/2.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Biased coin",
+   "statement": "<p>A bag holds one fair coin and one double-headed coin. Pick one at random and flip it.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(double-headed | heads)?",
+     "answer": 0.6666666666666666,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "P(double-headed | 3 heads in 3 flips)?",
+     "answer": 0.8888888888888888,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "P(next flip heads | 3 heads so far)?",
+     "answer": 0.9444444444444444,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Odds 1:1 × 2ⁿ."
+   ],
+   "solution": "<p>2/3; 8/9; 8/9 + 1/18 = 17/18.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Two tests",
+   "statement": "<p>The medical test repeated independently; both positive.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(disease | ++)?",
+     "answer": 0.7983870967741935,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Multiply the likelihood ratios: 1:99 × 19.8²."
+   ],
+   "solution": "<p>Odds 392:99, so ≈ 0.798.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Urn",
+   "statement": "<p>An urn has 3 red and 2 blue balls. Draw two without replacement.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(second is red | first is red)?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "P(first is red | second is red)?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Exchangeability."
+   ],
+   "solution": "<p>2/4 = ½; by symmetry of positions, also ½.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Prosecutor",
+   "statement": "<p>A DNA match probability of 1 in a million for a random person; a city of 5 million; no other evidence.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected innocent matches in the city?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "P(the matched suspect is guilty), assuming exactly one culprit in the city?",
+     "answer": 0.16666666666666666,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "About 5 innocent matches + 1 guilty."
+   ],
+   "solution": "<p>About 1/6. P(match | innocent) is not P(innocent | match).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Sequential evidence",
+   "statement": "<p>A trader's edge: you think there's a 30% chance a strategy is real (real strategies win 55% of trades; fake ones 50%). It wins 60 of 100 trades.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Likelihood ratio (0.55⁶⁰ 0.45⁴⁰ / 0.5¹⁰⁰)?",
+     "answer": 4.5005074718778095,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Posterior P(real)?",
+     "answer": 0.6585619419823109,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Odds form with binomial likelihoods (the C(100, 60) cancels)."
+   ],
+   "solution": "<p>LR ≈ 4.5, so posterior odds 0.3/0.7 × 4.5 ≈ 1.93, P(real) ≈ 0.66. Sixty wins in a hundred is real evidence, but far from proof: the two hypotheses predict overlapping results at n = 100.</p>"
+  }
+ ]
+}

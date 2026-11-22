@@ -1,0 +1,59 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Expected number of…", "expected value of a game", "how much would you pay to play?". Expectation questions are the backbone of quant interviews because pricing is expectation. The tool that makes most of them easy is <strong>linearity with indicator variables</strong>.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: E[sum] = sum of E, even for dependent terms</h2>
+<p>Write the count you want as a sum of <strong>indicators</strong> I₁ + … + Iₙ, where Iₖ = 1 if "thing k happens". Then E[count] = Σ P(thing k happens). No independence is needed: that's what makes linearity so powerful.</p>
+<ul>
+<li><strong>Fixed points</strong> of a random permutation: Σ P(σ(i) = i) = n × 1/n = 1.</li>
+<li><strong>Distinct faces</strong> in 6 rolls: Σ over faces of P(face appears) = 6(1 − (5/6)⁶) ≈ 3.99.</li>
+<li><strong>Coupon collector:</strong> the time to collect all n coupons is a sum of geometric waits with means n/n, n/(n − 1), …, n/1, so E = n·Hₙ (14.7 for n = 6).</li>
+<li><strong>Records</strong> in a random sequence: element k is a record with probability 1/k, so E = Hₙ.</li>
+</ul>
+<p><strong>Tail-sum formula:</strong> for non-negative integer X, E[X] = Σ_{k≥1} P(X ≥ k). It's often the fastest route for maxima and waiting times: E[max of two dice] = Σ_{k=1..6} (1 − ((k − 1)/6)²) = 161/36.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>1. Is the quantity a count?  → write it as a sum of indicators; add their probabilities.
+2. Is it a waiting time?      → split into stages of geometric waits (mean 1/p each), or use first-step analysis (13.4).
+3. Is it a max/min?          → tail sums: E[X] = Σ P(X ≥ k).
+4. Is it a game with choices? → work backwards: value = max(stop now, E[value of continuing]).
+5. Sanity: bounds (E between min and max), small n by hand.</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "roll a die; you may re-roll once; you get the final value. Value of the game?"</h2>
+<ol>
+<li><strong>Work backwards:</strong> if you re-roll, you get a fresh roll worth 3.5.</li>
+<li><strong>Optimal rule:</strong> keep the first roll if it beats 3.5, so keep 4, 5 or 6 and re-roll 1, 2 or 3.</li>
+<li><strong>Value:</strong> ½ × (average of 4, 5, 6 = 5) + ½ × 3.5 = 4.25.</li>
+<li><strong>Extend:</strong> with two re-rolls the continuation value is 4.25, so keep only 5 or 6: (2/6)(5.5) + (4/6)(4.25) = 4.67. This is optimal stopping by backward induction, the same logic as pricing an American option (Part 18).</li>
+<li><strong>Trading framing:</strong> "what would you pay?" Answer with the fair value (4.25), then say you'd pay less for an edge, and how much risk you'd take (variance).</li>
+</ol>
+<p>The habit: <strong>for sequential decisions, solve the last decision first</strong>; each earlier decision compares "stop now" with the value of the remaining game.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>E[f(X)] ≠ f(E[X])</strong> for non-linear f (Jensen): E[X²] ≥ (E[X])².</li>
+<li><strong>E[XY] = E[X]E[Y] only if uncorrelated</strong>; linearity of sums needs nothing, but products need independence.</li>
+<li><strong>Infinite expectations:</strong> the St Petersburg game has infinite expected value but is worth little to anyone with finite wealth (utility, Kelly: Part 16).</li>
+<li><strong>Conditioning on the stopping rule:</strong> "flip until heads; expected number of tails" = 1, not ½.</li>
+<li><strong>Expected value of a ratio</strong> ≠ ratio of expected values.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Green book, section 4.4 (discrete and continuous distributions, expected value, linearity).</li>
+<li>* Blitzstein & Hwang, chapter 4 (expectation; indicator method examples).</li>
+<li>Do 10 indicator problems from the green book in a row, saying the indicator definition aloud first.</li>
+<li>Peter Winkler, <em>Mathematical Puzzles: A Connoisseur's Collection</em>: the probability chapters.</li>
+</ul>
+</section>

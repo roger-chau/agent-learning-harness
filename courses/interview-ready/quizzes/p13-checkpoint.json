@@ -1,0 +1,101 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "P(at least one 6 in 6 rolls) ≈",
+   "options": [
+    "0.665",
+    "1",
+    "0.5"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Bayes fastest form:",
+   "options": [
+    "odds × likelihood ratio",
+    "a full formula always",
+    "simulation"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Monty Hall switching:",
+   "options": [
+    "2/3",
+    "1/2",
+    "1/3"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Expected distinct faces in 6 rolls ≈",
+   "options": [
+    "3.99",
+    "6",
+    "3.5"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "E[max of two dice] =",
+   "options": [
+    "161/36",
+    "4",
+    "5"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "Flips until HH:",
+   "options": [
+    "6",
+    "4",
+    "3"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Die rolls until two 6s in a row:",
+   "options": [
+    "42",
+    "36",
+    "12"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Var of a fair die:",
+   "options": [
+    "35/12",
+    "3.5",
+    "1"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

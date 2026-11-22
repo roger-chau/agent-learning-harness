@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Posterior odds =",
+   "options": [
+    "prior odds × likelihood ratio",
+    "prior + likelihood",
+    "likelihood only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Base-rate neglect ignores…",
+   "options": [
+    "the prior",
+    "the likelihood",
+    "the evidence"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Monty Hall switching wins 2/3 because…",
+   "options": [
+    "the host knowingly avoids the car",
+    "doors are random",
+    "symmetry"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Independent tests combine by…",
+   "options": [
+    "multiplying likelihood ratios",
+    "adding probabilities",
+    "averaging"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "The way information was revealed is…",
+   "options": [
+    "part of the evidence",
+    "irrelevant",
+    "a trick"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

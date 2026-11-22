@@ -1,0 +1,240 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Indicators",
+   "statement": "<p>Compute with linearity.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected fixed points of a random permutation of 20?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected distinct faces in 6 die rolls?",
+     "answer": 3.9906121399176953,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Expected number of HH pairs (adjacent) in 10 fair flips?",
+     "answer": 2.25,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Sum of P(each indicator)."
+   ],
+   "solution": "<p>1; 6(1 − (5/6)⁶) ≈ 3.99; 9 positions × ¼.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Max of two dice",
+   "statement": "<p>E[max of two dice] via tail sums.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "E[max]?",
+     "answer": 4.472222222222222,
+     "unit": "",
+     "tolerance": "0.2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "E[min] (= 7 − E[max])?",
+     "answer": 2.5277777777777777,
+     "unit": "",
+     "tolerance": "0.2%"
+    }
+   ],
+   "hints": [
+    "Σ P(max ≥ k)."
+   ],
+   "solution": "<p>161/36 ≈ 4.4722; max + min = sum, so E[min] = 7 − 161/36 = 91/36.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Coupons",
+   "statement": "<p>Collect all 6 faces of a die.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected rolls?",
+     "answer": 14.7,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected rolls to see the last new face after 5 are seen?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [
+    "n·Hₙ."
+   ],
+   "solution": "<p>6(1 + ½ + … + 1/6) = 14.7.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Re-roll game",
+   "statement": "<p>One die roll with the option to re-roll.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Value with one re-roll allowed?",
+     "answer": 4.25,
+     "unit": "",
+     "tolerance": "0.2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Value with two re-rolls allowed?",
+     "answer": 4.666666666666667,
+     "unit": "",
+     "tolerance": "0.2%"
+    }
+   ],
+   "hints": [
+    "Backward induction."
+   ],
+   "solution": "<p>4.25; then keep only 5 or 6: 2/6 × 5.5 + 4/6 × 4.25 ≈ 4.667.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Records",
+   "statement": "<p>A random permutation of 100 values; a record is larger than everything before it.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected number of records?",
+     "answer": 5.187377517639621,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Position k is a record with probability 1/k."
+   ],
+   "solution": "<p>H₁₀₀ ≈ 5.19.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Tails before heads",
+   "statement": "<p>Flip a fair coin until the first head.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected total flips?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected number of tails?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [
+    "Geometric(½)."
+   ],
+   "solution": "<p>2 flips, of which 1 is a tail on average.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Jensen",
+   "statement": "<p>X uniform on {1, 2, 3}.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "E[X²]?",
+     "answer": 4.666666666666667,
+     "unit": "",
+     "tolerance": "0.2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "(E[X])²?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Var(X)?",
+     "answer": 0.6666666666666666,
+     "unit": "",
+     "tolerance": "0.2%"
+    }
+   ],
+   "hints": [
+    "E[X²] − E[X]²."
+   ],
+   "solution": "<p>14/3 vs 4: the gap is the variance, 2/3.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Expected cycles",
+   "statement": "<p>A random permutation of n elements.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected number of cycles for n = 10?",
+     "answer": 2.9289682539682538,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why the same as records?",
+     "options": [
+      "a bijection (Foata) maps cycles to records",
+      "coincidence",
+      "they differ"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Hₙ again."
+   ],
+   "solution": "<p>H₁₀ ≈ 2.93. Recognising Hₙ quickly pays off.</p>"
+  }
+ ]
+}

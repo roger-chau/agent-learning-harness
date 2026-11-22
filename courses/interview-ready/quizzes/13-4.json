@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "First-step analysis conditions on…",
+   "options": [
+    "the next step's outcome",
+    "the final outcome",
+    "nothing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Expected flips until HH:",
+   "options": [
+    "6",
+    "4",
+    "8"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "SD of a sum of n i.i.d. bets grows like…",
+   "options": [
+    "√n",
+    "n",
+    "log n"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Poisson(λ) has variance…",
+   "options": [
+    "λ",
+    "λ²",
+    "√λ"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Self-overlapping patterns take…",
+   "options": [
+    "longer on average",
+    "shorter",
+    "the same"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -2071,14 +2071,147 @@
    "id": "p13",
    "n": 13,
    "title": "Probability I",
-   "summary": "Counting, conditioning, Bayes, expectation and indicators.",
+   "summary": "Counting with symmetry, conditioning and Bayes in odds form, expectation with indicators, variance and first-step analysis.",
    "items": [
     {
      "type": "chapter",
      "id": "13-1",
-     "title": "Probability I",
-     "summary": "Counting, conditioning, Bayes, expectation and indicators.",
-     "status": "planned"
+     "title": "Counting and symmetry",
+     "summary": "Count what's easy: complements, symmetry, sequential products, inclusion–exclusion.",
+     "coding": [
+      "dice-sum-probability"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "fast clean answers"
+      ],
+      [
+       "The core idea",
+       "count what's easy"
+      ],
+      [
+       "The invariant and template",
+       "five steps, key numbers"
+      ],
+      [
+       "A thinking trace",
+       "1 and 2 adjacent"
+      ],
+      [
+       "Traps and variations",
+       "non-uniform, ordering"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "13-2",
+     "title": "Conditioning and Bayes",
+     "summary": "Posterior odds = prior odds × likelihood ratio; the protocol is evidence.",
+     "blocks": [
+      [
+       "The signal",
+       "given that…"
+      ],
+      [
+       "The core idea",
+       "odds form"
+      ],
+      [
+       "The invariant and template",
+       "hypotheses, likelihoods, protocol"
+      ],
+      [
+       "A thinking trace",
+       "the Tuesday boy"
+      ],
+      [
+       "Traps and variations",
+       "base rates, Monty Hall"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "13-3",
+     "title": "Expectation and indicators",
+     "summary": "Linearity with indicators, tail sums, backward induction for games.",
+     "blocks": [
+      [
+       "The signal",
+       "expected number of…"
+      ],
+      [
+       "The core idea",
+       "linearity without independence"
+      ],
+      [
+       "The invariant and template",
+       "count, wait, max, game"
+      ],
+      [
+       "A thinking trace",
+       "re-roll game"
+      ],
+      [
+       "Traps and variations",
+       "Jensen, St Petersburg"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "13-4",
+     "title": "Variance, distributions and first-step analysis",
+     "summary": "States and one-step equations; √n risk; the distributions to know cold.",
+     "coding": [
+      "expected-tosses-pattern"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "waiting times, risk"
+      ],
+      [
+       "The core idea",
+       "condition on the first step"
+      ],
+      [
+       "The invariant and template",
+       "linear systems, normal approx"
+      ],
+      [
+       "A thinking trace",
+       "two sixes in a row"
+      ],
+      [
+       "Traps and variations",
+       "states, covariances, Penney"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p13-checkpoint",
+     "title": "Part 13 checkpoint",
+     "summary": "Probability I: count, condition, expect."
     }
    ]
   },
