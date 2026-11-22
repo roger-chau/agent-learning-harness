@@ -1,0 +1,55 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"We play a game: what's your strategy?", "how should you bluff?", "guess two-thirds of the average", "what's the equilibrium?". Trading is a repeated game against other strategic players, and quant interviews test whether you reason about the opponent's best response rather than just your own EV.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: best responses and indifference</h2>
+<ul>
+<li><strong>Nash equilibrium:</strong> each player's strategy is a best response to the others'. Nobody gains by deviating alone.</li>
+<li><strong>Dominance first:</strong> eliminate strategies that are worse in every case; iterate.</li>
+<li><strong>Mixed strategies via indifference:</strong> in a zero-sum game with no saddle point, each player mixes so that the <em>opponent</em> is indifferent between their options. Otherwise the opponent exploits the bias.</li>
+<li><strong>Backward induction</strong> for sequential games (Part 15.4's pirates).</li>
+<li><strong>Bluffing frequency:</strong> in a simple poker model, bet your strong hands and bluff with enough weak hands that the caller's EV of calling is zero: bluff ratio = pot odds. With a pot of P and a bet of B, the caller needs to win B/(P + 2B) of the time to break even, so the bettor bluffs in that proportion of their betting range.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>2×2 zero-sum, row payoffs [[a, b], [c, d]] with no saddle point:
+  row plays row 1 with p where  a p + c (1−p) = b p + d (1−p)
+  p = (d − c) / (a − b − c + d),   value v = a p + c (1−p)
+Checks: p ∈ [0, 1]; plugging into both columns gives the same v.</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "guess 2/3 of the average"</h2>
+<ol>
+<li><strong>Rules:</strong> everyone picks a number in [0, 100]; the closest to ⅔ of the average wins.</li>
+<li><strong>Dominance:</strong> the average can't exceed 100, so ⅔ of it can't exceed 66.7, and any pick above 66.7 is dominated.</li>
+<li><strong>Iterate:</strong> if nobody picks above 66.7, the target is at most 44.4; then 29.6; … the only Nash equilibrium is 0.</li>
+<li><strong>But play the room:</strong> real groups stop after 1–2 levels of reasoning; winning answers are typically 20–35. The equilibrium and the profit-maximising answer differ when the others aren't fully rational.</li>
+<li><strong>Trading lesson:</strong> markets reward modelling what others will <em>actually</em> do, not what perfectly rational agents would do.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Confusing \"maximise my payoff\" with \"make the opponent indifferent\":</strong> in mixed equilibria, your mix is chosen to neutralise the opponent.</li>
+<li><strong>Auctions:</strong> in a first-price sealed-bid auction with n bidders and uniform private values, bid (n − 1)/n of your value; second-price, bid your value (truthful).</li>
+<li><strong>Repeated games</strong> sustain cooperation (tit-for-tat) that one-shot games don't.</li>
+<li><strong>Interview games</strong> (\"I pick a number 1–100, you guess, I say higher or lower, you pay per guess\"): compute your strategy's expected cost and then think about the setter's best response.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Avinash Dixit &amp; Barry Nalebuff, <em>The Art of Strategy</em>, chapters 1–5.</li>
+<li>* Bill Chen &amp; Jerrod Ankenman, <em>The Mathematics of Poker</em>, chapters on the [0, 1] game and optimal bluffing.</li>
+<li>Solve three 2×2 zero-sum games by indifference and check each against the minimax LP.</li>
+<li>Play Figgie or a poker training app and log where your bluffing frequency deviates from the indifference ratio.</li>
+</ul>
+</section>

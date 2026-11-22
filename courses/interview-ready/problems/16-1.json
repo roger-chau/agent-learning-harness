@@ -1,0 +1,220 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Fair values",
+   "statement": "<p>What's the fair value?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sum of two dice?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Sum of two dice, given one die shows 6?",
+     "answer": 9.5,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Max of two dice?",
+     "answer": 4.472222222222222,
+     "unit": "",
+     "tolerance": "0.2%"
+    }
+   ],
+   "hints": [
+    "Conditional expectation."
+   ],
+   "solution": "<p>7; 6 + 3.5; 161/36.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Width",
+   "statement": "<p>Rank these situations from tightest to widest market.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which deserves the widest market?",
+     "options": [
+      "the counterparty has seen one of the dice",
+      "the distribution is fully known to both",
+      "you've seen one of the dice"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Information asymmetry."
+   ],
+   "solution": "<p>An informed counterparty is the strongest reason to widen.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Skew",
+   "statement": "<p>You quote 6.8 / 7.2 on two dice and get lifted three times (sold 30 contracts at 7.2).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Sensible next quote?",
+     "options": [
+      "6.9 / 7.3 (skewed up to reduce the short)",
+      "6.5 / 6.9",
+      "same"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected profit so far ($, 0.2 per contract)?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [
+    "Inventory risk."
+   ],
+   "solution": "<p>No new information about the dice, but a 30-lot short is risk; skew up to attract sellers.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Expected P&L of a quote",
+   "statement": "<p>Fair value 31.5, you quote 29.5 / 33.5; a noise trader buys or sells with ½ each.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected edge per noise fill?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [
+    "Half the spread."
+   ],
+   "solution": "<p>Buy at 33.5 or sell at 29.5, each 2 better than fair.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Updating",
+   "statement": "<p>The hidden value is the sum of three uniform 1–20 draws. Revealed: 17.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "New fair value?",
+     "answer": 38.0,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "SD of the remaining two draws' sum (√(2 × (20² − 1)/12))?",
+     "answer": 8.154753215150045,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Mean 10.5 each; variance (n² − 1)/12."
+   ],
+   "solution": "<p>38; SD ≈ 8.15, so a sensible width is a few points either side.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Crossed",
+   "statement": "<p>You quote bid 10, ask 9.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What happens?",
+     "options": [
+      "anyone buys at 9 and sells at 10 for a riskless 1",
+      "nothing",
+      "you profit"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Never cross."
+   ],
+   "solution": "<p>A crossed market is an arbitrage against you.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Sizing the width",
+   "statement": "<p>Fair value 50 with a standard deviation of uncertainty 4; you want an informed counterparty to profit only rarely.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Reasonable width?",
+     "options": [
+      "about ±1.5–2 SD: 43 / 57",
+      "49.9 / 50.1",
+      "0 / 100"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Width tracks uncertainty."
+   ],
+   "solution": "<p>Tighten as uncertainty falls.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Figgie-style inference",
+   "statement": "<p>A deck has 12 cards of a goal suit and 10 of others; you hold 4 of the suit in a 10-card hand drawn from a 40-card deck where the suits are 12, 10, 10, 8.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Your expected count of a 12-card suit in a random 10-card hand?",
+     "answer": 3.0,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Holding 4 of a suit (above 3 expected) makes it…",
+     "options": [
+      "more likely to be the 12-card suit",
+      "less likely",
+      "irrelevant"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Likelihoods of your hand under each hypothesis."
+   ],
+   "solution": "<p>3 expected; holding more is evidence for the larger suit (Bayes, Part 13.2).</p>"
+  }
+ ]
+}

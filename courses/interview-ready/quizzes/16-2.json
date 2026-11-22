@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Spreads exist even without costs because of…",
+   "options": [
+    "informed traders (adverse selection)",
+    "taxes",
+    "rounding"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Glosten–Milgrom ask =",
+   "options": [
+    "E[V | a buy arrives]",
+    "E[V]",
+    "the last price"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "More informed flow means…",
+   "options": [
+    "wider spreads",
+    "tighter spreads",
+    "no change"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Winning a common-value auction suggests…",
+   "options": [
+    "you overestimated",
+    "you're right",
+    "nothing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Mark-outs measure…",
+   "options": [
+    "post-trade price moves against you",
+    "fees",
+    "volume"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

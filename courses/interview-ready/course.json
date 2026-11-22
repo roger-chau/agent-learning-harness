@@ -2506,14 +2506,141 @@
    "id": "p16",
    "n": 16,
    "title": "Trading games",
-   "summary": "Market making against an informed bot, EV, adverse selection, Kelly, game theory.",
+   "summary": "Making markets, adverse selection, Kelly sizing and game theory, with an interactive market-making game.",
    "items": [
     {
      "type": "chapter",
      "id": "16-1",
-     "title": "Trading games",
-     "summary": "Market making against an informed bot, EV, adverse selection, Kelly, game theory.",
-     "status": "planned"
+     "title": "Making markets",
+     "summary": "Fair value, width from uncertainty, skew with position, update on trades; play the game.",
+     "blocks": [
+      [
+       "The signal",
+       "make me a market"
+      ],
+      [
+       "The core idea",
+       "fair value and width"
+      ],
+      [
+       "The invariant and template",
+       "the market-making game"
+      ],
+      [
+       "A thinking trace",
+       "two dice"
+      ],
+      [
+       "Traps and variations",
+       "crossing, anchoring, composure"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "16-2",
+     "title": "Adverse selection",
+     "summary": "Every fill is evidence; Glosten–Milgrom spreads; the winner's curse.",
+     "blocks": [
+      [
+       "The signal",
+       "why spreads exist"
+      ],
+      [
+       "The core idea",
+       "condition on the trade"
+      ],
+      [
+       "The invariant and template",
+       "regret-free prices"
+      ],
+      [
+       "A thinking trace",
+       "the large order"
+      ],
+      [
+       "Traps and variations",
+       "toxic flow, Kyle"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "16-3",
+     "title": "Kelly and position sizing",
+     "summary": "Maximise log growth: f* = edge/odds; over-betting ruins; fractional Kelly.",
+     "blocks": [
+      [
+       "The signal",
+       "how much to bet"
+      ],
+      [
+       "The core idea",
+       "log growth"
+      ],
+      [
+       "The invariant and template",
+       "formulas"
+      ],
+      [
+       "A thinking trace",
+       "the 60% coin"
+      ],
+      [
+       "Traps and variations",
+       "estimation error, drawdowns"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "16-4",
+     "title": "Game theory for traders",
+     "summary": "Best responses, dominance, mixing by indifference, bluffing ratios, auctions.",
+     "blocks": [
+      [
+       "The signal",
+       "strategic opponents"
+      ],
+      [
+       "The core idea",
+       "best responses"
+      ],
+      [
+       "The invariant and template",
+       "2×2 mixed equilibria"
+      ],
+      [
+       "A thinking trace",
+       "2/3 of the average"
+      ],
+      [
+       "Traps and variations",
+       "auctions, repetition"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p16-checkpoint",
+     "title": "Part 16 checkpoint",
+     "summary": "Trading games: markets, information, sizing, strategy."
     }
    ]
   },

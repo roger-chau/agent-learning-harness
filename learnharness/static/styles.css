@@ -684,3 +684,5 @@ svg .d-arrowhead { fill: var(--muted); }
 .drill-out, .mm-log { margin-top: 12px; }
 .drill-result { padding: 10px 12px; border-radius: var(--radius-md); background: var(--accent-soft); margin: 8px 0; }
 .mm-state { margin-top: 10px; }
+.mm-row label, .drill-setup label { white-space: nowrap; }
+.mm-row input.field { width: 90px; }

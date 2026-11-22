@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"You have an edge: how much of your bankroll do you bet?", "why don't traders bet full Kelly?", "a 60% coin at even money: how should you size?". Position sizing turns a positive-EV idea into long-run growth instead of ruin. Firms ask because traders who size badly blow up even with an edge.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: maximise expected log wealth</h2>
+<p>For repeated bets where you reinvest, the long-run growth rate of wealth is E[log(1 + f·R)], where f is the fraction bet and R the return. Maximising it gives the <strong>Kelly criterion</strong>. For a bet paying b-to-1 with win probability p:</p>
+<p style="text-align:center"><strong>f* = p − q/b</strong> (q = 1 − p): "edge over odds"</p>
+<p>At even money (b = 1): f* = 2p − 1, so a 60% coin calls for betting 20%. For continuous returns with mean μ and variance σ² (excess over the risk-free rate): f* ≈ μ/σ².</p>
+<ul>
+<li><strong>Over-betting is far worse than under-betting:</strong> the growth rate is roughly parabolic in f, peaks at f*, falls to 0 at about 2f*, and goes negative beyond that, so ruin is nearly certain even with an edge.</li>
+<li><strong>Half Kelly</strong> keeps about ¾ of the growth rate with about half the volatility, and it's robust to overestimating your edge, which you will. Practitioners use fractional Kelly.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Binary bet (win b per 1 staked w.p. p):   f* = p − (1 − p)/b
+Growth rate:   g(f) = p·ln(1 + b f) + (1 − p)·ln(1 − f)
+Small-edge approximation:   g(f) ≈ f·μ − f²σ²/2   →  f* = μ/σ²,  g* = μ²/(2σ²) = Sharpe²/2
+Rule of thumb: bet a fraction of Kelly (½ or less); never more than Kelly.</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: the 60% coin</h2>
+<ol>
+<li><strong>EV per $1 bet</strong> at even money: 0.6 − 0.4 = $0.20. Positive.</li>
+<li><strong>Bet everything each time?</strong> The expected wealth is maximised, but one loss wipes you out, and you will lose eventually. The <em>median</em> outcome is ruin. Expectation is the wrong objective for repeated reinvestment.</li>
+<li><strong>Kelly:</strong> f* = 0.6 − 0.4 = 0.2. Growth rate g = 0.6 ln 1.2 + 0.4 ln 0.8 ≈ 0.020 per bet, so wealth grows about e^{0.02n}: roughly 7× in 100 bets.</li>
+<li><strong>Half Kelly (10%):</strong> g = 0.6 ln 1.1 + 0.4 ln 0.9 ≈ 0.015, which is 75% of the growth with much smaller drawdowns.</li>
+<li><strong>40% (double Kelly):</strong> g = 0.6 ln 1.4 + 0.4 ln 0.6 ≈ −0.002. Negative growth, despite a 20% edge.</li>
+</ol>
+<p>The habit: <strong>for repeated bets, optimise growth (log), not expectation</strong>, then shade down for estimation error.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Kelly needs your true edge.</strong> Estimated edges are noisy and usually optimistic, which is the main reason to use fractional Kelly.</li>
+<li><strong>Several simultaneous bets</strong> need joint optimisation (correlations matter).</li>
+<li><strong>Kelly is about growth, not utility:</strong> institutions with drawdown limits use smaller fractions.</li>
+<li><strong>Negative edge:</strong> f* &lt; 0 means take the other side, or don't bet.</li>
+<li><strong>Time to recover:</strong> a 50% drawdown needs a 100% gain. Asymmetry is why sizing dominates long-run results.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Ed Thorp, "The Kelly Criterion in Blackjack, Sports Betting and the Stock Market" (2006), sections 1–4 and 7.</li>
+<li>* William Poundstone, <em>Fortune's Formula</em> (narrative history).</li>
+<li>Simulate 1,000 paths of 500 bets at f = 0.1, 0.2, 0.4 for the 60% coin; plot median and 5th-percentile wealth.</li>
+<li>MacLean, Thorp &amp; Ziemba, "Good and bad properties of the Kelly criterion".</li>
+</ul>
+</section>

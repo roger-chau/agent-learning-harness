@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Nash equilibrium:",
+   "options": [
+    "each strategy is a best response to the others",
+    "both maximise joint payoff",
+    "random play"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Mixed strategies make the opponent…",
+   "options": [
+    "indifferent",
+    "lose",
+    "certain"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Optimal bluff frequency equals…",
+   "options": [
+    "the caller's required equity (pot odds)",
+    "50%",
+    "0"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "2/3-of-average equilibrium:",
+   "options": [
+    "0",
+    "33",
+    "50"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Second-price auction: bid…",
+   "options": [
+    "your value",
+    "half your value",
+    "0"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -1,0 +1,54 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Why do market makers quote a spread at all?", "you win an auction for a jar of coins: should you be happy?", "a customer wants to buy 10× normal size: what do you do?". Adverse selection, trading against someone who knows more than you, is the central risk of market making and the reason spreads exist.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: every fill is evidence</h2>
+<p>When someone trades with you, ask: <em>"given that they chose to trade, what's the value now?"</em> The <strong>Glosten–Milgrom</strong> model makes this exact. The value is high (H) or low (L) with equal probability; a fraction μ of traders know it and buy if H, sell if L; the rest buy or sell at random. A competitive market maker sets</p>
+<p style="text-align:center">ask = E[V | a buy arrives], bid = E[V | a sell arrives]</p>
+<p>So the spread exists even with zero costs, and it widens with μ, the share of informed flow: with H = 100, L = 0, the spread is exactly 100μ. The market maker loses to the informed traders and wins it back from the uninformed. The spread is the price of that information asymmetry.</p>
+<p><strong>The winner's curse:</strong> in a common-value auction, winning means you had the highest estimate, which is probably an overestimate. Bid below your estimate, more so with more bidders.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Before quoting:  fair = E[V | public info]
+On a buy at ask: fair ← E[V | public info, "someone chose to buy at ask"]  (higher)
+Quote:           ask = E[V | buy], bid = E[V | sell]   (regret-free prices)
+Glosten–Milgrom (V ∈ {L, H} with ½ each, informed fraction μ):
+                 ask = L + (H − L)·(1 + μ)/2,   bid = L + (H − L)·(1 − μ)/2,   spread = μ(H − L)</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: the large customer order</h2>
+<ol>
+<li><strong>Setup:</strong> you make markets in a stock at 50.00 / 50.02 for 1,000 shares. A client asks to buy 100,000 shares now.</li>
+<li><strong>Ask what the size tells you:</strong> large, urgent orders are more likely to be informed (they know news) or to come from a client who'll keep buying (price pressure). Either way, the price is likely to rise after you sell.</li>
+<li><strong>Price the risk:</strong> you'll be short 100k shares and need to buy them back. Estimate the market impact of buying 100k (say 10–20 cents given typical daily volume) plus the information risk.</li>
+<li><strong>Quote:</strong> offer at, say, 50.15 for the block, or offer to work the order over time (agency) instead of taking the risk (principal).</li>
+<li><strong>Learn:</strong> track post-trade price moves (\"mark-outs\") by client. Clients whose trades are consistently followed by adverse moves get wider prices.</li>
+</ol>
+<p>The habit: <strong>condition on the fact that the trade happened</strong>. The question isn't \"what's it worth?\" but \"what's it worth given that this person wants to trade it with me now?\"</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Winning every trade is a warning sign:</strong> if you're always filled, your prices are too generous.</li>
+<li><strong>Toxic vs benign flow:</strong> retail order flow is mostly uninformed, which is why market makers pay for it.</li>
+<li><strong>Kyle's model:</strong> an informed trader splits the order over time to hide; the price impact per unit (λ) reflects how informed the flow is.</li>
+<li><strong>Interview games:</strong> when the interviewer \"knows\" a card or a die, assume any trade they make is informed, and widen.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Glosten & Milgrom (1985), "Bid, ask and transaction prices in a specialist market with heterogeneously informed traders", sections 1–3.</li>
+<li>* Larry Harris, <em>Trading and Exchanges</em>, chapters on dealers and informed traders.</li>
+<li>Richard Thaler, "The Winner's Curse" (JEP 1988).</li>
+<li>In the Part 16.1 game, raise your width only after informed fills and watch your average P&amp;L change.</li>
+</ul>
+</section>

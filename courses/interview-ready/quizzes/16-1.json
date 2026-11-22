@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A market is centred on…",
+   "options": [
+    "fair value given your information",
+    "the last trade",
+    "zero"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Width increases with…",
+   "options": [
+    "uncertainty and counterparty information",
+    "your confidence",
+    "time of day"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Being long, you should skew…",
+   "options": [
+    "down",
+    "up",
+    "not at all"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "A trade against you is…",
+   "options": [
+    "evidence about value",
+    "noise always",
+    "irrelevant"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Refusing to quote is…",
+   "options": [
+    "the worst answer",
+    "safe",
+    "expected"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

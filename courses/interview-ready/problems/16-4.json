@@ -1,0 +1,234 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Mixed equilibrium",
+   "statement": "<p>Row player's payoffs [[3, -1], [-2, 1]] in a zero-sum game.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Row's probability of row 1?",
+     "answer": 0.42857142857142855,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Value of the game?",
+     "answer": 0.1428571428571428,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Make the column player indifferent."
+   ],
+   "solution": "<p>p = (d − c)/(a − b − c + d) = 3/7; value = 1/7.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Classics",
+   "statement": "<p>Equilibrium mixes.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Matching pennies: P(heads)?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Rock-paper-scissors: P(rock)?",
+     "answer": 0.3333333333333333,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Symmetry."
+   ],
+   "solution": "<p>½ and ⅓.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Bluffing",
+   "statement": "<p>Pot P = 100; you bet B = 50.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Caller's required equity to call (B / (P + 2B))?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Optimal fraction of your bets that are bluffs?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Make the caller indifferent."
+   ],
+   "solution": "<p>The caller risks 50 to win 150, so needs 25%. Bluff 1 in 4 of your bets.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "2/3 of the average",
+   "statement": "<p>Iterated dominance.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Upper bound after one round of elimination?",
+     "answer": 66.66666666666667,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "After three rounds?",
+     "answer": 29.629629629629623,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Nash equilibrium?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Multiply by 2/3 each round."
+   ],
+   "solution": "<p>66.7, 29.6, …, 0.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "First-price auction",
+   "statement": "<p>n bidders with private values uniform on [0, 1].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Equilibrium bid with value 0.9 and n = 3?",
+     "answer": 0.6,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Second-price auction bid with value 0.9?",
+     "answer": 0.9,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "(n − 1)/n × value; truthful."
+   ],
+   "solution": "<p>0.6; 0.9.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Dominance",
+   "statement": "<p>Row payoffs [[4, 3], [2, 1]] (row player maximises).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Row player's choice?",
+     "options": [
+      "row 1 (dominates row 2)",
+      "row 2",
+      "mix"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Compare row 1 with row 2 column by column."
+   ],
+   "solution": "<p>4 &gt; 2 and 3 &gt; 1: row 1 strictly dominates.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Guessing game",
+   "statement": "<p>I pick an integer 1–100 uniformly; you guess and I say higher or lower; you pay $1 per guess including the correct one.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Guesses needed in the worst case with binary search?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected guesses with binary search (≈ 5.8)?",
+     "answer": 5.8,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "A binary-search tree over 100 values."
+   ],
+   "solution": "<p>7 in the worst case; about 5.8 on average for a uniform pick. If the picker is adversarial, expect them to choose hard-to-reach numbers.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Saddle point",
+   "statement": "<p>Payoffs [[2, 4], [1, 3]] (row maximises, column minimises).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Game value?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Mixed strategy needed?",
+     "options": [
+      "No: a pure saddle point (row 1, column 1)",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "max of row minima vs min of column maxima."
+   ],
+   "solution": "<p>Row minima are 2 and 1, so maximin is 2; column maxima are 2 and 4, so minimax is 2. Equal: a saddle point.</p>"
+  }
+ ]
+}

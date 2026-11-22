@@ -1,0 +1,233 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Glosten–Milgrom",
+   "statement": "<p>V = 100 or 0 with ½ each; 20% of traders are informed.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ask?",
+     "answer": 60.00000000000001,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bid?",
+     "answer": 39.99999999999999,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Spread?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "ask = E[V | buy]."
+   ],
+   "solution": "<p>P(H | buy) = 0.6/(0.6 + 0.4) = 0.6, so ask 60, bid 40, spread 100μ = 20.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "More informed",
+   "statement": "<p>Same model with 50% informed.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Spread?",
+     "answer": 50,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Spread = μ(H − L)."
+   ],
+   "solution": "<p>75 / 25.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Market maker P&L",
+   "statement": "<p>With μ = 0.2 and quotes 40 / 60, per 100 traders.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected loss to the 20 informed traders (each wins 40)?",
+     "answer": 800,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected gain from the 80 uninformed (each loses 10 on average)?",
+     "answer": 800,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Zero-profit spread."
+   ],
+   "solution": "<p>800 lost, 800 gained: the spread exactly balances.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Winner's curse",
+   "statement": "<p>5 bidders each get an unbiased but noisy estimate of a jar's value (true 100, estimate noise ±20 uniform).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected highest estimate (100 + 20 × (2·5/6 − 1))?",
+     "answer": 113.33333333333334,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "If everyone bids their estimate, the winner…",
+     "options": [
+      "overpays on average",
+      "breaks even",
+      "profits"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Max of 5 uniforms on [−20, 20]: mean 20·(5 − 1)/(5 + 1)."
+   ],
+   "solution": "<p>The winner's estimate averages about 113, so bid below your estimate.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Conditioning on size",
+   "statement": "<p>A client wants to buy 100× normal size, urgently.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Reasonable responses?",
+     "options": [
+      "widen and shade the offer up",
+      "work the order as agent over time",
+      "quote the normal 1-lot price for the full size",
+      "track post-trade mark-outs for this client"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Size and urgency signal information."
+   ],
+   "solution": "<p>Price the information and impact; never give the screen price for the block.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Mark-outs",
+   "statement": "<p>After your fills with client X, the price moves 3 ticks against you on average within 1 minute; your spread is 2 ticks.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Net expected ticks per fill (spread/2 − adverse move)?",
+     "answer": -2,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Action?",
+     "options": [
+      "widen for X or internalise less of X's flow",
+      "tighten",
+      "ignore"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Half-spread earned minus adverse selection."
+   ],
+   "solution": "<p>−2 ticks per fill: X is informed relative to your prices.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Interview game",
+   "statement": "<p>The interviewer has looked at a card; you make markets on its rank (1–13).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Fair value before any trade?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "They buy at your ask of 8. Update?",
+     "options": [
+      "raise your market: they likely saw a high card",
+      "keep 7",
+      "lower it"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Informed counterparty."
+   ],
+   "solution": "<p>The trade is a signal; treat the interviewer as informed.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Kyle intuition",
+   "statement": "<p>An informed trader with a large order…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "…prefers to",
+     "options": [
+      "split it over time to hide among noise traders",
+      "trade it all at once",
+      "announce it"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Price impact per unit."
+   ],
+   "solution": "<p>Spreading the order out minimises information leakage and impact. Market makers watch for it.</p>"
+  }
+ ]
+}

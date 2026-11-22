@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Kelly maximises…",
+   "options": [
+    "expected log wealth (growth)",
+    "expected wealth",
+    "win rate"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Even-money Kelly fraction:",
+   "options": [
+    "2p − 1",
+    "p",
+    "1/2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Betting 2× Kelly gives growth…",
+   "options": [
+    "about zero or negative",
+    "double",
+    "the same"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Half Kelly keeps about…",
+   "options": [
+    "75% of growth, 50% of volatility",
+    "50% of growth",
+    "all the growth"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Fractional Kelly protects against…",
+   "options": [
+    "overestimating your edge",
+    "taxes",
+    "fees"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

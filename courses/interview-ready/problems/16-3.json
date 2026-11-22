@@ -1,0 +1,245 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Kelly fraction",
+   "statement": "<p>Binary bets.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "p = 0.6 at even money?",
+     "answer": 0.19999999999999996,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "p = 0.5 at 2-to-1?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "p = 0.3 at 2-to-1?",
+     "answer": -0.04999999999999999,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "f* = p − q/b."
+   ],
+   "solution": "<p>0.2; 0.25; −0.05 (negative edge: don't bet).</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Growth",
+   "statement": "<p>p = 0.6, even money.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Growth rate at f = 0.2?",
+     "answer": 0.020135513550688863,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "At f = 0.1?",
+     "answer": 0.015041901619464441,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "At f = 0.4?",
+     "answer": -0.0024469075336685797,
+     "unit": "",
+     "tolerance": "10%"
+    }
+   ],
+   "hints": [
+    "g = p ln(1 + f) + q ln(1 − f)."
+   ],
+   "solution": "<p>0.0201, 0.0150 and -0.0024: double Kelly has negative growth.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Half Kelly",
+   "statement": "<p>Using the small-edge approximation g(f) = fμ − f²σ²/2.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Growth at f*/2 as a fraction of g*?",
+     "answer": 0.75,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Volatility at f*/2 relative to f*?",
+     "answer": 0.5,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "g(f*/2) = μ²/(2σ²) · (1 − ¼)."
+   ],
+   "solution": "<p>¾ of the growth, ½ the volatility.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Continuous Kelly",
+   "statement": "<p>A strategy with annual excess return μ = 8% and volatility σ = 20%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Kelly leverage μ/σ²?",
+     "answer": 2.0,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Growth rate at Kelly (μ²/(2σ²))?",
+     "answer": 0.08,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "f* = μ/σ²."
+   ],
+   "solution": "<p>2× leverage; 8% per year. Real practitioners use far less, because the parameter uncertainty is large.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Doubling time",
+   "statement": "<p>Growth rate g = 0.02 per bet.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bets to double wealth (ln 2 / g)?",
+     "answer": 34.657359027997266,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "e^{gn} = 2."
+   ],
+   "solution": "<p>About 35 bets.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Drawdowns",
+   "statement": "<p>A 50% loss.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Gain needed to recover (%)?",
+     "answer": 100,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Gain needed after a 20% loss (%)?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "1/(1 − L) − 1."
+   ],
+   "solution": "<p>100% and 25%.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Overconfidence",
+   "statement": "<p>You estimate p = 0.6 at even money, but the true p is 0.55.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Your Kelly bet?",
+     "answer": 0.2,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "True Kelly?",
+     "answer": 0.1,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "True growth at your bet (×1000)?",
+     "answer": -0.13774185471931988,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "You're betting 2× the true Kelly."
+   ],
+   "solution": "<p>Your 0.2 is double the true f* = 0.1, so growth ≈ -0.0001, about zero. Fractional Kelly is insurance against this.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Expectation vs median",
+   "statement": "<p>Bet everything on a 60% coin at even money, 10 times in a row.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Expected final wealth multiple (1.2¹⁰)?",
+     "answer": 6.191736422399997,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Probability of not being ruined (0.6¹⁰)?",
+     "answer": 0.006046617599999997,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "E = (2 × 0.6)ⁿ, but you only survive if you win every bet."
+   ],
+   "solution": "<p>Expectation 6.2× while being wiped out over 99% of the time: maximise growth, not expectation.</p>"
+  }
+ ]
+}

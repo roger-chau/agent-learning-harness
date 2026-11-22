@@ -1,0 +1,55 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Make me a market on…" is the signature question of trading interviews (SIG, Optiver, IMC, Jane Street, Susquehanna, Citadel Securities). You name a <strong>bid</strong> (the price you'd buy at) and an <strong>ask</strong> (the price you'd sell at); the interviewer trades with you, reveals information, and watches how you update. It tests expected value, uncertainty, risk management and composure all at once.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: centre on fair value, set the width from uncertainty and risk</h2>
+<ul>
+<li><strong>Fair value:</strong> your expected value of the thing, given everything you know.</li>
+<li><strong>Width:</strong> wide when you're uncertain or when the other side may know more (adverse selection, 16.2); tight when you're confident and want to trade. A market of 0 / 1,000,000 is useless; 49.9 / 50.1 on something you can't estimate gets you picked off.</li>
+<li><strong>Skew with your position:</strong> if you're already long, shade both prices down (you'd rather sell); if short, shade them up. This manages inventory risk.</li>
+<li><strong>Update on trades:</strong> someone buying at your ask is evidence the value is higher. Move your market up, not just your inventory.</li>
+<li><strong>Size:</strong> quote a size, e.g. "45 at 55, 10 up" (10 contracts each side). Larger size calls for a wider spread.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: play the game</h2>
+<div data-gw="market-maker"></div>
+<p>Play at least 20 rounds of the game above. Watch three things: whether your fills come from noise traders (good, you earn the spread) or the informed trader (bad, adverse selection); how your P&amp;L depends on your width in early rounds, when you know least; and how revealed draws should tighten your market around the new fair value. A strategy that does well on average: quote around the conditional mean, ±3–4 while two or three draws are hidden, ±1–2 once only one is.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "make me a market on the sum of two dice"</h2>
+<ol>
+<li><strong>Fair value:</strong> 7. The distribution is symmetric and you know it exactly, so there's no information disadvantage.</li>
+<li><strong>Width:</strong> you know the distribution perfectly, so you can be tight: "6.8 bid, at 7.2, for 10". You profit 0.2 per trade on average whichever way they trade.</li>
+<li><strong>The interviewer buys 10 at 7.2.</strong> You're now short 10. Nothing has changed the true distribution (the buyer has no information), so keep fair value at 7, but skew to reduce risk: "6.9 / 7.3".</li>
+<li><strong>Variation, \"one die is shown to me (not you)\":</strong> now the counterparty is informed. Widen a lot, "5.5 / 8.5", because they'll only trade when your price is wrong for the die they've seen.</li>
+<li><strong>Variation, \"you see one die: it's a 6\":</strong> fair value 6 + 3.5 = 9.5, and you're the informed side now. Quote tightly around 9.5.</li>
+</ol>
+<p>The habit: <strong>say your fair value and why, then your width and why</strong> ("7 fair; tight because the distribution is known and you have no information edge").</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Crossed or locked markets</strong> (bid ≥ ask) are free money for the other side. Never.</li>
+<li><strong>Refusing to quote</strong> is the worst answer. Quote wide, then tighten.</li>
+<li><strong>Anchoring:</strong> when information arrives, recompute fair value from scratch; don't nudge.</li>
+<li><strong>Ignoring position:</strong> after several buys from you, a large short position is a risk even at fair value.</li>
+<li><strong>Composure:</strong> interviewers will trade aggressively against you on purpose. Narrate calmly: \"you've bought three times; either you know something or you're testing me; I'll widen and move up.\"</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Green book, chapter 6 (finance) and the market-making questions in chapter 2.</li>
+<li>* Jane Street's "Figgie" card game (free online): the best practice for market-making intuition.</li>
+<li>Play the game above 20 times; plot your P&amp;L against your average early-round width.</li>
+<li>Ask a friend to "make me a market" on 10 Fermi quantities (Part 15.2) and trade against you.</li>
+</ul>
+</section>
