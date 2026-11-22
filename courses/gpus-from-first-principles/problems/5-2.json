@@ -1,0 +1,294 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "DRAM speed of light",
+   "statement": "<p>A GW-1 kernel moves 400 MB of DRAM traffic in 1.0 ms (1.5 million cycles). Peak: 341.3 bytes per cycle.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "DRAM SOL, in %?",
+     "answer": 78.125,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Bytes / peak bytes per cycle / cycles."
+   ],
+   "solution": "<p>$400 \\times 10^6 / 341.3 / 1.5 \\times 10^6 = 78\\%$: DRAM is the bottleneck.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Sectors per request",
+   "statement": "<p>A kernel's global loads: 2,000,000 warp load instructions, 32,000,000 sectors.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Sectors per request?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Efficiency for 4-byte loads, in %?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "4 is ideal for 4-byte loads."
+   ],
+   "solution": "<p>16 sectors per request: 4× the ideal, 25% efficiency. Look for a stride of 4 (or a 16-byte struct read field by field).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Issue speed of light",
+   "statement": "<p>The busiest SM issues 1,200,000 warp instructions in a 1.0 ms kernel (1.5 M cycles), at one per cycle peak.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Issue SOL, in %?",
+     "answer": 80,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Of those, 300,000 are FMAs. FMA share, in %?",
+     "answer": 25,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Instructions / cycles."
+   ],
+   "solution": "<p>80% issue SOL, but only a quarter is math: issue-bound on overhead (loads, address arithmetic, branches, conflicts), not compute-bound.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Intensity from counters",
+   "statement": "<p>Counters: 3.0 GFLOP, 1.5 GB of DRAM traffic, 2.0 ms on the GW-1.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Intensity?",
+     "answer": 2.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Achieved GFLOP/s?",
+     "answer": 1500,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Attainable on the roofline?",
+     "answer": 1024,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "min(peak, I × B)."
+   ],
+   "solution": "<p>I = 2, achieved 1,500 GFLOP/s, but the roofline allows only 1,024 at I = 2. A measurement above the roof means a counter is wrong: here, DRAM traffic must be lower than 1.5 GB (cache hits), or the time is wrong. Sanity-check counters against bounds.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "L2 hit rate and DRAM",
+   "statement": "<p>bytesMoved (SM↔L2) = 800 MB, dramBytes = 200 MB.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Effective L2 hit rate, in %?",
+     "answer": 75,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "L2 SOL if the kernel took 1.0 ms (683 B/cycle peak), in %?",
+     "answer": 78.08687164470473,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Hit rate ≈ 1 − DRAM/L2 traffic."
+   ],
+   "solution": "<p>(a) 75%. (b) 78%: L2 nearly saturated, DRAM at about 39%. This kernel is L2-bound; more DRAM bandwidth wouldn't help.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 1,
+   "title": "Stall reasons",
+   "statement": "<p>Match the dominant stall reason to its likely cause.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Long scoreboard",
+     "options": [
+      "Waiting on global/local memory",
+      "Bank conflicts",
+      "Tensor units busy"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "MIO throttle / short scoreboard",
+     "options": [
+      "DRAM latency",
+      "Shared-memory pressure, often bank conflicts",
+      "Too many blocks"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Math pipe throttle",
+     "options": [
+      "Compute-bound: the math units are full",
+      "Divergence",
+      "Launch overhead"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The chapter's table."
+   ],
+   "solution": "<p>Long scoreboard: memory. MIO/short scoreboard: shared memory or special functions. Math pipe throttle: the compute units are the bottleneck, which is usually good news.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Achieved occupancy",
+   "statement": "<p>Theoretical occupancy is 100%, but achieved occupancy is 45%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Plausible causes?",
+     "options": [
+      "Tail effect: SMs idle at the end of the grid",
+      "Imbalanced blocks finishing at different times",
+      "Too few blocks for the GPU",
+      "Too many registers per thread"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Theoretical accounts for registers already."
+   ],
+   "solution": "<p>Achieved < theoretical means slots exist but aren't filled over time: tails, imbalance or too few blocks. Register limits would lower the theoretical figure itself.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Which unit first?",
+   "statement": "<p>SOLs: DRAM 38%, L2 41%, issue 87% (FMA share 82%), tensor 0%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Diagnosis?",
+     "options": [
+      "Bandwidth-bound",
+      "Latency-bound",
+      "Compute-bound",
+      "Issue-bound on overhead"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "Busiest unit, then split issue by FMA share."
+   ],
+   "solution": "<p>Issue is the busiest unit and mostly FMAs: compute-bound. Next step: tensor cores or lower precision, not memory work.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Instructions per element",
+   "statement": "<p>An elementwise kernel over $2^{24}$ floats issues $4.2 \\times 10^6$ warp instructions in total.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warp instructions per warp of 32 elements?",
+     "answer": 8.0108642578125,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "If the work is one load, one FMA and one store per element, the ideal?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "$2^{24}/32 = 524{,}288$ warps of work."
+   ],
+   "solution": "<p>(a) 8.0 per warp-element group, against (b) 3 ideal: about 5 extra instructions of index arithmetic and loop overhead per element. For a memory-bound kernel that's fine; if issue SOL were high it'd be worth vector loads and a grid-stride loop.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "Reading Nsight Compute first",
+   "statement": "<p>You open a profile.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which section first?",
+     "options": [
+      "Source counters",
+      "Speed of Light (GPU throughput)",
+      "Launch statistics",
+      "Instruction statistics"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "What is this kernel using up?"
+   ],
+   "solution": "<p>Speed of Light: which unit is near its peak. Then the section for that unit. Starting from source counters is how afternoons disappear.</p>"
+  }
+ ]
+}

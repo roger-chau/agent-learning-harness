@@ -42,3 +42,35 @@ const t1 = gpu.now();          // ~4 µs, whatever the kernel does</code></pre>
 <li>Report: the statistic, the number of runs, warm-up, problem size, and the hardware. A number without these can't be checked.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: a benchmark harness, line by line</h3>
+<pre>for (i = 0; i &lt; 3; i++) launch()            // warm-up: module load, clocks, caches
+synchronize()
+for (i = 0; i &lt; 21; i++) {
+  record(start); launch(); record(stop)      // GPU-side timestamps around one launch
+  synchronize(stop); times.push(elapsed(start, stop))
+}
+report(median(times), min(times), max(times))</pre>
+<p><strong>Why each line.</strong> The warm-up absorbs the one-time costs. Events measure GPU time between two points in the stream, excluding host overhead. Twenty-one runs give a stable median (odd count: a single middle value). Reporting min and max exposes noise. This is what Lab 0's <code>gw::time_kernel</code> does.</p>
+<p><strong>What it doesn't control:</strong> clock state (lock clocks or at least report them), other processes, and data-dependent effects (the same input each time stays warm in L2: flush L2 between runs if the real use case starts cold).</p>
+
+<h3>Example 2: L2 warmth inflates small benchmarks</h3>
+<p><strong>Setup.</strong> A kernel reads a 16 MB array on a GPU with a 40 MB L2. Repeated runs find the data in L2 and report 2.5 TB/s, faster than the 1.5 TB/s DRAM.</p>
+<p><strong>Diagnosis:</strong> the benchmark measures L2 bandwidth, not DRAM. In production the array arrives cold from a previous kernel's output... or warm, if the previous kernel just wrote it. Decide which case you're measuring, then either flush (write a 2× L2-sized buffer between runs) or keep it warm deliberately. Many "faster than peak bandwidth" claims are this.</p>
+
+<h3>Example 3: is a 2% improvement real?</h3>
+<p><strong>Data.</strong> 30 interleaved runs each: A has median 100.0 µs with interquartile range 99.4–100.7; B has 98.1 µs with IQR 97.6–98.8.</p>
+<p><strong>Reasoning.</strong> The IQRs don't overlap; B's 75th percentile is below A's 25th. With 30 interleaved pairs, a sign test is simple: if B beats A in, say, 27 of 30 pairs, the probability of that under "no difference" is $\sum_{k \ge 27}\binom{30}{k}/2^{30} \approx 4 \times 10^{-6}$. Real.</p>
+<p><strong>Counter-case.</strong> Same medians, IQRs 96–104 and 94–102: B wins maybe 18 of 30 pairs; $P \approx 0.18$. Not established. Report it as "within noise" or collect more data. The difference between these two cases is the spread, not the medians.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Best Practices Guide</em>, "Performance Metrics: Timing" (CPU timers versus CUDA events).</li>
+<li><strong>Required:</strong> T. Hoefler, R. Belli, "Scientific Benchmarking of Parallel Computing Systems: Twelve Ways to Tell the Masses when Reporting Performance Results", SC 2015.</li>
+<li><strong>Optional:</strong> NVIDIA Nsight Compute documentation, "Kernel Profiling Guide": clock control and cache control during profiling.</li>
+</ul>
+</section>

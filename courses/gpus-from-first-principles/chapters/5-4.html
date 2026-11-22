@@ -39,3 +39,30 @@
 <li>Check: grid size divided by (SMs × blocks per SM). If the fractional part is small, you have a tail.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: choosing tiles for a set of shapes</h3>
+<p><strong>Setup.</strong> A 108-SM GPU; candidate tiles 128 × 128 (per-tile efficiency 90%, 1 block per SM) and 128 × 64 (85%, 2 blocks per SM). Shapes: M × N = 1024 × 1024 and 4096 × 4096.</p>
+<p><strong>1024 × 1024:</strong> 128 × 128 → 64 tiles, one partial wave: $64/108 = 59\%$ × 90% = 53%. 128 × 64 → 128 tiles, 216 slots: one wave at $128/216 = 59\%$ × 85% = 50%. Both poor: split-K or Stream-K is needed here.</p>
+<p><strong>4096 × 4096:</strong> 128 × 128 → 1,024 tiles, 10 waves ($1024/1080 = 95\%$) × 90% = 85%. 128 × 64 → 2,048 tiles, 10 waves of 216 ($2048/2160 = 95\%$) × 85% = 81%. Bigger tile wins.</p>
+<p><strong>Lesson:</strong> the best tile depends on the shape. Libraries keep a table (or a search) per architecture and shape class. The arithmetic above is what that table encodes.</p>
+
+<h3>Example 2: load balancing a triangular loop by pairing</h3>
+<p><strong>Problem.</strong> Row $i$ of a lower-triangular operation costs $i + 1$; $n = 4096$ rows; one warp per row.</p>
+<p><strong>Pairing:</strong> warp $w$ handles rows $w$ and $n - 1 - w$: cost $w + 1 + n - w = n + 1$, identical for every warp. 2,048 warps of equal work: perfect balance, independent of scheduling order. The same trick (fold the triangle into a rectangle) appears in symmetric matrix kernels and in causal attention, where query block $i$ attends to $i + 1$ key blocks.</p>
+
+<h3>Example 3: Stream-K, worked on a small case</h3>
+<p><strong>Setup.</strong> 5 tiles of 4 k-iterations each (20 iterations), 3 SMs.</p>
+<p><strong>Data-parallel:</strong> 5 tiles on 3 SMs: 2 waves, the second with 2 tiles: time 8 iterations, efficiency 20/24 = 83%.</p>
+<p><strong>Stream-K:</strong> each SM gets ⌈20/3⌉ ≈ 6.67 iterations: SM 0 takes iterations 0–6 (tile 0 fully, tile 1's first 3), SM 1 takes 7–13 (tile 1's last 1, tile 2, tile 3's first 2), SM 2 takes 14–19 (tile 3's last 2, tile 4). Time ≈ 7 iterations plus fix-ups: tiles 1 and 3 are split, so their partial accumulators are combined (one SM writes its partial; the other adds it in). About 12% faster here, and on real GPUs with 100+ SMs and awkward tile counts, Stream-K's gains are often 1.5–2× for small and medium GEMMs.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> M. Osama, D. Merrill, C. Cecka, M. Garland, J. Owens, "Stream-K: Work-centric Parallel Decomposition for Dense Matrix-Matrix Multiplication on the GPU", PPoPP 2023 (this Part's paper chapter).</li>
+<li><strong>Required:</strong> NVIDIA, "Matrix Multiplication Background User's Guide" (Deep Learning Performance docs): tile and wave quantisation.</li>
+<li><strong>Optional:</strong> R. Graham, "Bounds on Multiprocessing Timing Anomalies", <em>SIAM J. Appl. Math.</em>, 1969 (list scheduling and the LPT bound).</li>
+</ul>
+</section>

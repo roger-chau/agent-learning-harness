@@ -1,0 +1,303 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Kernel A",
+   "statement": "<p>Kernel time / wall time per launch: 0.90. SOL: DRAM 88%, L2 60%, issue 20%, tensor 0%. FMA share of issued instructions: 10%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Diagnosis?",
+     "options": [
+      "Launch-bound",
+      "Latency-bound",
+      "Bandwidth-bound",
+      "Compute-bound",
+      "Issue-bound"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "Launch check, then the busiest unit, then the 60% line, then the FMA share."
+   ],
+   "solution": "<p>Bandwidth-bound. Coalesce, reuse or shrink the data: bytes are the cost.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Kernel B",
+   "statement": "<p>Kernel time / wall time per launch: 0.90. SOL: DRAM 22%, L2 25%, issue 30%, tensor 0%. FMA share of issued instructions: 20%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Diagnosis?",
+     "options": [
+      "Launch-bound",
+      "Latency-bound",
+      "Bandwidth-bound",
+      "Compute-bound",
+      "Issue-bound"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Launch check, then the busiest unit, then the 60% line, then the FMA share."
+   ],
+   "solution": "<p>Latency-bound. Nothing is saturated: more warps or more independent loads (Little's law).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Kernel C",
+   "statement": "<p>Kernel time / wall time per launch: 0.30. SOL: DRAM 10%, L2 10%, issue 10%, tensor 0%. FMA share of issued instructions: 30%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Diagnosis?",
+     "options": [
+      "Launch-bound",
+      "Latency-bound",
+      "Bandwidth-bound",
+      "Compute-bound",
+      "Issue-bound"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Launch check, then the busiest unit, then the 60% line, then the FMA share."
+   ],
+   "solution": "<p>Launch-bound. The GPU waits for launches: fuse kernels or use CUDA Graphs.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Kernel D",
+   "statement": "<p>Kernel time / wall time per launch: 0.95. SOL: DRAM 30%, L2 40%, issue 90%, tensor 0%. FMA share of issued instructions: 20%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Diagnosis?",
+     "options": [
+      "Launch-bound",
+      "Latency-bound",
+      "Bandwidth-bound",
+      "Compute-bound",
+      "Issue-bound"
+     ],
+     "answer": 4
+    }
+   ],
+   "hints": [
+    "Launch check, then the busiest unit, then the 60% line, then the FMA share."
+   ],
+   "solution": "<p>Issue-bound. Mostly overhead instructions: vector loads, register tiling, fix bank conflicts.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Kernel E",
+   "statement": "<p>Kernel time / wall time per launch: 0.95. SOL: DRAM 35%, L2 45%, issue 92%, tensor 0%. FMA share of issued instructions: 85%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Diagnosis?",
+     "options": [
+      "Launch-bound",
+      "Latency-bound",
+      "Bandwidth-bound",
+      "Compute-bound",
+      "Issue-bound"
+     ],
+     "answer": 3
+    }
+   ],
+   "hints": [
+    "Launch check, then the busiest unit, then the 60% line, then the FMA share."
+   ],
+   "solution": "<p>Compute-bound. FP32 is full: tensor cores or lower precision.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "The bottleneck moves",
+   "statement": "<p>A kernel is bandwidth-bound at 88% DRAM SOL taking 2.0 ms. You cut its DRAM bytes in half.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "New time if it stays bandwidth-bound, in ms?",
+     "answer": 1.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Its issue work alone takes 1.4 ms. Actual new time, at best, in ms?",
+     "answer": 1.4,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "New diagnosis?",
+     "options": [
+      "Launch-bound",
+      "Latency-bound",
+      "Bandwidth-bound",
+      "Compute-bound",
+      "Issue-bound"
+     ],
+     "answer": 4
+    }
+   ],
+   "hints": [
+    "Time is set by the slowest unit."
+   ],
+   "solution": "<p>Halving bytes would give 1.0 ms, but issue needs 1.4 ms: the kernel becomes issue-bound at 1.4 ms (1.43×, not 2×). Re-diagnose after every fix.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "A kernel above 60% on two units",
+   "statement": "<p>SOLs: DRAM 72%, issue 70%, FMA share 30%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best description?",
+     "options": [
+      "Purely bandwidth-bound",
+      "Mixed: near both limits, so fixing one alone gains little",
+      "Latency-bound"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Upper bound on the speedup from fixing memory alone?",
+     "answer": 1.0285714285714285,
+     "unit": "",
+     "tolerance": "3%"
+    }
+   ],
+   "hints": [
+    "Time can't drop below the other unit's share."
+   ],
+   "solution": "<p>Both units are near saturation; removing all memory pressure leaves issue at 70% of the current time, so about 1.03×. Such kernels need a restructuring that cuts both (fusion, better tiling).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Little's law diagnosis",
+   "statement": "<p>A latency-bound copy kernel on the GW-1 reaches 30% of peak bandwidth at 25% occupancy, one 128-byte request per warp.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps resident on the whole GPU?",
+     "answer": 256,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Predicted fraction of peak, in %, from Little's law (136,533 bytes needed)?",
+     "answer": 24.00005859389305,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Requests per warp needed for 100% at this occupancy?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Bytes in flight = warps × requests × 128."
+   ],
+   "solution": "<p>(a) 25% of 1,024 = 256 warps. (b) 24%, close to the measured 30%: the model explains the kernel. (c) 5 requests per warp (unroll the loop, or float4 loads): no occupancy change needed.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 2,
+   "title": "Tensor cores, starved",
+   "statement": "<p>After moving a GEMM to tensor cores: tensor SOL 35%, DRAM 40%, L2 45%, issue 30%. Occupancy 25%, top stall: long scoreboard.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Diagnosis?",
+     "options": [
+      "Launch-bound",
+      "Latency-bound",
+      "Bandwidth-bound",
+      "Compute-bound",
+      "Issue-bound"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "First fix?",
+     "options": [
+      "Lower precision",
+      "Deeper pipelining (more stages in flight) or bigger tiles",
+      "Fewer registers",
+      "More blocks per tile"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Nothing above 60%; stalls on memory."
+   ],
+   "solution": "<p>Latency-bound: the math got 8× faster and the loads didn't. Keep more loads in flight (double or triple buffering, cp.async) so the tensor units are fed. This is exactly the step in Part 4 after tensor cores.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Evidence before change",
+   "statement": "<p>Your teammate says: \"It's slow because of bank conflicts.\"</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which numbers would support that?",
+     "options": [
+      "High shared-memory wavefronts per instruction",
+      "MIO throttle or short-scoreboard stalls dominate",
+      "DRAM SOL at 90%",
+      "Issue SOL high with a low FMA share"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Conflicts inflate shared-memory work and issue slots."
+   ],
+   "solution": "<p>Conflicts show as extra wavefronts, MIO/short-scoreboard stalls, and issue time spent on non-math. High DRAM SOL points elsewhere.</p>"
+  }
+ ]
+}

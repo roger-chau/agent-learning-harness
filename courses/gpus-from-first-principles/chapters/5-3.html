@@ -40,3 +40,37 @@
 <li>Write the diagnosis down with its numbers before you change anything. That's what B5 asks for.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: a full diagnosis write-up</h3>
+<p><strong>Kernel:</strong> a 3 × 3 convolution on a 4096 × 4096 image, 32 × 8 blocks, 1.9 ms on the GW-1.</p>
+<ol>
+<li><strong>Launch check:</strong> one launch, 1.9 ms: not launch-bound.</li>
+<li><strong>SOLs:</strong> DRAM 26%, L2 48%, issue 71% (FMA share 35%), tensor 0.</li>
+<li><strong>Busiest unit:</strong> issue at 71%, above 60%: issue-bound, FMA share under half, so overhead.</li>
+<li><strong>Which instructions?</strong> 9 global loads per output (each 4 bytes), 18 instructions of clamp arithmetic, 9 FMAs: loads and clamps dominate.</li>
+<li><strong>Fix:</strong> stage a (32 + 2) × (8 + 2) tile in shared memory with one coalesced load per element, pad the image instead of clamping, and compute 2 outputs per thread to reuse loaded neighbours in registers.</li>
+<li><strong>Prediction:</strong> instructions per output from about 40 to about 15: issue time 2.7× lower; DRAM (8 bytes per pixel minimum, 0.26 ms at peak) becomes the next limit at roughly 0.4–0.5 ms.</li>
+</ol>
+<p>Written this way, the change is justified before it's made, and the prediction can be checked afterwards.</p>
+
+<h3>Example 2: launch-bound in disguise</h3>
+<p><strong>Symptom:</strong> an inference step runs 400 small kernels in 6 ms; Nsight Systems shows the GPU busy for only 2.4 ms.</p>
+<p><strong>Diagnosis:</strong> each kernel averages 6 µs of GPU time and the host issues one every 15 µs: the GPU is idle 60% of the time. No kernel-level optimisation helps. <strong>Fixes:</strong> CUDA Graphs (record the 400 launches once, replay with one call: per-launch overhead drops to ~1 µs), and fusing adjacent elementwise kernels. Expected: 2.4 ms + 400 × ~1 µs ≈ 2.8 ms, a 2× end-to-end improvement from code that didn't change any kernel.</p>
+
+<h3>Example 3: a bottleneck that moves twice</h3>
+<p><strong>Start:</strong> a reduction at 30% of bandwidth, latency-bound (all SOLs low, occupancy 25%).</p>
+<p><strong>Fix 1,</strong> 4 independent loads per thread: 85% of bandwidth. DRAM-bound now.</p>
+<p><strong>Fix 2,</strong> "fewer bytes": the input is FP32 but only needs FP16 precision. Converting it upstream halves the bytes: time halves, still DRAM-bound at 85%.</p>
+<p><strong>Fix 3?</strong> Nothing left within this kernel: it reads each byte once at near-peak bandwidth. The remaining lever is fusion with the producer kernel (so the data is reduced as it's produced, never written). Knowing when a kernel is done is as important as knowing how to speed it up.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA, "Nsight Systems User Guide": reading timelines for launch gaps and CPU–GPU overlap.</li>
+<li><strong>Required:</strong> NVIDIA Developer Blog, "Getting Started with CUDA Graphs" (2019).</li>
+<li><strong>Optional:</strong> B. Gregg, <em>Systems Performance</em> (2nd ed.), Chapter 2 (methodologies: the USE method and drill-down analysis).</li>
+</ul>
+</section>

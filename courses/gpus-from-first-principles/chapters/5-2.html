@@ -52,3 +52,33 @@
 <li>Learn your profiler's speed-of-light, memory-workload and warp-state sections first. They cover most real diagnoses.</li>
 </ul>
 </section>
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: computing every SOL from raw counters</h3>
+<p><strong>Counters</strong> for a 0.8 ms GW-1 kernel (1.2 M cycles): dramBytes 240 MB; bytesMoved 300 MB; busiest SM issued 950,000 warp instructions, 120,000 of them FMAs; no tensor work.</p>
+<ul>
+<li>DRAM: $240\text{M} / 341.3 / 1.2\text{M} = 59\%$.</li>
+<li>L2: $300\text{M} / 683 / 1.2\text{M} = 37\%$.</li>
+<li>Issue: $950\text{k} / 1.2\text{M} = 79\%$, FMA share 13%.</li>
+</ul>
+<p><strong>Reading:</strong> issue is the busiest unit, mostly not math: issue-bound on overhead, with DRAM not far behind. The next question is which instructions: memory instructions, branches, address arithmetic, bank-conflict replays. If they're mostly 4-byte loads, vector loads cut both issue (fewer instructions) and keep DRAM unchanged, and the kernel becomes DRAM-bound at about 59/79 of its current time.</p>
+
+<h3>Example 2: when counters disagree with intuition</h3>
+<p><strong>Observation.</strong> A transpose kernel shows DRAM SOL 45% but L2 SOL 90%.</p>
+<p><strong>Explanation.</strong> Uncoalesced writes touch 32 sectors per warp, each of which goes to L2 (bytesMoved counts every sector touched), while L2 merges the partial sectors before they go to DRAM. So the waste shows up at L2, not DRAM. The fix (shared-memory staging) is the same, but the evidence is in the L2 numbers, and someone looking only at DRAM would call this kernel "latency-bound". Always check every level.</p>
+
+<h3>Example 3: from stall samples to a hypothesis</h3>
+<p><strong>Profile.</strong> Stall breakdown: long scoreboard 55%, barrier 25%, math pipe 10%, other 10%. Occupancy 50%.</p>
+<p><strong>Hypothesis 1</strong> (long scoreboard): warps wait on global loads. Check sectors per request (waste?) and bytes in flight (Little's law). <strong>Hypothesis 2</strong> (barrier): warps wait at __syncthreads for others in their block, perhaps because one warp does the loads for everyone, or the work per warp is uneven. Look at the source-level view to see which barrier.</p>
+<p><strong>Test:</strong> double buffering addresses both at once (loads overlap compute; one barrier per step instead of two). Predict the gain before trying: if loads took 55% of the time and get hidden, the kernel could approach 1/(1 − 0.55) ≈ 2.2× faster, bounded by whichever unit saturates next.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> NVIDIA Nsight Compute documentation, "Kernel Profiling Guide": the metrics structure, Speed of Light, memory workload analysis and warp stall reasons.</li>
+<li><strong>Required:</strong> NVIDIA Developer Blog, "Using Nsight Compute to Inspect your Kernels" (2019).</li>
+<li><strong>Optional:</strong> A. Yasin, "A Top-Down Method for Performance Analysis and Counters Architecture", ISPASS 2014: the CPU version of top-down bottleneck analysis.</li>
+</ul>
+</section>

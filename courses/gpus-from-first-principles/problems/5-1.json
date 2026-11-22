@@ -1,0 +1,313 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "What did you time?",
+   "statement": "<p>Host code: <code>t0 = now(); launch(k); t1 = now();</code> with no synchronisation. The kernel runs for 2 ms; issuing a launch costs 5 µs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Measured t1 − t0, in µs (approximately)?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "Launch twice",
+      "Synchronise (or record events) before reading the clock",
+      "Use a bigger grid"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Launches are asynchronous."
+   ],
+   "solution": "<p>About 5 µs: the cost of queuing the launch. Synchronise before t1, or better, record CUDA events on the stream around the kernel.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Summarising runs",
+   "statement": "<p>Ten synchronised runs, in µs: [155, 8.6, 8.4, 8.5, 8.4, 21.0, 8.5, 8.4, 8.6, 8.4].</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Mean?",
+     "answer": 24.38,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Median?",
+     "answer": 8.5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Minimum?",
+     "answer": 8.4,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The first run includes loading the kernel."
+   ],
+   "solution": "<p>Mean 24.38 (dragged up by the cold first run and one interrupted run), median 8.50, minimum 8.4. Report the median (typical) or minimum (best case) after discarding warm-up, and say which.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Latency versus throughput",
+   "statement": "<p>A tiny kernel runs for 3 µs on the GPU; launch overhead is 5 µs per launch.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Time per kernel when launched and synchronised one at a time, in µs?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time per kernel for 1,000 back-to-back launches with one final sync, in µs?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "In (b) the GPU is…",
+     "options": [
+      "busy all the time",
+      "idle 40% of the time, waiting for launches"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Back to back, the host issues while the GPU runs the previous kernel: the slower of the two sets the pace."
+   ],
+   "solution": "<p>(a) 5 + 3 = 8 µs. (b) The host can only issue one launch per 5 µs, so the GPU finishes each 3-µs kernel and waits: 5 µs per kernel, the GPU idle 2/5 of the time. That's launch-bound; CUDA Graphs or fusion fix it.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Is the difference real?",
+   "statement": "<p>Version A: median 10.0 µs, runs spread from 9.6 to 10.6. Version B: median 9.7 µs, spread from 9.3 to 10.4. Both measured interleaved, 50 runs each.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Can you claim B is 3% faster?",
+     "options": [
+      "Yes",
+      "Not from these numbers alone: the spreads overlap heavily; you need more runs or a statistical test"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Compare the difference with the spread."
+   ],
+   "solution": "<p>A 0.3 µs difference inside a 1 µs spread: possibly real, not established. Report the distributions, or run a rank test (e.g. Mann–Whitney) on the interleaved samples. Many published \"speedups\" don't survive this.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Why interleave?",
+   "statement": "<p>The GPU warms up over the benchmark, so the clock rises by 5% during the first half of the session and then stays put. You run 50 of A, then 50 of B.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Effect on the comparison?",
+     "options": [
+      "None",
+      "B looks faster than it is, because it ran on a warmer, faster clock",
+      "A looks faster"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Apparent speedup of B, in %, if A and B are actually identical and A's runs averaged 2.5% slower clocks?",
+     "answer": 2.5,
+     "unit": "",
+     "tolerance": "20%"
+    }
+   ],
+   "hints": [
+    "Drift hits whichever version runs later."
+   ],
+   "solution": "<p>B ran entirely at the higher clock: an apparent ~2.5% gain that is pure drift. Interleaving (A, B, A, B, …) exposes both to the same conditions. Locking clocks (Chapter 9.3) removes the drift entirely.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 1,
+   "title": "The first run",
+   "statement": "<p>Why is the first launch of a kernel slow?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select the real reasons.",
+     "options": [
+      "The kernel's code is loaded onto the device (or JIT-compiled from PTX)",
+      "The GPU's clock ramps up from idle",
+      "Caches are cold",
+      "The GPU must reboot",
+      "Memory allocations made earlier are lazily committed"
+     ],
+     "answer": [
+      0,
+      1,
+      2,
+      4
+     ]
+    }
+   ],
+   "hints": [
+    "Everything that happens once."
+   ],
+   "solution": "<p>Module loading (or JIT), clock ramp, cold caches and lazily mapped memory all hit the first iteration. Hence warm-up runs. The GPU doesn't reboot.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Events versus host timers",
+   "statement": "<p>A kernel runs 40 µs. Host timer with synchronise: 52 µs. CUDA events around the launch: 40.5 µs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Overhead included by the host-timer method, in µs?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Which measures the kernel?",
+     "options": [
+      "Host timer",
+      "Events"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Events are timestamped on the GPU, in stream order."
+   ],
+   "solution": "<p>12 µs of launch and synchronisation overhead. Events measure GPU time between two points in the stream: the kernel. The host timer measures what a caller waits, which is right for end-to-end latency, wrong for kernel speed.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "Copying hides the bug",
+   "statement": "<p><code>t0; launch; cudaMemcpy(result back); t1</code> with no explicit synchronise.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Does t1 − t0 include the kernel?",
+     "options": [
+      "No",
+      "Yes: the copy waits for the kernel (same stream), so the time includes kernel + copy"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Kernel 2 ms, copy of 64 MB over 25 GB/s PCIe: measured time, in ms?",
+     "answer": 4.5600000000000005,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Blocking copies synchronise."
+   ],
+   "solution": "<p>Yes: the blocking copy waits for the kernel, so the number is kernel + copy = 4.56 ms. It looks like a kernel timing but isn't one.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Throughput of a pipeline",
+   "statement": "<p>1,000 kernels each running 20 µs on the GPU, launch overhead 5 µs, launched back to back.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Total time, in ms?",
+     "answer": 20.005,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Is this launch-bound?",
+     "options": [
+      "Yes",
+      "No: the GPU never waits, since each kernel takes longer than issuing the next"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Issue runs ahead of execution."
+   ],
+   "solution": "<p>The host queues launches faster than the GPU drains them, so the GPU runs continuously: about 20 ms + the first launch's 5 µs. Launch overhead only matters when kernels are shorter than it.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 1,
+   "title": "What to report",
+   "statement": "<p>Write up a benchmark.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which belong in an honest report?",
+     "options": [
+      "Warm-up count and repetitions",
+      "Median (or min) and spread",
+      "GPU model, driver, clocks or clock policy",
+      "Only the best run, unlabelled",
+      "Problem sizes and data types"
+     ],
+     "answer": [
+      0,
+      1,
+      2,
+      4
+     ]
+    }
+   ],
+   "hints": [
+    "Could someone reproduce it?"
+   ],
+   "solution": "<p>Everything needed to reproduce and judge it. An unlabelled best run is cherry-picking.</p>"
+  }
+ ]
+}
