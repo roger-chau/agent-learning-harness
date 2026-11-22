@@ -1602,6 +1602,71 @@
      }
     },
     {
+     "type": "lab",
+     "id": "L4",
+     "title": "Lab 4: GEMM against cuBLAS",
+     "summary": "Naive, tiled, register-tiled and tensor-core GEMM on your card, checked bit-exactly and timed against cuBLAS.",
+     "dir": "labs/L4-gemm",
+     "hours": 8,
+     "blocks": [
+      [
+       "Why this lab",
+       "the portfolio kernel"
+      ],
+      [
+       "What to do",
+       "four rungs of the ladder"
+      ],
+      [
+       "Predict, then measure",
+       "peaks and profiles"
+      ],
+      [
+       "Going further",
+       "double buffering, warp tiles"
+      ],
+      [
+       "Passing",
+       "targets and the optimisation log"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "tiled_vs_naive",
+       "op": ">=",
+       "value": 1.3,
+       "label": "Tiled / naive speedup"
+      },
+      {
+       "metric": "reg_vs_cublas_pct",
+       "op": ">=",
+       "value": 50,
+       "label": "Register-tiled SGEMM, % of cuBLAS"
+      },
+      {
+       "metric": "wmma_vs_reg",
+       "op": ">=",
+       "value": 1.3,
+       "label": "WMMA / register-tiled speedup"
+      },
+      {
+       "metric": "wmma_vs_cublas_hgemm_pct",
+       "op": ">=",
+       "value": 25,
+       "label": "WMMA, % of cuBLAS FP16 GEMM"
+      }
+     ],
+     "writeup": {
+      "min_words": 300,
+      "prompts": [
+       "The optimisation log: every kernel and change, with TFLOP/s and % of cuBLAS.",
+       "For each kernel: loads per FMA (global and shared), and the limiter the profiler showed.",
+       "Registers and occupancy of the register-tiled kernel (make regs, ncu), and why low occupancy is fine here.",
+       "What separates your best kernels from cuBLAS? Name two concrete techniques you'd add next."
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p4-checkpoint",
      "title": "Part 4 checkpoint",
