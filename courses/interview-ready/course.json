@@ -1497,14 +1497,141 @@
    "id": "p9",
    "n": 9,
    "title": "C++ for interviews",
-   "summary": "Lifetimes, RAII, move semantics, templates, UB, STL complexity.",
+   "summary": "Lifetimes and ownership, move semantics, templates and the cost of abstraction, undefined behaviour and the STL cost model.",
    "items": [
     {
      "type": "chapter",
      "id": "9-1",
-     "title": "C++ for interviews",
-     "summary": "Lifetimes, RAII, move semantics, templates, UB, STL complexity.",
-     "status": "planned"
+     "title": "Lifetimes, RAII and ownership",
+     "summary": "Every resource has one owner whose destructor frees it; rule of zero/three/five; smart pointers.",
+     "blocks": [
+      [
+       "The signal",
+       "who owns this?"
+      ],
+      [
+       "The core idea",
+       "RAII and storage durations"
+      ],
+      [
+       "The invariant and template",
+       "a minimal unique_ptr"
+      ],
+      [
+       "A thinking trace",
+       "what's wrong with this class?"
+      ],
+      [
+       "Traps and variations",
+       "dangling, invalidation, cycles"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "9-2",
+     "title": "Move semantics and value categories",
+     "summary": "Moves steal from expiring objects; std::move is a cast; noexcept and vector growth; forwarding.",
+     "blocks": [
+      [
+       "The signal",
+       "copies you didn't ask for"
+      ],
+      [
+       "The core idea",
+       "value categories"
+      ],
+      [
+       "The invariant and template",
+       "forwarding and sinks"
+      ],
+      [
+       "A thinking trace",
+       "slow vector growth"
+      ],
+      [
+       "Traps and variations",
+       "const moves, emplace, SSO"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "9-3",
+     "title": "Templates and the cost of abstraction",
+     "summary": "Compile-time vs run-time polymorphism, concepts, constexpr, CRTP, type erasure.",
+     "blocks": [
+      [
+       "The signal",
+       "static vs dynamic"
+      ],
+      [
+       "The core idea",
+       "decide at compile time"
+      ],
+      [
+       "The invariant and template",
+       "CRTP, concepts, constexpr"
+      ],
+      [
+       "A thinking trace",
+       "cost of a virtual call"
+      ],
+      [
+       "Traps and variations",
+       "bloat, lookup, std::function"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "9-4",
+     "title": "Undefined behaviour and the STL",
+     "summary": "The optimiser assumes UB never happens; sanitizers; container costs beyond big-O.",
+     "blocks": [
+      [
+       "The signal",
+       "works in debug only"
+      ],
+      [
+       "The core idea",
+       "UB as an assumption"
+      ],
+      [
+       "The invariant and template",
+       "the STL cost model"
+      ],
+      [
+       "A thinking trace",
+       "an overflow check that vanishes"
+      ],
+      [
+       "Traps and variations",
+       "erase, map[], padding, aliasing"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p9-checkpoint",
+     "title": "Part 9 checkpoint",
+     "summary": "C++: lifetimes, moves, abstraction costs and UB."
     }
    ]
   },

@@ -1,0 +1,241 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "UB or not?",
+   "statement": "<p>Which are undefined behaviour?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "INT_MAX + 1 (int)",
+      "UINT_MAX + 1u (unsigned)",
+      "1 << 40 with a 32-bit int",
+      "reading a float's bits via *(int*)&f"
+     ],
+     "answer": [
+      0,
+      2,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Unsigned arithmetic wraps by definition."
+   ],
+   "solution": "<p>Signed overflow, oversized shifts and aliasing violations are UB; unsigned wrap is defined.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Container choice",
+   "statement": "<p>Pick a container.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "500 items, mostly scanned, occasionally appended:",
+     "options": [
+      "vector",
+      "list",
+      "map"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Ordered keys with range queries (all keys between a and b):",
+     "options": [
+      "map",
+      "unordered_map",
+      "vector unsorted"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Contiguity vs ordering."
+   ],
+   "solution": "<p>vector for scans; map's ordering supports lower_bound ranges.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Vanishing check",
+   "statement": "<p>The add_overflows function from the trace.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why can Clang at -O2 return false for add_overflows(INT_MAX, 1)?",
+     "options": [
+      "signed overflow is UB, so the compiler may assume a + b can't wrap and fold the comparisons",
+      "a compiler bug",
+      "integer promotion"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Correct check?",
+     "options": [
+      "__builtin_add_overflow or test against INT_MAX − b before adding",
+      "use long",
+      "compare s with 0"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Check before the operation."
+   ],
+   "solution": "<p>Use a precondition test or the builtin; widening works too when a wider type exists.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Spin wait",
+   "statement": "<p><code>bool ready = false;</code> set by thread A; thread B runs <code>while (!ready) {}</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What can happen at -O2?",
+     "options": [
+      "the loop never ends: the load is hoisted (data race = UB)",
+      "works always",
+      "compile error"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "std::atomic<bool> with acquire/release",
+      "volatile",
+      "a sleep"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Data races on non-atomics."
+   ],
+   "solution": "<p>volatile doesn't give inter-thread ordering in C++. Use atomics (Part 10).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Growth",
+   "statement": "<p>push_back 10⁶ ints into an empty vector with growth factor 2.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of reallocations (about log₂ 10⁶)?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": "10%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Total elements copied/moved during growth (< 2n, millions)?",
+     "answer": 1.0,
+     "unit": "",
+     "tolerance": "10%"
+    }
+   ],
+   "hints": [
+    "Geometric series."
+   ],
+   "solution": "<p>About 20 reallocations; 1 + 2 + 4 + … + 2¹⁹ ≈ 10⁶ moves in total, amortised O(1) per push.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "map[]",
+   "statement": "<p><code>int count(const std::map&lt;std::string,int&gt;&amp; m) { return m[\"x\"]; }</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Result?",
+     "options": [
+      "compile error: operator[] is non-const (it may insert)",
+      "returns 0",
+      "UB"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "[] inserts on a miss."
+   ],
+   "solution": "<p>Use <code>auto it = m.find(\"x\")</code> or <code>m.contains</code>.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Padding",
+   "statement": "<p><code>struct A { char c; double d; int i; };</code> on x86-64.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "sizeof(A)?",
+     "answer": 24,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "sizeof after reordering to {double d; int i; char c;}?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Alignment of double is 8."
+   ],
+   "solution": "<p>1 + 7 padding + 8 + 4 + 4 tail padding = 24; reordered: 8 + 4 + 1 + 3 = 16.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Unsigned loop",
+   "statement": "<p><code>for (size_t i = v.size() - 1; i &gt;= 0; --i) use(v[i]);</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Problems?",
+     "options": [
+      "i >= 0 is always true for size_t: the loop never ends",
+      "v.size() − 1 underflows to SIZE_MAX if v is empty",
+      "it skips v[0]",
+      "nothing"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    }
+   ],
+   "hints": [
+    "Unsigned never goes negative."
+   ],
+   "solution": "<p>Use <code>for (size_t i = v.size(); i-- &gt; 0;)</code> or reverse iterators.</p>"
+  }
+ ]
+}

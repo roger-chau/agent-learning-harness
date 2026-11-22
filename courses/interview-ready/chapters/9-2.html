@@ -1,0 +1,78 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"What does <code>std::move</code> do?", "why is my vector of strings slow to grow?", "lvalue vs rvalue", "implement perfect forwarding", "when is a copy elided?". Move semantics questions test whether you understand <em>value categories</em> and the cost model behind them, which is exactly what latency-sensitive roles care about.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: a move is a copy that may steal from a source nobody will look at again</h2>
+<p>Every expression has a type and a <strong>value category</strong>. Roughly: an <strong>lvalue</strong> has an identity you can refer to again (a named variable, <code>*p</code>, <code>a[i]</code>); a <strong>prvalue</strong> is a pure temporary (<code>f()</code> returning by value, <code>x + 1</code>); an <strong>xvalue</strong> is an object about to expire (<code>std::move(x)</code>). Rvalue references (<code>T&amp;&amp;</code>) bind to rvalues, so overloading on <code>T&amp;&amp;</code> lets a function know it may plunder its argument.</p>
+<ul>
+<li><strong><code>std::move</code> doesn't move anything.</strong> It's a cast to <code>T&amp;&amp;</code>, a promise that you won't rely on the object's value afterwards. The move constructor does the stealing.</li>
+<li><strong>A moved-from object</strong> is in a "valid but unspecified" state: you may assign to it or destroy it, but not read its value.</li>
+<li><strong>Named rvalue references are lvalues.</strong> Inside <code>void f(string&amp;&amp; s)</code>, <code>s</code> is an lvalue; pass it on with <code>std::move(s)</code>.</li>
+<li><strong>Copy elision:</strong> since C++17, returning a prvalue (<code>return T(...);</code>) constructs directly in the caller, so there's no copy or move at all. Named return value optimisation (<code>return local;</code>) is permitted but not guaranteed, with an implicit move as a fallback. Don't write <code>return std::move(local);</code>: it disables NRVO.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>// Perfect forwarding: preserve the caller's value category through a wrapper
+template &lt;class... Args&gt;
+auto make_widget(Args&amp;&amp;... args) {                 // forwarding references (deduced T&amp;&amp;)
+    return Widget(std::forward&lt;Args&gt;(args)...);   // lvalues stay lvalues, rvalues stay rvalues
+}
+
+// Sink parameters: take by value, then move (one copy for lvalues, zero for rvalues)
+class Person {
+    std::string name_;
+public:
+    explicit Person(std::string name) : name_(std::move(name)) {}
+};</code></pre>
+<p><strong>Why <code>noexcept</code> on moves matters:</strong> when <code>std::vector</code> grows, it must keep the strong exception guarantee. It moves the old elements only if the move constructor is <code>noexcept</code> (via <code>std::move_if_noexcept</code>); otherwise it <em>copies</em> them. A missing <code>noexcept</code> can turn every reallocation of a <code>vector&lt;BigThing&gt;</code> into deep copies.</p>
+<table>
+<tr><th>Parameter</th><th>Use when</th></tr>
+<tr><td><code>const T&amp;</code></td><td>read-only, no copy needed</td></tr>
+<tr><td><code>T</code> (by value)</td><td>you'll keep a copy anyway (sink), or T is small (≤ 2 words, trivially copyable)</td></tr>
+<tr><td><code>T&amp;&amp;</code></td><td>overloads that steal; rarely in plain APIs</td></tr>
+<tr><td><code>Args&amp;&amp;</code> (template)</td><td>forwarding wrappers: emplace, make_*</td></tr>
+</table>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: why is this vector growth slow?</h2>
+<pre><code>struct Order { std::string id; std::vector&lt;double&gt; fills;
+               Order(const Order&amp;) = default;
+               Order(Order&amp;&amp; o) : id(std::move(o.id)), fills(std::move(o.fills)) {} };
+std::vector&lt;Order&gt; book; for (...) book.push_back(make_order());</code></pre>
+<ol>
+<li><strong>Observe:</strong> profiling shows time in string and vector copy constructors during push_back.</li>
+<li><strong>Which push_back overload?</strong> <code>make_order()</code> is a prvalue, so <code>push_back(T&amp;&amp;)</code> is chosen and the new element is move-constructed. That part is fine.</li>
+<li><strong>Reallocation:</strong> when capacity runs out, existing elements are transferred. The user-declared move constructor isn't <code>noexcept</code>, so <code>move_if_noexcept</code> picks the <em>copy</em> constructor to preserve the strong guarantee. Each growth deep-copies every order.</li>
+<li><strong>Fix:</strong> mark the move constructor <code>noexcept</code> (it only moves members that can't throw), or better, delete both user-declared constructors (rule of zero), and the implicit ones are noexcept automatically. Also <code>book.reserve(n)</code> if n is known.</li>
+<li><strong>Verify:</strong> <code>static_assert(std::is_nothrow_move_constructible_v&lt;Order&gt;);</code></li>
+</ol>
+<p>The habit: <strong>when a C++ program does surprising work, trace which overload and which special member function each line actually invokes</strong>.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Moving from a const object</strong> silently copies (<code>std::move</code> of a <code>const T</code> gives <code>const T&amp;&amp;</code>, which binds only to the copy constructor).</li>
+<li><strong>Use after move:</strong> reading a moved-from string is legal but unspecified. Clang-tidy's bugprone-use-after-move catches it.</li>
+<li><strong><code>emplace_back</code> vs <code>push_back</code>:</strong> emplace constructs in place from constructor arguments. With an existing object they're equivalent. Emplace can call explicit constructors, so <code>v.emplace_back(10)</code> on a <code>vector&lt;vector&lt;int&gt;&gt;</code> makes 10 zeros, not {10}.</li>
+<li><strong>Self-move assignment</strong> must leave the object valid (std types guarantee only that).</li>
+<li><strong>Small string optimisation:</strong> short strings (around 15 chars in libstdc++) live inside the object, so moving them is a copy of bytes. Moving isn't always cheaper.</li>
+<li><strong>Forwarding references vs rvalue references:</strong> <code>T&amp;&amp;</code> is forwarding only when T is deduced in that very call. <code>std::vector&lt;T&gt;&amp;&amp;</code> is not a forwarding reference.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* <em>Effective Modern C++</em>, Items 23–30 (move semantics and perfect forwarding).</li>
+<li>* cppreference: <em>Value categories</em>, <em>Copy elision</em>, <em>std::move_if_noexcept</em>.</li>
+<li>Write a type that prints in every special member; predict, then check, what push_back/emplace_back/return statements invoke.</li>
+<li>Howard Hinnant's "Everything you ever wanted to know about move semantics" talk (special-member table).</li>
+</ul>
+</section>

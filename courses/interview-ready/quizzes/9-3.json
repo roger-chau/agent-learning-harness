@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A virtual call's biggest cost in hot loops is usually…",
+   "options": [
+    "no inlining (and mispredicts with mixed types)",
+    "the vtable load",
+    "memory allocation"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "CRTP gives…",
+   "options": [
+    "static polymorphism without a vtable",
+    "run-time polymorphism",
+    "type erasure"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Concepts replace…",
+   "options": [
+    "most SFINAE/enable_if constraints",
+    "virtual functions",
+    "macros"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "final helps the compiler…",
+   "options": [
+    "devirtualise calls",
+    "inline templates",
+    "avoid copies"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Templates generally live in…",
+   "options": [
+    "headers",
+    "cpp files only",
+    "DLLs"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

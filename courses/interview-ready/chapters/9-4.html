@@ -1,0 +1,74 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Why does this work in debug but not in release?", "is this code correct?", "what's the complexity of this container operation?", "which container would you use?". Undefined behaviour (UB) questions are a favourite at compiler teams (optimisers <em>exploit</em> UB) and HFT firms (UB shows up as a rare production crash).</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: the optimiser assumes UB never happens</h2>
+<p>UB isn't "the program crashes". It's "the standard places no requirements", and compilers optimise on the assumption that valid programs never execute UB. So a UB bug can make the compiler delete your checks, reorder your code, or turn a finite loop infinite.</p>
+<table>
+<tr><th>UB</th><th>What the optimiser may do</th></tr>
+<tr><td>signed overflow (<code>INT_MAX + 1</code>)</td><td>assume <code>x + 1 &gt; x</code>; delete overflow checks written as <code>if (x + 1 &lt; x)</code></td></tr>
+<tr><td>null dereference</td><td>delete a later null check (\"it was dereferenced, so it's non-null\")</td></tr>
+<tr><td>out-of-bounds access</td><td>assume indices are in range; vectorise or unroll past your intent</td></tr>
+<tr><td>data race on non-atomics</td><td>hoist loads out of loops (a spin-wait on a plain bool never ends)</td></tr>
+<tr><td>strict aliasing violation</td><td>assume an <code>int*</code> and a <code>float*</code> don't alias; reorder loads and stores</td></tr>
+<tr><td>use after free / lifetime end</td><td>anything</td></tr>
+<tr><td>shift by ≥ width or a negative amount</td><td>anything (x86 masks the count, other ISAs don't)</td></tr>
+<tr><td>uninitialised reads</td><td>treat the value as whatever is convenient</td></tr>
+</table>
+<p><strong>Tools:</strong> <code>-fsanitize=address,undefined</code> (ASan + UBSan) in tests; <code>-fsanitize=thread</code> for races; <code>-Wall -Wextra</code>; and <code>std::bit_cast</code> or <code>memcpy</code> for type punning.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: the STL cost model</h2>
+<table>
+<tr><th>Container</th><th>Access</th><th>Insert / erase</th><th>Notes</th></tr>
+<tr><td>vector</td><td>O(1) index</td><td>amortised O(1) at the end, O(n) in the middle</td><td>contiguous: the fastest to scan by far; growth ×1.5–2 invalidates everything</td></tr>
+<tr><td>deque</td><td>O(1) index</td><td>O(1) at both ends</td><td>chunked; no invalidation of references on push at the ends</td></tr>
+<tr><td>list</td><td>O(n)</td><td>O(1) with an iterator</td><td>a node per element: cache-hostile; rarely the right answer</td></tr>
+<tr><td>map / set</td><td>O(log n)</td><td>O(log n)</td><td>red-black tree; ordered; stable iterators</td></tr>
+<tr><td>unordered_map</td><td>O(1) average</td><td>O(1) average</td><td>node-based chaining in std, so a pointer chase per lookup; rehash invalidates iterators</td></tr>
+<tr><td>priority_queue</td><td>O(1) top</td><td>O(log n)</td><td>a max-heap over a vector</td></tr>
+</table>
+<p>Big-O hides constants that matter here: a linear scan of a 1,000-element vector often beats a std::map lookup, because the vector is contiguous and prefetched while each map node is a cache miss. Flat hash maps (open addressing: absl, boost::unordered_flat_map) are typically 2–3× faster than std::unordered_map.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "this check never fires in release"</h2>
+<pre><code>bool add_overflows(int a, int b) {
+    int s = a + b;
+    return (b &gt; 0 &amp;&amp; s &lt; a) || (b &lt; 0 &amp;&amp; s &gt; a);
+}</code></pre>
+<ol>
+<li><strong>Symptom:</strong> <code>add_overflows(INT_MAX, 1)</code> returns true at <code>-O0</code>, but Clang at <code>-O2</code> returns false. (GCC 13 at -O2 happened to keep the check when we tried it, which is the point: UB results differ between compilers, versions and surrounding code.)</li>
+<li><strong>Find the UB:</strong> when the sum overflows, <code>a + b</code> is signed overflow, which is UB. So the compiler may assume <code>a + b</code> never overflows, which makes <code>s &lt; a</code> with <code>b &gt; 0</code> impossible. Both branches fold to false.</li>
+<li><strong>Fix:</strong> check <em>before</em> the operation (<code>b &gt; 0 ? a &gt; INT_MAX - b : a &lt; INT_MIN - b</code>), or use <code>__builtin_add_overflow(a, b, &amp;s)</code>, or do the arithmetic in a wider or unsigned type where wrap-around is defined.</li>
+<li><strong>Prevent:</strong> UBSan (<code>-fsanitize=signed-integer-overflow</code>) flags it in tests immediately.</li>
+</ol>
+<p>The habit: <strong>when behaviour differs between optimisation levels, assume UB first</strong>, then find the operation whose precondition can be violated.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Erasing while iterating:</strong> use <code>it = v.erase(it)</code>, or erase-remove (<code>std::erase_if</code> in C++20).</li>
+<li><strong><code>map[key]</code> inserts</strong> a default value when the key is missing. Use <code>find</code> or <code>contains</code> for lookups, especially on a const map (where [] doesn't compile).</li>
+<li><strong><code>vector&lt;bool&gt;</code></strong> is a bit-packed proxy, not a container of bools: no <code>bool&amp;</code>, and not thread-safe per element.</li>
+<li><strong>Struct padding:</strong> order members from largest to smallest to shrink objects; <code>sizeof</code> includes padding; <code>alignas(64)</code> prevents false sharing (Part 10).</li>
+<li><strong>Unsigned underflow:</strong> <code>for (size_t i = v.size() - 1; i &gt;= 0; --i)</code> never ends, and <code>v.size() - 1</code> underflows when empty.</li>
+<li><strong>Strict aliasing:</strong> reading a float's bits through an <code>int*</code> is UB. Use <code>std::bit_cast&lt;uint32_t&gt;(f)</code>.</li>
+<li><strong>Integer promotion:</strong> <code>uint8_t a = 200, b = 100; auto c = a + b;</code> gives an int 300, not a wrapped 44.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* John Regehr, "A Guide to Undefined Behavior in C and C++" (blog series), and Chris Lattner, "What Every C Programmer Should Know About Undefined Behavior".</li>
+<li>* Compile the overflow example above with -O0 and -O2 in Compiler Explorer; then add -fsanitize=undefined and run it.</li>
+<li>cppreference: <em>Containers library</em> (the iterator invalidation table).</li>
+<li>Chandler Carruth, "Efficiency with Algorithms, Performance with Data Structures" (CppCon 2014).</li>
+</ul>
+</section>

@@ -1,0 +1,229 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Categories",
+   "statement": "<p>Classify each expression.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "<code>x</code> (a named int variable):",
+     "options": [
+      "lvalue",
+      "prvalue",
+      "xvalue"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "<code>x + 1</code>:",
+     "options": [
+      "prvalue",
+      "lvalue",
+      "xvalue"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "<code>std::move(x)</code>:",
+     "options": [
+      "xvalue",
+      "lvalue",
+      "prvalue"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Identity? Expiring?"
+   ],
+   "solution": "<p>Named things are lvalues; results of arithmetic are prvalues; std::move casts to an xvalue.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "std::move",
+   "statement": "<p>What does <code>std::move(v)</code> do by itself?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "casts v to an rvalue reference; nothing moves until a move constructor/assignment uses it",
+      "moves v's buffer",
+      "empties v"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Read its definition: static_cast<T&&>."
+   ],
+   "solution": "<p>It's a cast. Without a receiving move operation, nothing happens.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Named rvalue refs",
+   "statement": "<p><code>void g(std::string&amp;&amp; s) { h(s); }</code>, where h has overloads for <code>const string&amp;</code> and <code>string&amp;&amp;</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which h is called?",
+     "options": [
+      "h(const string&): s is an lvalue inside g",
+      "h(string&&)",
+      "ambiguous"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Names are lvalues."
+   ],
+   "solution": "<p>Call <code>h(std::move(s))</code> to pass the rvalue on.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "noexcept growth",
+   "statement": "<p><code>std::vector&lt;T&gt;</code> reallocates; T has a copy constructor and a move constructor that is not noexcept.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "How are existing elements transferred?",
+     "options": [
+      "copied (move_if_noexcept chooses copy to keep the strong guarantee)",
+      "moved",
+      "memcpy"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Strong exception guarantee."
+   ],
+   "solution": "<p>If a move threw halfway, the old buffer would be half-destroyed. Copying keeps the old buffer intact until success.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Return statements",
+   "statement": "<p><code>T f() { T t; ...; return std::move(t); }</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Effect of the std::move?",
+     "options": [
+      "It prevents NRVO, forcing a move where there might have been no operation at all",
+      "It's required for efficiency",
+      "It's a compile error"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "return local; already moves implicitly when elision doesn't happen."
+   ],
+   "solution": "<p>Write <code>return t;</code>.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Const moves",
+   "statement": "<p><code>const std::vector&lt;int&gt; a(1000000); auto b = std::move(a);</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What happens?",
+     "options": [
+      "a copy: const T&& binds to the copy constructor",
+      "a move",
+      "a compile error"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Elements copied?",
+     "answer": 1000000,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "You can't steal from a const object."
+   ],
+   "solution": "<p>A silent deep copy.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Sink parameters",
+   "statement": "<p><code>Person(std::string name) : name_(std::move(name)) {}</code> called with an lvalue string and with a temporary.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Deep copies with an lvalue argument?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Deep copies with a temporary?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "By-value parameter + move."
+   ],
+   "solution": "<p>An lvalue is copied into the parameter, then moved; a temporary is moved (or elided) straight in.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "emplace surprise",
+   "statement": "<p><code>std::vector&lt;std::vector&lt;int&gt;&gt; v; v.emplace_back(10); v.push_back({10});</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Size of v[0]?",
+     "answer": 10,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Size of v[1]?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "emplace forwards to the (explicit) size constructor."
+   ],
+   "solution": "<p>emplace_back(10) calls vector(10), ten zeros. push_back({10}) uses the initializer list: one element.</p>"
+  }
+ ]
+}

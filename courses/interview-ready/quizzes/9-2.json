@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "std::move is…",
+   "options": [
+    "a cast to an rvalue reference",
+    "a function that moves data",
+    "a destructor"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "A moved-from std::string is…",
+   "options": [
+    "valid but unspecified",
+    "empty, guaranteed",
+    "destroyed"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "vector moves elements on growth only if…",
+   "options": [
+    "the move constructor is noexcept",
+    "always",
+    "T is trivial"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Perfect forwarding uses…",
+   "options": [
+    "T&& with deduced T + std::forward<T>",
+    "const T&",
+    "std::move always"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "return std::move(local); can…",
+   "options": [
+    "inhibit NRVO",
+    "speed things up always",
+    "be required"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

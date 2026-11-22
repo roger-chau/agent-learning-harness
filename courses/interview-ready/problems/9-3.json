@@ -1,0 +1,236 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Static or dynamic?",
+   "statement": "<p>Pick the mechanism.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "A vector holding Circles, Squares and Triangles drawn by a loop:",
+     "options": [
+      "virtual functions (or variant)",
+      "CRTP",
+      "templates only"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "A tick handler whose strategy type is fixed per binary, in the hot path:",
+     "options": [
+      "templates / CRTP",
+      "virtual",
+      "std::function"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Heterogeneous at run time, or known at compile time?"
+   ],
+   "solution": "<p>Heterogeneous collections need run-time dispatch; fixed strategies get inlined via templates.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "constexpr",
+   "statement": "<p><code>constexpr int fib(int n) {...}</code>, with <code>int x = fib(30);</code> inside main (not a constant expression context).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Is it guaranteed to be computed at compile time?",
+     "options": [
+      "No: constexpr permits, consteval or a constexpr variable forces",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Constant-expression contexts."
+   ],
+   "solution": "<p>Write <code>constexpr int x = fib(30);</code> to force it.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Virtual cost",
+   "statement": "<p>A virtual call in a loop over 10⁶ objects of 4 random concrete types, about 15-cycle mispredict penalty, prediction rate about 25%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Mispredicts (thousands)?",
+     "answer": 750,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Extra cycles from mispredicts (millions)?",
+     "answer": 11.25,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "0.75 × 10⁶ × 15."
+   ],
+   "solution": "<p>About 11M cycles, several milliseconds at 3 GHz. Sorting by type turns this into near-perfect prediction.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "final",
+   "statement": "<p><code>struct Fast final : Base { void f() override; }; void g(Fast&amp; x) { x.f(); }</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Can the compiler devirtualise x.f()?",
+     "options": [
+      "Yes: no class can derive from Fast",
+      "No"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "What could the dynamic type be?"
+   ],
+   "solution": "<p>final pins the dynamic type, enabling a direct (inlinable) call.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Templates in headers",
+   "statement": "<p>A template function defined in a .cpp and only declared in the header, used from another .cpp.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Result?",
+     "options": [
+      "link error: undefined reference (never instantiated for that type)",
+      "works",
+      "compile error in the header"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fixes?",
+     "options": [
+      "define it in the header, or explicitly instantiate the needed types in the .cpp",
+      "mark it inline only",
+      "use virtual"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Instantiation needs the definition."
+   ],
+   "solution": "<p>The compiler instantiates templates where they're used, so it needs the body there.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "std::function",
+   "statement": "<p>Storing a lambda capturing 64 bytes in std::function (libstdc++ small buffer: 16 bytes).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Does constructing it allocate?",
+     "options": [
+      "Yes: the capture exceeds the small buffer",
+      "No"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Zero-cost alternative for a hot callback?",
+     "options": [
+      "a template parameter F&& f",
+      "virtual",
+      "function pointer to the lambda (captures not allowed)"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Type erasure."
+   ],
+   "solution": "<p>Template parameters keep the callable's type, so it can be inlined.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Dependent base",
+   "statement": "<p>Inside <code>template &lt;class T&gt; struct D : B&lt;T&gt; { void g() { f(); } };</code>, f is a member of B&lt;T&gt;.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Does it compile?",
+     "options": [
+      "No: f isn't found by unqualified lookup in a dependent base; write this->f()",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Two-phase lookup."
+   ],
+   "solution": "<p>Dependent bases aren't searched at definition time.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Safe average",
+   "statement": "<p>The integral safe_avg(a, b) = a/2 + b/2 + (a%2 + b%2)/2 with C++ truncating division.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "safe_avg(7, 9)?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "safe_avg(INT_MAX, INT_MAX) − INT_MAX?",
+     "answer": 0,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "safe_avg(−3, −4)? (truncation toward zero)",
+     "answer": -3,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "−3/2 = −1, −4/2 = −2, (−1 + 0)/2 = 0."
+   ],
+   "solution": "<p>8; INT_MAX without overflow; −1 − 2 + 0 = −3 (the exact mean is −3.5, truncated toward zero). Compare <code>std::midpoint</code>.</p>"
+  }
+ ]
+}

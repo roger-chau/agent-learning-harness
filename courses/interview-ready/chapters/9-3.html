@@ -1,0 +1,73 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Static vs dynamic polymorphism", "what does a virtual call cost?", "write a generic function constrained to numbers", "compute this at compile time", "what is CRTP / type erasure?". Templates matter in quant C++ (zero-cost abstractions on the hot path) and compilers and GPU work (heavily templated kernels like CUTLASS).</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: decide at compile time what you can, and pay at run time only for what you must</h2>
+<p><strong>Templates</strong> are code generators: each instantiation is a separate, fully typed function the optimiser can inline. <strong>Virtual functions</strong> decide at run time through a vtable: one indirect call per dispatch, and usually no inlining across it. The trade-off is <em>flexibility vs speed and code size</em>.</p>
+<table>
+<tr><th>Mechanism</th><th>Decided</th><th>Cost</th><th>Use for</th></tr>
+<tr><td>virtual functions</td><td>run time</td><td>indirect call, no inlining, vptr per object</td><td>heterogeneous collections, plugin boundaries</td></tr>
+<tr><td>templates / CRTP</td><td>compile time</td><td>code bloat, compile time</td><td>hot loops, policies, generic containers</td></tr>
+<tr><td>type erasure (std::function, any)</td><td>run time</td><td>indirect call + maybe heap allocation</td><td>storing callables of different types</td></tr>
+<tr><td>std::variant + visit</td><td>run time, closed set</td><td>a switch on the index</td><td>a fixed set of alternatives (message types)</td></tr>
+</table>
+<p><strong>Constraining templates:</strong> C++20 <strong>concepts</strong> (<code>template &lt;std::integral T&gt;</code>) give readable errors and overload by property. The older tool is SFINAE (<code>enable_if</code>): a substitution failure removes an overload instead of erroring. <strong>constexpr / consteval</strong> run code in the compiler; <code>if constexpr</code> discards untaken branches per instantiation.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>// CRTP: static polymorphism, no vtable
+template &lt;class Derived&gt;
+struct Strategy {
+    double on_tick(double px) { return static_cast&lt;Derived*&gt;(this)-&gt;signal(px); }  // resolved at compile time
+};
+struct MeanRevert : Strategy&lt;MeanRevert&gt; { double signal(double px) { return -px; } };
+
+// Concepts + if constexpr
+template &lt;class T&gt; concept Number = std::integral&lt;T&gt; || std::floating_point&lt;T&gt;;
+template &lt;Number T&gt;
+T safe_avg(T a, T b) {
+    if constexpr (std::integral&lt;T&gt;) return a / 2 + b / 2 + (a % 2 + b % 2) / 2;   // no overflow
+    else return (a + b) / 2;
+}
+
+constexpr int fib(int n) { return n &lt; 2 ? n : fib(n - 1) + fib(n - 2); }
+static_assert(fib(10) == 55);                         // evaluated by the compiler</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "how expensive is a virtual call?"</h2>
+<ol>
+<li><strong>Mechanics:</strong> load the vptr from the object, load the function pointer from the vtable, then make an indirect call. That's two dependent loads and an indirect branch.</li>
+<li><strong>When it's cheap:</strong> the vtable is hot in L1 and the branch predictor learns the target. Then it's a few cycles, often indistinguishable from a direct call.</li>
+<li><strong>When it hurts:</strong> (a) <em>no inlining</em>, so the compiler can't vectorise or constant-fold through the call, which is the big cost in tight loops; (b) mixed concrete types in one container make the indirect branch unpredictable (about 15–20 cycles per mispredict); (c) objects scattered through the heap, the usual companion of polymorphic containers, cost cache misses.</li>
+<li><strong>Mitigations:</strong> mark classes <code>final</code> (enables devirtualisation); sort or partition objects by type and process each type in a batch; switch to CRTP or templates when the set of types is known at compile time; <code>std::variant</code> for a closed set.</li>
+<li><strong>Measure</strong> rather than assert: a microbenchmark with representative type mixing, plus perf counters for branch misses.</li>
+</ol>
+<p>The habit: <strong>answer cost questions with mechanism → best case → worst case → mitigation → measurement</strong>. The same structure works for exceptions, atomics, allocation and system calls.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Templates must be visible where they're instantiated</strong>, so they go in headers (or use explicit instantiation).</li>
+<li><strong>Code bloat:</strong> every type combination is a new function. Factor type-independent code out of templates.</li>
+<li><strong>Two-phase lookup:</strong> inside a template deriving from a dependent base, call base members as <code>this-&gt;f()</code>.</li>
+<li><strong><code>std::function</code></strong> may allocate (beyond its small buffer) and always costs an indirect call. On the hot path, take the callable as a template parameter.</li>
+<li><strong>constexpr isn't a guarantee</strong> of compile-time evaluation unless used in a constant expression; <code>consteval</code> forces it.</li>
+<li><strong>Virtual functions in constructors</strong> dispatch to the class being constructed, not the most-derived one.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* cppreference: <em>Constraints and concepts</em>, <em>if constexpr</em>, <em>constexpr specifier</em>.</li>
+<li>* Matt Godbolt's Compiler Explorer: compare a virtual call vs a CRTP call at -O2; find the devirtualised version when the class is final.</li>
+<li>Klaus Iglberger, <em>C++ Software Design</em>, chapters on type erasure and the CRTP.</li>
+<li>Read one CUTLASS or Eigen kernel and identify which decisions are template parameters.</li>
+</ul>
+</section>

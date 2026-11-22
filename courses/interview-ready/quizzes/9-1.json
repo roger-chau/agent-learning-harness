@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "RAII ties a resource to…",
+   "options": [
+    "an object's lifetime",
+    "a thread",
+    "the heap"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Rule of zero:",
+   "options": [
+    "let members manage resources; write no special members",
+    "write all five",
+    "never use destructors"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "unique_ptr's copy constructor is…",
+   "options": [
+    "deleted",
+    "a deep copy",
+    "a shallow copy"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Deleting Derived via Base* needs…",
+   "options": [
+    "a virtual destructor in Base",
+    "a cast",
+    "nothing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "shared_ptr cycles are broken with…",
+   "options": [
+    "weak_ptr",
+    "unique_ptr",
+    "raw pointers only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

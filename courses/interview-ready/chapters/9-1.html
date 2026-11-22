@@ -1,0 +1,87 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>C++ rounds at trading firms, compiler teams and GPU/driver teams start from one question: <strong>who owns this object, and when does it die?</strong> Expect "what's wrong with this class?", "implement a smart pointer", "why does this crash only in release builds?", and "explain the rule of five". The skill is reading code and tracking every object's lifetime and owner without running it.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: every resource has exactly one owner, and the owner's destructor releases it</h2>
+<p><strong>RAII</strong> (resource acquisition is initialisation) ties a resource (memory, file, lock, socket, GPU buffer) to an object's lifetime: acquire in the constructor, release in the destructor. Because destructors run on every exit path, including exceptions, early returns and <code>break</code>, cleanup can't be forgotten.</p>
+<p>Storage durations decide when destructors run:</p>
+<ul>
+<li><strong>Automatic</strong> (locals): destroyed at the end of their scope, in reverse order of construction.</li>
+<li><strong>Dynamic</strong> (<code>new</code>): destroyed when something calls delete, which should always be an owning object (unique_ptr, vector), never you by hand.</li>
+<li><strong>Static</strong>: at program exit, in reverse order of initialisation. Order <em>across</em> translation units is unspecified (the "static initialisation order fiasco").</li>
+<li><strong>Temporaries</strong>: at the end of the full expression, unless bound to a <code>const&amp;</code> or <code>&amp;&amp;</code> local, which extends the lifetime.</li>
+</ul>
+<p><strong>The rule of zero / three / five:</strong> if your class only holds members that manage themselves (vector, string, unique_ptr), write none of the special members (rule of zero). If you must write a destructor to release something, you almost certainly need the copy constructor and copy assignment too (rule of three), and for efficiency the move constructor and move assignment (rule of five).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: a minimal unique_ptr</h2>
+<pre><code>template &lt;class T&gt;
+class UniquePtr {
+    T* p_ = nullptr;                                   // invariant: p_ is null or owned by exactly this object
+public:
+    UniquePtr() = default;
+    explicit UniquePtr(T* p) noexcept : p_(p) {}
+    ~UniquePtr() { delete p_; }
+    UniquePtr(const UniquePtr&) = delete;              // unique ownership: no copies
+    UniquePtr&amp; operator=(const UniquePtr&amp;) = delete;
+    UniquePtr(UniquePtr&amp;&amp; o) noexcept : p_(o.p_) { o.p_ = nullptr; }   // steal, leave source empty
+    UniquePtr&amp; operator=(UniquePtr&amp;&amp; o) noexcept {
+        if (this != &amp;o) { delete p_; p_ = o.p_; o.p_ = nullptr; }
+        return *this;
+    }
+    T* get() const noexcept { return p_; }
+    T&amp; operator*() const { return *p_; }
+    T* operator-&gt;() const noexcept { return p_; }
+    T* release() noexcept { T* q = p_; p_ = nullptr; return q; }
+    void reset(T* q = nullptr) noexcept { T* old = p_; p_ = q; delete old; }   // assign first: safe if delete re-enters
+};</code></pre>
+<p>Interviewers look for: copying is deleted, the moved-from object is left null, self-move assignment is handled, moves are <code>noexcept</code>, and the constructor is <code>explicit</code>. The extension questions are custom deleters, arrays (<code>T[]</code> uses delete[]), and why <code>make_unique</code> is preferred (exception safety in multi-argument calls before C++17, and no naked new).</p>
+<p><strong>shared_ptr</strong> adds a control block holding atomic strong and weak counts. Copies increment the strong count (an atomic RMW, so not free); the last strong owner destroys the object, and the last weak owner frees the block. <code>make_shared</code> puts the object and the block in one allocation. <code>weak_ptr</code> breaks reference cycles.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "what's wrong with this class?"</h2>
+<pre><code>class Buffer {
+    char* data; size_t n;
+public:
+    Buffer(size_t n) : data(new char[n]), n(n) {}
+    ~Buffer() { delete data; }
+};
+void f() { Buffer a(10); Buffer b = a; }</code></pre>
+<ol>
+<li><strong>Who owns <code>data</code>?</strong> Buffer does: it allocates and frees it. So it's a resource-owning class, and the rule of three applies.</li>
+<li><strong>Bug 1:</strong> <code>delete</code> on memory from <code>new[]</code> is undefined behaviour. It must be <code>delete[]</code>.</li>
+<li><strong>Bug 2:</strong> <code>Buffer b = a</code> uses the implicit copy constructor, which copies the pointer. Two owners means a double delete at the end of f(), and UB.</li>
+<li><strong>Bug 3 (design):</strong> the constructor isn't <code>explicit</code>, so <code>Buffer b = 10;</code> compiles. And there's no move support, so returning a Buffer by value copies (or would, if copying worked).</li>
+<li><strong>Fix, best answer:</strong> rule of zero. Use <code>std::vector&lt;char&gt; data;</code> or <code>std::unique_ptr&lt;char[]&gt;</code>; the compiler-generated members are then correct (vector deep-copies; unique_ptr makes the class move-only).</li>
+<li><strong>Fix, if asked to keep the raw pointer:</strong> write a deep copy constructor, copy assignment via copy-and-swap (strong exception safety, self-assignment safe), noexcept move operations, and delete[].</li>
+</ol>
+<p>The habit: <strong>for each member, ask "who frees this?", then check every special member function against that answer</strong>. Most C++ code-review questions are this check.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Dangling references:</strong> returning a reference or pointer to a local; holding a <code>string_view</code> or <code>span</code> to a temporary; a lambda capturing a local by reference that outlives the scope.</li>
+<li><strong>Iterator and reference invalidation:</strong> <code>push_back</code> may reallocate a vector, invalidating every pointer, reference and iterator into it. Holding <code>auto&amp; x = v[0];</code> across a push_back is a classic bug.</li>
+<li><strong>Exceptions in destructors</strong> terminate if thrown during stack unwinding; destructors are implicitly noexcept.</li>
+<li><strong>Virtual destructor:</strong> deleting a derived object through a base pointer without a virtual destructor is UB.</li>
+<li><strong>Slicing:</strong> copying a Derived into a Base by value drops the derived part. Pass polymorphic objects by reference or pointer.</li>
+<li><strong>shared_ptr cycles</strong> leak (parent ↔ child). Make the back-pointer a weak_ptr.</li>
+<li><strong>Constructing two shared_ptrs from one raw pointer</strong> gives two control blocks and a double delete. Use make_shared or <code>enable_shared_from_this</code>.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* cppreference: <em>RAII</em>, <em>The rule of three/five/zero</em>, <em>Lifetime</em> (the temporary-lifetime-extension rules).</li>
+<li>* Scott Meyers, <em>Effective Modern C++</em>, Items 18–22 (smart pointers).</li>
+<li>Write UniquePtr and a minimal SharedPtr (with a weak count) from memory; test them under <code>-fsanitize=address,undefined</code>.</li>
+<li>Herb Sutter, GotW #89–#91 (smart pointers, parameter passing).</li>
+</ul>
+</section>

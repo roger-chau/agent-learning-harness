@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Compilers treat UB as…",
+   "options": [
+    "something that never happens (an optimisation assumption)",
+    "a runtime error",
+    "implementation-defined"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Debug/release behaviour differences: suspect…",
+   "options": [
+    "UB first",
+    "the compiler",
+    "the OS"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Detect UB in tests with…",
+   "options": [
+    "-fsanitize=address,undefined",
+    "-O3",
+    "-g"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Type punning safely:",
+   "options": [
+    "std::bit_cast or memcpy",
+    "reinterpret_cast reads",
+    "unions in C++"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "std::unordered_map lookup costs…",
+   "options": [
+    "O(1) average with a pointer chase per node",
+    "O(log n)",
+    "O(1) with no memory access"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}
