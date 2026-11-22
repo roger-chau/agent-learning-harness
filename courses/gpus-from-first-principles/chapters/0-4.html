@@ -114,3 +114,47 @@ function main() {
 
 <p>Real GPUs are far bigger than the GW-1: a data-center part might have over a hundred SMs and several TB/s of bandwidth. The principles are the same, and the simulator's small numbers keep the arithmetic easy to follow. One caveat to carry forward: the simulator runs the threads of a warp one after another and lines up their memory accesses afterwards. For code without divergence that matches lockstep hardware exactly; Part 1 shows where the difference matters.</p>
 </section>
+
+
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: mapping threads to a 2-D problem</h3>
+<p><strong>Setup.</strong> Brighten a $W \times H = 1000 \times 600$ image stored row-major (<code>img[y * W + x]</code>), one thread per pixel, 32 × 8 blocks.</p>
+<ol>
+<li>Grid: $\lceil 1000/32 \rceil \times \lceil 600/8 \rceil = 32 \times 75$ blocks.</li>
+<li>Coordinates: <code>x = blockIdx.x * 32 + threadIdx.x</code>, <code>y = blockIdx.y * 8 + threadIdx.y</code>.</li>
+<li>Guard: <code>if (x &lt; W &amp;&amp; y &lt; H)</code>. Here $32 \times 32 = 1024 &gt; 1000$, so the last column of blocks has 24 idle threads per row. 600 is a multiple of 8, so rows have none.</li>
+<li>Which threads form a warp? Within a block, threads are numbered $x$-fastest: <code>threadIdx.x + 32 * threadIdx.y</code>. So each warp is one row of the block: 32 consecutive pixels of one image row, which are consecutive addresses. That's the layout Part 2 calls coalesced.</li>
+</ol>
+<p><strong>The mistake to avoid.</strong> Swapping the roles, <code>x = ...threadIdx.y</code> and <code>y = ...threadIdx.x</code>, gives the same results but makes each warp walk down a column, 1000 floats apart per lane. It's correct and 8–16× slower. Correctness tests won't catch it; the simulator's coalescing number will.</p>
+
+<h3>Example 2: residency, waves and run time</h3>
+<p><strong>Setup.</strong> GW-1 (16 SMs, 2,048 threads and 16 blocks per SM). A kernel has 4,000 blocks of 256 threads, using 40 registers per thread; each block takes about $T$ to run once resident, the same for all blocks.</p>
+<ol>
+<li>Thread limit: $2048/256 = 8$ blocks. Block limit: 16. Registers: $65536/(256 \times 40) = 6.4 \to 6$ blocks. Resident: <strong>6 blocks per SM</strong>.</li>
+<li>Slots: $16 \times 6 = 96$. Waves: $\lceil 4000/96 \rceil = 42$ (41.7).</li>
+<li>Run time ≈ $42\,T$; the last wave runs $4000 - 41 \times 96 = 64$ blocks on 96 slots.</li>
+</ol>
+<p><strong>What if</strong> registers drop to 32? Then 8 blocks per SM fit, 128 slots, $\lceil 4000/128 \rceil = 32$ waves. If a block's own time $T$ stays the same, the kernel takes 24% less time (32 waves instead of 42). (It may not: with more blocks sharing an SM, each runs slower if the SM is saturated. Waves count residency, not throughput: use them for tail effects, and the utilisation model from 0.3 for throughput.)</p>
+
+<h3>Example 3: grid-stride loops and sizing a grid to the machine</h3>
+<p><strong>Problem.</strong> Process $n = 50{,}000{,}000$ elements. One thread per element needs 195,313 blocks of 256: fine for the hardware, but per-thread setup is repeated 50 million times and the last wave is ragged.</p>
+<p><strong>Alternative.</strong> Launch exactly as many blocks as fit at once (GW-1 at 8 blocks/SM: 128 blocks, 32,768 threads) and loop with a stride of 32,768. Each thread does $\lceil n / 32768 \rceil = 1526$ iterations (some 1525). There's one wave, no tail, and setup happens 32,768 times.</p>
+<p><strong>Trade-off.</strong> Fixed grids depend on the machine's size; launching "enough" blocks is portable. A common compromise: size the grid to a small multiple of the SM count, e.g. 2–4 × SMs × resident blocks.</p>
+
+<h3>Example 4: from datasheet to design check, on a real card</h3>
+<p><strong>Your RTX 2060 Super.</strong> 34 SMs; on Turing each SM holds at most 1,024 threads (32 warps); 448 GB/s. Assume about 450 ns loaded latency.</p>
+<p><strong>Requirement.</strong> $448 \times 450 = 201{,}600$ bytes in flight.</p>
+<p><strong>Supply.</strong> $34 \times 32$ warps $\times$ 128 bytes per warp load $= 139{,}264$ bytes with one load per warp. That's 69% of the requirement.</p>
+<p><strong>Conclusion.</strong> On this card a naive copy kernel can't reach peak even at full occupancy. Two loads per warp in flight (two elements per thread, or one 8-byte load per thread) clears the requirement. When you measure this on the card (the real-GPU track), you should see the naive copy plateau well below 448 GB/s, and the 2- or 4-element version get much closer. Predicting that <em>before</em> running it is the skill.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> <em>Programming Massively Parallel Processors</em> (4th ed.), Chapter 2 (Heterogeneous Data Parallel Computing) and Chapter 3 (Multidimensional Grids and Data).</li>
+<li><strong>Required:</strong> NVIDIA, <em>CUDA C++ Programming Guide</em>, the "Programming Model" chapter (kernels, thread hierarchy, memory hierarchy), and the compute-capability table for your card (7.5) in the appendix.</li>
+<li><strong>Optional:</strong> E. Lindholm, J. Nickolls, S. Oberman, J. Montrym, "NVIDIA Tesla: A Unified Graphics and Computing Architecture", IEEE Micro 2008 (Part 1's paper), for where this design came from.</li>
+</ul>
+</section>

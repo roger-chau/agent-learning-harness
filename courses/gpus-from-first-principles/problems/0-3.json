@@ -1,0 +1,348 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Utilisation",
+   "statement": "<p>One execution unit, one instruction per cycle. Each thread repeatedly does $C = 3$ cycles of work, then waits $L = 27$ cycles for a load. There are $N = 4$ threads.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Utilisation, in %?",
+     "answer": 40,
+     "unit": "%",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Threads needed to saturate the unit?",
+     "answer": 10,
+     "unit": "threads",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each thread needs C out of every C + L cycles.",
+    "N_sat = ⌈(C + L) / C⌉."
+   ],
+   "solution": "<p>(a) $\\min(1, NC/(C+L)) = \\min(1, 12/30) = 40\\%$. (b) $\\lceil 30/3 \\rceil = 10$ threads.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Realistic numbers",
+   "statement": "<p>A streaming kernel does $C = 5$ cycles of work per load; memory latency is $L = 395$ cycles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Threads per execution unit to saturate it?",
+     "answer": 80,
+     "unit": "threads",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "⌈(C + L)/C⌉."
+   ],
+   "solution": "<p>$\\lceil 400/5 \\rceil = 80$. With four schedulers per SM, that's 320 threads (10 warps) per SM just for this kernel to keep up: the scale GPUs are built for.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Instruction-level parallelism",
+   "statement": "<p>Now each thread issues $k = 4$ independent loads back to back, waits $L = 400$ cycles for all of them, then does $C = 4$ cycles of work per loaded value ($kC = 16$ cycles in all) before repeating.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cycles in one thread's period?",
+     "answer": 416,
+     "unit": "cycles",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Threads needed to saturate the unit?",
+     "answer": 26,
+     "unit": "threads",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "And with k = 1 (one load at a time)?",
+     "answer": 101,
+     "unit": "threads",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "A period is now kC + L, of which the unit is needed kC cycles.",
+    "N_sat = ⌈(kC + L)/(kC)⌉."
+   ],
+   "solution": "<p>(a) $kC + L = 16 + 400 = 416$. (b) $\\lceil 416/16 \\rceil = 26$. (c) $\\lceil 404/4 \\rceil = 101$. Four independent loads per thread cut the threads needed by almost 4× (not exactly: the work per period grew, but the latency didn't).</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "From registers to utilisation",
+   "statement": "<p>An SM has 65,536 registers, 4 warp schedulers and a limit of 64 warps. A kernel uses 40 registers per thread (registers are allocated per warp: 32 × 40). Per load, a warp does $C = 8$ cycles of issue; memory latency is $L = 400$.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps resident per SM?",
+     "answer": 51,
+     "unit": "warps",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Average warps per scheduler?",
+     "answer": 12.75,
+     "unit": "warps",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Utilisation of each scheduler, in %?",
+     "answer": 25,
+     "unit": "%",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Warps = ⌊65536 / (32 × 40)⌋, capped at 64.",
+    "Each scheduler is its own execution unit with its share of the warps."
+   ],
+   "solution": "<p>(a) $\\lfloor 65536 / 1280 \\rfloor = 51$ warps. (b) $51/4 = 12.75$. (c) $12.75 \\times 8 / 408 = 25\\%$. A scheduler needs $\\lceil 408/8 \\rceil = 51$ warps to saturate, four times what it has. The fix is either fewer registers (more warps) or more independent loads per warp (more ILP).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "When registers stop mattering",
+   "statement": "<p>Same SM: 65,536 registers, at most 64 warps (2,048 threads).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps resident at 24 registers per thread?",
+     "answer": 64,
+     "unit": "warps",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "At 33 registers per thread?",
+     "answer": 62,
+     "unit": "warps",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Occupancy at 33 registers, in %?",
+     "answer": 96.875,
+     "unit": "%",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Don't forget the 64-warp cap.",
+    "One register over 32 costs whole warps."
+   ],
+   "solution": "<p>(a) $65536/(32\\times24) = 85.3$, capped at 64: full occupancy. (b) $\\lfloor 65536/1056 \\rfloor = 62$. (c) $62/64 = 96.9\\%$. The cliff edges in occupancy come from integer division; Part 2's occupancy chapter adds the finer granularity real GPUs use.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "How long does the whole job take?",
+   "statement": "<p>One execution unit processes 1,000,000 items. Each item is a load (latency 400) followed by 4 cycles of work. 64 threads share the items.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Utilisation, in %?",
+     "answer": 63.366336633663366,
+     "unit": "%",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Total cycles?",
+     "answer": 6312500.0,
+     "unit": "cycles",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Total cycles with 128 threads?",
+     "answer": 4000000.0,
+     "unit": "cycles",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The unit must spend 4 × 10⁶ cycles on work. Divide by utilisation.",
+    "With enough threads, the unit is saturated and only the work counts."
+   ],
+   "solution": "<p>(a) $\\min(1, 64 \\times 4/404) = 63.4\\%$. (b) Work is $4\\times10^6$ cycles; at 63.4% busy that's $4\\times10^6 \\times 404/256 = 6{,}312{,}500$ cycles. Equivalently, each thread finishes an item every 404 cycles, so 64 threads do $64/404$ items per cycle. (c) 128 threads exceed $N_{sat} = 101$, so the unit is saturated: $4\\times10^6$ cycles. Doubling the threads made it 1.58× faster, not 2×: past saturation, extra threads buy nothing.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 1,
+   "title": "What latency hiding doesn't do",
+   "statement": "<p>You add more threads to a latency-bound kernel and it gets faster.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What happened to the latency of each individual load?",
+     "options": [
+      "It went down",
+      "It stayed the same (or rose slightly under load): it's hidden, not shortened",
+      "It went to zero",
+      "It doubled"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "What happened to each individual thread's run time?",
+     "options": [
+      "It went down",
+      "It stayed about the same or grew: threads share the unit",
+      "It went to zero",
+      "It's undefined"
+     ],
+     "answer": 1
+    }
+   ],
+   "hints": [
+    "Multithreading improves throughput, not latency."
+   ],
+   "solution": "<p>Multithreading improves the unit's throughput by overlapping waits. Each load still takes as long (more, if memory gets busier: Chapter 0.1's loaded latency), and each thread takes at least as long, since it now shares the unit. This is the defining trade of throughput machines.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Uneven phases",
+   "statement": "<p>A thread repeatedly: loads (latency 400), does 2 cycles of work, does a <em>dependent</em> load (latency 400), then does 6 cycles of work.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Work cycles per period?",
+     "answer": 8,
+     "unit": "cycles",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Period length in cycles?",
+     "answer": 808,
+     "unit": "cycles",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Threads to saturate one unit?",
+     "answer": 101,
+     "unit": "threads",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "The utilisation formula holds with C = total work per period and L = total waiting per period.",
+    "Dependent loads can't overlap with each other."
+   ],
+   "solution": "<p>(a) $2 + 6 = 8$. (b) $8 + 400 + 400 = 808$. (c) $\\lceil 808/8 \\rceil = 101$. The general rule: $N_{sat} = \\lceil (\\text{work} + \\text{wait}) / \\text{work} \\rceil$ per period, whatever the shape of the period, as long as all threads behave alike and the scheduler never idles while a thread is ready.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Why SMT isn't enough on a CPU",
+   "statement": "<p>A CPU core runs 2 hardware threads (SMT). On a memory-bound loop each thread does 20 cycles of work per DRAM miss of 300 cycles, and can't overlap misses.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Core utilisation with 2 threads, in %?",
+     "answer": 12.5,
+     "unit": "%",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Hardware threads needed to saturate the core?",
+     "answer": 16,
+     "unit": "threads",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Same formula as a GPU scheduler."
+   ],
+   "solution": "<p>(a) $2 \\times 20/320 = 12.5\\%$. (b) $\\lceil 320/20 \\rceil = 16$. Each extra hardware thread needs a full copy of the architectural registers and more bookkeeping; CPUs stop at 2 (sometimes 4 or 8) because their per-thread state is large. GPUs keep per-thread state small (no big out-of-order machinery) so that dozens of warps fit.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 3,
+   "title": "The GW-1 at full scale",
+   "statement": "<p>Treat each GW-1 SM as one execution unit issuing one warp instruction per cycle, memory latency 400 cycles, at most 64 resident warps. A kernel issues $C = 6$ instructions per load per warp.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Utilisation with 64 warps per SM, in %?",
+     "answer": 94.58128078817734,
+     "unit": "%",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Utilisation if registers limit it to 24 warps, in %?",
+     "answer": 35.467980295566505,
+     "unit": "%",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Warps needed to saturate (compare with the 64-warp limit)?",
+     "answer": 68,
+     "unit": "warps",
+     "tolerance": 0
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "With 64 warps, the minimum independent loads per warp (k) to saturate?",
+     "answer": 2,
+     "unit": "loads",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "With k loads in flight per warp, the period is kC + L and the work is kC.",
+    "Solve 64 · kC ≥ kC + L for the smallest integer k."
+   ],
+   "solution": "<p>(a) $64 \\times 6 / 406 = 94.6\\%$. (b) $24 \\times 6/406 = 35.5\\%$. (c) $\\lceil 406/6 \\rceil = 68 > 64$: thread-level parallelism alone can't saturate this SM. (d) $64 \\cdot 6k \\ge 6k + 400 \\Rightarrow 378k \\ge 400 \\Rightarrow k \\ge 1.06$, so $k = 2$. When occupancy runs out, ILP is the only lever left: the central idea of Volkov's paper in Part 2.</p>"
+  }
+ ]
+}

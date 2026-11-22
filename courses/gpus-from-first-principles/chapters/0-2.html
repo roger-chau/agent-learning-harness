@@ -76,3 +76,42 @@
 
 <div class="callout companion"><b>Companion reading</b>Hennessy &amp; Patterson (7th ed.): <strong>Appendix B</strong> (Review of Memory Hierarchy) covers caches and AMAT from the ground up; <strong>Chapter 2</strong> (Memory Hierarchy Design) covers the advanced cache optimisations and DRAM. Their quantitative style is exactly how this course reasons about GPUs.</div>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: deriving the nested AMAT formula, carefully</h3>
+<p><strong>Setup.</strong> Three levels: L1, L2, DRAM. Every access probes L1. Those that miss probe L2. Those that miss L2 go to DRAM. Let $h_1$ be the L1 hit rate and $h_2$ the L2 hit rate <em>conditional on reaching L2</em> (the "local" rate).</p>
+<p><strong>Derivation.</strong> By the law of total expectation over where an access is satisfied:</p>
+<div class="eq">$$E[t] = h_1 t_{L1} + (1-h_1)h_2 (t_{L1} + t_{L2}) + (1-h_1)(1-h_2)(t_{L1} + t_{L2} + t_D)$$</div>
+<p>Collect terms. Every access pays $t_{L1}$; the $(1-h_1)$ that miss also pay $t_{L2}$; the $(1-h_1)(1-h_2)$ that miss twice also pay $t_D$:</p>
+<div class="eq">$$E[t] = t_{L1} + (1-h_1)\big(t_{L2} + (1-h_2)\,t_D\big)$$</div>
+<p>That's the chapter's formula. The assumption hidden in it: a miss pays each level's latency in sequence (look up L1, then L2, then DRAM). Hardware that probes levels in parallel changes the constants, not the structure.</p>
+<p><strong>The trap.</strong> Vendors and papers often quote <em>global</em> miss rates (misses at that level / all accesses). With global rates $m_1 = 1 - h_1$ and $m_2 = (1-h_1)(1-h_2)$, the formula flattens to $t_{L1} + m_1 t_{L2} + m_2 t_D$. Plugging a global rate into the nested formula double-counts the L1 miss probability. Problem 3 makes you convert.</p>
+
+<h3>Example 2: stride, quantified</h3>
+<p><strong>Setup.</strong> Sum $n$ floats at stride $s$ elements, cold cache, 64-byte lines, $t_{L1} = 4$ cycles, misses cost 300 cycles (straight to DRAM, no L2, no prefetch).</p>
+<p><strong>Miss rate.</strong> A line holds 16 floats, so for $s \le 16$ each line serves $16/s$ accesses: miss rate $s/16$. For $s \ge 16$, every access misses.</p>
+<p><strong>AMAT.</strong> $s = 1$: $4 + \tfrac{1}{16} \times 300 = 22.75$ cycles. $s = 4$: $4 + \tfrac{4}{16} \times 300 = 79$ cycles. $s = 16$: $304$ cycles.</p>
+<p><strong>Interpretation.</strong> The same number of loads costs over 13× more at stride 16 than at stride 1, and the bytes moved from DRAM are 16× higher. Access order, not operation count, decides the cost. Every coalescing rule in Part 2 is this example applied to 32 threads at once.</p>
+
+<h3>Example 3: does the working set fit?</h3>
+<p><strong>Setup.</strong> A 2-D blur reads each pixel and its 8 neighbours, on a 4096 × 4096 image of floats (64 MB), row by row, with a 2 MB cache.</p>
+<p><strong>Reasoning.</strong> Processing row $r$ needs rows $r-1$, $r$, $r+1$: three rows of $4096 \times 4 = 16$ KB, 48 KB in all. That fits easily, so each row is fetched from DRAM once and reused for three output rows. DRAM traffic is about 64 MB in and 64 MB out: the minimum.</p>
+<p><strong>Change one number.</strong> Make the image 1,048,576 pixels wide (4 MB per row) and three rows no longer fit in 2 MB. Each row is now fetched roughly three times: about 3× the input traffic for the same arithmetic. The working set, not the data size, is what decides whether caching works. Tiling (Part 4) is the art of choosing a working set that fits.</p>
+
+<h3>Example 4: what an out-of-order core buys, and where it stops</h3>
+<p><strong>Setup.</strong> An array-summing loop: per element, 1 load and 1 add, with 300-cycle DRAM misses on every 16th load (one per line), the rest L1 hits. The core's reorder buffer holds 200 instructions, so it can run ahead about 100 iterations.</p>
+<p><strong>Without OoO:</strong> each line costs 300 cycles of stall plus 16 × (load + add), about 332 cycles per 16 elements.</p>
+<p><strong>With OoO:</strong> 100 iterations ahead covers about 6 future lines (100/16), so up to 6 misses can be in flight. Per-line cost falls to about $300/6 + 32 \approx 82$ cycles, roughly 4× faster.</p>
+<p><strong>The limit.</strong> To hide the misses completely, the core must keep issuing while a miss is outstanding. One line's work is 32 instructions, about 32 cycles at one instruction per cycle, so it needs $\lceil 300/32 \rceil = 10$ lines in flight. That means running about 160 iterations (320 instructions) ahead, beyond this 200-entry window, and right at the limit of the 10–16 outstanding misses real cores can track. Double the latency, or halve the work per element, and the required window and miss tracking double too. That's the scaling problem: a CPU core hides latency with structures whose size must grow with latency × issue rate. The GPU's answer (next chapter) is not a bigger window, but many threads.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> Hennessy &amp; Patterson (7th ed.), Appendix B (Review of Memory Hierarchy): B.1–B.3 on caches, AMAT and the six basic optimisations.</li>
+<li><strong>Required:</strong> Bryant &amp; O'Hallaron, <em>Computer Systems: A Programmer's Perspective</em> (3rd ed.), Chapter 6 (The Memory Hierarchy), especially 6.4–6.6 on cache organisation and writing cache-friendly code. It's the textbook behind CMU's 15-213.</li>
+<li><strong>Optional:</strong> U. Drepper, "What Every Programmer Should Know About Memory" (2007), sections 3 and 6.</li>
+</ul>
+</section>

@@ -40,7 +40,7 @@ def test_course_content_is_consistent():
             continue
         if it["type"] == "chapter":
             assert content.chapter_html(SLUG, it["id"]).strip(), it["id"]
-            assert len(it.get("blocks", [])) == 5, it["id"]
+            assert len(it.get("blocks", [])) in (5, 7), it["id"]
         for ex in it["exercises"]:
             assert content.asset_path(SLUG, "exercises", f"{ex}.js").exists()
         q = content.quiz(SLUG, it["id"])
@@ -80,7 +80,30 @@ def test_gating_flow(client):
     r = client.post(f"{base}/exercises/0-1-a", json={"passed": False, "results": []}).json()
     assert r["state"]["state"] == "open"
     r = client.post(f"{base}/exercises/0-1-a", json={"passed": True, "results": []}).json()
+    r = client.post(f"{base}/exercises/0-1-b", json={"passed": True, "results": []}).json()
+    assert r["state"]["state"] == "open"  # the problem set isn't done yet
+    ps = content.problems(SLUG, "0-1")
+    probs = ps["problems"]
+    # a wrong attempt: no solution, and reveal refused before two attempts
+    w = client.post(f"{base}/problems/{probs[0]['id']}", json={"answers": {}}).json()
+    assert not w["solved"] and "solution" not in w
+    assert client.post(f"{base}/problems/{probs[0]['id']}/reveal").status_code == 409
+    client.post(f"{base}/problems/{probs[0]['id']}", json={"answers": {}})
+    rv = client.post(f"{base}/problems/{probs[0]['id']}/reveal").json()
+    assert rv["solution"] and rv["record"]["revealed"]
+    # a revealed problem can't count as solved afterwards
+    right = lambda pr: {pt["id"]: pt["answer"] for pt in pr["parts"]}
+    again = client.post(f"{base}/problems/{probs[0]['id']}", json={"answers": right(probs[0])}).json()
+    assert again["solved"] and not again["record"]["solved"]
+    # solve enough of the rest (70% of the set)
+    need = -(-int(round(ps["pass"] * len(probs) * 1000)) // 1000)
+    for pr in probs[1:need + 1]:
+        r = client.post(f"{base}/problems/{pr['id']}", json={"answers": right(pr)}).json()
+        assert r["solved"] and "solution" in r
     assert r["state"]["state"] == "complete"
+    # the public item never carries answers or solutions
+    pub = client.get(base).json()["problems"]["problems"][0]
+    assert "solution" not in pub and all("answer" not in pt for pt in pub["parts"])
     assert client.get(f"/api/courses/{SLUG}/items/0-2").status_code == 200
     # a later failure doesn't re-lock
     client.post(f"{base}/exercises/0-1-a", json={"passed": False, "results": []})
@@ -113,3 +136,22 @@ def test_unlock_all_env(client, monkeypatch):
 def test_unlocked_by_default(client, monkeypatch):
     monkeypatch.delenv("GROUNDWORK_UNLOCK", raising=False)
     assert client.get(f"/api/courses/{SLUG}/items/9-1").status_code == 200
+
+
+def test_problem_sets_are_self_consistent():
+    c = content.course(SLUG)
+    seen = 0
+    for it in c["order"]:
+        ps = content.problems(SLUG, it["id"])
+        if not ps:
+            continue
+        ids = [p["id"] for p in ps["problems"]]
+        assert len(ids) == len(set(ids)), it["id"]
+        for pr in ps["problems"]:
+            assert pr["parts"] and pr.get("solution") and pr.get("level") in (1, 2, 3), (it["id"], pr["id"])
+            right = {pt["id"]: pt["answer"] for pt in pr["parts"]}
+            assert content.grade_problem(pr, right)["solved"], (it["id"], pr["id"])
+            wrong = {pt["id"]: (pt["answer"] * 3 + 7 if pt["type"] == "numeric" else -1) for pt in pr["parts"]}
+            assert not content.grade_problem(pr, wrong)["solved"], (it["id"], pr["id"])
+            seen += 1
+    assert seen >= 40

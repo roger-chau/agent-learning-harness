@@ -1,0 +1,396 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Sizing a grid",
+   "statement": "<p>A kernel processes $n = 1{,}000{,}000$ elements, one per thread, with blocks of 256 threads.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Blocks to launch?",
+     "answer": 3907,
+     "unit": "blocks",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Threads that must do nothing (fail the bounds check)?",
+     "answer": 192,
+     "unit": "threads",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "⌈n / blockSize⌉ blocks."
+   ],
+   "solution": "<p>(a) $\\lceil 10^6/256 \\rceil = 3907$. (b) $3907 \\times 256 - 10^6 = 192$. Without the <code>if (i &lt; n)</code> guard those 192 threads would read and write past the end of the arrays: on a real GPU that's silent memory corruption or a crash.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Who am I?",
+   "statement": "<p>In a 1-D launch with <code>blockDim.x = 128</code>, consider the thread with <code>blockIdx.x = 5</code>, <code>threadIdx.x = 37</code>.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Its global index?",
+     "answer": 677,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Which warp of its block is it in (0-based)?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Its lane within that warp?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Global index = blockIdx.x × blockDim.x + threadIdx.x.",
+    "Warps are consecutive groups of 32 threads within a block."
+   ],
+   "solution": "<p>(a) $5 \\times 128 + 37 = 677$. (b) $\\lfloor 37/32 \\rfloor = 1$. (c) $37 \\bmod 32 = 5$. Warps are formed from consecutive <code>threadIdx</code> values within a block, which is why the layout of threads over data decides what a warp's 32 lanes touch together (Parts 1 and 2).</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "A 2-D launch over an image",
+   "statement": "<p>A 1920 × 1080 image, one thread per pixel, with 16 × 16 blocks. <code>x = blockIdx.x·16 + threadIdx.x</code> indexes columns.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "gridDim.x?",
+     "answer": 120,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "gridDim.y?",
+     "answer": 68,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Threads launched in total?",
+     "answer": 2088960,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "Threads outside the image?",
+     "answer": 15360,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "1080 isn't a multiple of 16."
+   ],
+   "solution": "<p>(a) $1920/16 = 120$. (b) $\\lceil 1080/16 \\rceil = 68$ (67.5). (c) $120 \\times 68 \\times 256 = 2{,}088{,}960$. (d) $2{,}088{,}960 - 1920 \\times 1080 = 15{,}360$: the last row of blocks is half outside the image. In 2-D, guard both coordinates: <code>if (x &lt; W &amp;&amp; y &lt; H)</code>.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Waves and the tail",
+   "statement": "<p>1,000 equal blocks run on a GPU with 34 SMs, each holding 4 of these blocks at a time.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of waves?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Blocks in the last wave?",
+     "answer": 48,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Fraction of the machine busy in the last wave, in %?",
+     "answer": 35.294117647058826,
+     "unit": "%",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "Overall efficiency (blocks / (waves × slots)), in %?",
+     "answer": 91.91176470588235,
+     "unit": "%",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Slots = SMs × blocks per SM.",
+    "Waves = ⌈blocks / slots⌉."
+   ],
+   "solution": "<p>Slots $= 34 \\times 4 = 136$. (a) $\\lceil 1000/136 \\rceil = 8$. (b) $1000 - 7 \\times 136 = 48$. (c) $48/136 = 35.3\\%$. (d) $1000/(8 \\times 136) = 91.9\\%$. With 1,088 blocks you'd do 8.8% more work in the same time. Part 5 turns this into a design tool.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "What limits residency?",
+   "statement": "<p>An SM allows at most 2,048 threads, 32 blocks and 65,536 registers. A kernel uses blocks of 128 threads and 64 registers per thread.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Blocks allowed by the thread limit?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Blocks allowed by the register limit?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Blocks resident?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "d",
+     "type": "single",
+     "prompt": "What's the limiting resource?",
+     "options": [
+      "Threads",
+      "Blocks",
+      "Registers",
+      "Shared memory"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "Compute each limit separately; the smallest wins."
+   ],
+   "solution": "<p>(a) $2048/128 = 16$. (b) Registers per block $= 128 \\times 64 = 8192$, so $65536/8192 = 8$. (c) $\\min(16, 32, 8) = 8$ blocks = 1,024 threads, 50% occupancy. (d) Registers. Part 2 builds the full calculator, including shared memory and allocation granularity.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Grid-stride loops",
+   "statement": "<p>Instead of one thread per element, you launch a fixed 136 blocks × 256 threads and loop: <code>for (i = global id; i &lt; n; i += total threads)</code>, with $n = 10^7$.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Total threads?",
+     "answer": 34816,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Most iterations any thread does?",
+     "answer": 288,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "How many threads do that many?",
+     "answer": 7808,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "n = q × threads + r: r threads do q + 1 iterations."
+   ],
+   "solution": "<p>(a) $136 \\times 256 = 34{,}816$. (b) $\\lceil 10^7/34816 \\rceil = 288$. (c) $10^7 - 287 \\times 34816 = 7{,}808$ threads do 288; the rest do 287. Grid-stride loops decouple the grid size from the problem size, so you can size the grid to the machine (a whole number of waves) and reuse per-thread setup across many elements.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 1,
+   "title": "Counting a GPU's concurrency",
+   "statement": "<p>A GPU has 108 SMs, each holding up to 2,048 resident threads.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum resident threads?",
+     "answer": 221184,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bytes in flight if each has one 4-byte load outstanding?",
+     "answer": 884736,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "SMs × threads per SM."
+   ],
+   "solution": "<p>(a) $108 \\times 2048 = 221{,}184$. (b) $\\times 4 = 884{,}736$ bytes: the same order as Little's law demands for a ~2 TB/s, ~500 ns memory. The design follows from the constraint.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Your RTX 2060 Super",
+   "statement": "<p>The RTX 2060 Super (Turing) has 34 SMs, at most 32 resident warps per SM, and 448 GB/s of memory bandwidth. Assume 450 ns loaded latency, and a streaming kernel where each warp load moves 128 bytes.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes in flight needed for full bandwidth?",
+     "answer": 201600,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bytes in flight with every warp resident and one load each?",
+     "answer": 139264,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Best achievable fraction of peak with one load per warp, in %?",
+     "answer": 69.07936507936508,
+     "unit": "%",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "Minimum independent loads per warp to saturate?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Turing allows half as many resident warps per SM as the 64 of newer datacenter GPUs."
+   ],
+   "solution": "<p>(a) $448 \\times 450 = 201{,}600$ bytes. (b) $34 \\times 32 \\times 128 = 139{,}264$. (c) $69.1\\%$. (d) $\\lceil 201600/139264 \\rceil = 2$. On your card, a simple one-element-per-thread copy kernel can't reach peak bandwidth even at full occupancy: you'll see this when you measure it on real hardware, and fix it by having each thread load 2–4 elements (or use 128-bit vector loads) before storing.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 1,
+   "title": "Odd block sizes",
+   "statement": "<p>A kernel launches blocks of 100 threads.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Warps per block?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Idle lanes per block?",
+     "answer": 28,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Lane efficiency, in %?",
+     "answer": 78.125,
+     "unit": "%",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Warps are always 32 lanes; a partial warp still occupies a whole one."
+   ],
+   "solution": "<p>(a) $\\lceil 100/32 \\rceil = 4$. (b) $128 - 100 = 28$. (c) $100/128 = 78.1\\%$. Block sizes should be multiples of 32 (usually of 64 or 128): the hardware schedules whole warps.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 3,
+   "title": "Choosing a block size",
+   "statement": "<p>An SM allows 2,048 threads and 16 blocks; registers and shared memory aren't limiting.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Occupancy with blocks of 64 threads, in %?",
+     "answer": 50,
+     "unit": "%",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With blocks of 96, in %?",
+     "answer": 75,
+     "unit": "%",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "With blocks of 128, in %?",
+     "answer": 100,
+     "unit": "%",
+     "tolerance": 0
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "With blocks of 1,024, in %?",
+     "answer": 100,
+     "unit": "%",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Resident blocks = min(16, ⌊2048 / block size⌋).",
+    "Occupancy = resident threads / 2048."
+   ],
+   "solution": "<p>(a) $\\min(16, 32) = 16$ blocks × 64 = 1024 threads: 50%. (b) $\\min(16, 21) = 16$ × 96 = 1536: 75%. (c) $\\min(16, 16) = 16$ × 128 = 2048: 100%. (d) 2 × 1024 = 2048: 100%. Small blocks hit the per-SM block limit before the thread limit. Very large blocks reach full occupancy but are coarse: one block that can't fit wastes a lot, and the tail effect grows.</p>"
+  }
+ ]
+}

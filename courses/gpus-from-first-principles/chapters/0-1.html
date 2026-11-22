@@ -78,3 +78,42 @@
 
 <div class="callout companion"><b>Companion reading</b>Hennessy &amp; Patterson, <em>Computer Architecture: A Quantitative Approach</em> (7th ed.): <strong>Chapter 1</strong> (Fundamentals of Quantitative Design and Analysis) on trends in bandwidth versus latency, and the opening of <strong>Chapter 2</strong> (Memory Hierarchy Design) on the processor–memory gap.</div>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+<p>Work through these with a pencil before reading each solution. The problem set below uses the same techniques with different numbers.</p>
+
+<h3>Example 1: a proof of Little's law</h3>
+<p><strong>Claim.</strong> For any system observed over a long window $[0, T]$, let $A(T)$ be the number of arrivals, $\lambda = A(T)/T$ the arrival rate, $W$ the mean time each request spends inside, and $L$ the time-averaged number of requests inside. If the system starts and ends empty, then $L = \lambda W$ exactly.</p>
+<p><strong>Proof.</strong> Let $N(t)$ be the number of requests inside at time $t$. Request $i$ is inside during an interval of length $w_i$. Count the area under $N(t)$ in two ways. Vertically, it is $\int_0^T N(t)\,dt$. Horizontally, each request contributes a horizontal strip of length $w_i$, so the area is $\sum_{i=1}^{A(T)} w_i$. Therefore</p>
+<div class="eq">$$\underbrace{\frac{1}{T}\int_0^T N(t)\,dt}_{L} = \underbrace{\frac{A(T)}{T}}_{\lambda}\cdot \underbrace{\frac{1}{A(T)}\sum_{i=1}^{A(T)} w_i}_{W}$$</div>
+<p>If the system isn't empty at the ends, the two counts differ only by requests that straddle 0 or $T$. In steady state that boundary error is bounded, so it vanishes as $T \to \infty$. Nothing in the argument depends on the order of service, the distribution of arrivals, or the distribution of the $w_i$. ∎</p>
+<p><strong>Why it matters.</strong> Because the law is exact for averages and needs no model of the system, it gives <em>hard</em> bounds. A kernel that can only ever have $L$ bytes in flight can never exceed $L/W$ bandwidth, however clever the rest of the hardware is.</p>
+
+<h3>Example 2: can the GW-1 saturate its own memory?</h3>
+<p><strong>Setup.</strong> GW-1: 16 SMs, at most 64 warps resident per SM, 512 GB/s, 270 ns latency. A streaming kernel has each warp issue one load of 32 four-byte values (128 bytes) and wait for it. Can it reach peak bandwidth?</p>
+<p><strong>Requirement.</strong> $L_{\text{need}} = 512\,\text{GB/s} \times 270\,\text{ns} = 138{,}240$ bytes.</p>
+<p><strong>Supply.</strong> At most $16 \times 64 = 1{,}024$ warps, each with 128 bytes outstanding: $L_{\text{max}} = 131{,}072$ bytes.</p>
+<p><strong>Conclusion.</strong> $L_{\text{max}} < L_{\text{need}}$, so the best possible is $131{,}072/270 \approx 485$ GB/s, about <strong>94.8%</strong> of peak, even with the machine completely full. One extra independent load per warp (two in flight) doubles the supply to 262 KB, which is enough with margin.</p>
+<p><strong>Sanity check.</strong> The result doesn't depend on how fast the SMs compute: no amount of arithmetic speed creates requests in flight. That's why the simulator in this course reports "DRAM latency (too few requests in flight)" as a distinct limiter.</p>
+
+<h3>Example 3: threads or independent loads?</h3>
+<p><strong>Setup.</strong> You need 138,240 bytes in flight. Option A: 34,560 threads, each with one 4-byte load outstanding. Option B: 8,640 threads, each issuing 4 independent loads before using any.</p>
+<p><strong>Analysis.</strong> Both put $34{,}560 \times 4 = 8{,}640 \times 16 = 138{,}240$ bytes in flight, so Little's law says both reach full bandwidth. The difference is cost. Each resident thread needs registers (Chapter 0.3). Option B needs a quarter of the threads but more registers per thread (four destination registers live at once instead of one). Whether B is cheaper depends on how many registers the rest of the kernel needs. That's the occupancy versus ILP trade-off of Part 2, in its smallest form.</p>
+<p><strong>Watch out.</strong> The four loads must be <em>independent</em>: if load 2's address depends on load 1's value, they can't be in flight together, and Option B degrades to one load in flight per thread.</p>
+
+<h3>Example 4: when latency depends on load</h3>
+<p><strong>Setup.</strong> A program keeps $L = 64{,}000$ bytes in flight. Loaded latency follows $W(\lambda) = W_0/(1 - \lambda/P)$ with $W_0 = 270$ ns and $P = 512$ GB/s. What bandwidth does it get?</p>
+<p><strong>Naive answer.</strong> $64{,}000/270 = 237$ GB/s. Wrong, because at 237 GB/s the latency is no longer 270 ns.</p>
+<p><strong>Correct answer.</strong> The operating point must satisfy Little's law with the latency it causes: $\lambda = L/W(\lambda) = (L/W_0)(1 - \lambda/P)$. Solving, $\lambda = \dfrac{L/W_0}{1 + L/(W_0 P)} = \dfrac{237.0}{1 + 0.463} = 162$ GB/s, at a loaded latency of $270/(1 - 162/512) = 395$ ns.</p>
+<p><strong>Lesson.</strong> Queueing turns "a bit short of enough concurrency" into "a lot short of peak". Measured latency on a busy GPU can be well above the idle number, and the concurrency you size for has to use the loaded value.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> Hwu, Kirk &amp; El Hajj, <em>Programming Massively Parallel Processors</em> (4th ed.), Chapter 1 (Introduction), for the throughput-oriented design philosophy.</li>
+<li><strong>Required:</strong> Hennessy &amp; Patterson (7th ed.), Chapter 1, the section on trends in bandwidth and latency.</li>
+<li><strong>Optional:</strong> J. D. C. Little, "A Proof for the Queuing Formula: L = λW", <em>Operations Research</em>, 1961. The original, three pages.</li>
+</ul>
+</section>

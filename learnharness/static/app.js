@@ -434,7 +434,7 @@
         const msg = form.querySelector(".prob-msg");
         if (b.dataset.act === "hint") {
           if (hintN < p.hints.length) {
-            const d = document.createElement("div"); d.className = "callout"; d.innerHTML = `<b>Hint ${hintN + 1}</b>${p.hints[hintN]}`;
+            const d = document.createElement("div"); d.className = "callout"; d.innerHTML = `<b>Hint ${hintN + 1}.</b> ${p.hints[hintN]}`;
             form.querySelector(".prob-hints").appendChild(d); typeset(d); hintN++;
             b.textContent = hintN < p.hints.length ? `Next hint (${p.hints.length - hintN})` : "No more hints"; if (hintN >= p.hints.length) b.disabled = true;
           }

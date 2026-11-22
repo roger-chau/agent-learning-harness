@@ -67,7 +67,8 @@
      "title": "Latency vs throughput",
      "summary": "Two ways to be fast, and Little's law.",
      "exercises": [
-      "0-1-a"
+      "0-1-a",
+      "0-1-b"
      ],
      "blocks": [
       [
@@ -89,6 +90,14 @@
       [
        "Reality",
        "why it matters for GPUs"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
       ]
      ]
     },
@@ -98,7 +107,8 @@
      "title": "The memory wall",
      "summary": "Where a CPU spends its time, and why caches only go so far.",
      "exercises": [
-      "0-2-a"
+      "0-2-a",
+      "0-2-b"
      ],
      "blocks": [
       [
@@ -120,6 +130,14 @@
       [
        "Reality",
        "misses still dominate"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
       ]
      ]
     },
@@ -129,7 +147,8 @@
      "title": "Hiding latency with many threads",
      "summary": "Cheap context switches, and how many threads keep a unit busy.",
      "exercises": [
-      "0-3-a"
+      "0-3-a",
+      "0-3-b"
      ],
      "blocks": [
       [
@@ -151,6 +170,14 @@
       [
        "Reality",
        "threads cost registers"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
       ]
      ]
     },
@@ -160,7 +187,8 @@
      "title": "The GPU in one picture",
      "summary": "SMs, warps, schedulers, registers, shared memory, L2 and DRAM.",
      "exercises": [
-      "0-4-a"
+      "0-4-a",
+      "0-4-b"
      ],
      "blocks": [
       [
@@ -182,6 +210,14 @@
       [
        "Reality",
        "your first kernel"
+      ],
+      [
+       "Worked examples",
+       "step by step"
+      ],
+      [
+       "Readings",
+       "textbook and papers"
       ]
      ]
     },

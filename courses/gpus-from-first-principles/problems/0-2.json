@@ -1,0 +1,319 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "One level of cache",
+   "statement": "<p>A cache has a 1 ns hit time and a 5% miss rate. A miss costs 100 ns more.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Average memory access time?",
+     "answer": 6,
+     "unit": "ns",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "AMAT = hit time + miss rate × miss penalty."
+   ],
+   "solution": "<p>$\\text{AMAT} = 1 + 0.05 \\times 100 = 6$ ns. The 5% of accesses that miss cost 5 ns on average, five times the hit time.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Two levels",
+   "statement": "<p>L1: 4-cycle hit, 95% hit rate. L2: 12-cycle hit, 80% hit rate among accesses that miss L1. DRAM: 250 cycles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "AMAT in cycles?",
+     "answer": 7.1,
+     "unit": "cycles",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "What fraction of all accesses go to DRAM, in %?",
+     "answer": 1.0,
+     "unit": "%",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Nest it: AMAT = t₁ + (1 − h₁)(t₂ + (1 − h₂) t_DRAM).",
+    "The L2 hit rate here is local: it applies only to L1 misses."
+   ],
+   "solution": "<p>(a) $4 + 0.05\\,(12 + 0.2 \\times 250) = 4 + 0.05 \\times 62 = 7.1$ cycles.</p><p>(b) $0.05 \\times 0.2 = 1\\%$ of accesses reach DRAM, yet they contribute $0.01 \\times 250 = 2.5$ of the 7.1 cycles.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Local and global miss rates",
+   "statement": "<p>Measured over all memory accesses: 8% miss in L1, and 2% miss in both L1 and L2 (the <em>global</em> L2 miss rate). L1 hit 3 cycles, L2 hit 15 cycles, DRAM 300 cycles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "The L2's local miss rate (misses / accesses that reached L2), in %?",
+     "answer": 25,
+     "unit": "%",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "AMAT in cycles?",
+     "answer": 10.2,
+     "unit": "cycles",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Local miss rate = global L2 miss rate / L1 miss rate.",
+    "Using global rates: AMAT = t₁ + m₁·t₂ + m_global·t_DRAM."
+   ],
+   "solution": "<p>(a) Only 8% of accesses reach L2, and 2% of all accesses miss there, so the local miss rate is $2/8 = 25\\%$. A 25% local miss rate sounds terrible and a 2% global rate sounds great: they describe the same cache. Always say which one you mean.</p><p>(b) With global rates the nesting flattens: $3 + 0.08 \\times 15 + 0.02 \\times 300 = 3 + 1.2 + 6 = 10.2$ cycles.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "How good must the L1 be?",
+   "statement": "<p>L1 hit 4 cycles; L2 hit 14 cycles with a local hit rate of 60%; DRAM 300 cycles. You need AMAT ≤ 8 cycles.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum L1 hit rate, in %?",
+     "answer": 97.01492537313433,
+     "unit": "%",
+     "tolerance": "0.05%"
+    }
+   ],
+   "hints": [
+    "Write AMAT as a function of h₁ and solve the inequality.",
+    "The miss penalty of L1 is 14 + 0.4 × 300 = 134 cycles."
+   ],
+   "solution": "<p>$4 + (1-h_1) \\times 134 \\le 8 \\Rightarrow 1 - h_1 \\le 4/134 = 0.02985$, so $h_1 \\ge 97.01\\%$.</p><p>Going from 95% to 97% hit rate is the difference between 10.7 and 8 cycles: in this regime every point of hit rate is worth a lot, which is why CPU designers fight for tiny improvements in L1.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 1,
+   "title": "Stride and spatial locality",
+   "statement": "<p>A loop reads 4-byte floats from a cold cache with 64-byte lines, at a fixed stride of <em>s</em> elements. Ignore prefetching.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Miss rate for s = 1, in %?",
+     "answer": 6.25,
+     "unit": "%",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Miss rate for s = 8, in %?",
+     "answer": 50,
+     "unit": "%",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Miss rate for s = 32, in %?",
+     "answer": 100,
+     "unit": "%",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "A line holds 16 floats. How many accesses land in each line?"
+   ],
+   "solution": "<p>A 64-byte line holds 16 floats. With stride $s$, consecutive accesses are $4s$ bytes apart, so a line serves $\\max(1, 16/s)$ accesses and the miss rate is $\\min(1, s/16)$: (a) $1/16 = 6.25\\%$, (b) $8/16 = 50\\%$, (c) 100%. Past a stride of one line, every access misses and most of each fetched line is wasted.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Bytes fetched versus bytes used",
+   "statement": "<p>You sum every 4th float of a 64 MB array that isn't in cache (64-byte lines).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes your code actually uses?",
+     "answer": 16777216,
+     "unit": "bytes",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bytes fetched from DRAM?",
+     "answer": 67108864,
+     "unit": "bytes",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Efficiency (used / fetched), in %?",
+     "answer": 25,
+     "unit": "%",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Floats 16 bytes apart: does any line go untouched?"
+   ],
+   "solution": "<p>(a) Every 4th float: a quarter of 64 MB, $16,777,216$ bytes. (b) Accesses are 16 bytes apart, so every 64-byte line is touched and the whole $67,108,864$ bytes come from DRAM. (c) 25%. On a GPU the same waste happens at 32-byte sector granularity, and it's the central topic of Part 2 (coalescing).</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Latency-bound or bandwidth-bound",
+   "statement": "<p>(a) A program streams through 2 GB of data at a sustained 60 GB/s. (b) Another follows a linked list of 5 million nodes, each access missing to DRAM with 85 ns latency.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Time for (a), in ms?",
+     "answer": 33.333333333333336,
+     "unit": "ms",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time for (b), in ms?",
+     "answer": 425.0,
+     "unit": "ms",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "(a) is limited by bandwidth: bytes / (bytes per second).",
+    "(b) has one access in flight at a time: count × latency."
+   ],
+   "solution": "<p>(a) $2\\,\\text{GB} / 60\\,\\text{GB/s} = 33.33$ ms. (b) $5\\times10^6 \\times 85\\,\\text{ns} = 425$ ms. The second moves about 320 MB (5 M lines of 64 bytes), a sixth of the first's data, and takes 13× longer. Bandwidth-bound and latency-bound programs need completely different fixes.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 2,
+   "title": "A loop with no overlap",
+   "statement": "<p>A CPU loop does $10^8$ iterations. Each does one load and 2 cycles of arithmetic that depends on it, and nothing overlaps (no out-of-order, no prefetch). The memory hierarchy is the one from Problem 2 (AMAT 7.1 cycles). The clock is 4 GHz.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Run time in seconds?",
+     "answer": 0.2275,
+     "unit": "s",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Fraction of time spent waiting on memory, in %?",
+     "answer": 78.02197802197803,
+     "unit": "%",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Cycles per iteration = compute + AMAT."
+   ],
+   "solution": "<p>Cycles per iteration $= 2 + 7.1 = 9.1$, so $10^8 \\times 9.1 / 4\\times10^9 = 0.2275$ s, with $78\\%$ of the time waiting. This is the single-thread picture that out-of-order execution and, on GPUs, multithreading attack.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Working set of a matrix-vector product",
+   "statement": "<p>Compute $y = Ax$ with $A$ a 4096 × 4096 FP32 matrix in row-major order, $x$ and $y$ FP32 vectors. The last-level cache is 4 MB, nothing is cached at the start, and every element of $A$ is used once.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum DRAM traffic in bytes, assuming x stays in cache once loaded?",
+     "answer": 67141632,
+     "unit": "bytes",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time at 100 GB/s, in µs?",
+     "answer": 671.41632,
+     "unit": "µs",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Arithmetic intensity, in FLOPs per DRAM byte?",
+     "answer": 0.4997559785261103,
+     "unit": "FLOP/B",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "x is 16 KB: does it fit in the cache alongside the streaming A?",
+    "FLOPs: one multiply and one add per element of A."
+   ],
+   "solution": "<p>(a) $A$ is $67,108,864$ bytes and must stream once; $x$ (16 KB) is read once and reused from cache for every row; $y$ is written once: $67,141,632$ bytes.</p><p>(b) $67,141,632 / 100\\times10^9 = 671$ µs.</p><p>(c) $2 \\times 4096^2 = 33,554,432$ FLOPs, so $0.4998$ FLOP/byte: one FLOP per 2 bytes. Matrix-vector products are hopelessly memory-bound on any machine, which is the root of Scenario 4 (LLM decode) much later.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 3,
+   "title": "Caches don't save streaming code; concurrency does",
+   "statement": "<p>One CPU core sums a 1 GB float array sequentially. Every line (64 bytes) comes from DRAM at 90 ns latency. Without a prefetcher, the core can have at most 10 misses outstanding.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bandwidth the core reaches?",
+     "answer": 7.111111111111111,
+     "unit": "GB/s",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Time to sum the array, in ms?",
+     "answer": 140.625,
+     "unit": "ms",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "With a prefetcher keeping 32 lines in flight, the new time in ms?",
+     "answer": 43.9453125,
+     "unit": "ms",
+     "tolerance": "1%"
+    },
+    {
+     "id": "d",
+     "type": "single",
+     "prompt": "Would a cache twice as large help this loop?",
+     "options": [
+      "Yes, the hit rate would double",
+      "Only slightly",
+      "No: every byte is used once, so there's no reuse to exploit",
+      "Yes, if the array fits"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "Little's law, from Chapter 0.1: λ = bytes in flight / latency.",
+    "1 GB = 10⁹ bytes here."
+   ],
+   "solution": "<p>(a) $10 \\times 64 / 90 = 7.11$ GB/s. (b) $10^9 / 7.11\\times10^9 = 140.6$ ms. (c) $32 \\times 64 / 90 = 22.76$ GB/s, so $43.9$ ms. (d) No: the array is far larger than any cache and each byte is used once. Prefetching helps because it adds requests in flight (Little's law); a bigger cache doesn't, because there is nothing to reuse.</p>"
+  }
+ ]
+}

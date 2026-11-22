@@ -1,0 +1,343 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Bytes in flight on a datacenter GPU",
+   "statement": "<p>A GPU has 3.35 TB/s of DRAM bandwidth and a loaded memory latency of 600 ns.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "How many bytes must be in flight to sustain full bandwidth?",
+     "answer": 2010000.0,
+     "unit": "bytes",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "How many 4-byte loads is that?",
+     "answer": 502500.0,
+     "unit": "loads",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Little's law: in flight = throughput × latency. Keep the units straight: TB/s × ns.",
+    "3.35 × 10¹² B/s × 600 × 10⁻⁹ s."
+   ],
+   "solution": "<p>$L = \\lambda W = 3.35\\times10^{12}\\,\\tfrac{\\text{B}}{\\text{s}} \\times 600\\times10^{-9}\\,\\text{s} = 2,010,000$ bytes ≈ 2 MB.</p><p>(b) At 4 bytes per load: $502,500$ loads in flight. Half a million independent loads, at every moment: no small set of cores can do that.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "One outstanding miss",
+   "statement": "<p>A single CPU thread walks a linked list. Each node lives in a different 64-byte cache line, every access misses to DRAM, and DRAM latency is 80 ns. The next address isn't known until the current load returns.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "What bandwidth does the thread achieve?",
+     "answer": 0.8,
+     "unit": "GB/s",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "What fraction of a 50 GB/s memory system is that, in %?",
+     "answer": 1.6,
+     "unit": "%",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "How many requests can be in flight when each address depends on the previous load?",
+    "λ = L / W with L = one 64-byte line."
+   ],
+   "solution": "<p>Each load depends on the previous one, so exactly one request is in flight: $L = 64$ bytes. Little's law gives $\\lambda = L/W = 64\\,\\text{B} / 80\\,\\text{ns} = 0.8$ GB/s (bytes per ns = GB/s).</p><p>(b) $0.8/50 = 1.6\\%$. Pointer chasing is <em>latency-bound</em>: more bandwidth wouldn't help at all, only lower latency would.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 1,
+   "title": "Cycles, nanoseconds and bytes",
+   "statement": "<p>A GPU's memory latency is quoted as 400 cycles at a 1.8 GHz clock. Its bandwidth is 1 TB/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Latency in nanoseconds?",
+     "answer": 222.22222222222223,
+     "unit": "ns",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bytes in flight to sustain full bandwidth?",
+     "answer": 222222.22222222222,
+     "unit": "bytes",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "One cycle at 1.8 GHz lasts 1/1.8 ns."
+   ],
+   "solution": "<p>(a) $400 / 1.8\\,\\text{GHz} = 222.2$ ns.</p><p>(b) $1000\\,\\text{GB/s} \\times 222.22\\,\\text{ns} = 222,222$ bytes. Mixing cycles and seconds is the most common slip in these calculations: convert once, at the start.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Threads with several loads each",
+   "statement": "<p>Bandwidth is 900 GB/s and loaded latency 500 ns. Each thread issues 4 independent 4-byte loads before it needs any of the results, and keeps them all in flight.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes in flight needed?",
+     "answer": 450000.0,
+     "unit": "bytes",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Minimum number of threads to saturate the memory?",
+     "answer": 28125,
+     "unit": "threads",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "And if each thread kept only one load in flight?",
+     "answer": 112500,
+     "unit": "threads",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each thread contributes 4 × 4 = 16 bytes in flight.",
+    "Threads must be a whole number, and enough: round up."
+   ],
+   "solution": "<p>(a) $900 \\times 500 = 450,000$ bytes.</p><p>(b) Each thread holds $4 \\times 4 = 16$ bytes in flight, so $\\lceil 450,000 / 16 \\rceil = 28,125$ threads.</p><p>(c) $\\lceil 450,000/4 \\rceil = 112,500$. Four independent loads per thread (instruction-level parallelism) substitute for four times as many threads (thread-level parallelism). Chapter 0.3 and Volkov's paper (Part 2) come back to this trade.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "A machine with fixed concurrency",
+   "statement": "<p>An accelerator can track at most 64,000 bytes of outstanding reads. Its memory has 300 ns latency and a peak of 400 GB/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "What bandwidth can it actually reach?",
+     "answer": 213.33333333333334,
+     "unit": "GB/s",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "What percentage of peak is that?",
+     "answer": 53.33333333333334,
+     "unit": "%",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "How many bytes of tracking would it need to reach peak?",
+     "answer": 120000,
+     "unit": "bytes",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Throughput is the smaller of two limits: the peak, and what the concurrency allows.",
+    "Concurrency allows λ = L / W."
+   ],
+   "solution": "<p>Achieved bandwidth is bounded by both the peak and Little's law: $\\lambda = \\min(P, L/W) = \\min(400, 64000/300) = \\min(400, 213.3) = 213.3$ GB/s, i.e. $53.3\\%$ of peak.</p><p>(c) To reach peak it would need $L = P W = 400 \\times 300 = 120,000$ bytes. Hardware designers size miss-tracking structures (MSHRs on CPUs) exactly this way.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Why one CPU core can't saturate memory",
+   "statement": "<p>A CPU core can track 10 outstanding L1 misses (each a 64-byte line). DRAM latency is 90 ns. The memory system delivers 200 GB/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Maximum bandwidth one core can draw?",
+     "answer": 7.111111111111111,
+     "unit": "GB/s",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Minimum number of cores to saturate the memory system?",
+     "answer": 29,
+     "unit": "cores",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Little's law per core: λ = (10 × 64 B) / 90 ns."
+   ],
+   "solution": "<p>(a) $\\lambda = 640\\,\\text{B} / 90\\,\\text{ns} = 7.11$ GB/s.</p><p>(b) $\\lceil 200 / 7.111 \\rceil = 29$ cores. This is why memory-bound CPU code needs many cores, and why hardware prefetchers (which add requests in flight) matter so much on CPUs.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 1,
+   "title": "Little's law outside computers",
+   "statement": "<p>A web service handles a steady 2,000 requests per second, and each request spends on average 15 ms in the service.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "On average, how many requests are inside the service at once?",
+     "answer": 30,
+     "unit": "requests",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Which assumption does Little's law need?",
+     "options": [
+      "Exponentially distributed arrival times",
+      "First-come, first-served ordering",
+      "A steady state: on average, requests leave as fast as they arrive",
+      "Constant latency for every request"
+     ],
+     "answer": 2
+    }
+   ],
+   "hints": [
+    "Units: requests/s × s = requests."
+   ],
+   "solution": "<p>(a) $L = \\lambda W = 2000\\,\\text{s}^{-1} \\times 0.015\\,\\text{s} = 30$ requests.</p><p>(b) Little's law holds for <em>averages</em> in any system in steady state, whatever the arrival distribution, ordering or variation in latency. That generality is why it's the first tool to reach for.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Latency that rises with load",
+   "statement": "<p>Latency isn't constant: as a memory system gets busier, requests queue. Model the loaded latency as $W(\\lambda) = W_0 / (1 - \\lambda / P)$, with idle latency $W_0 = 270$ ns and peak $P = 512$ GB/s. A program keeps exactly 100,000 bytes in flight at all times.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "If latency stayed at 270 ns, what bandwidth would Little's law predict?",
+     "answer": 370.3703703703704,
+     "unit": "GB/s",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "What bandwidth does it actually reach, with the loaded latency?",
+     "answer": 214.90933512424445,
+     "unit": "GB/s",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "What is the loaded latency at that bandwidth?",
+     "answer": 465.31249999999994,
+     "unit": "ns",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "The bandwidth λ and the latency W(λ) depend on each other: λ = L / W(λ). Solve for λ.",
+    "λ = L(1 − λ/P) / W₀. Collect the λ terms."
+   ],
+   "solution": "<p>(a) $100000 / 270 = 370.4$ GB/s.</p><p>(b) Little's law must hold at the operating point: $\\lambda = L / W(\\lambda) = \\frac{L}{W_0}\\left(1 - \\frac{\\lambda}{P}\\right)$. So $\\lambda\\left(1 + \\frac{L}{W_0 P}\\right) = \\frac{L}{W_0}$, giving $\\lambda = \\frac{L/W_0}{1 + L/(W_0 P)} = \\frac{370.4}{1 + 0.723} = 214.9$ GB/s.</p><p>(c) $W = 270 / (1 - 214.9/512) = 465.3$ ns. Queueing raised the latency, which lowered the throughput the same concurrency buys. Always use <em>loaded</em> latency in Little's law; the idle number overestimates what you'll get.</p>"
+  },
+  {
+   "id": "p9",
+   "level": 3,
+   "title": "Sizing ILP for a GPU",
+   "statement": "<p>A GPU has 80 SMs, each holding 48 resident warps. A warp-wide load of 4-byte values moves 128 bytes. Memory: 2 TB/s, 500 ns loaded latency.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes in flight if every warp has exactly one load outstanding?",
+     "answer": 491520,
+     "unit": "bytes",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bytes in flight needed for full bandwidth?",
+     "answer": 1000000.0,
+     "unit": "bytes",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Minimum independent loads each warp must keep in flight (a whole number)?",
+     "answer": 3,
+     "unit": "loads",
+     "tolerance": 0
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "With one load per warp, what percentage of peak bandwidth can you reach?",
+     "answer": 49.152,
+     "unit": "%",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Count the machine's concurrency: SMs × warps × bytes per warp request.",
+    "If concurrency falls short of the requirement, achieved bandwidth = concurrency / latency."
+   ],
+   "solution": "<p>(a) $80 \\times 48 \\times 128 = 491,520$ bytes.</p><p>(b) $2000\\,\\text{GB/s} \\times 500\\,\\text{ns} = 1,000,000$ bytes.</p><p>(c) $\\lceil 1,000,000 / 491,520 \\rceil = \\lceil 2.03 \\rceil = 3$ independent loads per warp.</p><p>(d) $491,520 / 1,000,000 = 49.2\\%$. Even a huge GPU fully occupied falls short with one load per warp: real kernels issue several loads (often as vector loads) before using them.</p>"
+  },
+  {
+   "id": "p10",
+   "level": 2,
+   "title": "Requests of different sizes",
+   "statement": "<p>On the GW-1 (512 GB/s, 270 ns), half of a kernel's memory requests are 128 bytes and half are 32 bytes.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes in flight needed for full bandwidth?",
+     "answer": 138240,
+     "unit": "bytes",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Average request size?",
+     "answer": 80.0,
+     "unit": "bytes",
+     "tolerance": "1%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Requests in flight needed?",
+     "answer": 1728.0,
+     "unit": "requests",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Little's law also holds for requests: requests in flight = bytes in flight / mean bytes per request."
+   ],
+   "solution": "<p>(a) $512 \\times 270 = 138,240$ bytes. (b) Mean size $= 0.5(128) + 0.5(32) = 80$ bytes. (c) $138,240 / 80 = 1,728$ requests. Small requests are expensive: they need more of them in flight for the same bytes, which is one reason GPUs work hard to combine lanes' accesses into wide transactions (coalescing, Part 2).</p>"
+  }
+ ]
+}

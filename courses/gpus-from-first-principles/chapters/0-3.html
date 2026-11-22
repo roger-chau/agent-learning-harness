@@ -74,3 +74,45 @@
 <p>So there is a trade-off at the heart of GPU tuning. Using more registers per thread can make each thread faster, through more ILP and more data kept close, but it leaves fewer threads to hide latency. The fraction of the maximum threads that are actually resident is called <strong>occupancy</strong>, and Part 2 builds an occupancy calculator from first principles. Part 6 shows that the compiler's register allocator is quietly deciding this trade-off for you.</p>
 <div class="callout companion"><b>Companion reading</b>Hennessy &amp; Patterson (7th ed.), <strong>Chapter 3</strong> (Instruction-Level Parallelism) covers out-of-order execution and multithreading on CPUs, including simultaneous multithreading; <strong>Chapter 4</strong> introduces the GPU's multithreaded SIMD processor.</div>
 </section>
+
+
+<section class="blk" data-n="06">
+<h2>Worked examples</h2>
+
+<h3>Example 1: deriving the utilisation formula, and its assumptions</h3>
+<p><strong>Model.</strong> One unit issues at most one instruction per cycle. $N$ identical threads each repeat a period: $C$ cycles needing the unit, then $L$ cycles waiting. The scheduler is <em>work-conserving</em>: it never idles while some thread is ready.</p>
+<p><strong>Upper bound.</strong> In a long window of $T$ cycles, each thread completes at most $T/(C+L)$ periods (it can't go faster than its own latency allows), so the unit does at most $N C T/(C+L)$ cycles of work. It also can't do more than $T$. So utilisation $U \le \min(1, NC/(C+L))$.</p>
+<p><strong>Achievability, for the greedy scheduler.</strong> Greedy runs each thread's $C$ cycles as one unbroken burst, then switches. Consider a thread that finishes its burst at time $t$; it's ready again at $t + L$. Meanwhile the other $N-1$ threads can each run one burst, taking $(N-1)C$ cycles if they're ready. If $(N-1)C \ge L$, which is $NC \ge C + L$, then by the time those bursts are done, the first thread is ready again. By induction the unit never idles after the start-up transient, so $U \to 1$. If $NC < C+L$, greedy settles into a staggered pattern where each thread runs back-to-back after the previous one and then everyone waits; each thread completes one period every $C + L$ cycles, meeting the bound $NC/(C+L)$. Hence, for greedy,</p>
+<div class="eq">$$U = \min\left(1, \frac{NC}{C+L}\right)$$</div>
+<p><strong>Not every scheduler gets there.</strong> "Never idle while a thread is ready" is <em>not</em> sufficient. Strict round-robin, issuing one instruction from each ready thread in turn, interleaves the threads' bursts so that they all finish their work, and all start waiting, at nearly the same time. With $C = 2$, $L = 16$ and 9 threads, round-robin reaches only about 69% where greedy reaches 100%. That's why real GPU warp schedulers use greedy-then-oldest or two-level policies: keeping threads <em>out of phase</em> is part of hiding latency. The drill below makes you discover this.</p>
+<p><strong>Assumptions to remember.</strong> Identical threads (otherwise use per-thread averages), a latency that doesn't grow with load (Chapter 0.1, Example 4 shows what happens when it does), and no other limit, such as memory bandwidth. In reality, saturating issue may first saturate DRAM: two different ceilings, which Part 2's roofline puts on one chart.</p>
+
+<h3>Example 2: threads versus independent loads</h3>
+<p><strong>Setup.</strong> $C = 4$ cycles of work per loaded value, $L = 400$. Compare: (A) one load per thread, (B) 4 independent loads per thread, then 16 cycles of work.</p>
+<p>(A) Period $404$, work $4$: $N_{sat} = 101$ threads. (B) Period $16 + 400 = 416$, work $16$: $N_{sat} = 26$ threads.</p>
+<p><strong>Register check.</strong> Suppose (A) needs 20 registers per thread and (B) needs 32 (three extra loaded values live at once, plus addressing). Per scheduler, (A) needs $101 \times 20 = 2{,}020$ registers' worth of threads; (B) needs $26 \times 32 = 832$. ILP is cheaper here by 2.4×. It isn't always: if (B) needed 96 registers, it would cost $26 \times 96 = 2{,}496$ and lose. Measure, don't assume (Volkov, Part 2).</p>
+
+<h3>Example 3: from a register count to a predicted speed</h3>
+<p><strong>Setup.</strong> An SM with 4 schedulers, 65,536 registers, 64-warp limit. Kernel: 48 registers per thread, $C = 10$ issue cycles per load, $L = 450$.</p>
+<ol>
+<li>Warps that fit: $\lfloor 65536/(32 \times 48) \rfloor = \lfloor 42.67 \rfloor = 42$.</li>
+<li>Per scheduler: $42/4 = 10.5$ warps.</li>
+<li>Needed per scheduler: $\lceil 460/10 \rceil = 46$.</li>
+<li>Utilisation: $10.5 \times 10/460 = 22.8\%$.</li>
+</ol>
+<p><strong>Prediction.</strong> This kernel runs at under a quarter of the SM's issue rate and is latency-bound. Cutting registers to 32 gives 64 warps (16 per scheduler) and $34.8\%$, still far short. The real fix is more work per load or more loads in flight per warp. This chain of reasoning, from registers to warps to utilisation, is exactly what an occupancy calculator plus a profiler tells you in practice.</p>
+
+<h3>Example 4: Little's law, seen from the scheduler</h3>
+<p>Example 1's saturation condition $NC \ge C + L$ is Little's law in disguise. Take the unit's throughput $\lambda = 1$ instruction per cycle. A thread occupies "the system" for a whole period, $C+L$ cycles, during which it contributes $C$ instructions. The number of threads in flight needed for throughput 1 is</p>
+<div class="eq">$$N = \lambda \cdot \frac{C+L}{C} \quad\Longleftrightarrow\quad \underbrace{N}_{\text{in flight}} = \underbrace{\tfrac{1}{C}}_{\text{periods per instruction}} \times \underbrace{(C+L)}_{\text{time per period}}$$</div>
+<p>The same law sized memory concurrency in Chapter 0.1 and sizes thread concurrency here. When you see a GPU number (warps per SM, registers, bytes in flight), ask which latency it is there to cover.</p>
+</section>
+
+<section class="blk" data-n="07">
+<h2>Readings</h2>
+<ul>
+<li><strong>Required:</strong> <em>Programming Massively Parallel Processors</em> (4th ed.), Chapter 4 (Compute Architecture and Scheduling), the sections on warp scheduling and latency tolerance.</li>
+<li><strong>Required:</strong> Hennessy &amp; Patterson (7th ed.), Chapter 3, the section on multithreading (fine-grained, coarse-grained and simultaneous).</li>
+<li><strong>Optional:</strong> J. E. Thornton, "Parallel operation in the Control Data 6600" (1964), and the HEP and Tera MTA papers, for the history of hiding latency with threads: the GPU's ancestors.</li>
+</ul>
+</section>
