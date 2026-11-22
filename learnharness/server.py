@@ -127,7 +127,7 @@ def get_item(slug: str, item_id: str):
     return {
         "id": it["id"], "type": it["type"], "title": it["title"], "summary": it.get("summary", ""),
         "blocks": it.get("blocks", []), "project": it.get("project"),
-        "part": {"id": part["id"], "n": part.get("n"), "title": part["title"], "hp": part.get("hp", "")},
+        "part": {"id": part["id"], "n": part.get("n"), "title": part["title"], "hp": part.get("hp", ""), "pmpp": part.get("pmpp", "")},
         "html": content.chapter_html(slug, item_id),
         "exercises": it["exercises"],
         "quiz": content.public_quiz(content.quiz(slug, item_id)),

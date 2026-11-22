@@ -274,7 +274,8 @@
      "summary": "Cumulative quiz across the Part."
     }
    ],
-   "hp": "Ch 1 · Ch 2 · App B"
+   "hp": "Ch 1 · Ch 2 · App B",
+   "pmpp": "Ch 1, 4"
   },
   {
    "id": "p1",
@@ -645,7 +646,8 @@
      "summary": "Cumulative quiz across the Part."
     }
    ],
-   "hp": "Ch 4 · App G"
+   "hp": "Ch 4 · App G",
+   "pmpp": "Ch 2, 3, 4"
   },
   {
    "id": "p2",
@@ -1059,7 +1061,8 @@
      "summary": "Cumulative quiz across the Part."
     }
    ],
-   "hp": "Ch 2 · Ch 4 · App B · App L"
+   "hp": "Ch 2 · Ch 4 · App B · App L",
+   "pmpp": "Ch 5, 6"
   },
   {
    "id": "p3",
@@ -1448,7 +1451,8 @@
      "summary": "Cumulative quiz across the Part."
     }
    ],
-   "hp": "Ch 5"
+   "hp": "Ch 5",
+   "pmpp": "Ch 9, 10, 11, 13"
   },
   {
    "id": "p4",
@@ -1857,7 +1861,8 @@
      ]
     }
    ],
-   "hp": "Ch 7 · Ch 4"
+   "hp": "Ch 7 · Ch 4",
+   "pmpp": "Ch 3, 5, 6, 16"
   },
   {
    "id": "p5",
@@ -2239,7 +2244,8 @@
      "summary": "Cumulative quiz across the Part."
     }
    ],
-   "hp": "Ch 1"
+   "hp": "Ch 1",
+   "pmpp": "Ch 6"
   },
   {
    "id": "p6",
@@ -2613,7 +2619,8 @@
      "summary": "Cumulative quiz across the Part."
     }
    ],
-   "hp": "Ch 3 · App C · App H · App A · App K"
+   "hp": "Ch 3 · App C · App H · App A · App K",
+   "pmpp": "Ch 6, 19"
   },
   {
    "id": "p7",
@@ -2909,7 +2916,8 @@
      "summary": "Cumulative quiz across the Part."
     }
    ],
-   "hp": "Ch 6 · App F"
+   "hp": "Ch 6 · App F",
+   "pmpp": "Ch 16, 22"
   },
   {
    "id": "p8",
@@ -3015,7 +3023,8 @@
      }
     }
    ],
-   "hp": "Ch 4 · Ch 7"
+   "hp": "Ch 4 · Ch 7",
+   "pmpp": "Ch 16"
   },
   {
    "id": "p9",
@@ -3286,7 +3295,8 @@
      ]
     }
    ],
-   "hp": "App J"
+   "hp": "App J",
+   "pmpp": "Ch 22, 23, App. A"
   }
  ]
 }
