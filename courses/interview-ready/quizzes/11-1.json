@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Seconds per day ≈",
+   "options": [
+    "10⁵",
+    "10⁴",
+    "10⁶"
+   ],
+   "answer": 0,
+   "explanation": "86,400."
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "The first five minutes go to…",
+   "options": [
+    "requirements and scale",
+    "drawing boxes",
+    "picking a database"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "7-character base62 codes give about…",
+   "options": [
+    "3.5 × 10¹²",
+    "10⁹",
+    "62⁷ ≈ 10⁶"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "An estimate should be…",
+   "options": [
+    "fast and within ~2×",
+    "exact",
+    "skipped"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Every component needs…",
+   "options": [
+    "a reason and its cost",
+    "a vendor name",
+    "a diagram"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

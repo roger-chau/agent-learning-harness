@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Consistent hashing moves about ___ of keys when a node is added:",
+   "options": [
+    "1/N",
+    "half",
+    "all"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Quorum overlap condition:",
+   "options": [
+    "R + W > N",
+    "R = W",
+    "R + W = N"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "At-least-once delivery requires…",
+   "options": [
+    "idempotent consumers",
+    "two-phase commit",
+    "nothing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "A cache stampede is prevented by…",
+   "options": [
+    "coalescing/early refresh/stale-while-revalidate",
+    "shorter TTLs",
+    "more DB replicas only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Hash partitioning balances…",
+   "options": [
+    "keys, not per-key load",
+    "load always",
+    "ranges"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

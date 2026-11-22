@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Little's law:",
+   "options": [
+    "in-flight = rate × time",
+    "rate = time / items",
+    "throughput = latency"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Fan-out makes tails…",
+   "options": [
+    "much more likely",
+    "less likely",
+    "irrelevant"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Retry storms are prevented with…",
+   "options": [
+    "backoff with jitter, budgets, circuit breakers",
+    "more retries",
+    "timeouts of zero"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Metrics systems scale with…",
+   "options": [
+    "series cardinality",
+    "dashboard count",
+    "CPU cores"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "After removing a bottleneck…",
+   "options": [
+    "find the next one",
+    "stop",
+    "add caches"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

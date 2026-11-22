@@ -1,0 +1,69 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Every design uses the same dozen building blocks. Know each one's job, its scaling limit and its failure mode well enough to justify choosing it in one sentence.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: replicate for reads and availability, partition for writes and size</h2>
+<table>
+<tr><th>Block</th><th>Job</th><th>Key trade-offs</th></tr>
+<tr><td>Load balancer (L4/L7)</td><td>spread requests over stateless servers; health checks</td><td>L7 can route by path and terminate TLS; sticky sessions hurt balance</td></tr>
+<tr><td>Cache (Redis, memcached, CDN)</td><td>serve hot reads from memory</td><td>invalidation, stampedes on expiry, hot keys</td></tr>
+<tr><td>Relational DB</td><td>transactions, joins, constraints</td><td>vertical limits on writes; read replicas lag</td></tr>
+<tr><td>KV / wide-column (DynamoDB, Cassandra)</td><td>huge scale by key</td><td>queries limited to the key design; eventual consistency options</td></tr>
+<tr><td>Message queue / log (Kafka, SQS)</td><td>decouple producers from consumers; absorb bursts</td><td>at-least-once delivery, so consumers must be idempotent</td></tr>
+<tr><td>Object store (S3)</td><td>blobs: images, video, backups</td><td>high latency per object; cheap and durable</td></tr>
+<tr><td>Search index</td><td>full-text and ranked queries</td><td>indexing lag; a second copy of the data</td></tr>
+</table>
+<p><strong>Replication:</strong> leader-follower (simple; followers lag, so reads may be stale) or leaderless quorums (R + W &gt; N gives read-your-writes-like guarantees). <strong>Partitioning (sharding):</strong> by key hash (even spread, no range scans) or by key range (range scans, risk of hot ranges). <strong>Consistent hashing</strong> places nodes and keys on a ring, so adding a node moves only ~1/N of the keys; virtual nodes even out the load.</p>
+<p><strong>CAP, practically:</strong> during a network partition you choose between consistency (refuse some requests) and availability (serve possibly stale data). Outside partitions the real trade-off is latency vs consistency (PACELC).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: caching patterns</h2>
+<pre><code># Cache-aside (lazy loading): the default
+def get(key):
+    v = cache.get(key)
+    if v is None:
+        v = db.read(key)
+        cache.set(key, v, ttl=jittered(300))    # jitter TTLs to avoid synchronised expiry
+    return v
+def update(key, v):
+    db.write(key, v)
+    cache.delete(key)                          # delete, don't set: avoids racing stale writes</code></pre>
+<p>Write-through (write the cache and the DB together: fresher, slower writes); write-back (write the cache, flush later: fast, risks loss). <strong>Cache stampede:</strong> when a hot key expires, thousands of requests hit the DB at once. Mitigate with request coalescing (one loader per key), early probabilistic refresh, or serving stale content while revalidating.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: the hot partition</h2>
+<ol>
+<li><strong>Setup:</strong> a social app shards posts by user_id hash. One celebrity's account gets 10⁵ reads/s; their shard's p99 latency spikes and the shard falls over.</li>
+<li><strong>Diagnose:</strong> hash partitioning balances <em>keys</em>, not <em>load</em>. A single hot key concentrates load on one shard however many shards exist.</li>
+<li><strong>Read-side fixes:</strong> cache the hot key (and replicate the cache entry across several cache nodes), push it to a CDN, and serve from read replicas.</li>
+<li><strong>Write-side fixes:</strong> split the hot key (a key suffix 0..k-1 spreads its writes over k shards; reads gather all k), or batch counter updates in memory and flush periodically.</li>
+<li><strong>Detect:</strong> per-key request metrics and top-k heavy-hitter tracking (count-min sketch), so the system can promote hot keys automatically.</li>
+</ol>
+<p>The habit: <strong>after any partitioning choice, ask "what's the most skewed realistic workload?"</strong>. Uniformity assumptions fail at the worst moment.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Exactly-once delivery</strong> doesn't exist end to end; use at-least-once delivery plus idempotent consumers (dedupe by message id).</li>
+<li><strong>Distributed transactions</strong> (two-phase commit) are slow and fragile. Prefer sagas with compensating actions, or design so updates stay within one partition.</li>
+<li><strong>Secondary indexes on sharded data</strong> are either local (scatter-gather reads) or global (writes touch several shards).</li>
+<li><strong>Time:</strong> clocks drift, so don't order events across machines by wall-clock time. Use logical clocks or a single sequencer.</li>
+<li><strong>Backpressure:</strong> queues hide overload until they're full. Bound them, and shed load early.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Kleppmann, <em>DDIA</em>, chapters 5 (replication), 6 (partitioning) and 9 (consistency and consensus).</li>
+<li>* Karger et al., "Consistent Hashing and Random Trees" (1997), sections 1–2; and the Dynamo paper (2007).</li>
+<li>Implement a consistent-hash ring with virtual nodes; measure the load spread with 10 vs 200 vnodes per node.</li>
+<li>AWS Builders' Library: "Using load shedding to avoid overload" and "Caching challenges and strategies".</li>
+</ul>
+</section>

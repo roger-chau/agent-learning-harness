@@ -1,0 +1,60 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>For performance engineers, the design round often becomes "design a system whose bottleneck is performance": a metrics and observability pipeline, a distributed cache, a high-throughput ingestion service, a profiling service across a fleet. These test whether you can apply Part 10's hardware intuition to whole systems.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: find the bottleneck resource, then scale or remove it</h2>
+<p>Every system has one resource that saturates first: CPU, memory bandwidth, disk IOPS, network, a lock, a single leader, a hot key. Steps:</p>
+<ol>
+<li>Estimate the demand on each resource from the numbers.</li>
+<li>Compare it with the per-node capacity to find the bottleneck and the node count.</li>
+<li>Remove the bottleneck: batch (amortise per-request overhead), compress (trade CPU for bandwidth), partition (split the hot resource), pre-aggregate (send less), sample (measure less).</li>
+<li>Repeat: the bottleneck moves.</li>
+</ol>
+<p><strong>Little's law:</strong> items in the system = arrival rate × time in the system. It sizes queues, thread pools and connection pools: at 10,000 requests/s and 50 ms each, ~500 are in flight.</p>
+<p><strong>Tail at scale:</strong> if a request fans out to 100 servers each with a 1% chance of being slow, 1 − 0.99¹⁰⁰ ≈ 63% of requests hit a slow server. Mitigations are hedged requests (send a backup after the p95 time), partial results, and reducing variance at each server.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: a metrics pipeline</h2>
+<pre><code>agents on hosts ──(batch, compress, local pre-aggregation)──▶ ingestion tier (stateless)
+   ──▶ log / queue (partitioned by series id) ──▶ aggregators (rollups: 10 s, 1 min, 1 h)
+   ──▶ time-series store (columnar, delta/XOR compression) ◀── query service (+ cache)</code></pre>
+<p>Invariants: ingestion is append-only and idempotent (dedupe by (series, timestamp)); every stage is horizontally partitioned by series id; downsampled rollups bound query cost over long ranges; cardinality (the number of distinct series) is the scaling limit, so cap labels.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: sizing the metrics pipeline</h2>
+<ol>
+<li><strong>Requirements:</strong> 100,000 hosts × 1,000 metrics each, every 10 s; 15 days at full resolution and 1 year downsampled; dashboards query within 1 s.</li>
+<li><strong>Ingest rate:</strong> 10⁵ × 10³ / 10 = 10⁷ points/s.</li>
+<li><strong>Bandwidth:</strong> raw at 16 bytes/point (8-byte timestamp + 8-byte value) is 160 MB/s; with Gorilla-style delta-of-delta + XOR compression (~1.4 bytes/point) about 14 MB/s. Compression moves the bottleneck from network and disk to CPU.</li>
+<li><strong>Storage:</strong> 10⁷ × 86,400 × 15 days × 1.4 B ≈ 18 TB (× 3 replicas), so it's sharded by series.</li>
+<li><strong>Ingestion nodes:</strong> if one node handles ~500k points/s (parse, validate, partition), that's 20 nodes + headroom → ~30.</li>
+<li><strong>Bottleneck check:</strong> series cardinality 10⁸ means the in-memory index (series → shard, labels) is ~10⁸ × ~100 B = 10 GB, which must be partitioned too. Query fan-out across shards brings in the tail-at-scale problem, so pre-aggregate common dashboards.</li>
+</ol>
+<p>The habit: <strong>for every stage, compute demand ÷ per-node capacity</strong>, and say which resource each node runs out of first.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Retry storms:</strong> clients retrying a struggling service multiply its load. Use exponential backoff with jitter, retry budgets and circuit breakers.</li>
+<li><strong>Synchronised behaviour:</strong> cron jobs at :00, TTLs expiring together, and clients reconnecting after an outage all cause thundering herds. Add jitter everywhere.</li>
+<li><strong>Batching trades latency for throughput</strong>: size batches by count <em>or</em> time, whichever comes first.</li>
+<li><strong>Observability is part of the design:</strong> name the metrics (RED: rate, errors, duration; USE: utilisation, saturation, errors) and the alerts.</li>
+<li><strong>Back to hardware:</strong> per-node capacity estimates come from Part 10 (memory bandwidth, syscalls, cache behaviour). A design that ignores them is guessing.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Dean and Barroso, "The Tail at Scale" (CACM 2013).</li>
+<li>* Pelkonen et al., "Gorilla: A Fast, Scalable, In-Memory Time Series Database" (VLDB 2015), sections 1–4.</li>
+<li>Brendan Gregg, the USE method (brendangregg.com/usemethod.html).</li>
+<li>Size a log-ingestion pipeline for 1 GB/s of logs, end to end, in 15 minutes, then compare against a public architecture write-up.</li>
+</ul>
+</section>

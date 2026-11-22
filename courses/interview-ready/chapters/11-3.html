@@ -1,0 +1,54 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Three classics that show up again and again and exercise different building blocks: a <strong>rate limiter</strong> (algorithms + distributed state), a <strong>news feed</strong> (fan-out and caching), and a <strong>distributed key-value store</strong> (partitioning, replication, consistency). Each one teaches a decision you'll reuse in other designs.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: three decisions</h2>
+<p><strong>Rate limiter, which algorithm?</strong> A fixed window (simple; allows 2× bursts at window edges), a sliding log (exact; memory per request), a sliding-window counter (approximates with two windows), or a <strong>token bucket</strong> (allows controlled bursts, two numbers per client, the usual default). Where it lives: at the API gateway. Distributed state: Redis with an atomic Lua script, or local buckets with a share of the global limit.</p>
+<p><strong>News feed, push or pull?</strong> <em>Fan-out on write</em> (push each post into followers' timelines) makes reads cheap but celebrity posts expensive (10⁷ writes per post). <em>Fan-out on read</em> (merge followees' posts at read time) makes writes cheap and reads expensive. The real answer is <strong>hybrid</strong>: push for normal users, pull for celebrities, merged at read time.</p>
+<p><strong>KV store, which consistency?</strong> A Dynamo-style design: consistent hashing for partitioning; N replicas; tunable quorums R and W; hinted handoff and read repair for temporary failures; Merkle trees for anti-entropy; vector clocks or last-writer-wins for conflicts.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: quorum arithmetic</h2>
+<pre><code>N replicas, write waits for W acks, read waits for R responses
+R + W &gt; N   → every read set overlaps every write set → reads see the latest acknowledged write
+W = N, R = 1 → fast reads, writes fail if any replica is down
+W = 1, R = N → fast writes, slow reads
+typical: N = 3, W = 2, R = 2 (tolerates one node down for both reads and writes)</code></pre>
+<p>Overlap is necessary but not sufficient for linearisability (concurrent writes, sloppy quorums during failures). Say so if pushed.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: the news feed</h2>
+<ol>
+<li><strong>Requirements:</strong> 300M daily users, each loads the feed about 10 times a day, each posts about once a day; the average user has 200 followers, and some have 10⁷. A feed should load in &lt; 200 ms.</li>
+<li><strong>Load:</strong> reads 3 × 10⁹ / 10⁵ ≈ 30,000/s; posts 3,000/s; fan-out writes if pushing everything ≈ 3,000 × 200 = 600,000 timeline inserts/s on average, with celebrity spikes of 10⁷ per post.</li>
+<li><strong>Choose hybrid:</strong> push posts into followers' timeline caches (Redis lists of post ids, capped at ~800) for users with &lt; ~10⁴ followers; celebrities' posts are pulled at read time and merged.</li>
+<li><strong>Read path:</strong> fetch the cached timeline ids, plus recent posts of followed celebrities; merge by time (or rank); hydrate post content from a post cache; paginate with a cursor, not an offset.</li>
+<li><strong>Write path:</strong> store the post, then enqueue a fan-out job; workers push ids to follower timelines asynchronously, so posting returns immediately.</li>
+<li><strong>Failure and scale:</strong> fan-out workers scale horizontally; inactive users' timelines aren't maintained (rebuild on login); the ranking model is a separate service.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Pagination with offsets</strong> breaks when new items arrive; use cursors (the last seen id or time).</li>
+<li><strong>Distributed rate limiting</strong> with a central Redis adds a network hop to every request; local token buckets with periodic sync trade accuracy for latency.</li>
+<li><strong>Conflict resolution:</strong> last-writer-wins silently loses writes. Shopping carts famously use merge (union) semantics.</li>
+<li><strong>Other classics worth one practice run each:</strong> chat (WebSockets, per-conversation ordering), typeahead (a trie of top-k per prefix, precomputed), web crawler (politeness, dedupe with Bloom filters), distributed job scheduler, metrics pipeline (Part 12 overlaps).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Alex Xu, <em>System Design Interview</em>, Vol. 1: rate limiter (ch. 4), consistent hashing (ch. 5), KV store (ch. 6), news feed (ch. 11).</li>
+<li>* DeCandia et al., "Dynamo: Amazon's Highly Available Key-value Store" (SOSP 2007).</li>
+<li>Practise each design aloud in 35 minutes with the five-step method; record yourself and check the requirements step took &lt; 5 minutes.</li>
+<li>Twitter/X engineering blog posts on timeline fan-out (search "Timelines at scale").</li>
+</ul>
+</section>

@@ -1784,14 +1784,144 @@
    "id": "p11",
    "n": 11,
    "title": "System design",
-   "summary": "Estimation, building blocks and classic designs.",
+   "summary": "A five-step method with estimation, the building blocks and their trade-offs, classic designs, and performance-bottleneck design.",
    "items": [
     {
      "type": "chapter",
      "id": "11-1",
-     "title": "System design",
-     "summary": "Estimation, building blocks and classic designs.",
-     "status": "planned"
+     "title": "The method and estimation",
+     "summary": "Requirements, numbers, API, high level, deep dive; let the numbers choose.",
+     "blocks": [
+      [
+       "The signal",
+       "design X in 45 minutes"
+      ],
+      [
+       "The core idea",
+       "five steps, key numbers"
+      ],
+      [
+       "The invariant and template",
+       "envelope formulas"
+      ],
+      [
+       "A thinking trace",
+       "URL shortener sizing"
+      ],
+      [
+       "Traps and variations",
+       "buzzwords, failure, driving"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "11-2",
+     "title": "Building blocks",
+     "summary": "Load balancers, caches, databases, queues; replication, partitioning, consistent hashing, CAP.",
+     "blocks": [
+      [
+       "The signal",
+       "the same dozen parts"
+      ],
+      [
+       "The core idea",
+       "replicate and partition"
+      ],
+      [
+       "The invariant and template",
+       "caching patterns"
+      ],
+      [
+       "A thinking trace",
+       "the hot partition"
+      ],
+      [
+       "Traps and variations",
+       "exactly-once, 2PC, clocks"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "11-3",
+     "title": "Classic designs",
+     "summary": "Rate limiter, news feed, distributed KV store: algorithms, fan-out and quorums.",
+     "coding": [
+      "token-bucket-limiter"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "three classics"
+      ],
+      [
+       "The core idea",
+       "three decisions"
+      ],
+      [
+       "The invariant and template",
+       "quorum arithmetic"
+      ],
+      [
+       "A thinking trace",
+       "the news feed"
+      ],
+      [
+       "Traps and variations",
+       "cursors, conflicts, more classics"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "11-4",
+     "title": "Designing for performance",
+     "summary": "Find the bottleneck resource; Little's law; the tail at scale; a metrics pipeline.",
+     "blocks": [
+      [
+       "The signal",
+       "performance-first designs"
+      ],
+      [
+       "The core idea",
+       "bottleneck, Little, tails"
+      ],
+      [
+       "The invariant and template",
+       "metrics pipeline"
+      ],
+      [
+       "A thinking trace",
+       "sizing ingestion"
+      ],
+      [
+       "Traps and variations",
+       "retry storms, herds, USE/RED"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p11-checkpoint",
+     "title": "Part 11 checkpoint",
+     "summary": "System design: method, numbers and trade-offs."
     }
    ]
   },

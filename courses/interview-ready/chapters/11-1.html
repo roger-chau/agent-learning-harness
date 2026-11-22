@@ -1,0 +1,63 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Design X" with 45–60 minutes and a whiteboard. Interviewers grade the <em>process</em> more than the final diagram: do you pin down requirements, quantify the load, choose components for stated reasons, find the bottleneck, and discuss trade-offs and failure modes? For performance-engineering roles, expect the estimation and bottleneck parts to be weighted heavily.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: a fixed five-step method</h2>
+<ol>
+<li><strong>Requirements (5 min):</strong> functional (what operations), non-functional (latency target, availability, consistency, durability), scale (users, requests/s, data size, read:write ratio). Write them down; ask which matter most.</li>
+<li><strong>Estimate (5 min):</strong> QPS (average and peak), storage growth per year, bandwidth, memory for the hot set. These numbers drive every later choice.</li>
+<li><strong>API and data model (5–10 min):</strong> the endpoints and the core tables or records. Access patterns decide the database.</li>
+<li><strong>High-level design (10–15 min):</strong> clients → load balancer → stateless services → cache → database / queue / object store. Walk one request end to end.</li>
+<li><strong>Deep dive and bottlenecks (15–20 min):</strong> the hardest part (the hot key, the fan-out, the consistency requirement), scaling each tier, failure handling, monitoring. Offer two options and pick one with a reason.</li>
+</ol>
+<p><strong>Numbers to know:</strong> a day has ~86,400 s ≈ 10⁵ s, so 1M requests/day ≈ 12/s on average (peaks are often 2–10×). A modern server handles ~10⁴–10⁵ simple requests/s; a single SQL primary ~10⁴ writes/s; a Redis node ~10⁵ ops/s; datacentre round trip ~0.5 ms; reading 1 MB sequentially from memory ~50 µs, from SSD ~1 ms, over 1 Gbps ~10 ms.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: back-of-the-envelope estimation</h2>
+<pre><code>QPS_avg   = daily_actions / 86,400            (≈ daily / 10⁵)
+QPS_peak  = QPS_avg × peak_factor            (2–10)
+storage   = new_items/day × bytes/item × 365 × years × replication (3)
+bandwidth = QPS × response_bytes
+cache     = hot fraction (often 20%) × daily read set     (the 80/20 rule)
+servers   = QPS_peak / per_server_QPS × headroom (1.5–2)</code></pre>
+<p>Round aggressively (powers of 10 and 2), and say your assumptions out loud. An estimate that's within 2× and fast beats a precise one that eats ten minutes.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: sizing a URL shortener</h2>
+<ol>
+<li><strong>Requirements:</strong> shorten (write) and redirect (read); 100M new URLs/day; reads 10× writes; keep URLs 5 years; redirects should take &lt; 20 ms at the server.</li>
+<li><strong>QPS:</strong> writes 10⁸ / 10⁵ ≈ 1,000/s (peak ~5,000); reads ≈ 10,000/s (peak ~50,000).</li>
+<li><strong>Storage:</strong> 10⁸ × 365 × 5 ≈ 1.8 × 10¹¹ URLs × ~500 bytes ≈ 90 TB (× 3 replicas). So it must be sharded.</li>
+<li><strong>Key length:</strong> base62 with 7 characters gives 62⁷ ≈ 3.5 × 10¹², enough for 1.8 × 10¹¹ with room to spare.</li>
+<li><strong>Key generation:</strong> a counter per shard (or a distributed ID service, Snowflake-style) encoded in base62, which avoids collision checks. Hashing the URL needs collision handling, but deduplicates.</li>
+<li><strong>Reads:</strong> a cache (Redis) in front of a KV store sharded by key. The hot set is small, so most redirects are cache hits at ~1 ms.</li>
+<li><strong>Bottleneck discussion:</strong> hot links (celebrity tweets) are handled by the cache plus CDN-level redirects. Analytics (click counts) are written asynchronously through a queue, never on the redirect path.</li>
+</ol>
+<p>The habit: <strong>let the numbers choose the architecture</strong>. "90 TB" forces sharding; "50k reads/s with a small hot set" forces a cache; "analytics on every click" forces async.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Jumping to a diagram</strong> before requirements. Spend the first five minutes asking questions.</li>
+<li><strong>Buzzword components</strong> without reasons ("add Kafka"). Every box needs a sentence on why it's there and what it costs.</li>
+<li><strong>Ignoring failure:</strong> what happens when a node, an availability zone, the cache or the queue dies? Mention replication, retries with backoff, and idempotency.</li>
+<li><strong>One giant design:</strong> scale the simple version first, and grow it only when the numbers demand.</li>
+<li><strong>Not driving:</strong> the interviewer expects you to lead and check in ("I'll go deeper on the fan-out unless you'd prefer the storage layer").</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Alex Xu, <em>System Design Interview</em>, Vol. 1, chapters 2–4 (estimation, framework) and 8 (URL shortener).</li>
+<li>* Jeff Dean's "Numbers Everyone Should Know" (latency table), refreshed for SSDs and modern networks.</li>
+<li>Do three estimations aloud with a 5-minute timer: a photo-sharing app, a ride-hailing location service, a metrics pipeline.</li>
+<li>Martin Kleppmann, <em>Designing Data-Intensive Applications</em>, chapter 1.</li>
+</ul>
+</section>

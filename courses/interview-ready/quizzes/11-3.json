@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Token buckets store per client…",
+   "options": [
+    "tokens and last refill time",
+    "every request time",
+    "nothing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Celebrity posts are handled by…",
+   "options": [
+    "fan-out on read for those users",
+    "fan-out on write",
+    "dropping them"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Stable pagination uses…",
+   "options": [
+    "cursors",
+    "offsets",
+    "random pages"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Dynamo resolves conflicts with…",
+   "options": [
+    "versions + application merges",
+    "locks",
+    "2PC"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "R + W > N guarantees…",
+   "options": [
+    "read and write sets overlap",
+    "linearisability always",
+    "no failures"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

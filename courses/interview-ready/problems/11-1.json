@@ -1,0 +1,206 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "QPS",
+   "statement": "<p>50M daily active users, 20 reads each per day, writes 1/10 of reads.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Average read QPS?",
+     "answer": 11574.074074074075,
+     "unit": "",
+     "tolerance": "15%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Average write QPS?",
+     "answer": 1157.4074074074074,
+     "unit": "",
+     "tolerance": "15%"
+    }
+   ],
+   "hints": [
+    "Divide by ~10⁵ seconds/day."
+   ],
+   "solution": "<p>About 11,600 reads/s and 1,160 writes/s (≈ 10⁴ and 10³ with the 10⁵ approximation).</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Order of method",
+   "statement": "<p>The five steps.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "What comes before the high-level diagram?",
+     "options": [
+      "requirements, estimates, API/data model",
+      "the deep dive",
+      "picking databases"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Numbers first."
+   ],
+   "solution": "<p>Requirements → estimates → API/data → high level → deep dive.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Storage",
+   "statement": "<p>A photo app stores 10M new photos/day at 2 MB each, kept 10 years, replicated 3×.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Raw bytes per day (TB)?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Total with replication over 10 years (PB)?",
+     "answer": 219.0,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "10⁷ × 2 MB."
+   ],
+   "solution": "<p>20 TB/day; × 3,650 days × 3 ≈ 219 PB. That's object storage with tiering.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Key space",
+   "statement": "<p>base62 short codes.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "6 characters: number of codes (billions)?",
+     "answer": 56.800235584,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "7 characters (trillions)?",
+     "answer": 3.521614606208,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "62ⁿ."
+   ],
+   "solution": "<p>56.8 billion and 3.52 trillion.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Servers",
+   "statement": "<p>Peak 120,000 requests/s; one server handles 8,000 requests/s; 50% headroom.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Servers needed?",
+     "answer": 22.5,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "15 × 1.5."
+   ],
+   "solution": "<p>22.5, so about 23. Then add N+1 or N+2 for failures.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Bandwidth",
+   "statement": "<p>Video service: 1M concurrent viewers at 5 Mbps.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Egress (Tbps)?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Implication?",
+     "options": [
+      "serve from CDNs/edge caches, not origin",
+      "one big server",
+      "compress more"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "10⁶ × 5 × 10⁶ bits/s."
+   ],
+   "solution": "<p>5 Tbps total is CDN territory.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Cache size",
+   "statement": "<p>10M reads/day of distinct 1 KB items; cache the hottest 20%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cache memory (GB)?",
+     "answer": 2.0,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "0.2 × 10⁷ × 1 KB."
+   ],
+   "solution": "<p>2 GB, which fits in one Redis node.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Peak factor",
+   "statement": "<p>A ticketing site sells concert tickets at 10:00 sharp; normal average load 200 req/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Reasonable design assumption?",
+     "options": [
+      "peaks of 100×+ in the first seconds: queue users and admit them gradually (a virtual waiting room)",
+      "2× peak",
+      "average load"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Synchronised demand."
+   ],
+   "solution": "<p>Flash crowds break the usual 2–10× rule. Design admission control.</p>"
+  }
+ ]
+}

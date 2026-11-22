@@ -1,0 +1,232 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Pick the block",
+   "statement": "<p>Choose.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Decouple an upload API from slow video transcoding:",
+     "options": [
+      "a queue + workers",
+      "a cache",
+      "a load balancer"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Store user-uploaded images:",
+     "options": [
+      "object store + CDN",
+      "relational DB blobs",
+      "Redis"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Async work; blobs."
+   ],
+   "solution": "<p>Queues absorb slow work; object stores and CDNs serve blobs.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Quorums",
+   "statement": "<p>N = 3.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "W = 2, R = 2: do reads overlap writes?",
+     "options": [
+      "Yes (R + W > N)",
+      "No"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "W = 1, R = 1?",
+     "options": [
+      "No: stale reads are possible",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "R + W > N."
+   ],
+   "solution": "<p>2 + 2 &gt; 3 overlaps; 1 + 1 doesn't.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Consistent hashing",
+   "statement": "<p>10 nodes on a ring; add an 11th.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Fraction of keys that move (approximately 1/11)?",
+     "answer": 0.09090909090909091,
+     "unit": "",
+     "tolerance": "10%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With naive hash mod N, fraction that move (≈ 1 − 1/11)?",
+     "answer": 0.9090909090909091,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "Only keys between the new node and its predecessor move."
+   ],
+   "solution": "<p>About 9% vs about 91%.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Cache invalidation",
+   "statement": "<p>Cache-aside update path.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "After writing the DB, the safer action is…",
+     "options": [
+      "delete the cache entry",
+      "set the cache to the new value",
+      "do nothing"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Races between concurrent writers and readers."
+   ],
+   "solution": "<p>A delayed set can overwrite a newer value; delete-then-reload converges.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Stampede",
+   "statement": "<p>A hot key served at 50,000 reads/s expires; a DB read takes 50 ms.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Requests that miss during one reload window with no coalescing?",
+     "answer": 2500,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "multi",
+     "prompt": "Mitigations?",
+     "options": [
+      "request coalescing (single flight)",
+      "early probabilistic refresh",
+      "serve stale while revalidating",
+      "shorter TTLs"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "50,000 × 0.05."
+   ],
+   "solution": "<p>2,500 identical DB queries. Shorter TTLs make it worse.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Delivery semantics",
+   "statement": "<p>A queue with at-least-once delivery.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "The consumer must be…",
+     "options": [
+      "idempotent (dedupe by message id)",
+      "fast",
+      "single-threaded"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Duplicates happen."
+   ],
+   "solution": "<p>Redelivery after a crash or timeout duplicates messages.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Hot key",
+   "statement": "<p>Sharded by user id, one celebrity key gets 10⁵ reads/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Fixes?",
+     "options": [
+      "replicate the key in several cache nodes",
+      "CDN for its public content",
+      "add more shards",
+      "split writes with key suffixes"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "More shards don't split one key."
+   ],
+   "solution": "<p>Hash partitioning spreads keys, not one key's load.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "CAP",
+   "statement": "<p>A network partition separates two datacentres of a bank ledger.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Typical choice?",
+     "options": [
+      "consistency: refuse writes on the minority side",
+      "availability: accept writes on both sides",
+      "neither"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Money can't diverge."
+   ],
+   "solution": "<p>Ledgers choose CP. A shopping cart might choose AP with merges.</p>"
+  }
+ ]
+}
