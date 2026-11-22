@@ -21,6 +21,7 @@ other GPUs. Set `GW_PEAK_GBS` if the reported peak bandwidth looks wrong for you
 | L2-memory | 2 | Sectors, transpose and bank conflicts, AoS vs SoA, Nsight counters |
 | L3-primitives | 3 | Reduction, scan and histogram against CUB |
 | L4-gemm | 4 | Naive, tiled, register-tiled and WMMA tensor-core GEMM against cuBLAS |
+| L5-roofline | 5 | Measured FP32 and bandwidth ceilings, a roofline sweep, tail effects, and a profile-driven GEMV fix |
 
 `common/gw.h` is the shared harness: error checking, device info, event timing with warm-up
 and median, exactness checks, and `results.json`.

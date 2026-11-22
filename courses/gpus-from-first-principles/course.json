@@ -1934,6 +1934,89 @@
      }
     },
     {
+     "type": "lab",
+     "id": "L5",
+     "title": "Lab 5: Your card's roofline, and a profile-driven fix",
+     "summary": "Measure FP32 and bandwidth ceilings, sweep arithmetic intensity, watch a tail effect, and fix a slow GEMV starting from Nsight Compute.",
+     "dir": "labs/L5-roofline",
+     "hours": 5,
+     "blocks": [
+      [
+       "Why this lab",
+       "measure before guessing"
+      ],
+      [
+       "What to do",
+       "peak, roofline, tail, GEMV"
+      ],
+      [
+       "Reading the profile",
+       "the sections that matter"
+      ],
+      [
+       "Going further",
+       "persistent kernels, odd shapes, locked clocks"
+      ],
+      [
+       "Passing",
+       "targets and the report"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "fma_pct",
+       "op": ">=",
+       "value": 75,
+       "label": "FMA rate, % of theoretical FP32 peak"
+      },
+      {
+       "metric": "low_intensity_bw_pct",
+       "op": ">=",
+       "value": 70,
+       "label": "K = 1, % of peak bandwidth"
+      },
+      {
+       "metric": "high_intensity_vs_fma_pct",
+       "op": ">=",
+       "value": 70,
+       "label": "K = 1024, % of the measured FMA rate"
+      },
+      {
+       "metric": "tail_ratio",
+       "op": ">=",
+       "value": 1.7,
+       "label": "One wave + 1 block / one wave"
+      },
+      {
+       "metric": "fine_ratio",
+       "op": "<=",
+       "value": 1.3,
+       "label": "Same work in 8× smaller blocks / one wave"
+      },
+      {
+       "metric": "gemv_fast_pct",
+       "op": ">=",
+       "value": 70,
+       "label": "Your GEMV, % of peak bandwidth"
+      },
+      {
+       "metric": "gemv_speedup",
+       "op": ">=",
+       "value": 3,
+       "label": "Your GEMV / given GEMV"
+      }
+     ],
+     "writeup": {
+      "min_words": 300,
+      "prompts": [
+       "Your roofline plot (from roofline.csv), with both measured ceilings, the predicted ridge point and the measured one.",
+       "Part C: your four predicted times next to the measured ones.",
+       "gemv_slow's profile before any change (DRAM %, sectors per request, achieved occupancy, top stall reason), with each number explained from the code.",
+       "The same numbers for gemv_fast, and what limits it now."
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p5-checkpoint",
      "title": "Part 5 checkpoint",

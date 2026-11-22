@@ -1,0 +1,41 @@
+<section class="blk" data-n="01">
+<h2>Why this lab</h2>
+<p>Part 5 is about measuring before guessing. On a real card that means three skills: knowing your machine's actual limits (not the spec sheet's), knowing what a kernel <em>should</em> take before you profile it, and reading Nsight Compute well enough to name the bottleneck in a minute. This lab builds all three. You measure your card's roofline from first principles, watch a tail effect cost a whole wave, and then fix a slow kernel starting from its profile.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>What to do</h2>
+<p>Open <code>labs/L5-roofline/l5.cu</code>.</p>
+<ul>
+<li><strong>A. FP32 peak.</strong> In <code>fma_peak</code>, give each thread 8 independent FMA chains, so that both warps and instruction-level parallelism hide the 4-cycle FMA latency (Chapter 6.4 has the theory; here you just need it to run at peak). The program compares your rate with the theoretical one: SMs × 64 lanes × 2 FLOPs × clock. Under GPU Boost your card runs above its reported clock, so above 100% is possible.</li>
+<li><strong>B. The roofline.</strong> <code>intensity&lt;K&gt;</code> streams a 256 MiB array and applies K FMAs to each element: K / 4 FLOP per byte. The program sweeps K from 1 to 1024 and writes <code>roofline.csv</code>. Plot GFLOP/s against FLOP/byte on log–log axes, and draw your two measured ceilings on top. Before you run it, predict the K where the kernel stops being memory-bound (Chapter 2.1's ridge point, from your card's specifications).</li>
+<li><strong>C. Tail effects.</strong> <code>busy</code> blocks all take the same time. Write <code>wave_capacity</code> with <code>cudaOccupancyMaxActiveBlocksPerMultiprocessor</code>. The program times one wave, one wave plus one block, and two waves, then the same total work as one wave plus one block, cut into blocks 8× smaller (Chapter 5.4). Predict all four times first.</li>
+<li><strong>D. Diagnose, then fix.</strong> <code>gemv_slow</code> is a correct and very slow matrix–vector product. <em>Before changing anything</em>, run <code>make ncu-gemv</code> and write down three numbers: DRAM throughput as a percentage of peak, global-load sectors per request, and achieved occupancy. Explain each from the code. Then write <code>gemv_fast</code> and <code>gemv_grid</code>. One warp per row, reading <code>float4</code>s and finishing with a shuffle reduction, is the standard design. Profile it again and compare.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Reading the profile</h2>
+<ul>
+<li><strong>Speed of light</strong>: compute and memory throughput as a percentage of peak. If both are low, the kernel is latency-bound: not enough work in flight.</li>
+<li><strong>Memory workload analysis</strong>: sectors per request (4 is ideal for 4-byte loads, 32 is the worst case), and L1 and L2 hit rates. <code>gemv_slow</code>'s L1 hit rate is high, and it doesn't save it. Why not?</li>
+<li><strong>Occupancy</strong> and <strong>launch statistics</strong>: how many warps the grid even has, compared with what the card can hold. 16,384 rows at one thread per row is 512 warps for 34 SMs.</li>
+<li><strong>Warp state statistics</strong>: the top stall reason, such as "long scoreboard" (waiting on memory) or "math pipe throttle".</li>
+<li><code>make roofline</code> draws Nsight Compute's own roofline for part B. Check that it agrees with your plot.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Going further</h2>
+<ul>
+<li>Replace <code>busy</code>'s clock spin with a compute loop (dependent FMAs) and repeat C. The lone tail block now runs <em>faster</em> than a block sharing its SM. Work out how much faster from the issue rates.</li>
+<li>Fix C's tail without changing the work per block: a persistent kernel with an atomic work counter. When does it help, and when do smaller blocks win?</li>
+<li>GEMV at different shapes: 256 rows × 262,144 columns, and 1,048,576 rows × 64 columns. One warp per row is wrong for both. Design a mapping for each.</li>
+<li>Lock your clocks (<code>nvidia-smi -lgc</code>, if your driver allows it) and see how much run-to-run variance drops (Chapter 5.1).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Passing</h2>
+<p>All checks pass. FMA rate at least 75% of theoretical. The K = 1 kernel reaches at least 70% of peak bandwidth, and the K = 1024 kernel at least 70% of part A's FMA rate. One extra block costs at least 1.7× a wave, and the finer split brings it back under 1.3×. Your GEMV reaches at least 70% of peak bandwidth and is at least 3× faster than the given one. The report has the roofline plot and the before-and-after profile numbers.</p>
+</section>
