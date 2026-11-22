@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "47 × 53 is fastest as…",
+   "options": [
+    "50² − 3²",
+    "long multiplication",
+    "47 × 50 + 47 × 3 only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "x% of y equals…",
+   "options": [
+    "y% of x",
+    "x/y",
+    "x·y"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "× 25 is…",
+   "options": [
+    "× 100 ÷ 4",
+    "× 20 + × 5 always",
+    "× 5 × 5 only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "3/8 =",
+   "options": [
+    "0.375",
+    "0.38",
+    "0.35"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Stuck on a question in a speed test:",
+   "options": [
+    "skip",
+    "persist",
+    "restart"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

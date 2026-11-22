@@ -1158,5 +1158,5 @@
     live.observers.add(io);
   }
 
-  window.GWComponents = { mount, unmountAll, registry: C };
+  window.GWComponents = { mount, unmountAll, registry: C, every, cancelEvery, onResize, frameReq, frameCancel };
 })();

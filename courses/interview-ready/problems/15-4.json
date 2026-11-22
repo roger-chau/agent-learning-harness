@@ -1,0 +1,220 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Weighings",
+   "statement": "<p>12 coins, one counterfeit (heavier or lighter, unknown), a balance scale.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of cases to distinguish?",
+     "answer": 24,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Outcomes of 3 weighings?",
+     "answer": 27,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Max coins solvable in 3 weighings for this problem ((3³ − 3)/2)?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Each weighing has 3 outcomes."
+   ],
+   "solution": "<p>24 ≤ 27, so 3 weighings can suffice (and do, with care); the known maximum is (3ⁿ − 3)/2 = 12.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Ropes",
+   "statement": "<p>Two ropes each burn for exactly 60 minutes, unevenly.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Light rope A at both ends and B at one end; when A finishes, light B's other end. Total time measured (min)?",
+     "answer": 45,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Both ends halve the remaining time."
+   ],
+   "solution": "<p>A takes 30; B has 30 left, both ends → 15 more. Total 45.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Prisoners",
+   "statement": "<p>100 prisoners, 50 boxes each, cycle-following strategy.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(success) (1 − Σ_{L=51}^{100} 1/L)?",
+     "answer": 0.31182782068980475,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Naive strategy P(success)?",
+     "answer": 7.888609052210118e-31,
+     "unit": "",
+     "tolerance": "100%"
+    }
+   ],
+   "hints": [
+    "Longest cycle ≤ 50."
+   ],
+   "solution": "<p>≈ 0.3118 vs ≈ 0.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Pirates",
+   "statement": "<p>5 pirates (ranked), the top one proposes a split of 100 coins; a majority (ties pass) accepts, otherwise the proposer is thrown overboard. Pirates are rational, greedy, and prefer throwing someone over when indifferent.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Coins the top pirate keeps?",
+     "answer": 98,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Backward induction from 2 pirates."
+   ],
+   "solution": "<p>Working back: with 2 pirates, the top takes all; with 3, the top gives 1 to the lowest; …; with 5, the top keeps 98 and gives 1 each to pirates 3 and 5 (who'd get 0 otherwise).</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Hats in a line",
+   "statement": "<p>n prisoners in a line, each sees those ahead; hats are black or white; each guesses in turn from the back, and everyone hears the guesses.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Guaranteed correct guesses out of n = 10?",
+     "answer": 9,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Strategy?",
+     "options": [
+      "the last person announces the parity of black hats they see; everyone deduces their own",
+      "everyone guesses randomly",
+      "majority vote"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Parity encodes one bit."
+   ],
+   "solution": "<p>Everyone except the first speaker is guaranteed correct.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Dominoes",
+   "statement": "<p>An 8×8 board with two opposite corners removed.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Black squares remaining?",
+     "answer": 30,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "White squares remaining?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Tileable by 31 dominoes?",
+     "options": [
+      "No",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Opposite corners share a colour."
+   ],
+   "solution": "<p>Each domino covers one of each colour; 30 ≠ 32, so no.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Bridge crossing",
+   "statement": "<p>Four people take 1, 2, 5 and 10 minutes to cross; at most two cross at a time (moving at the slower speed); one torch must accompany each crossing.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minimum total time?",
+     "answer": 17,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Send the two slowest together."
+   ],
+   "solution": "<p>1 + 2 cross (2), 1 returns (1), 5 + 10 cross (10), 2 returns (2), 1 + 2 cross (2): 17.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Two envelopes",
+   "statement": "<p>One envelope has twice the other. You open one and see $100.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Is \"switch, because E = ½·50 + ½·200 = 125\" valid?",
+     "options": [
+      "No: it assumes each case is equally likely for every observed amount, which no proper prior allows",
+      "Yes, always switch"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Priors."
+   ],
+   "solution": "<p>With a proper prior over amounts, the 50/50 assumption fails for some values. Without a prior, there's no reason to switch.</p>"
+  }
+ ]
+}

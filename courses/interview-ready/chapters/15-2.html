@@ -1,0 +1,59 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"How many piano tuners are in Chicago?", "how much does it cost to run all of the world's GPUs for a day?", "how many golf balls fit in a plane?". Fermi questions test structured reasoning under uncertainty and comfort with orders of magnitude, which traders and engineers use constantly ("is this trade worth it?", "will this fit in memory?").</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: decompose into factors you can bound, then multiply logs</h2>
+<ol>
+<li><strong>Decompose</strong> the quantity into a product (or sum) of factors you have some feel for.</li>
+<li><strong>Estimate each factor</strong> with a low and a high bound you'd bet on; use the <strong>geometric mean</strong> √(low × high) as the point estimate (it's the midpoint in log space).</li>
+<li><strong>Multiply in powers of ten:</strong> keep a mantissa and an exponent; round mantissas to 1, 2, 3 or 5.</li>
+<li><strong>Sanity-check from a second decomposition</strong> (supply side vs demand side).</li>
+<li><strong>State the uncertainty:</strong> "about 3 × 10⁴, probably within a factor of 3".</li>
+</ol>
+<p>Errors partly cancel: if each of 5 factors is within 2× and the errors are independent, the product is typically within about 2^√5 ≈ 4.7×, not 2⁵ = 32×.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Useful anchors: world population 8×10⁹ · US 3.3×10⁸ · seconds/year 3.15×10⁷ ≈ π×10⁷
+                Earth's surface 5×10⁸ km² · speed of light 3×10⁸ m/s · a day 8.64×10⁴ s
+                US GDP ~2.8×10¹³ $ · a household ~2.5 people · a working year ~2,000 hours
+log₁₀ shortcuts: log 2 ≈ 0.30, log 3 ≈ 0.48, log 5 ≈ 0.70, log 7 ≈ 0.85</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: daily electricity for all data-centre GPUs</h2>
+<ol>
+<li><strong>Decompose:</strong> number of GPUs × power per GPU (plus cooling overhead) × 24 h × price per kWh.</li>
+<li><strong>GPUs:</strong> accelerator shipments are a few million per year, with several years of installed base, so 10⁷ within a factor of 3.</li>
+<li><strong>Power:</strong> 300–1,000 W each, geometric mean ~550 W; with a PUE of ~1.3, call it 700 W.</li>
+<li><strong>Energy per day:</strong> 10⁷ × 0.7 kW × 24 h ≈ 1.7 × 10⁸ kWh.</li>
+<li><strong>Cost:</strong> at ~$0.08/kWh that's 1.3 × 10⁷, about $13M per day (about $5B per year).</li>
+<li><strong>Cross-check:</strong> 1.7 × 10⁸ kWh/day is ~7 GW average, a handful of large power plants. Plausible given current data-centre build-out news.</li>
+</ol>
+<p>The habit: <strong>bounds → geometric mean → powers of ten → a cross-check from an independent angle</strong>.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Unit errors</strong> (kW vs kWh, per day vs per year) are the most common mistake. Carry the units through every step.</li>
+<li><strong>False precision:</strong> \"17,482\" signals that you don't understand the uncertainty.</li>
+<li><strong>Silence:</strong> narrate the decomposition; the interviewer grades the structure.</li>
+<li><strong>Market-sizing variants</strong> (\"how big is the market for X?\") add penetration and price factors.</li>
+<li><strong>Trading variant:</strong> \"make me a market on the number of …\": give a bid/ask whose width reflects your uncertainty (Part 16).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Sanjoy Mahajan, <em>Street-Fighting Mathematics</em> (free from MIT Press), chapters 1–2.</li>
+<li>* Lawrence Weinstein & John Adam, <em>Guesstimation</em>: fifty worked Fermi problems.</li>
+<li>Do two estimates a day for two weeks; check them against real data afterwards and log your log-error.</li>
+<li>Memorise the anchor list above.</li>
+</ul>
+</section>

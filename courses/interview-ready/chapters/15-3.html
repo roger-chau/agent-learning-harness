@@ -1,0 +1,57 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Some online assessments (and a few firms' numerical tests) include "next number in the sequence" and numerical-reasoning questions under heavy time pressure. They're pattern-recognition drills with a small catalogue of tricks, so learning the catalogue pays off quickly.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: a fixed checklist, cheapest test first</h2>
+<ol>
+<li><strong>Differences:</strong> first, second, third differences (polynomial sequences become constant).</li>
+<li><strong>Ratios:</strong> geometric growth, or ratios that themselves form a sequence (×2, ×3, ×4 → factorial-like).</li>
+<li><strong>Interleaved sequences:</strong> odd and even positions following separate rules.</li>
+<li><strong>Recurrences:</strong> each term from the previous two (Fibonacci-like: aₙ = aₙ₋₁ + aₙ₋₂, or aₙ = aₙ₋₁ × aₙ₋₂, or + n).</li>
+<li><strong>Special sets:</strong> primes, squares, cubes, triangular numbers n(n + 1)/2, powers of 2, factorials, n² ± 1, digit sums.</li>
+<li><strong>Operations alternating:</strong> +3, ×2, +3, ×2…</li>
+</ol>
+<p>Spend at most ~30 seconds on one question: guess using the most plausible rule and move on.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>Sequence  2, 6, 12, 20, 30, ?
+Diff      4, 6, 8, 10        → second diff constant 2 → next diff 12 → 42   (n(n+1))
+Sequence  1, 2, 6, 24, 120, ?
+Ratio     2, 3, 4, 5         → next ratio 6 → 720                          (n!)
+Sequence  3, 4, 7, 11, 18, ?
+Rule      a(n) = a(n−1) + a(n−2) → 29                                       (Lucas)</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: 1, 4, 9, 61, 52, 63, ?</h2>
+<ol>
+<li><strong>Differences:</strong> 3, 5, 52, −9, 11. No pattern.</li>
+<li><strong>Ratios:</strong> no.</li>
+<li><strong>Special sets:</strong> 1, 4, 9 are squares; is 61 a reversed 16? Is 52 a reversed 25, 63 a reversed 36? Yes.</li>
+<li><strong>Answer:</strong> 49 reversed = 94.</li>
+</ol>
+<p>The habit: <strong>when arithmetic tests fail, look at the digits</strong> (reversals, digit sums, concatenations). It's the last item on the checklist for a reason.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Several valid rules</strong> can fit a short sequence; choose the simplest (lowest description length).</li>
+<li><strong>Numerical reasoning tables</strong> (percent changes, ratios from charts) are just Chapter 15.1's arithmetic under time pressure.</li>
+<li><strong>Logic grids and \"which statement must be true\"</strong>: practise a few to learn the format; don't over-invest.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Practise 20 sequences in 10 minutes from any numerical-reasoning book; log your error types.</li>
+<li>OEIS (oeis.org): when a sequence stumps you afterwards, look it up and learn the family.</li>
+<li>Check each target firm's test format (number of questions, negative marking) before practising.</li>
+</ul>
+</section>

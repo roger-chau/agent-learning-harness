@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "n weighings distinguish at most…",
+   "options": [
+    "3ⁿ cases",
+    "2ⁿ",
+    "n²"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Pirate games are solved by…",
+   "options": [
+    "backward induction",
+    "symmetry",
+    "simulation"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "The dominoes puzzle uses…",
+   "options": [
+    "an invariant (colour count)",
+    "induction",
+    "probability"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "100 prisoners succeed often because…",
+   "options": [
+    "outcomes become correlated",
+    "luck",
+    "communication"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "If stuck on a brainteaser…",
+   "options": [
+    "explain what you tried and ask for a hint",
+    "stay silent",
+    "give up"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

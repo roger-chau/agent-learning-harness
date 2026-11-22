@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Point estimate from bounds [a, b]:",
+   "options": [
+    "√(ab)",
+    "(a + b)/2",
+    "b"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Seconds per year ≈",
+   "options": [
+    "π × 10⁷",
+    "10⁶",
+    "10⁸"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Independent factor errors…",
+   "options": [
+    "partly cancel",
+    "always add",
+    "don't matter"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "The most common Fermi mistake:",
+   "options": [
+    "units",
+    "rounding",
+    "using logs"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "A good Fermi answer ends with…",
+   "options": [
+    "an order of magnitude and its uncertainty",
+    "five significant figures",
+    "no number"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

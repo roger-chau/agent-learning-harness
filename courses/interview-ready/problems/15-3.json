@@ -1,0 +1,221 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Differences",
+   "statement": "<p>Next term.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "2, 6, 12, 20, 30, ?",
+     "answer": 42,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "1, 8, 27, 64, ?",
+     "answer": 125,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "3, 7, 15, 31, ?",
+     "answer": 63,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "n(n + 1); cubes; 2ⁿ⁺¹ − 1."
+   ],
+   "solution": "<p>42; 125; 63.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Ratios and recurrences",
+   "statement": "<p>Next term.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "1, 2, 6, 24, 120, ?",
+     "answer": 720,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "3, 4, 7, 11, 18, ?",
+     "answer": 29,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "2, 3, 6, 18, 108, ?",
+     "answer": 1944,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "n!; Lucas; product of the previous two."
+   ],
+   "solution": "<p>720; 29; 18 × 108 = 1,944.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Interleaved",
+   "statement": "<p>Next term of 1, 10, 3, 9, 5, 8, 7, ?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Odd positions 1, 3, 5, 7; even 10, 9, 8, …"
+   ],
+   "solution": "<p>The even-position sequence continues to 7.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Primes and squares",
+   "statement": "<p>Next term.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "2, 3, 5, 7, 11, 13, ?",
+     "answer": 17,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "1, 4, 9, 61, 52, 63, ?",
+     "answer": 94,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "4, 6, 10, 14, 22, 26, ?",
+     "answer": 34,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Primes; reversed squares; 2 × primes."
+   ],
+   "solution": "<p>17; 94; 2 × 17 = 34.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Alternating ops",
+   "statement": "<p>Next term of 2, 5, 10, 13, 26, 29, ?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 58,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "+3, ×2, +3, ×2…"
+   ],
+   "solution": "<p>29 × 2 = 58.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Triangular",
+   "statement": "<p>Next term of 1, 3, 6, 10, 15, ?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 21,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "The 100th triangular number?",
+     "answer": 5050,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "n(n + 1)/2."
+   ],
+   "solution": "<p>21; 5,050.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Second differences",
+   "statement": "<p>Next term of 5, 11, 21, 35, 53, ?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 75,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Differences 6, 10, 14, 18 → 22."
+   ],
+   "solution": "<p>53 + 22 = 75. Closed form: 2n² + 3 (n = 1 gives 5 ✓).</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Digits",
+   "statement": "<p>Next term of 1, 11, 21, 1211, 111221, ?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Answer?",
+     "answer": 312211,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Describe the previous term aloud."
+   ],
+   "solution": "<p>Look-and-say: \"three 1s, two 2s, one 1\" → 312211.</p>"
+  }
+ ]
+}

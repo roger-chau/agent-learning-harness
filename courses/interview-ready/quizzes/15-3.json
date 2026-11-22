@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "First test for a sequence:",
+   "options": [
+    "differences",
+    "digit reversal",
+    "primes"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Constant second differences mean…",
+   "options": [
+    "a quadratic",
+    "geometric",
+    "Fibonacci"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "1, 1, 2, 3, 5, 8 is…",
+   "options": [
+    "Fibonacci",
+    "primes",
+    "squares"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "When arithmetic tests fail, look at…",
+   "options": [
+    "the digits",
+    "nothing",
+    "ratios again"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Time per sequence question:",
+   "options": [
+    "≤ 30 s, then guess",
+    "unlimited",
+    "5 minutes"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

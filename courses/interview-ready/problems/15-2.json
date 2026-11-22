@@ -1,0 +1,243 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Anchors",
+   "statement": "<p>Recall.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Seconds in a year (×10⁷)?",
+     "answer": 3.15,
+     "unit": "",
+     "tolerance": "3%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "US population (millions)?",
+     "answer": 330,
+     "unit": "",
+     "tolerance": "10%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "log₁₀ 3?",
+     "answer": 0.47712125471966244,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "π × 10⁷ s."
+   ],
+   "solution": "<p>3.15 × 10⁷; ~330M; 0.477.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Geometric mean",
+   "statement": "<p>Your bounds for a factor are 100 and 10,000.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Point estimate (geometric mean)?",
+     "answer": 1000,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why not the arithmetic mean (5,050)?",
+     "options": [
+      "it's dominated by the upper bound; in log space the midpoint is the geometric mean",
+      "it's harder to compute",
+      "no reason"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "√(10² × 10⁴)."
+   ],
+   "solution": "<p>10³.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Piano tuners",
+   "statement": "<p>A city of 3M people; 1 piano per 20 households of 2.5 people; tuned once a year; a tuner does 4 per day, 250 days a year.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Pianos?",
+     "answer": 60000.0,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Tuners?",
+     "answer": 60.0,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Households → pianos → tunings → tuners."
+   ],
+   "solution": "<p>60,000 pianos; 60,000 / 1,000 = 60 tuners.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "GPU electricity",
+   "statement": "<p>10⁷ GPUs at 0.7 kW (with cooling), 24 h, $0.08/kWh.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "kWh per day (×10⁸)?",
+     "answer": 1.68,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Cost per day ($M)?",
+     "answer": 13.44,
+     "unit": "",
+     "tolerance": "2%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Average power (GW)?",
+     "answer": 7.0,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Carry units."
+   ],
+   "solution": "<p>1.68 × 10⁸ kWh; $13.4M; 7 GW.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Error propagation",
+   "statement": "<p>Five independent factors each within a factor of 2 (σ of log₂ error ≈ 1).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Typical factor error of the product (2^√5)?",
+     "answer": 4.7111131333214376,
+     "unit": "",
+     "tolerance": "3%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Worst case (2⁵)?",
+     "answer": 32,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Log errors add like random walks."
+   ],
+   "solution": "<p>≈ 4.7× typically, 32× worst case.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Data",
+   "statement": "<p>Storing one year of 1080p video from 1,000 cameras at 4 Mbps.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes per camera per year (TB)?",
+     "answer": 15.75,
+     "unit": "",
+     "tolerance": "3%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "All cameras (PB)?",
+     "answer": 15.75,
+     "unit": "",
+     "tolerance": "3%"
+    }
+   ],
+   "hints": [
+    "Mbps ÷ 8 = MB/s."
+   ],
+   "solution": "<p>≈ 15.8 TB each; ≈ 15.8 PB total.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Golf balls",
+   "statement": "<p>A plane cabin of ~300 m³; a golf ball of 4.3 cm diameter; random packing ~64%.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ball volume (cm³, (4/3)π r³)?",
+     "answer": 41.62973268833333,
+     "unit": "",
+     "tolerance": "3%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Balls (millions)?",
+     "answer": 4.612088226399006,
+     "unit": "",
+     "tolerance": "5%"
+    }
+   ],
+   "hints": [
+    "Cabin cm³ × packing ÷ ball volume."
+   ],
+   "solution": "<p>≈ 41.6 cm³ each; ≈ 4.6 million balls.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Make a market",
+   "statement": "<p>You estimate the number of piano tuners at 60, with ±2× uncertainty.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "A reasonable two-sided market?",
+     "options": [
+      "30 bid / 120 offered (wide, log-symmetric)",
+      "59 / 61",
+      "0 / 1,000"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Width reflects uncertainty."
+   ],
+   "solution": "<p>Wide enough not to be picked off, centred in log space. Tighten as information arrives (Part 16).</p>"
+  }
+ ]
+}

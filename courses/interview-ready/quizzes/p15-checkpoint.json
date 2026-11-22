@@ -1,0 +1,101 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "47 × 53 =",
+   "options": [
+    "2,491",
+    "2,500",
+    "2,451"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "17% of 340 =",
+   "options": [
+    "57.8",
+    "54",
+    "60.2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "5/8 =",
+   "options": [
+    "0.625",
+    "0.6",
+    "0.58"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Fermi point estimate from 10 and 1,000:",
+   "options": [
+    "100",
+    "505",
+    "1,000"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "2, 6, 12, 20, 30 →",
+   "options": [
+    "42",
+    "40",
+    "36"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "12-coin problem needs…",
+   "options": [
+    "3 weighings",
+    "4",
+    "2"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Ropes: both ends lit →",
+   "options": [
+    "half the time",
+    "same time",
+    "unknown"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Pirates (5): top keeps…",
+   "options": [
+    "98",
+    "100",
+    "50"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -673,3 +673,14 @@ svg .d-arrowhead { fill: var(--muted); }
 .lc-medium { color: #c08a12; background: #c08a121f; }
 .lc-hard { color: #d2525b; background: #d2525b1f; }
 .lc-note { color: var(--muted); font-size: .92rem; }
+
+/* Quant drills and games */
+.drill-body, .mm-body { padding: 14px 16px 16px; }
+.drill-setup, .mm-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.drill-setup label, .mm-row label { display: flex; gap: 6px; align-items: center; font-size: .92rem; }
+.drill-top { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; font-weight: 600; }
+.drill-q { font-size: 2rem; font-weight: 600; margin: 14px 0 10px; font-variant-numeric: tabular-nums; }
+.drill-in { font-size: 1.3rem; max-width: 260px; font-variant-numeric: tabular-nums; }
+.drill-out, .mm-log { margin-top: 12px; }
+.drill-result { padding: 10px 12px; border-radius: var(--radius-md); background: var(--accent-soft); margin: 8px 0; }
+.mm-state { margin-top: 10px; }

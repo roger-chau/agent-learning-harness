@@ -1,0 +1,61 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Classic brainteasers still appear, especially in first rounds and with senior traders who like them: weighings, burning ropes, hats and prisoners, pirates splitting gold, crossing bridges. There's a small set of recurring ideas; recognising which one applies is most of the work.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: six recurring ideas</h2>
+<table>
+<tr><th>Idea</th><th>Classic</th></tr>
+<tr><td><strong>Information counting:</strong> each test has k outcomes, so n tests distinguish at most kⁿ cases</td><td>12 coins, one counterfeit (heavier or lighter): 3 weighings, 3³ = 27 ≥ 24 cases</td></tr>
+<tr><td><strong>Backward induction</strong> from the last decision</td><td>pirates dividing gold; the last-person-standing games</td></tr>
+<tr><td><strong>Invariants and parity</strong>: find a quantity that never changes</td><td>a chessboard with two opposite corners removed can't be tiled by dominoes (colour count)</td></tr>
+<tr><td><strong>Symmetry and pairing</strong></td><td>a strategy-stealing argument; pair up moves to mirror an opponent</td></tr>
+<tr><td><strong>Encoding / shared strategy</strong></td><td>hats in a line (parity of what you see), 100 prisoners and boxes (follow the cycle)</td></tr>
+<tr><td><strong>Extreme or small cases first</strong></td><td>try n = 1, 2, 3 and spot the pattern; then prove it</td></tr>
+</table>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>1. Restate precisely; ask about edge rules.
+2. Solve tiny cases (n = 1, 2, 3) out loud.
+3. Ask which idea applies: counting outcomes? backward induction? invariant? encoding?
+4. Propose a strategy; test it on a small case; then argue why it's optimal (a lower bound).
+5. Narrate throughout: interviewers grade the search, not just the answer.</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: 100 prisoners and 100 boxes</h2>
+<p><em>Each prisoner may open 50 of 100 boxes to find their own number; all must succeed or all die; no communication after the start. Find a strategy with a decent success chance.</em></p>
+<ol>
+<li><strong>Naive:</strong> random boxes, (½)¹⁰⁰ ≈ 0.</li>
+<li><strong>Encoding idea:</strong> treat the contents as a permutation. Prisoner k opens box k, then the box numbered by what's inside, and so on, following the cycle that contains k.</li>
+<li><strong>When does it work?</strong> Prisoner k succeeds iff k's cycle has length ≤ 50. Everyone succeeds iff the permutation has <em>no cycle longer than 50</em>.</li>
+<li><strong>Probability:</strong> a random permutation of 100 has a cycle of length L &gt; 50 with probability 1/L (at most one such cycle can exist). So P(fail) = Σ_{L=51}^{100} 1/L ≈ ln 2 ≈ 0.69, and P(success) ≈ 0.31.</li>
+<li><strong>The insight:</strong> the strategy makes the prisoners' successes highly <em>correlated</em>, so they all succeed or fail together, instead of independently.</li>
+</ol>
+<p>The habit: <strong>when individual chances are fixed but you need everyone to succeed, look for a strategy that correlates the outcomes</strong>.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Answer first, then explain?</strong> No: explain your search, briefly.</li>
+<li><strong>Memorised answers</strong> get follow-ups (\"now with 13 coins\"), so know <em>why</em> they work.</li>
+<li><strong>Burning ropes:</strong> lighting both ends halves the time, whatever the burn rate along the rope.</li>
+<li><strong>Two-envelope paradox:</strong> \"switch because E = 1.25x\" is wrong. It conditions inconsistently on x.</li>
+<li><strong>Know when to stop:</strong> if stuck, say what you've tried and ask for a hint. That's normal and scored kindly.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Green book, chapter 2 (brainteasers).</li>
+<li>* Peter Winkler, <em>Mathematical Puzzles: A Connoisseur's Collection</em> and <em>Mathematical Mind-Benders</em>.</li>
+<li>Heard on the Street (Timothy Crack): the brainteaser chapters.</li>
+<li>Explain three classics aloud to a friend in under 3 minutes each, including why the answer is optimal.</li>
+</ul>
+</section>

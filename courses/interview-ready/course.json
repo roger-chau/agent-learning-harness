@@ -2364,14 +2364,141 @@
    "id": "p15",
    "n": 15,
    "title": "Mental maths and estimation",
-   "summary": "Timed arithmetic drills, Fermi estimates, sequences.",
+   "summary": "Timed mental arithmetic with a drill, Fermi estimation, sequences, and the recurring ideas behind brainteasers.",
    "items": [
     {
      "type": "chapter",
      "id": "15-1",
-     "title": "Mental maths and estimation",
-     "summary": "Timed arithmetic drills, Fermi estimates, sequences.",
-     "status": "planned"
+     "title": "Mental arithmetic",
+     "summary": "Rewrite hard products into easy ones; a timed drill with per-type feedback.",
+     "blocks": [
+      [
+       "The signal",
+       "80 in 8 minutes"
+      ],
+      [
+       "The core idea",
+       "decompose, compensate, square tricks"
+      ],
+      [
+       "The invariant and template",
+       "the drill"
+      ],
+      [
+       "A thinking trace",
+       "0.35 × 48"
+      ],
+      [
+       "Traps and variations",
+       "accuracy, skipping, fatigue"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "15-2",
+     "title": "Fermi estimation",
+     "summary": "Bounds, geometric means and powers of ten; cross-check from another angle.",
+     "blocks": [
+      [
+       "The signal",
+       "how many…?"
+      ],
+      [
+       "The core idea",
+       "decompose and bound"
+      ],
+      [
+       "The invariant and template",
+       "anchors and logs"
+      ],
+      [
+       "A thinking trace",
+       "GPU electricity per day"
+      ],
+      [
+       "Traps and variations",
+       "units, precision, markets"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "15-3",
+     "title": "Sequences and numerical reasoning",
+     "summary": "A fixed checklist: differences, ratios, interleaving, recurrences, special sets, digits.",
+     "blocks": [
+      [
+       "The signal",
+       "next number"
+      ],
+      [
+       "The core idea",
+       "the checklist"
+      ],
+      [
+       "The invariant and template",
+       "worked patterns"
+      ],
+      [
+       "A thinking trace",
+       "reversed squares"
+      ],
+      [
+       "Traps and variations",
+       "multiple rules, formats"
+      ],
+      [
+       "Practice and reading",
+       "3 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "15-4",
+     "title": "Brainteasers",
+     "summary": "Six recurring ideas: information counting, backward induction, invariants, symmetry, encoding, small cases.",
+     "blocks": [
+      [
+       "The signal",
+       "classics"
+      ],
+      [
+       "The core idea",
+       "six ideas"
+      ],
+      [
+       "The invariant and template",
+       "the attack plan"
+      ],
+      [
+       "A thinking trace",
+       "100 prisoners"
+      ],
+      [
+       "Traps and variations",
+       "follow-ups, paradoxes"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p15-checkpoint",
+     "title": "Part 15 checkpoint",
+     "summary": "Mental maths, estimation and puzzles."
     }
    ]
   },

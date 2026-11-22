@@ -1,0 +1,296 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Quick products",
+   "statement": "<p>Compute mentally.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "47 × 53?",
+     "answer": 2491,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "65²?",
+     "answer": 4225,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "36 × 25?",
+     "answer": 900,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "98²?",
+     "answer": 9604,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Difference of squares; ×25 = ×100 ÷ 4."
+   ],
+   "solution": "<p>2,491; 4,225; 900; 9,604.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Percentages",
+   "statement": "<p>Compute.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "17% of 340?",
+     "answer": 57.8,
+     "unit": "",
+     "tolerance": 0.001
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "8% of 25?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "240 increased by 15%?",
+     "answer": 276,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "x% of y = y% of x."
+   ],
+   "solution": "<p>57.8; 2; 276.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Fractions",
+   "statement": "<p>As decimals.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "5/8?",
+     "answer": 0.625,
+     "unit": "",
+     "tolerance": 0.0001
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "3/7 (to 4 dp)?",
+     "answer": 0.4286,
+     "unit": "",
+     "tolerance": 0.0001
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "5/6 (to 4 dp)?",
+     "answer": 0.8333,
+     "unit": "",
+     "tolerance": 0.0001
+    },
+    {
+     "id": "d",
+     "type": "numeric",
+     "prompt": "7/16?",
+     "answer": 0.4375,
+     "unit": "",
+     "tolerance": 0.0001
+    }
+   ],
+   "hints": [
+    "Sevenths rotate 142857."
+   ],
+   "solution": "<p>0.625; 0.428571…; 0.8333; 0.4375.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Decimal products",
+   "statement": "<p>Compute.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "0.35 × 48?",
+     "answer": 16.8,
+     "unit": "",
+     "tolerance": 0.001
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "1.25 × 64?",
+     "answer": 80,
+     "unit": "",
+     "tolerance": 0.001
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "0.125 × 96?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0.001
+    }
+   ],
+   "hints": [
+    "Friendly fractions."
+   ],
+   "solution": "<p>16.8; 80; 12.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Divisions",
+   "statement": "<p>Compute.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "4,200 ÷ 35?",
+     "answer": 120,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "1,001 ÷ 7?",
+     "answer": 143,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "2,808 ÷ 12?",
+     "answer": 234,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Simplify first."
+   ],
+   "solution": "<p>120; 143 (1,001 = 7 × 11 × 13); 234.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Expected values",
+   "statement": "<p>Bets.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Win 40 with p = 0.3, else lose 10: EV?",
+     "answer": 5.0,
+     "unit": "",
+     "tolerance": 0.001
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Break-even p for win 30 / lose 10?",
+     "answer": 0.25,
+     "unit": "",
+     "tolerance": 0.001
+    }
+   ],
+   "hints": [
+    "p·W − (1 − p)·L."
+   ],
+   "solution": "<p>12 − 7 = 5; p·30 = (1 − p)·10 → p = 1/4.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Squares near 50",
+   "statement": "<p>Using (50 ± k)² = 2,500 ± 100k + k².</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "53²?",
+     "answer": 2809,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "46²?",
+     "answer": 2116,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "58²?",
+     "answer": 3364,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "k = 3, −4, 8."
+   ],
+   "solution": "<p>2,809; 2,116; 3,364.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Speed under load",
+   "statement": "<p>An 80-question, 8-minute test.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Seconds per question available?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Best policy on a question you can't do in ~5 s?",
+     "options": [
+      "skip and move on",
+      "keep working",
+      "guess randomly always"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "480 s / 80."
+   ],
+   "solution": "<p>6 s each; skip stalls. (If wrong answers are penalised, skip rather than guess.)</p>"
+  }
+ ]
+}
