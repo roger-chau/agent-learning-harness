@@ -1,0 +1,237 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Data race?",
+   "statement": "<p>Which are data races (UB)?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "two threads increment a plain int",
+      "two threads read a plain int, nobody writes",
+      "two threads fetch_add a std::atomic<int>",
+      "one thread writes a plain bool, another spins reading it"
+     ],
+     "answer": [
+      0,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Concurrent access, a write, no synchronisation, non-atomic."
+   ],
+   "solution": "<p>Concurrent reads are fine; atomics never race.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Deadlock",
+   "statement": "<p>Thread 1 locks A then B; thread 2 locks B then A.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Which deadlock condition do you break with a global lock order?",
+     "options": [
+      "circular wait",
+      "mutual exclusion",
+      "no pre-emption"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "C++ helper?",
+     "options": [
+      "std::scoped_lock lk(a, b)",
+      "std::lock_guard twice",
+      "std::atomic"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Coffman conditions."
+   ],
+   "solution": "<p>Lock in a consistent order, or let scoped_lock's deadlock-avoidance algorithm do it.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Lost increments",
+   "statement": "<p>Two threads each run <code>for (i = 0; i &lt; 10⁶; ++i) counter++;</code> on a plain int (no sync, no optimisation).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Possible final values?",
+     "options": [
+      "anything between about 2 and 2 × 10⁶ (lost updates); and it's UB",
+      "exactly 2 × 10⁶",
+      "exactly 10⁶"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fastest correct fix?",
+     "options": [
+      "per-thread local counters, summed at the end",
+      "a mutex per increment",
+      "volatile"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Read-modify-write interleavings."
+   ],
+   "solution": "<p>Local accumulation avoids sharing entirely; atomics work, but bounce the cache line.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Condition variables",
+   "statement": "<p><code>if (q.empty()) cv.wait(lk); auto x = q.front();</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Bug?",
+     "options": [
+      "spurious wakeups / another consumer can empty q: must wait in a loop on the predicate",
+      "none",
+      "needs a spinlock"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "while, not if."
+   ],
+   "solution": "<p>Use <code>cv.wait(lk, [&amp;]{ return !q.empty(); });</code>.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Acquire/release",
+   "statement": "<p>Producer: <code>data = 42; flag.store(1, release);</code> Consumer: <code>if (flag.load(acquire) == 1) print(data);</code></p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "If the consumer sees flag == 1, can it print a stale data?",
+     "options": [
+      "No: release→acquire makes data = 42 visible",
+      "Yes"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "With both as relaxed?",
+     "options": [
+      "Yes, it could see stale data (no ordering)",
+      "No"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Synchronises-with."
+   ],
+   "solution": "<p>Relaxed gives atomicity only.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Double-checked locking",
+   "statement": "<p>The unsynchronised <code>if (!instance)</code> check.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Valid fixes?",
+     "options": [
+      "function-local static (thread-safe init since C++11)",
+      "std::call_once",
+      "atomic pointer with acquire/release",
+      "mark instance volatile"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "volatile doesn't order."
+   ],
+   "solution": "<p>The first three establish happens-before; volatile doesn't.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Mutex cost",
+   "statement": "<p>An uncontended lock+unlock ~20 ns; a contended handoff through the kernel ~2 µs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Ratio?",
+     "answer": 100,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "What dominates latency in a lock-heavy hot path?",
+     "options": [
+      "contention and the resulting sleeps/wakeups",
+      "the uncontended cost",
+      "memory size"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Sleeps cost microseconds."
+   ],
+   "solution": "<p>Contention, not the primitive, is the cost. Shrink critical sections, or shard the data.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "x86 vs ARM",
+   "statement": "<p>Code with relaxed atomics that \"always worked\" on x86 fails on ARM.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Most likely reason?",
+     "options": [
+      "x86 (TSO) orders loads and stores more strongly; ARM reorders, exposing missing acquire/release",
+      "ARM compilers are buggy",
+      "endianness"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Memory models differ by ISA."
+   ],
+   "solution": "<p>Correctness must come from the C++ memory model, not from the hardware you tested on.</p>"
+  }
+ ]
+}

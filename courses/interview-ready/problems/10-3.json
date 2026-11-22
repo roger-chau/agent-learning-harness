@@ -1,0 +1,266 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Single writer",
+   "statement": "<p>In an SPSC ring buffer…</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Who writes tail?",
+     "options": [
+      "only the producer",
+      "only the consumer",
+      "both"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Does it need CAS?",
+     "options": [
+      "No",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "One writer per variable."
+   ],
+   "solution": "<p>Plain atomic stores with release, and loads with acquire.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Masks",
+   "statement": "<p>N = 1024 slots, counter t = 5000.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Slot index t & (N − 1)?",
+     "answer": 904,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Elements in the ring if head = 4100?",
+     "answer": 900,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Power-of-two masking."
+   ],
+   "solution": "<p>5000 mod 1024 = 904; tail − head = 900.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "False sharing",
+   "statement": "<p>Two counters in the same cache line, each incremented by its own core 10⁸ times.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Effect?",
+     "options": [
+      "the line ping-pongs between cores: often 10×+ slower than separate lines",
+      "none: different variables",
+      "a compile error"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "alignas(64) on each counter (or padding)",
+      "volatile",
+      "a mutex"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Coherence works on lines, not variables."
+   ],
+   "solution": "<p>Separate lines remove the invalidation traffic.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "ABA",
+   "statement": "<p>A lock-free stack pop: read top = A, next = B; another thread pops A, pops B, pushes A back; the first thread's CAS(top, A → B) succeeds.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Problem?",
+     "options": [
+      "top now points to B, which was popped (maybe freed)",
+      "nothing",
+      "a deadlock"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "multi",
+     "prompt": "Mitigations?",
+     "options": [
+      "tagged pointer with a version counter",
+      "hazard pointers",
+      "epoch-based reclamation",
+      "a bigger stack"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Same value, different history."
+   ],
+   "solution": "<p>CAS compares values, not histories.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Throughput",
+   "statement": "<p>4 producers CAS the same tail; each successful CAS moves the line (~80 ns transfer).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Upper bound on successful pushes per second (millions, 1 / 80 ns)?",
+     "answer": 12.5,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Design that scales?",
+     "options": [
+      "one SPSC ring per producer",
+      "more producers",
+      "a bigger buffer"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "One line, serialised ownership."
+   ],
+   "solution": "<p>At most about 12.5M/s regardless of core count; per-producer rings remove the shared write.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Progress guarantees",
+   "statement": "<p>Classify.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "A mutex-based queue:",
+     "options": [
+      "blocking",
+      "lock-free",
+      "wait-free"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "A CAS-loop queue where some thread always succeeds:",
+     "options": [
+      "lock-free",
+      "wait-free",
+      "blocking"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "An SPSC ring where each op finishes in bounded steps:",
+     "options": [
+      "wait-free",
+      "blocking",
+      "neither"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Definitions."
+   ],
+   "solution": "<p>Lock-free means system-wide progress; wait-free means per-thread bounded progress.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Cached indices",
+   "statement": "<p>In the SPSC ring, the producer keeps a local copy of head and re-reads the atomic only when the copy says \"full\".</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Benefit?",
+     "options": [
+      "far fewer reads of the consumer's cache line, so less coherence traffic",
+      "correctness",
+      "smaller memory"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Each cross-core read can pull the line."
+   ],
+   "solution": "<p>Most pushes then touch only the producer's own line and the slot.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Spin waiting",
+   "statement": "<p>A pinned consumer busy-polls an empty ring.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Good practice?",
+     "options": [
+      "isolate the core (isolcpus) so nothing else runs there",
+      "use _mm_pause() in the loop",
+      "sleep(0) between polls",
+      "pin the thread"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Predictability over efficiency."
+   ],
+   "solution": "<p>Yielding reintroduces scheduler latency; pause eases pipeline and power pressure.</p>"
+  }
+ ]
+}

@@ -1,0 +1,246 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Latency ladder",
+   "statement": "<p>Order of magnitude, in nanoseconds.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "L1 hit?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": "100%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Local DRAM access?",
+     "answer": 90,
+     "unit": "",
+     "tolerance": "40%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Context switch (µs)?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": "70%"
+    }
+   ],
+   "hints": [
+    "~1 ns, ~100 ns, ~µs."
+   ],
+   "solution": "<p>Roughly 1 ns, 80–100 ns, 1–5 µs. Know these to within 2×.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Cache lines",
+   "statement": "<p>Summing a vector of 10⁶ 4-byte ints.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Cache lines touched?",
+     "answer": 62500,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Ints per line?",
+     "answer": 16,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "64-byte lines."
+   ],
+   "solution": "<p>62,500 lines, 16 ints each, streamed by the prefetcher.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Bandwidth vs latency",
+   "statement": "<p>10⁸ elements. Vector sum at 20 GB/s with 4-byte ints vs a shuffled linked list at 90 ns per dependent miss.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Vector time (ms)?",
+     "answer": 20.0,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "List time (s)?",
+     "answer": 9.0,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Ratio (≈)?",
+     "answer": 450.0,
+     "unit": "",
+     "tolerance": "10%"
+    }
+   ],
+   "hints": [
+    "Bytes/bandwidth vs misses × latency."
+   ],
+   "solution": "<p>20 ms vs 9 s: about 450×.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "TLB reach",
+   "statement": "<p>A TLB with 1,536 entries.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Reach with 4 KB pages (MB)?",
+     "answer": 6.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Reach with 2 MB pages (GB)?",
+     "answer": 3.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "entries × page size."
+   ],
+   "solution": "<p>6 MB vs 3 GB. That's why huge pages help random access over large tables.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Page faults",
+   "statement": "<p>malloc(1 GB) and then touching every byte once.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Minor faults with 4 KB pages (thousands)?",
+     "answer": 262.144,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why does malloc itself return fast?",
+     "options": [
+      "pages are mapped lazily on first touch",
+      "memory is pre-zeroed",
+      "it uses the stack"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Demand paging."
+   ],
+   "solution": "<p>262,144 faults at roughly 0.5–1 µs each, a quarter of a second. Pre-fault (touch or MAP_POPULATE) before latency-critical work.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "NUMA",
+   "statement": "<p>A thread on socket 0 reads a buffer that a thread on socket 1 initialised.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Where do the pages live?",
+     "options": [
+      "on socket 1's memory (first-touch policy)",
+      "on socket 0's memory",
+      "split evenly"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "initialise on the node that will use it, or bind with numactl / mbind",
+      "use more threads",
+      "huge pages alone"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "First touch."
+   ],
+   "solution": "<p>Remote accesses cost roughly 1.5–2× local.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "AoS vs SoA",
+   "statement": "<p>10⁷ particles of {x, y, z, vx, vy, vz, mass, id} (8 × 8 bytes); a loop reads only mass.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Bytes pulled through the cache with AoS (MB)?",
+     "answer": 640.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "With SoA (MB)?",
+     "answer": 80.0,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "A whole line per particle vs a contiguous mass array."
+   ],
+   "solution": "<p>640 MB vs 80 MB: 8× less traffic for SoA.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Memory-level parallelism",
+   "statement": "<p>Walking 8 independent shuffled lists in an interleaved loop vs one at a time (90 ns misses, the core sustains ~10 outstanding misses).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Approximate speed-up from interleaving?",
+     "answer": 8,
+     "unit": "",
+     "tolerance": "25%"
+    }
+   ],
+   "hints": [
+    "Independent misses overlap."
+   ],
+   "solution": "<p>About 8×: the 8 dependent chains proceed in parallel, limited by the miss-handling resources.</p>"
+  }
+ ]
+}

@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Low-latency systems are judged by…",
+   "options": [
+    "tail latency (p99, p99.9)",
+    "the mean only",
+    "throughput only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Cheap cancels need…",
+   "options": [
+    "an id → order map (lazy deletion or intrusive lists)",
+    "a sorted vector",
+    "re-sorting"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Coordinated omission makes latency look…",
+   "options": [
+    "better than reality",
+    "worse",
+    "unchanged"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Kernel bypass saves…",
+   "options": [
+    "microseconds per packet",
+    "milliseconds",
+    "nothing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Trades execute at…",
+   "options": [
+    "the resting order's price",
+    "the incoming price",
+    "the midpoint"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

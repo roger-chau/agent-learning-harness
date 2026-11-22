@@ -1,0 +1,74 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Implement a single-producer single-consumer ring buffer", "what is false sharing?", "what is the ABA problem?", "is a lock-free queue always faster?". These are core questions at HFT and low-latency firms, where a mutex's occasional sleep (a context switch of microseconds) breaks the latency budget.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: one writer per variable, and keep writers on separate cache lines</h2>
+<p>The fastest shared structure is one where <strong>each variable has exactly one writer</strong>. A single-producer single-consumer (SPSC) ring buffer is the archetype: only the producer writes <code>tail</code>, only the consumer writes <code>head</code>, and each reads the other's index with acquire semantics. There are no compare-and-swap loops and no locks, and each operation is a few nanoseconds.</p>
+<p><strong>False sharing:</strong> cores keep cache lines coherent (MESI). If the producer's <code>tail</code> and the consumer's <code>head</code> sit in the same 64-byte line, every write invalidates the other core's copy, and the line ping-pongs at ~50–100 ns per transfer even though the variables are independent. Fix it with <code>alignas(64)</code> (or <code>std::hardware_destructive_interference_size</code>) on each hot variable.</p>
+<p><strong>Multi-producer structures</strong> need compare-and-swap (CAS) loops: read, compute, and CAS the new value in, retrying on failure. They bring the <strong>ABA problem</strong>: a CAS succeeds because the value is the same pointer, though the node was freed and reallocated in between. Mitigations are tagged pointers (a version counter beside the pointer), hazard pointers, or epoch-based reclamation.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: SPSC ring buffer</h2>
+<pre><code>template &lt;class T, size_t N&gt;                     // N a power of two
+class SpscRing {
+    static_assert((N &amp; (N - 1)) == 0);
+    alignas(64) std::atomic&lt;size_t&gt; head_{0};    // written only by the consumer
+    alignas(64) std::atomic&lt;size_t&gt; tail_{0};    // written only by the producer
+    alignas(64) T buf_[N];
+public:
+    bool push(const T&amp; v) {                      // producer thread only
+        size_t t = tail_.load(std::memory_order_relaxed);
+        if (t - head_.load(std::memory_order_acquire) == N) return false;   // full
+        buf_[t &amp; (N - 1)] = v;
+        tail_.store(t + 1, std::memory_order_release);   // publish the slot
+        return true;
+    }
+    bool pop(T&amp; out) {                           // consumer thread only
+        size_t h = head_.load(std::memory_order_relaxed);
+        if (h == tail_.load(std::memory_order_acquire)) return false;      // empty
+        out = buf_[h &amp; (N - 1)];
+        head_.store(h + 1, std::memory_order_release);   // free the slot
+        return true;
+    }
+};</code></pre>
+<p>Invariant: 0 ≤ tail − head ≤ N; slots in [head, tail) hold published values. Monotonic counters with a power-of-two mask avoid a separate full/empty flag. A known optimisation is for each side to cache the other's index and re-read the atomic only when the cached value says full or empty, which cuts cross-core traffic.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "our lock-free queue is slower than the mutex one"</h2>
+<ol>
+<li><strong>Setup:</strong> 4 producers, 1 consumer; a CAS-based MPSC queue against a mutex-protected deque. Under load the lock-free one has <em>worse</em> throughput.</li>
+<li><strong>Contention:</strong> every producer CASes the same tail pointer. Under contention most CASes fail and retry, and each attempt moves the cache line to that core: one line bouncing among 5 cores.</li>
+<li><strong>Allocation:</strong> each push calls new for a node: a malloc, possibly contended, plus a cache miss when the consumer touches the node.</li>
+<li><strong>Why the mutex wins here:</strong> it serialises producers cheaply when critical sections are tiny, and the deque allocates in chunks.</li>
+<li><strong>Better design:</strong> one SPSC ring per producer (no shared writes at all), with the consumer polling them round-robin. Or batch: producers enqueue arrays of items.</li>
+<li><strong>Also report the tail:</strong> lock-free mainly improves <em>worst-case</em> latency (no thread is ever blocked behind a descheduled lock holder), not average throughput. Measure p99/p99.9, not just the mean.</li>
+</ol>
+<p>The habit: <strong>"lock-free" describes a progress guarantee, not speed</strong>. Reason about cache-line ownership transfers to predict the throughput.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Lock-free ≠ wait-free:</strong> lock-free means some thread always makes progress; wait-free means every thread finishes in bounded steps.</li>
+<li><strong>Memory reclamation</strong> is the hard part of lock-free structures in C++. Without GC you need hazard pointers or epochs.</li>
+<li><strong>Busy-polling:</strong> spinning consumers burn a whole core; that's acceptable (and standard) in HFT with pinned, isolated cores, and wasteful elsewhere. Add a <code>_mm_pause()</code> in spin loops.</li>
+<li><strong>std::atomic&lt;T&gt;::is_lock_free</strong>: large T may silently use a lock.</li>
+<li><strong>Memory ordering bugs</strong> often don't show on x86; test on ARM, or reason formally.</li>
+<li><strong>Disruptor pattern</strong> (LMAX): a ring buffer with sequence barriers, consumers chained in a pipeline, and pre-allocated entries. Worth knowing by name.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Erik Rigtorp's SPSCQueue (GitHub) and his notes on cached indices; read the whole implementation.</li>
+<li>* Martin Thompson et al., "Disruptor" technical paper (LMAX).</li>
+<li>Benchmark an SPSC ring with and without alignas(64) on the indices; measure ops/s with two pinned threads.</li>
+<li>Herb Sutter, "atomic&lt;&gt; Weapons" (talk, two parts).</li>
+</ul>
+</section>

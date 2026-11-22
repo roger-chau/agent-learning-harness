@@ -1,0 +1,101 @@
+{
+ "pass": 0.75,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Scanning a vector vs walking a list:",
+   "options": [
+    "bandwidth-bound vs latency-bound",
+    "the same",
+    "list faster"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Huge pages help…",
+   "options": [
+    "TLB reach",
+    "branch prediction",
+    "disk"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Publishing data between threads:",
+   "options": [
+    "release store / acquire load",
+    "volatile",
+    "relaxed"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Wait on a condition variable:",
+   "options": [
+    "in a loop on the predicate",
+    "with if",
+    "without a lock"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Independent counters on one line:",
+   "options": [
+    "false sharing",
+    "ABA",
+    "deadlock"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q6",
+   "type": "single",
+   "prompt": "SPSC ring needs…",
+   "options": [
+    "no CAS: one writer per index",
+    "a mutex",
+    "CAS loops"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q7",
+   "type": "single",
+   "prompt": "Order book priority:",
+   "options": [
+    "price, then time",
+    "time only",
+    "size"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q8",
+   "type": "single",
+   "prompt": "Latency benchmarks must avoid…",
+   "options": [
+    "coordinated omission",
+    "percentiles",
+    "histograms"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -1,0 +1,67 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Why is iterating a linked list slower than a vector of the same size?", "what happens on a page fault?", "why does this run 3× slower on the second socket?", "what are huge pages for?". Systems interviewers want a working model of the memory hierarchy, with numbers, that you can use to predict performance before you measure it. (The GPU course's Part 1 covers the hardware in depth; this chapter is the CPU-side interview version.)</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: latency numbers and the unit of transfer</h2>
+<table>
+<tr><th>Operation</th><th>Rough latency</th></tr>
+<tr><td>L1 hit</td><td>~1 ns (4–5 cycles)</td></tr>
+<tr><td>L2 hit</td><td>~4 ns</td></tr>
+<tr><td>L3 hit</td><td>~10–20 ns</td></tr>
+<tr><td>DRAM (local NUMA node)</td><td>~80–100 ns</td></tr>
+<tr><td>DRAM (remote socket)</td><td>~130–200 ns</td></tr>
+<tr><td>branch mispredict</td><td>~5 ns (15–20 cycles)</td></tr>
+<tr><td>mutex lock/unlock, uncontended</td><td>~20 ns</td></tr>
+<tr><td>system call</td><td>~100 ns – 1 µs</td></tr>
+<tr><td>context switch</td><td>~1–5 µs</td></tr>
+<tr><td>minor / major page fault</td><td>~1 µs / ~ms (disk)</td></tr>
+<tr><td>same-datacentre round trip</td><td>~50–500 µs</td></tr>
+</table>
+<p>Data moves in <strong>64-byte cache lines</strong>. Sequential access lets the hardware prefetcher stream lines ahead of use; pointer chasing defeats it, since each load's address depends on the previous load. That's why a vector scan runs at memory bandwidth while a list traversal runs at memory <em>latency</em>, often a 10–50× difference.</p>
+<p><strong>Virtual memory:</strong> each process sees its own address space; the MMU translates virtual pages (4 KB) to physical frames through page tables, cached in the <strong>TLB</strong>. A TLB miss costs a page-table walk; a page that isn't mapped yet costs a page fault. 2 MB or 1 GB <strong>huge pages</strong> cover far more memory per TLB entry. <strong>NUMA:</strong> on multi-socket machines, memory attached to the other socket is slower. Pin threads and allocate memory on the same node ("first touch" places pages on the node of the thread that first writes them).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: estimate before you measure</h2>
+<pre><code>time ≈ max( bytes_moved / bandwidth ,  dependent_misses × miss_latency ,  instructions / IPC / f )
+# e.g. sum 10⁸ ints in a vector: 400 MB / ~20 GB/s ≈ 20 ms (bandwidth-bound)
+#      walk 10⁸-node shuffled list: 10⁸ dependent misses × ~90 ns ≈ 9 s (latency-bound)</code></pre>
+<p>The three regimes: bandwidth-bound (streaming), latency-bound (dependent misses), compute-bound. Memory-level parallelism (several independent misses in flight) is how real code escapes the latency regime: walk several lists at once, or prefetch.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "the hash map got slower as it grew"</h2>
+<ol>
+<li><strong>Observation:</strong> lookups take 20 ns at 10⁴ keys, 100 ns at 10⁷ keys, though the hash map is "O(1)".</li>
+<li><strong>Working set:</strong> 10⁴ entries (~0.5 MB) fit in L2/L3; 10⁷ entries (~500 MB with node overhead) don't, so each lookup becomes 1–2 DRAM misses (bucket array + node).</li>
+<li><strong>TLB:</strong> random access over 500 MB with 4 KB pages touches about 125,000 pages; the TLB covers only about 1,500 entries (~6 MB), so most lookups also take a page walk, which can miss in cache too.</li>
+<li><strong>Fixes:</strong> an open-addressing (flat) table removes the node indirection (1 miss instead of 2); huge pages cut TLB misses; batching lookups and prefetching overlap misses; shrinking entries (32-bit keys, a separate value array) fits more per line.</li>
+<li><strong>Verify:</strong> perf counters for LLC misses and dTLB misses before and after.</li>
+</ol>
+<p>The habit: <strong>big-O tells you how the operation count grows; the memory hierarchy tells you what each operation costs</strong>. When performance falls off a cliff as data grows, look for a cache or TLB capacity boundary.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>False sharing</strong> (Chapter 10.3): independent variables on the same line written by different cores.</li>
+<li><strong>Struct of arrays vs array of structs:</strong> scanning one field of an AoS drags every other field through the cache.</li>
+<li><strong>fork() and copy-on-write:</strong> pages are shared until written; a write after fork triggers a fault and a copy.</li>
+<li><strong>mmap vs read:</strong> mmap avoids a copy but costs page faults and TLB pressure; read with a big buffer is often comparable.</li>
+<li><strong>Stack vs heap:</strong> both are just memory. The difference is the allocator's cost and lifetime management, not access speed.</li>
+<li><strong>Measure with:</strong> <code>perf stat -e cache-misses,dTLB-load-misses</code>, <code>perf record</code>, and <code>numactl --hardware</code>.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Ulrich Drepper, "What Every Programmer Should Know About Memory", sections 3 and 4 (caches, virtual memory).</li>
+<li>* OSTEP (Arpaci-Dusseau), chapters on paging, TLBs and swapping, free at ostep.org.</li>
+<li>Write a pointer-chasing benchmark and plot ns/access vs working-set size; find your L1/L2/L3/DRAM steps.</li>
+<li>The GPU course, Part 1, for the same ideas on a GPU.</li>
+</ul>
+</section>

@@ -1,0 +1,248 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Percentiles",
+   "statement": "<p>1,000,000 latency samples.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "How many samples are above p99.9?",
+     "answer": 1000,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Why report tails?",
+     "options": [
+      "a strategy acts on every event; rare slow events cost money and cluster in volatile markets",
+      "means are hard to compute",
+      "convention"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "0.1%."
+   ],
+   "solution": "<p>1,000 slow events per million is a lot of trades.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Trace a book",
+   "statement": "<p>Ops: buy 1 @100×10; sell 2 @101×5; sell 3 @100×4; sell 4 @99×10.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of trades?",
+     "answer": 2,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Price of the second trade?",
+     "answer": 100,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Quantity of order 4 left resting?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Trades are at the resting price."
+   ],
+   "solution": "<p>3 buys 4 from 1 at 100; 4 sells 6 to 1 at 100 (not 99); 4 lots of order 4 rest at 99.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Cancel cost",
+   "statement": "<p>A book with 10⁵ resting orders; cancels are 20× more frequent than trades.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Why not find-and-erase in a heap?",
+     "options": [
+      "O(n) search per cancel",
+      "heaps can't store ints",
+      "it's fine"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "multi",
+     "prompt": "O(1)/O(log n) designs?",
+     "options": [
+      "lazy deletion with an id→order map",
+      "price levels with intrusive lists + id map",
+      "re-sort the book on every cancel"
+     ],
+     "answer": [
+      0,
+      1
+     ]
+    }
+   ],
+   "hints": [
+    "Cancels dominate."
+   ],
+   "solution": "<p>Lazy deletion is O(log n) amortised; intrusive lists give O(1) unlink.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Price array",
+   "statement": "<p>Prices lie within ±5,000 ticks of a reference.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Array size for levels per side?",
+     "answer": 10001,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Advantage over a std::map?",
+     "options": [
+      "O(1) level access, contiguous memory, no tree rebalancing",
+      "smaller always",
+      "sorted iteration"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Bounded integer prices."
+   ],
+   "solution": "<p>Track the best index and scan forward when a level empties.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Coordinated omission",
+   "statement": "<p>A load generator sends the next request only after the previous reply. The server stalls for 1 s once during a 100 s test at 1,000 req/s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Requests that should have been sent during the stall?",
+     "answer": 1000,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Slow samples the naive tool records?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "The tool stops sending while waiting."
+   ],
+   "solution": "<p>One bad sample instead of ~1,000, so the percentiles look far better than reality.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Kernel bypass",
+   "statement": "<p>Kernel UDP receive path ~6 µs; kernel-bypass ~1 µs; tick-to-trade budget 5 µs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Can the kernel path meet the budget?",
+     "options": [
+      "No: it alone exceeds it",
+      "Yes"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Budget left after bypass receive (µs)?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Subtract."
+   ],
+   "solution": "<p>That's why low-latency stacks bypass the kernel.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Hot path hygiene",
+   "statement": "<p>Which belong on a microsecond hot path?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "pre-allocated object pools",
+      "std::string concatenation for logging",
+      "throwing exceptions for rejected orders",
+      "binary records into an SPSC log ring"
+     ],
+     "answer": [
+      0,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Allocation and I/O are unpredictable."
+   ],
+   "solution": "<p>Format logs elsewhere; reject without exceptions.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Integer prices",
+   "statement": "<p>Why are prices stored as integer ticks?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "exact equality and ordering at price levels; 0.1 + 0.2 != 0.3 in floating point",
+      "speed only",
+      "exchanges require it"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Price-level identity."
+   ],
+   "solution": "<p>Levels are keyed by exact price.</p>"
+  }
+ ]
+}

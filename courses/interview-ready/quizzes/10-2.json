@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "A data race in C++ is…",
+   "options": [
+    "undefined behaviour",
+    "a slow path",
+    "fine for bools"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Waiting on a condition variable should be…",
+   "options": [
+    "in a loop on the predicate",
+    "an if",
+    "without a mutex"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Release/acquire publishes…",
+   "options": [
+    "all writes before the release to the acquirer",
+    "only the flag",
+    "nothing"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Lock ordering prevents deadlock by breaking…",
+   "options": [
+    "circular wait",
+    "mutual exclusion",
+    "pre-emption"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Thread-safe lazy init in modern C++:",
+   "options": [
+    "function-local static",
+    "volatile pointer",
+    "a plain pointer check"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

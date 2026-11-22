@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "The unit of cache transfer is…",
+   "options": [
+    "a 64-byte line",
+    "a byte",
+    "a 4 KB page"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Pointer chasing is bound by…",
+   "options": [
+    "memory latency",
+    "bandwidth",
+    "compute"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Huge pages mainly reduce…",
+   "options": [
+    "TLB misses",
+    "cache misses",
+    "page size"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "First-touch NUMA policy places a page…",
+   "options": [
+    "on the node of the thread that first writes it",
+    "on node 0",
+    "randomly"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "When performance falls off a cliff as data grows, look for…",
+   "options": [
+    "a cache/TLB capacity boundary",
+    "a compiler bug",
+    "big-O changes"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

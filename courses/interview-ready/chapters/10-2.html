@@ -1,0 +1,95 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Implement a thread-safe queue", "what's a deadlock and how do you prevent it?", "explain memory_order_acquire", "why is double-checked locking broken without atomics?", "what's the difference between a mutex and a spinlock?". Concurrency questions probe whether your mental model of what other threads can observe is correct, because concurrency bugs don't show up in testing.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: happens-before</h2>
+<p>Without synchronisation, the compiler and the CPU may reorder memory operations, and other cores may see your writes late or in a different order. A <strong>data race</strong> (two threads access the same non-atomic location, at least one writes, no synchronisation) is undefined behaviour in C++. Synchronisation establishes <strong>happens-before</strong> edges: everything before a release (unlock, a store with memory_order_release) is visible to a thread after the matching acquire (lock, a load with acquire that reads the stored value).</p>
+<table>
+<tr><th>Primitive</th><th>Use</th><th>Notes</th></tr>
+<tr><td>mutex</td><td>protect an invariant spanning several variables</td><td>sleeps when contended; ~20 ns uncontended</td></tr>
+<tr><td>condition variable</td><td>wait until a predicate holds</td><td>always wait in a loop (spurious wakeups); hold the mutex while checking</td></tr>
+<tr><td>atomic (seq_cst)</td><td>a single shared flag or counter</td><td>simplest correct ordering; a full fence on stores on x86</td></tr>
+<tr><td>acquire/release</td><td>publishing data via a flag</td><td>a release store pairs with an acquire load that reads it</td></tr>
+<tr><td>relaxed</td><td>counters where only the final value matters</td><td>atomicity, no ordering</td></tr>
+<tr><td>spinlock</td><td>very short critical sections, no sleeping allowed</td><td>burns CPU; terrible if the holder is descheduled</td></tr>
+</table>
+<p><strong>Deadlock</strong> needs four conditions at once: mutual exclusion, hold-and-wait, no pre-emption, and circular wait. Break circular wait by always acquiring locks in a global order, or use <code>std::scoped_lock(a, b)</code>, which locks several mutexes deadlock-free.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: a bounded blocking queue</h2>
+<pre><code>template &lt;class T&gt;
+class BoundedQueue {
+    std::mutex m_;
+    std::condition_variable not_full_, not_empty_;
+    std::deque&lt;T&gt; q_;                       // invariant (under m_): q_.size() &lt;= cap_
+    const size_t cap_;
+public:
+    explicit BoundedQueue(size_t cap) : cap_(cap) {}
+    void push(T v) {
+        std::unique_lock lk(m_);
+        not_full_.wait(lk, [&amp;] { return q_.size() &lt; cap_; });   // loop inside: handles spurious wakeups
+        q_.push_back(std::move(v));
+        lk.unlock();
+        not_empty_.notify_one();
+    }
+    T pop() {
+        std::unique_lock lk(m_);
+        not_empty_.wait(lk, [&amp;] { return !q_.empty(); });
+        T v = std::move(q_.front()); q_.pop_front();
+        lk.unlock();
+        not_full_.notify_one();
+        return v;
+    }
+};</code></pre>
+<p>Publishing with acquire/release:</p>
+<pre><code>Data payload; std::atomic&lt;bool&gt; ready{false};
+// producer                                // consumer
+payload = make();                          while (!ready.load(std::memory_order_acquire)) {}
+ready.store(true, std::memory_order_release);   use(payload);   // guaranteed to see make()'s writes</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: lazy initialisation</h2>
+<pre><code>Widget* instance = nullptr; std::mutex m;
+Widget* get() {
+    if (!instance) {                       // check 1 (unlocked)
+        std::lock_guard g(m);
+        if (!instance) instance = new Widget;   // check 2 (locked)
+    }
+    return instance;
+}</code></pre>
+<ol>
+<li><strong>Intent:</strong> double-checked locking, so the lock is taken only during initialisation.</li>
+<li><strong>Find the race:</strong> check 1 reads <code>instance</code> without synchronisation while another thread writes it, which is a data race and UB.</li>
+<li><strong>Concrete failure:</strong> <code>instance = new Widget</code> may become visible <em>before</em> the Widget's fields are written (the store of the pointer is reordered with the constructor's stores). A thread passing check 1 then uses a half-built object.</li>
+<li><strong>Fix 1:</strong> make <code>instance</code> a <code>std::atomic&lt;Widget*&gt;</code>; load with acquire, store with release.</li>
+<li><strong>Fix 2 (best):</strong> a function-local static, <code>static Widget w; return &amp;w;</code>, whose initialisation C++11 guarantees is thread-safe; or <code>std::call_once</code>.</li>
+</ol>
+<p>The habit: <strong>for every shared variable, name the synchronisation that orders each access to it</strong>. If you can't name one, it's a data race.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong><code>volatile</code> is not a synchronisation primitive</strong> in C++ (it's for memory-mapped I/O). Use atomics.</li>
+<li><strong>Lost wakeup:</strong> checking the predicate without holding the mutex, or notifying before the state change, can sleep forever.</li>
+<li><strong>Priority inversion:</strong> a low-priority thread holds a lock that a high-priority thread needs while a medium one runs. Real-time systems use priority inheritance.</li>
+<li><strong>Read-mostly data:</strong> shared_mutex, RCU, or seqlocks (readers retry if a sequence number changed) avoid writer starvation and reader cache-line bouncing.</li>
+<li><strong>Thread pools:</strong> creating a thread costs ~10–50 µs, so reuse threads for short tasks.</li>
+<li><strong>x86 is strongly ordered</strong> (TSO: only store→load reordering), so acquire/release loads and stores compile to plain moves. ARM isn't, so code that "works on x86" can fail on ARM servers and phones.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Anthony Williams, <em>C++ Concurrency in Action</em> (2nd ed.), chapters 3–5.</li>
+<li>* Jeff Preshing's blog: "Acquire and Release Semantics", "The Synchronizes-With Relation".</li>
+<li>Run a racy counter under -fsanitize=thread; then fix it three ways (mutex, atomic, per-thread counters + a final sum) and time each.</li>
+<li>OSTEP concurrency chapters (locks, condition variables, common bugs).</li>
+</ul>
+</section>

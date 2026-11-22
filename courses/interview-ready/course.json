@@ -1639,14 +1639,144 @@
    "id": "p10",
    "n": 10,
    "title": "OS, concurrency and low latency",
-   "summary": "Virtual memory, caches, atomics, lock-free queues, order books, latency.",
+   "summary": "The memory hierarchy and virtual memory, synchronisation and memory ordering, lock-free structures, and low-latency trading systems.",
    "items": [
     {
      "type": "chapter",
      "id": "10-1",
-     "title": "OS, concurrency and low latency",
-     "summary": "Virtual memory, caches, atomics, lock-free queues, order books, latency.",
-     "status": "planned"
+     "title": "Memory hierarchy and virtual memory",
+     "summary": "Latency numbers, cache lines, TLBs, huge pages and NUMA; estimate before you measure.",
+     "blocks": [
+      [
+       "The signal",
+       "why is this slow?"
+      ],
+      [
+       "The core idea",
+       "latency numbers"
+      ],
+      [
+       "The invariant and template",
+       "three regimes"
+      ],
+      [
+       "A thinking trace",
+       "a hash map that slows as it grows"
+      ],
+      [
+       "Traps and variations",
+       "AoS/SoA, mmap, fork"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-2",
+     "title": "Synchronisation and memory ordering",
+     "summary": "Happens-before, mutexes and condition variables, atomics, acquire/release, deadlock.",
+     "blocks": [
+      [
+       "The signal",
+       "thread-safe X"
+      ],
+      [
+       "The core idea",
+       "happens-before"
+      ],
+      [
+       "The invariant and template",
+       "bounded queue, publishing"
+      ],
+      [
+       "A thinking trace",
+       "double-checked locking"
+      ],
+      [
+       "Traps and variations",
+       "volatile, lost wakeups, TSO"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-3",
+     "title": "Lock-free structures and false sharing",
+     "summary": "One writer per variable; SPSC rings; CAS, ABA and memory reclamation.",
+     "blocks": [
+      [
+       "The signal",
+       "no locks on the hot path"
+      ],
+      [
+       "The core idea",
+       "single writers, separate lines"
+      ],
+      [
+       "The invariant and template",
+       "SPSC ring buffer"
+      ],
+      [
+       "A thinking trace",
+       "lock-free but slower"
+      ],
+      [
+       "Traps and variations",
+       "wait-free, reclamation, Disruptor"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "10-4",
+     "title": "Low-latency systems and the order book",
+     "summary": "Tick-to-trade budgets, tails and honest measurement; a matching engine.",
+     "coding": [
+      "order-book-matching"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "microseconds matter"
+      ],
+      [
+       "The core idea",
+       "the budget is in the tails"
+      ],
+      [
+       "The invariant and template",
+       "measuring latency"
+      ],
+      [
+       "A thinking trace",
+       "designing a matching engine"
+      ],
+      [
+       "Traps and variations",
+       "ticks, order types, clocks"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p10-checkpoint",
+     "title": "Part 10 checkpoint",
+     "summary": "OS, concurrency and low latency."
     }
    ]
   },

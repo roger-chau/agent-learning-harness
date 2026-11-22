@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "The fastest shared structure has…",
+   "options": [
+    "one writer per variable",
+    "one lock",
+    "many CAS loops"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "False sharing comes from…",
+   "options": [
+    "independent variables in the same cache line",
+    "shared variables",
+    "atomics"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "ABA is a problem for…",
+   "options": [
+    "CAS-based structures with memory reuse",
+    "mutexes",
+    "SPSC rings"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Lock-free guarantees…",
+   "options": [
+    "system-wide progress",
+    "speed",
+    "per-thread bounds"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Separate hot variables with…",
+   "options": [
+    "alignas(64)",
+    "volatile",
+    "static"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

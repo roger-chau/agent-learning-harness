@@ -1,0 +1,62 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Trading-firm systems rounds: "design an order book", "how would you measure tick-to-trade latency?", "where do the microseconds go between the NIC and your strategy?", "why is p99.9 more important than the mean?". The judged problem below is the order book itself, the data structure at the centre of every exchange and every market-making system.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: the latency budget is spent in the tails</h2>
+<p>A tick-to-trade path (packet arrives, is parsed, the book updates, the strategy decides, an order is encoded and sent) can run in a few microseconds in software (sub-microsecond on FPGAs). Every component must be predictable, because one slow event (a page fault, a cache miss storm, a context switch, an allocation, a log write) dominates the tail.</p>
+<ul>
+<li><strong>Kernel bypass:</strong> the kernel network stack costs ~5–10 µs; user-space NIC access (DPDK, Solarflare/OpenOnload, ef_vi) cuts it to ~1 µs.</li>
+<li><strong>Core isolation and pinning:</strong> <code>isolcpus</code>, IRQ affinity, one busy-polling thread per pinned core, no context switches.</li>
+<li><strong>No allocation on the hot path:</strong> pre-allocate pools at start-up; no <code>new</code>, no <code>std::string</code> growth, no exceptions thrown.</li>
+<li><strong>Warm caches:</strong> keep the hot path warm by exercising it with dummy work when idle; avoid cold code layout.</li>
+<li><strong>Log asynchronously:</strong> write binary records into an SPSC ring; another core formats and writes them.</li>
+</ul>
+<p><strong>Order book design:</strong> per side, price levels (price → FIFO queue of orders) plus an order-id → order map for O(1) cancel and modify. If prices lie in a known band of ticks, an <em>array indexed by price tick</em> beats a tree: O(1) level access and contiguous memory, with a tracked best-price index.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: measuring latency honestly</h2>
+<ul>
+<li><strong>Timestamps:</strong> <code>rdtsc</code> (invariant TSC) for nanosecond-scale in-process timing; NIC hardware timestamps for wire-to-wire.</li>
+<li><strong>Report percentiles:</strong> p50, p99, p99.9, max, and a histogram (HdrHistogram). The mean hides exactly the events that lose money.</li>
+<li><strong>Coordinated omission:</strong> a load generator that waits for each response before sending the next under-samples the slow periods. Send on a fixed schedule and measure from the <em>intended</em> send time.</li>
+<li><strong>Isolate variables:</strong> pin the benchmark, disable frequency scaling (or record it), warm up, and repeat with confidence intervals.</li>
+</ul>
+<p>Invariant of the book: the best bid &lt; the best ask after every operation (no crossed book); each level's queue is in arrival order; every live order appears exactly once in both the level queue and the id map.</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: designing the matching engine</h2>
+<ol>
+<li><strong>Clarify the rules:</strong> price-time priority, trades at the resting price, partial fills, cancels by id, one instrument. Ask about order types (market, IOC, iceberg) and leave them as extensions.</li>
+<li><strong>Operations and frequencies:</strong> in real markets, adds and cancels vastly outnumber trades (cancel-to-trade ratios of 10–100×), so cancel must be cheap.</li>
+<li><strong>Structure v1 (interview-sized):</strong> two heaps keyed by (price, sequence), with <em>lazy cancels</em>: mark the order dead and skip it when it surfaces. O(log n) everything, simple, and correct. This is the judged problem below.</li>
+<li><strong>Structure v2 (production):</strong> a price-level map/array + an intrusive doubly-linked FIFO per level + id → node map: O(1) cancel, O(1) best price with a cached index, no dead entries accumulating.</li>
+<li><strong>Edge cases:</strong> an incoming order sweeping several levels; cancel of an unknown or already-filled id; zero-quantity remainders; equal prices arriving in sequence.</li>
+<li><strong>Testing:</strong> a reference implementation (simple, slow) against the optimised one on random order flow, exactly how this course's judge validated the two reference solutions.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Floating-point prices:</strong> use integer ticks. 0.1 + 0.2 ≠ 0.3 breaks price equality.</li>
+<li><strong>Self-trade prevention</strong>, market orders, IOC/FOK, and modify (which loses time priority if the quantity increases) are standard follow-ups.</li>
+<li><strong>Market data feeds:</strong> incremental updates with sequence numbers, so detect gaps and recover from a snapshot.</li>
+<li><strong>Throughput vs latency:</strong> batching improves the first and hurts the second; trading systems usually optimise the tail latency of each event.</li>
+<li><strong>Clock sync:</strong> cross-machine latency needs PTP-synchronised clocks; NTP is too coarse for microseconds.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Implement the production order book (price array + intrusive FIFO + id map) and fuzz it against your heap version.</li>
+<li>* Gil Tene, "How NOT to Measure Latency" (talk): coordinated omission and percentiles.</li>
+<li>Carl Cook, "When a Microsecond Is an Eternity" (CppCon 2017): HFT C++ practices.</li>
+<li>David Gross, "Trading at light speed" (CppCon 2022): order-book and low-latency data structures.</li>
+</ul>
+</section>
