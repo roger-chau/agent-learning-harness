@@ -1,0 +1,235 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Bars",
+   "statement": "<p>Trades [t, px, q]: [0, 10, 5], [400, 11, 5], [999, 9, 10], [1000, 9.5, 1], [3500, 10, 2]; 1-second bars.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Number of bars emitted?",
+     "answer": 3,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "First bar's VWAP?",
+     "answer": 9.75,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "First bar's close?",
+     "answer": 9.0,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Empty bars skipped."
+   ],
+   "solution": "<p>3 bars (0, 1000, 3000); VWAP (50 + 55 + 90)/20 = 9.75; close 9.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Top of book",
+   "statement": "<p>Updates: bid 100×5, ask 102×3, bid 101×2, bid 101×0, ask 102×0, ask 103×7.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Final top of book?",
+     "options": [
+      "[100, 5, 103, 7]",
+      "[101, 2, 102, 3]",
+      "[100, 5, 102, 3]"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Apply in order."
+   ],
+   "solution": "<p>[100, 5, 103, 7].</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Stability",
+   "statement": "<p>Prices near 10⁶ moving by ~0.01; window variance ~10⁻⁴.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "E[x²] magnitude (×10¹²)?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Relative double precision (≈ 2.2 × 10⁻¹⁶) times 10¹²?",
+     "answer": 0.00022,
+     "unit": "",
+     "tolerance": "5%"
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Conclusion?",
+     "options": [
+      "the rounding error in E[x²] exceeds the variance: the naive formula fails",
+      "fine"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Catastrophic cancellation."
+   ],
+   "solution": "<p>Rounding error ~2 × 10⁻⁴ against a variance of 10⁻⁴: no correct digits.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Welford",
+   "statement": "<p>Insert 2, 4, 4, 4, 5, 5, 7, 9 with Welford's update.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Mean?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": "0.1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Population variance (M2/n)?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": "0.1%"
+    }
+   ],
+   "hints": [
+    "The classic SD = 2 example."
+   ],
+   "solution": "<p>Mean 5, variance 4.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "VWAP window",
+   "statement": "<p>Trades within the last minute: (100, 10), (101, 30), (99, 20) as (price, qty).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "VWAP?",
+     "answer": 100.16666666666667,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "When a trade ages out…",
+     "options": [
+      "subtract its p·q and q from the running sums",
+      "recompute from scratch always",
+      "ignore"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Σpq/Σq."
+   ],
+   "solution": "<p>6,010/60 ≈ 100.17.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Rolling max",
+   "statement": "<p>A rolling max over the last w prices in O(1) amortised.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Structure?",
+     "options": [
+      "monotonic deque of indices (Part 1.4)",
+      "a heap without deletion",
+      "re-scan the window"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Sliding window maximum."
+   ],
+   "solution": "<p>Pop smaller values from the back; expire the front by index.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "L2 semantics",
+   "statement": "<p>An L2 update says \"bid 100 → size 7\" when the book had 5 at 100.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "New size if the feed sends totals?",
+     "answer": 7,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "New size if it sends deltas?",
+     "answer": 12,
+     "unit": "",
+     "tolerance": 0
+    }
+   ],
+   "hints": [
+    "Read the spec."
+   ],
+   "solution": "<p>Mixing these up corrupts the book silently: confirm the semantics first.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Book band",
+   "statement": "<p>A price-indexed array of ±2,000 ticks around a base; the price drifts 2,500 ticks during the day.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Handling?",
+     "options": [
+      "recentre: rebuild the array around a new base when the price nears the edge",
+      "crash",
+      "switch to map permanently"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Bounded arrays need a plan for drift."
+   ],
+   "solution": "<p>Recentring is rare and can be done off the critical path, or with a ring of levels.</p>"
+  }
+ ]
+}

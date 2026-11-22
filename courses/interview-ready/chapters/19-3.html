@@ -1,0 +1,65 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Quant-dev rounds mix classic \"brainteasers in code\": implement rand7() from rand5(), shuffle uniformly, sample k items from a stream of unknown length, simulate a game to check a probability, generate correlated normals. Each tests whether your code is <em>exactly</em> correct in distribution, which is hard to see by eye.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: prove uniformity, then test it statistically</h2>
+<ul>
+<li><strong>Fisher–Yates shuffle:</strong> for i from n − 1 down to 1, swap a[i] with a[j], j uniform in [0, i]. That gives n! equally likely outcomes. The common bug (j uniform in [0, n − 1] every time) gives nⁿ outcomes, which can't map evenly onto n!.</li>
+<li><strong>Rejection sampling:</strong> rand7 from rand5: form 5·(rand5 − 1) + rand5, uniform on 1..25; accept 1..21 (21 = 3 × 7) and map mod 7; reject 22–25 and retry. Expected calls = 2 × 25/21 ≈ 2.38.</li>
+<li><strong>Reservoir sampling:</strong> keep the first k items; for item i &gt; k, replace a random reservoir slot with probability k/i. Every item ends up included with probability k/n, proved by induction.</li>
+<li><strong>Correlated normals:</strong> Z₁ and Z₂ independent; X = Z₁, Y = ρZ₁ + √(1 − ρ²)Z₂ (Cholesky).</li>
+<li><strong>Testing:</strong> run 10⁶ trials and compare counts with expectations using a chi-square test. A biased shuffle shows up immediately for n = 3.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code>def shuffle(a, rng):                    # invariant: a[i:] is a uniform random arrangement of chosen items
+    for i in range(len(a) - 1, 0, -1):
+        j = rng.randint(0, i)
+        a[i], a[j] = a[j], a[i]
+
+def reservoir(stream, k, rng):          # invariant: each of the first i items is in R with probability k/i
+    R = []
+    for i, x in enumerate(stream, 1):
+        if i &lt;= k: R.append(x)
+        else:
+            j = rng.randint(1, i)
+            if j &lt;= k: R[j - 1] = x
+    return R</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "is this shuffle uniform?"</h2>
+<pre><code>for i in range(n): j = randint(0, n - 1); a[i], a[j] = a[j], a[i]</code></pre>
+<ol>
+<li><strong>Count outcomes:</strong> each step has n choices, so nⁿ equally likely execution paths.</li>
+<li><strong>Divisibility:</strong> for the result to be uniform over n! permutations, n! must divide nⁿ. For n = 3: 27 isn't divisible by 6. Not uniform.</li>
+<li><strong>Which permutations are favoured?</strong> For n = 3, some arrangements appear 5 times out of 27 and others 4 (not 4.5). Confirm with a quick simulation.</li>
+<li><strong>Fix:</strong> Fisher–Yates, j in [0, i]: n × (n − 1) × … × 1 = n! paths, one per permutation.</li>
+</ol>
+<p>The habit: <strong>count the equally likely execution paths and check that they divide evenly among the outcomes</strong>, then confirm with a chi-square test.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Modulo bias:</strong> rand() % n is biased unless n divides RAND_MAX + 1. Use rejection or std::uniform_int_distribution.</li>
+<li><strong>Seeding:</strong> reproducible simulations need explicit seeds; parallel simulations need independent streams.</li>
+<li><strong>Monte Carlo error:</strong> SE ∝ 1/√N. Report it with every simulated probability.</li>
+<li><strong>Weighted sampling:</strong> alias method for O(1) per sample after O(n) set-up; prefix sums + binary search for O(log n).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Knuth, TAOCP vol. 2, §3.4.2 (random sampling and shuffling).</li>
+<li>* Write rand7-from-rand5 and the naive shuffle; chi-square test both with 10⁶ trials.</li>
+<li>Vitter, "Random Sampling with a Reservoir" (1985).</li>
+<li>Implement Walker's alias method and compare its speed with binary search on prefix sums.</li>
+</ul>
+</section>

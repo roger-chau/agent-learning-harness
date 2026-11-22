@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Tails are caused by…",
+   "options": [
+    "rare slow events",
+    "uniform slowness",
+    "the median"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Prices on the hot path are…",
+   "options": [
+    "integer ticks",
+    "doubles",
+    "strings"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Sequence gaps require…",
+   "options": [
+    "recovery before trusting the book",
+    "nothing",
+    "a restart"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Unaligned binary fields: read with…",
+   "options": [
+    "memcpy",
+    "pointer casts",
+    "unions"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "unordered_map on a hot path: first…",
+   "options": [
+    "reserve capacity",
+    "use more threads",
+    "add logging"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Uniform shuffle:",
+   "options": [
+    "Fisher–Yates (j in [0, i])",
+    "j in [0, n − 1] every step",
+    "sort by random keys with ties"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "rand7 from rand5 uses…",
+   "options": [
+    "rejection sampling",
+    "rounding",
+    "modulo only"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Reservoir keeps each item with probability…",
+   "options": [
+    "k/n",
+    "1/n",
+    "k/i forever"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "rand() % n is biased unless…",
+   "options": [
+    "n divides the generator's range",
+    "n is prime",
+    "n < 100"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "Verify a sampler with…",
+   "options": [
+    "a chi-square test on many trials",
+    "one run",
+    "intuition"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

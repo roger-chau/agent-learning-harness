@@ -1,0 +1,65 @@
+{
+ "pass": 0.8,
+ "questions": [
+  {
+   "id": "q1",
+   "type": "single",
+   "prompt": "Market-data tasks are…",
+   "options": [
+    "streaming folds with small state",
+    "batch only",
+    "random access"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q2",
+   "type": "single",
+   "prompt": "Stable rolling variance:",
+   "options": [
+    "centre / Welford",
+    "E[x²] − E[x]²",
+    "doubles always fine"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q3",
+   "type": "single",
+   "prompt": "Top of book in Python:",
+   "options": [
+    "dict + lazy heap",
+    "sort every update",
+    "list scan"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q4",
+   "type": "single",
+   "prompt": "Empty bars in this task are…",
+   "options": [
+    "skipped",
+    "emitted with zeros",
+    "errors"
+   ],
+   "answer": 0,
+   "explanation": ""
+  },
+  {
+   "id": "q5",
+   "type": "single",
+   "prompt": "L2 updates usually carry…",
+   "options": [
+    "new level totals (check the spec)",
+    "always deltas",
+    "trades"
+   ],
+   "answer": 0,
+   "explanation": ""
+  }
+ ]
+}

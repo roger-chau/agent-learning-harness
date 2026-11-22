@@ -1,0 +1,245 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "rand7 from rand5",
+   "statement": "<p>Using 5·(rand5 − 1) + rand5, uniform on 1..25.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Accepted values?",
+     "answer": 21,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Expected rand5 calls per rand7 (2 × 25/21)?",
+     "answer": 2.380952380952381,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Accept a multiple of 7."
+   ],
+   "solution": "<p>21 accepted; ≈ 2.38 calls.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Shuffle paths",
+   "statement": "<p>The naive shuffle (j uniform in [0, n − 1] every step).</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Execution paths for n = 3?",
+     "answer": 27,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Permutations?",
+     "answer": 6,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "Uniform?",
+     "options": [
+      "No: 27 isn't divisible by 6",
+      "Yes"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "nⁿ vs n!."
+   ],
+   "solution": "<p>27 paths over 6 outcomes can't be uniform.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Reservoir",
+   "statement": "<p>Reservoir of size k = 10 over a stream of n = 1,000.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "P(item 500 is in the final sample)?",
+     "answer": 0.01,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "P(item 500 is accepted when it arrives)?",
+     "answer": 0.02,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "k/i on arrival; survives later replacements."
+   ],
+   "solution": "<p>Accepted with 10/500, then survives each later step i with probability 1 − 1/i: the product telescopes to 10/1000.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Modulo bias",
+   "statement": "<p>rand() returns 0..32767 uniformly; you use rand() % 10000.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Probability of outcome 0 (×10⁻⁵)?",
+     "answer": 12.20703125,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Probability of outcome 9999 (×10⁻⁵)?",
+     "answer": 9.1552734375,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "32768 = 3 × 10000 + 2768."
+   ],
+   "solution": "<p>Values below 2,768 occur 4 times in 32,768, the rest 3 times: a 33% relative bias.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Correlated normals",
+   "statement": "<p>Z₁, Z₂ independent N(0, 1); Y = ρZ₁ + √(1 − ρ²)Z₂ with ρ = 0.6.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Coefficient on Z₂?",
+     "answer": 0.8,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Var(Y)?",
+     "answer": 1,
+     "unit": "",
+     "tolerance": "0.5%"
+    },
+    {
+     "id": "c",
+     "type": "numeric",
+     "prompt": "Corr(Z₁, Y)?",
+     "answer": 0.6,
+     "unit": "",
+     "tolerance": "0.5%"
+    }
+   ],
+   "hints": [
+    "Cholesky for 2×2."
+   ],
+   "solution": "<p>0.8; 0.36 + 0.64 = 1; 0.6.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Monte Carlo SE",
+   "statement": "<p>Estimating a probability near 0.3 with 10⁶ trials.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Standard error?",
+     "answer": 0.000458257569495584,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "√(p(1 − p)/N)."
+   ],
+   "solution": "<p>≈ 0.00046.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Chi-square",
+   "statement": "<p>Testing a 3-element shuffle with 6,000 trials: each permutation expected 1,000 times.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Degrees of freedom?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "The naive shuffle would show…",
+     "options": [
+      "counts near 1,111 and 889 (5/27 vs 4/27 × 6,000): an enormous chi-square",
+      "counts near 1,000",
+      "no difference"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "k − 1."
+   ],
+   "solution": "<p>5 degrees of freedom; the naive shuffle's bias is obvious at this sample size.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Alias method",
+   "statement": "<p>Weighted sampling from n = 10⁶ categories, 10⁸ samples.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best method?",
+     "options": [
+      "alias method: O(n) set-up, O(1) per sample",
+      "linear scan per sample",
+      "sort per sample"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Binary search cost per sample (comparisons, log₂ 10⁶)?",
+     "answer": 20,
+     "unit": "",
+     "tolerance": "2%"
+    }
+   ],
+   "hints": [
+    "Amortise the set-up."
+   ],
+   "solution": "<p>Alias: two random numbers and one comparison per sample.</p>"
+  }
+ ]
+}

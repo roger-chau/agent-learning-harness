@@ -1,0 +1,62 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Knowing what the quant-dev loop looks like lets you prepare deliberately rather than broadly. Typical structure: an online assessment (Track A level, sometimes with C++-specific questions), one or two coding rounds, a C++/systems deep dive, a system design round (a trading system component), light probability, and a behavioural/fit conversation, often with a project deep dive.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: map each round to the Parts that prepare it</h2>
+<table>
+<tr><th>Round</th><th>What's tested</th><th>Prepare with</th></tr>
+<tr><td>Online assessment</td><td>2–4 coding problems, timed</td><td>Track A, both mock OAs</td></tr>
+<tr><td>Coding</td><td>clean, correct, fast solutions with complexity</td><td>Parts 1–8, Part 0's six-move method</td></tr>
+<tr><td>C++ deep dive</td><td>lifetimes, moves, templates, UB, STL internals</td><td>Part 9</td></tr>
+<tr><td>Systems / low latency</td><td>caches, concurrency, lock-free, measurement</td><td>Parts 10 and 19.1</td></tr>
+<tr><td>Design</td><td>order book, feed handler, risk system, market-data store</td><td>Parts 10.4, 11 and 19.2</td></tr>
+<tr><td>Probability (light)</td><td>expectation, conditioning, simulation in code</td><td>Parts 13 and 19.3</td></tr>
+<tr><td>Project deep dive</td><td>a performance story with numbers</td><td>your GPU course labs; Part 20</td></tr>
+</table>
+<p>Your differentiator is performance engineering: GPU kernels, profiling, roofline reasoning. Prepare two stories where you measured, found the bottleneck, fixed it, and quantified the result (Part 20 shows how).</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: a 6-week plan before applying</h2>
+<pre><code>Weeks 1–2:  Track A review: one Part per two days; LeetCode lists; mock OA 1
+Week 3:     Parts 9–10 (C++, systems); re-implement unique_ptr, SPSC ring, order book in C++
+Week 4:     Part 19 tasks end to end in C++ with benchmarks; Part 11 design practice aloud
+Week 5:     Parts 13–14 probability (light); daily mental-maths drill; mock OA 2
+Week 6:     Part 20 story bank; two full mock loops with a friend (coding + design + behavioural)
+Daily:      2 timed coding problems, 10 min drill, 1 C++ question explained aloud</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: the take-home</h2>
+<p><em>\"Write a program that reads a day of market data and outputs per-minute bars and the top of book at each bar's close. Optimise for speed. You have 4 hours.\"</em></p>
+<ol>
+<li><strong>Clarify in writing:</strong> input format, size, time zone, how to handle gaps and crossed books. State your assumptions in a README if you can't ask.</li>
+<li><strong>Correct first:</strong> a simple, readable version (the judged problems here); unit tests on edge cases; a test comparing against a brute-force reference on random data.</li>
+<li><strong>Then fast:</strong> profile; parse with a hand-written fast reader rather than iostreams; avoid per-line allocation; reserve containers; benchmark and report the numbers (throughput in messages per second, before and after).</li>
+<li><strong>Presentation:</strong> a README with the design, complexity, assumptions, test strategy, benchmark table, and what you'd do with more time. Reviewers read the README first.</li>
+<li><strong>Don't:</strong> over-engineer, skip tests, or submit something that doesn't build from a clean checkout.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Silence in coding rounds:</strong> quant-dev interviewers still grade communication (Part 0).</li>
+<li><strong>Over-claiming on your CV:</strong> every bullet can become a 20-minute deep dive; keep only what you can defend in detail.</li>
+<li><strong>Ignoring probability:</strong> even dev roles ask a few expectation questions. Keep Part 13 warm.</li>
+<li><strong>Not asking about the team:</strong> HFT dev roles vary enormously (strategy infrastructure, exchange connectivity, research platforms); ask which.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Each firm's careers page usually describes the process. Read it for every target and adapt the plan.</li>
+<li>* Glassdoor / Blind interview reports for your target firms (read critically: small samples, Part 17.3).</li>
+<li>Do the 4-hour take-home above as a timed exercise and write the README.</li>
+<li>Schedule two mock loops with a peer; swap roles afterwards.</li>
+</ul>
+</section>

@@ -1,0 +1,237 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Map rounds",
+   "statement": "<p>Which Part prepares which round?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "\"Explain what happens when vector grows\":",
+     "options": [
+      "Part 9",
+      "Part 13",
+      "Part 4"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "\"Design a feed handler\":",
+     "options": [
+      "Parts 10.4/19.1",
+      "Part 6",
+      "Part 15"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "c",
+     "type": "single",
+     "prompt": "\"Expected value of this game\":",
+     "options": [
+      "Part 13",
+      "Part 9",
+      "Part 11"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "The table in the chapter."
+   ],
+   "solution": "<p>C++ → 9; systems design → 10/19; probability → 13.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Take-home priorities",
+   "statement": "<p>Order these for a 4-hour take-home.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "First?",
+     "options": [
+      "a correct simple version with tests",
+      "the fastest possible version",
+      "a fancy UI"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "What do reviewers usually read first?",
+     "options": [
+      "the README",
+      "the longest file",
+      "commit messages"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Correctness, then speed, then presentation."
+   ],
+   "solution": "<p>Correct and tested, then optimised with numbers, documented in the README.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Throughput report",
+   "statement": "<p>Your bar builder processes a 10 GB file of 2 × 10⁸ messages in 40 s.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Messages per second (millions)?",
+     "answer": 5,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Bandwidth (MB/s)?",
+     "answer": 250,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Divide."
+   ],
+   "solution": "<p>5M msg/s and 250 MB/s; compare with disk and memory bandwidth to see what bounds it.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Parsing speed",
+   "statement": "<p>Reading 2 × 10⁸ lines with iostream at ~150 ns/line vs a hand-rolled parser at ~20 ns/line.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "iostream time (s)?",
+     "answer": 30,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "numeric",
+     "prompt": "Hand-rolled (s)?",
+     "answer": 4,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "Lines × cost."
+   ],
+   "solution": "<p>30 s vs 4 s. Parsing is often the bottleneck of a take-home.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "CV bullets",
+   "statement": "<p>Which CV bullet is strongest for a quant-dev role?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Choose",
+     "options": [
+      "\"Optimised a GEMM kernel from 4 to 31 TFLOP/s (78% of peak) by tiling for shared memory; verified with Nsight\"",
+      "\"Worked on GPU performance\"",
+      "\"Passionate about speed\""
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Specific, measured, defensible."
+   ],
+   "solution": "<p>Numbers, method and verification: and you must be able to explain every word.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Plan",
+   "statement": "<p>The 6-week plan's daily routine.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Which are in it?",
+     "options": [
+      "2 timed coding problems",
+      "10-minute mental-maths drill",
+      "1 C++ question explained aloud",
+      "reading news for 2 hours"
+     ],
+     "answer": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "hints": [
+    "Consistency."
+   ],
+   "solution": "<p>Small daily volume beats bursts.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Communication",
+   "statement": "<p>In a coding round you go silent for 6 minutes while thinking.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Better?",
+     "options": [
+      "narrate the approaches you're weighing (Part 0's method)",
+      "stay silent until done",
+      "ask for the answer"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Interviewers grade reasoning."
+   ],
+   "solution": "<p>Silence gives the interviewer nothing to score.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Team choice",
+   "statement": "<p>Three teams offered: strategy infrastructure, exchange connectivity, research platform.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Best question to ask each?",
+     "options": [
+      "\"What does a typical week's work and its success metric look like?\"",
+      "\"What's the salary?\" only",
+      "nothing"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Roles differ enormously."
+   ],
+   "solution": "<p>Find where your performance skills create the most leverage.</p>"
+  }
+ ]
+}

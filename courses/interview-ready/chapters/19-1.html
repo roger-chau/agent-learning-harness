@@ -1,0 +1,58 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>Quant developer (and HFT software engineer) loops combine Track A coding, Part 9–10 C++ and systems depth, and domain problems: parse a feed, maintain a book, compute signals on a stream, all fast and correct. This Part turns those pieces into the tasks you'll actually be given, and connects them to your GPU and performance background.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: correctness first, then the hot path, then the tail</h2>
+<ol>
+<li><strong>Correct on edge cases:</strong> empty books, crossed or locked markets, out-of-order or duplicate messages, sequence gaps, price precision.</li>
+<li><strong>Make the hot path cheap:</strong> no allocation (pools, fixed arrays), contiguous data (struct of arrays, price-indexed arrays), branch-light code, no virtual calls or exceptions, no locks (SPSC rings).</li>
+<li><strong>Control the tail:</strong> pin threads, pre-fault memory, warm caches, async logging; measure p99/p99.9 honestly (Part 10.4).</li>
+</ol>
+<p>Your GPU-performance background transfers directly: the memory hierarchy, roofline-style reasoning (is this bandwidth- or latency-bound?), measuring before optimising, and reading compiler output. Say so in interviews, with numbers from your labs.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template: a feed-handler skeleton</h2>
+<pre><code>recv packet (kernel bypass) → check sequence number (gap? → request snapshot / recover)
+  → decode fixed-layout binary message (no parsing allocations; memcpy into a POD struct)
+  → apply to the book (price-indexed levels; O(1) best-price tracking)
+  → publish top-of-book / signals to strategy (SPSC ring, cache-line aligned)
+  → strategy decides → order encoder → send
+Logging: binary records into a ring; a non-critical thread formats them.</code></pre>
+<p>Invariants: book state equals the exchange's after applying every message in sequence; the hot thread never blocks; every message is processed exactly once (dedupe by sequence number).</p>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: "our book-update path has a 40 µs p99.9 but a 2 µs median"</h2>
+<ol>
+<li><strong>Tail ≫ median means rare slow events</strong>, not uniform slowness. List the candidates: allocation, page faults, cache-cold paths, context switches, logging, rehashing.</li>
+<li><strong>Measure:</strong> timestamp each stage with rdtsc; histogram per stage; correlate slow events with perf counters (page faults, context switches) and with message types.</li>
+<li><strong>Finding (typical):</strong> an <code>unordered_map</code> of orders rehashes as it grows, a multi-microsecond pause that happens rarely. Also, the first message after a quiet period runs cache-cold.</li>
+<li><strong>Fixes:</strong> reserve the map at start-up (or use a pre-sized open-addressing table or an array indexed by order id); keep the path warm with periodic dummy work; pre-fault and lock memory (mlockall).</li>
+<li><strong>Verify:</strong> the p99.9 drops to about 4 µs; record the fix and add a regression benchmark to CI.</li>
+</ol>
+<p>The habit: <strong>a tail is a list of rare events; find them by measuring per stage, then remove each one structurally</strong>.</p>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Floating-point prices:</strong> use integer ticks. Floating point is for signals, not book keys.</li>
+<li><strong>Endianness and alignment</strong> in binary protocols: decode explicitly; use memcpy for unaligned fields (avoid UB from casting).</li>
+<li><strong>Clocks:</strong> monotonic clocks for intervals; PTP-synchronised clocks for cross-machine timestamps.</li>
+<li><strong>Testing:</strong> replay recorded market data through the system deterministically; fuzz against a simple reference implementation (as the judges here do).</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Carl Cook, "When a Microsecond Is an Eternity" (CppCon 2017).</li>
+<li>* David Gross, "Trading at Light Speed" (CppCon 2022), on order books and data structures.</li>
+<li>Read a public exchange binary protocol spec (e.g. Nasdaq ITCH 5.0) and write a decoder for the add/execute/cancel messages.</li>
+<li>Build the top-of-book handler below in C++ with a price-indexed array and benchmark it against the std::map version.</li>
+</ul>
+</section>

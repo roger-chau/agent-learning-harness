@@ -2944,14 +2944,146 @@
    "id": "p19",
    "n": 19,
    "title": "Quant developer",
-   "summary": "Low-latency C++, order books and tick data, brainteasers in code.",
+   "summary": "Low-latency practice, market-data streaming tasks (judged bars, top of book, rolling statistics), randomness in code, and the quant-dev loop.",
    "items": [
     {
      "type": "chapter",
      "id": "19-1",
-     "title": "Quant developer",
-     "summary": "Low-latency C++, order books and tick data, brainteasers in code.",
-     "status": "planned"
+     "title": "Low-latency engineering in practice",
+     "summary": "Correct, then a cheap hot path, then the tail; a feed-handler skeleton.",
+     "blocks": [
+      [
+       "The signal",
+       "fast and correct"
+      ],
+      [
+       "The core idea",
+       "correctness, hot path, tail"
+      ],
+      [
+       "The invariant and template",
+       "feed-handler skeleton"
+      ],
+      [
+       "A thinking trace",
+       "a 40 µs tail"
+      ],
+      [
+       "Traps and variations",
+       "ticks, alignment, replay"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "19-2",
+     "title": "Market-data processing",
+     "summary": "Streaming state machines for bars, VWAP, rolling stats and books; numerical care.",
+     "coding": [
+      "ohlc-bars",
+      "top-of-book",
+      "rolling-zscore"
+     ],
+     "blocks": [
+      [
+       "The signal",
+       "take-home tasks"
+      ],
+      [
+       "The core idea",
+       "streaming folds"
+      ],
+      [
+       "The invariant and template",
+       "VWAP window, Welford"
+      ],
+      [
+       "A thinking trace",
+       "top of book from L2"
+      ],
+      [
+       "Traps and variations",
+       "alignment, ordering, adjustments"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "19-3",
+     "title": "Randomness and simulation in code",
+     "summary": "Fisher–Yates, rejection, reservoirs, correlated normals; prove and test uniformity.",
+     "blocks": [
+      [
+       "The signal",
+       "rand7, shuffle, sample"
+      ],
+      [
+       "The core idea",
+       "count paths, then chi-square"
+      ],
+      [
+       "The invariant and template",
+       "shuffle, reservoir"
+      ],
+      [
+       "A thinking trace",
+       "the naive shuffle"
+      ],
+      [
+       "Traps and variations",
+       "modulo bias, seeds, alias"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "chapter",
+     "id": "19-4",
+     "title": "The quant developer loop",
+     "summary": "Rounds mapped to Parts; a 6-week plan; acing the take-home.",
+     "blocks": [
+      [
+       "The signal",
+       "know the loop"
+      ],
+      [
+       "The core idea",
+       "map rounds to Parts"
+      ],
+      [
+       "The invariant and template",
+       "a 6-week plan"
+      ],
+      [
+       "A thinking trace",
+       "the take-home"
+      ],
+      [
+       "Traps and variations",
+       "CV, silence, team fit"
+      ],
+      [
+       "Practice and reading",
+       "4 items"
+      ]
+     ]
+    },
+    {
+     "type": "checkpoint",
+     "id": "p19-checkpoint",
+     "title": "Part 19 checkpoint",
+     "summary": "Quant developer: streaming, latency and correctness."
     }
    ]
   },

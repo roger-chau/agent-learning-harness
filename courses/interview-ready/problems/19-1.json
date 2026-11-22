@@ -1,0 +1,211 @@
+{
+ "pass": 0.7,
+ "problems": [
+  {
+   "id": "p1",
+   "level": 1,
+   "title": "Hot path",
+   "statement": "<p>Which belong on a microsecond hot path?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "std::unordered_map that may rehash",
+      "a pre-sized array indexed by price tick",
+      "throwing an exception on a rejected order",
+      "an SPSC ring to the strategy thread"
+     ],
+     "answer": [
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Predictability."
+   ],
+   "solution": "<p>Rehashing and exceptions are rare but slow, exactly what ruins tails.</p>"
+  },
+  {
+   "id": "p2",
+   "level": 1,
+   "title": "Tail vs median",
+   "statement": "<p>Median 2 µs, p99.9 40 µs, 10⁶ messages per day.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Messages per day slower than 40 µs (≈)?",
+     "answer": 1000,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "First step?",
+     "options": [
+      "per-stage timestamps and histograms to find the rare events",
+      "rewrite in assembly",
+      "buy faster hardware"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "0.1% of 10⁶."
+   ],
+   "solution": "<p>About 1,000 slow messages: find what's different about them.</p>"
+  },
+  {
+   "id": "p3",
+   "level": 2,
+   "title": "Sequence gaps",
+   "statement": "<p>You receive messages with sequence numbers 100, 101, 103.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Action?",
+     "options": [
+      "detect the gap at 103; request a retransmit or snapshot before trusting the book",
+      "ignore it",
+      "drop 103"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Books are built from complete streams."
+   ],
+   "solution": "<p>A missing update makes the book wrong in ways you can't detect later.</p>"
+  },
+  {
+   "id": "p4",
+   "level": 2,
+   "title": "Unaligned decode",
+   "statement": "<p>Reading a little-endian uint32 at byte offset 3 of a packet buffer in C++.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Safe approach?",
+     "options": [
+      "memcpy into a uint32_t (and byte-swap if needed)",
+      "*(uint32_t*)(buf + 3)",
+      "reinterpret_cast<uint32_t&>"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Alignment and aliasing UB (Part 9.4)."
+   ],
+   "solution": "<p>memcpy compiles to a single load where allowed, without UB.</p>"
+  },
+  {
+   "id": "p5",
+   "level": 2,
+   "title": "Rehash pause",
+   "statement": "<p>An unordered_map grows from 2²⁰ to 2²¹ buckets, rehashing 10⁶ elements at ~20 ns each.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Pause (ms)?",
+     "answer": 20.0,
+     "unit": "",
+     "tolerance": "1%"
+    },
+    {
+     "id": "b",
+     "type": "single",
+     "prompt": "Fix?",
+     "options": [
+      "reserve capacity at start-up",
+      "use std::map",
+      "rehash more often"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Elements × cost."
+   ],
+   "solution": "<p>About 20 ms, enormous at microsecond budgets. Reserve up front.</p>"
+  },
+  {
+   "id": "p6",
+   "level": 2,
+   "title": "Throughput",
+   "statement": "<p>A feed delivers 5 million messages per second at peak.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "numeric",
+     "prompt": "Budget per message (ns)?",
+     "answer": 200,
+     "unit": "",
+     "tolerance": "1%"
+    }
+   ],
+   "hints": [
+    "1 s / 5 × 10⁶."
+   ],
+   "solution": "<p>200 ns per message, end to end, on one core.</p>"
+  },
+  {
+   "id": "p7",
+   "level": 2,
+   "title": "Your edge",
+   "statement": "<p>Which GPU-course skills transfer directly to low-latency roles?</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "multi",
+     "prompt": "Select",
+     "options": [
+      "memory-hierarchy reasoning",
+      "measure-then-optimise discipline",
+      "warp divergence specifics",
+      "reading compiler output"
+     ],
+     "answer": [
+      0,
+      1,
+      3
+     ]
+    }
+   ],
+   "hints": [
+    "Transferable habits."
+   ],
+   "solution": "<p>Warp specifics are GPU-only; the reasoning and discipline transfer.</p>"
+  },
+  {
+   "id": "p8",
+   "level": 3,
+   "title": "Warm path",
+   "statement": "<p>The first message after 10 s of silence takes 15 µs instead of 2 µs.</p>",
+   "parts": [
+    {
+     "id": "a",
+     "type": "single",
+     "prompt": "Likely cause and fix?",
+     "options": [
+      "caches/TLB/branch predictors went cold; keep the path warm with periodic dummy work",
+      "network jitter only",
+      "a bug"
+     ],
+     "answer": 0
+    }
+   ],
+   "hints": [
+    "Idle cores evict state."
+   ],
+   "solution": "<p>Some firms run \"heartbeat\" executions of the hot path to keep it resident.</p>"
+  }
+ ]
+}

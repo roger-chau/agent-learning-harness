@@ -1,0 +1,70 @@
+<section class="blk" data-n="01">
+<h2>The signal</h2>
+<p>"Build OHLC bars from trades", "maintain the top of book from level-2 updates", "compute VWAP over the last N minutes", "rolling z-score of the spread". These are the take-home and on-site tasks of quant-dev interviews, and the daily work of the role. They're graded on correctness in edge cases, clean streaming design, and numerical care.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>The core idea: streaming state machines</h2>
+<p>Every market-data task is a fold over an ordered stream: keep a small state, update it per message, emit results. Choose the state so each update is O(1) or O(log n):</p>
+<table>
+<tr><th>Task</th><th>State</th><th>Per-update cost</th></tr>
+<tr><td>OHLC bars</td><td>the open bar</td><td>O(1)</td></tr>
+<tr><td>VWAP over a time window</td><td>deque of (t, p·q, q) + running sums</td><td>amortised O(1)</td></tr>
+<tr><td>Rolling mean/variance</td><td>window + stable running moments</td><td>O(1)</td></tr>
+<tr><td>Rolling max/min</td><td>monotonic deque (Part 1.4)</td><td>amortised O(1)</td></tr>
+<tr><td>Top of book</td><td>price → size maps, best tracking</td><td>O(log n) or O(1) with arrays</td></tr>
+<tr><td>Rolling median</td><td>two heaps with lazy deletion (Part 5.2)</td><td>O(log w)</td></tr>
+</table>
+<p>The numerical lesson from the judged rolling z-score: running sums of squares lose all precision when the level is large and the variance tiny. Centre on a reference value, or use Welford's update.</p>
+</section>
+
+<section class="blk" data-n="03">
+<h2>The invariant and template</h2>
+<pre><code># Time-window VWAP: invariant (pv_sum, q_sum) equal the sums over trades in (t − W, t]
+from collections import deque
+win, pv, qs = deque(), 0.0, 0
+def on_trade(t, px, q):
+    global pv, qs
+    win.append((t, px * q, q)); pv += px * q; qs += q
+    while win[0][0] &lt;= t - W:
+        _, a, b = win.popleft(); pv -= a; qs -= b
+    return pv / qs
+
+# Welford (insert only): stable mean and variance
+n, mean, M2 = 0, 0.0, 0.0
+def add(x):
+    global n, mean, M2
+    n += 1; d = x - mean; mean += d / n; M2 += d * (x - mean)   # variance = M2 / n</code></pre>
+</section>
+
+<section class="blk" data-n="04">
+<h2>A thinking trace: top of book from L2</h2>
+<ol>
+<li><strong>Semantics first:</strong> does an update carry the level's new total size or a delta? (Here: the new size; 0 deletes.) Ask; getting it wrong corrupts the book silently.</li>
+<li><strong>State:</strong> per side a map price → size. Best bid = max key, best ask = min key.</li>
+<li><strong>Language choice:</strong> in C++, <code>std::map</code> with <code>greater&lt;&gt;</code> for bids gives best = begin(). In Python there's no built-in sorted map, so use a dict plus a heap with lazy deletion.</li>
+<li><strong>Edge cases:</strong> deleting the best level (find the next), an empty side (−1), re-adding a deleted price, a crossed book from bad data (flag it).</li>
+<li><strong>Production version:</strong> an array indexed by (price − base) in ticks, with the best index tracked and scanned only when the best level empties, giving O(1) typical updates. Recentre the base if the price drifts outside the band.</li>
+</ol>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Traps and variations</h2>
+<ul>
+<li><strong>Bar alignment:</strong> exchange timestamps vs receive timestamps; time zones and session boundaries.</li>
+<li><strong>Out-of-order trades:</strong> decide on a policy (drop, buffer, amend the closed bar) and document it.</li>
+<li><strong>VWAP with zero volume</strong> in a window: define the output (carry forward, or none).</li>
+<li><strong>Corporate actions</strong> (splits, dividends) adjust historical prices: research data needs adjusted series; live trading doesn't.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="06">
+<h2>Practice and reading</h2>
+<p>Work through these after the chapter; the asterisked ones are the most interview-relevant.</p>
+<ul>
+<li>* Implement the time-window VWAP and a rolling median; test both against brute force on random streams.</li>
+<li>* Welford (1962) / Knuth TAOCP vol. 2 §4.2.2 on numerically stable variance.</li>
+<li>Nasdaq TotalView-ITCH specification: map its messages onto the top-of-book problem.</li>
+<li>Write a replay tool that feeds a recorded CSV of trades through your bar builder at 10× speed.</li>
+</ul>
+</section>
