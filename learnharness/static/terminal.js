@@ -1,6 +1,7 @@
 /* In-page terminal: a code editor + console that runs code in a Web Worker. */
 (() => {
   "use strict";
+  const liveTerminals = new Set();
   const TIMEOUT_MS = 15000;
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -143,6 +144,8 @@
 
     let worker = null;
     let busy = false;
+    const kill = () => { if (worker) { worker.terminate(); worker = null; } };
+    liveTerminals.add(kill);
     const buttons = () => el.querySelectorAll(".term-btn");
 
     function go(mode) {
@@ -159,7 +162,8 @@
         line(`Stopped after ${TIMEOUT_MS / 1000}s. Is there an infinite loop, or a very large launch?`, "err");
         finish();
       }, TIMEOUT_MS);
-      const finish = () => { clearTimeout(timer); busy = false; buttons().forEach((b) => (b.disabled = false)); };
+      // A finished run's worker is terminated: idle workers hold the simulator's memory.
+      const finish = () => { clearTimeout(timer); kill(); busy = false; buttons().forEach((b) => (b.disabled = false)); };
       worker.onmessage = (ev) => {
         const m = ev.data;
         if (m.type === "out") line(m.text, m.kind);
@@ -189,5 +193,7 @@
     return el;
   }
 
-  window.GWTerminal = { create };
+  // Called by the router when leaving a page: stop any run still in progress.
+  function stopAll() { liveTerminals.forEach((k) => k()); liveTerminals.clear(); }
+  window.GWTerminal = { create, stopAll };
 })();

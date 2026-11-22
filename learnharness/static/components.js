@@ -2,7 +2,37 @@
 (() => {
   "use strict";
   const C = {};
-  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  // Theme colours, read once and cached: drawing code asks for them dozens of times per frame,
+  // and each getComputedStyle read can force a style recalculation. Cleared on resize/theme change.
+  const cssCache = new Map();
+  const css = (name) => {
+    let v = cssCache.get(name);
+    if (v === undefined) { v = getComputedStyle(document.documentElement).getPropertyValue(name).trim(); cssCache.set(name, v); }
+    return v;
+  };
+
+  // ---- Lifecycle: everything a mounted component starts is tracked, so that leaving the page
+  // (unmountAll, called by the router) stops it. Without this, timers, animation loops and
+  // resize listeners of components on pages you've left keep running and redrawing forever.
+  const live = { timers: new Set(), frames: new Set(), observers: new Set(), resize: new Set() };
+  const every = (fn, ms) => { const id = setInterval(fn, ms); live.timers.add(id); return id; };
+  const cancelEvery = (id) => { clearInterval(id); live.timers.delete(id); };
+  const frameReq = (fn) => { const id = requestAnimationFrame((t) => { live.frames.delete(id); fn(t); }); live.frames.add(id); return id; };
+  const frameCancel = (id) => { cancelAnimationFrame(id); live.frames.delete(id); };
+  const onResize = (fn) => live.resize.add(fn);
+  let resizeQueued = false;
+  window.addEventListener("resize", () => {
+    cssCache.clear();
+    if (resizeQueued) return;
+    resizeQueued = true;
+    requestAnimationFrame(() => { resizeQueued = false; live.resize.forEach((fn) => { try { fn(); } catch (e) {} }); });
+  });
+  function unmountAll() {
+    live.timers.forEach((id) => clearInterval(id));
+    live.frames.forEach((id) => cancelAnimationFrame(id));
+    live.observers.forEach((o) => o.disconnect());
+    live.timers.clear(); live.frames.clear(); live.observers.clear(); live.resize.clear();
+  }
   const fmt = (x, d = 1) => (Math.abs(x) >= 100 || Number.isInteger(x) ? Math.round(x).toLocaleString() : x.toFixed(d));
   const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -55,7 +85,9 @@
   // Keep animations cheap: only run while visible.
   function whenVisible(el, start, stop) {
     if (!("IntersectionObserver" in window)) { start(); return; }
-    new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? start() : stop())), { threshold: 0.05 }).observe(el);
+    const io = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? start() : stop())), { threshold: 0.05 });
+    io.observe(el);
+    live.observers.add(io);
   }
 
   // ---------------------------------------------------------------------------
@@ -92,7 +124,7 @@
       s.setReadout("scale", d.per === 1 ? "1 request" : `${d.per} requests`);
     }
     function frame(t) {
-      raf = requestAnimationFrame(frame);
+      raf = frameReq(frame);
       const dt = Math.min(0.05, (t - (last || t)) / 1000); last = t;
       const { ctx, w, h } = geo;
       const d = derived();
@@ -120,10 +152,10 @@
       ctx.fillStyle = css("--ink-2");
       ctx.fillText(`${s.vals.lat} ns`, x0 + pipeW / 2 - 18, y0 + ph + 20);
     }
-    const start = () => { if (!raf && !reduced()) { last = 0; raf = requestAnimationFrame(frame); } else if (reduced()) frame(0); };
-    const stop = () => { cancelAnimationFrame(raf); raf = 0; };
+    const start = () => { if (!raf && !reduced()) { last = 0; raf = frameReq(frame); } else if (reduced()) frame(0); };
+    const stop = () => { frameCancel(raf); raf = 0; };
     onInput(el, s, () => { readouts(); dots = []; });
-    window.addEventListener("resize", () => (geo = s.size()));
+    onResize(() => (geo = s.size()));
     readouts();
     whenVisible(el, start, stop);
   };
@@ -181,7 +213,7 @@
       ctx.fillText("Expected time of one loop iteration: the work, then the load's average cost", x0, y - 14);
     }
     onInput(el, s, draw);
-    window.addEventListener("resize", draw);
+    onResize(draw);
     draw();
   };
 
@@ -274,11 +306,11 @@
       ctx.fillStyle = colors.wait; ctx.fillRect(left + 338, h - 14, 10, 8);
       el.querySelector(".sim-clock").textContent = `cycle ${shown}/${T}`;
     }
-    const stopPlay = () => { playing = false; clearInterval(timer); el.querySelector('[data-t="play"]').textContent = "▶ Play"; };
+    const stopPlay = () => { playing = false; cancelEvery(timer); el.querySelector('[data-t="play"]').textContent = "▶ Play"; };
     const play = () => {
       if (shown >= T) shown = 0;
       playing = true; el.querySelector('[data-t="play"]').textContent = "❚❚ Pause";
-      timer = setInterval(() => { shown++; draw(); if (shown >= T) stopPlay(); }, 45);
+      timer = every(() => { shown++; draw(); if (shown >= T) stopPlay(); }, 45);
     };
     el.querySelector(".sim-transport").addEventListener("click", (e) => {
       const b = e.target.closest("[data-t]"); if (!b) return;
@@ -287,7 +319,7 @@
       if (b.dataset.t === "reset") { stopPlay(); shown = 0; draw(); }
     });
     onInput(el, s, () => { simulate(); shown = T; draw(); });
-    window.addEventListener("resize", draw);
+    onResize(draw);
     simulate(); shown = T; draw();
   };
 
@@ -351,13 +383,13 @@
       ctx.fillText(wave < d.waves ? `Wave ${wave + 1} of ${d.waves}` : "Grid finished", 8, h - 10);
       el.querySelector(".sim-clock").textContent = `wave ${Math.min(wave + 1, d.waves)}/${d.waves}`;
     }
-    const stopPlay = () => { playing = false; clearInterval(timer); el.querySelector('[data-t="play"]').textContent = "▶ Play"; };
+    const stopPlay = () => { playing = false; cancelEvery(timer); el.querySelector('[data-t="play"]').textContent = "▶ Play"; };
     const play = () => {
       const d = derived();
       if (wave >= d.waves - 1) wave = 0;
       playing = true; el.querySelector('[data-t="play"]').textContent = "❚❚ Pause";
       draw();
-      timer = setInterval(() => { if (wave >= derived().waves - 1) { stopPlay(); return; } wave++; draw(); }, 900);
+      timer = every(() => { if (wave >= derived().waves - 1) { stopPlay(); return; } wave++; draw(); }, 900);
     };
     el.querySelector(".sim-transport").addEventListener("click", (e) => {
       const b = e.target.closest("[data-t]"); if (!b) return;
@@ -366,7 +398,7 @@
       if (b.dataset.t === "reset") { stopPlay(); wave = 0; draw(); }
     });
     onInput(el, s, () => { stopPlay(); wave = 0; draw(); });
-    window.addEventListener("resize", draw);
+    onResize(draw);
     draw();
   };
 
@@ -462,14 +494,14 @@
       el.querySelector('[data-r="eff"]').textContent = k ? `${Math.round((100 * work) / (k * W32))}%` : "–";
       el.querySelector(".sim-clock").textContent = `step ${k}/${steps.length}`;
     }
-    const stop = () => { clearInterval(timer); timer = 0; el.querySelector('[data-t="play"]').textContent = "▶ Play"; };
+    const stop = () => { cancelEvery(timer); timer = 0; el.querySelector('[data-t="play"]').textContent = "▶ Play"; };
     el.querySelector(".sim-transport").addEventListener("click", (e) => {
       const b = e.target.closest("[data-t]"); if (!b) return;
       if (b.dataset.t === "play") {
         if (timer) return stop();
         if (k >= steps.length) k = 0;
         b.textContent = "❚❚ Pause";
-        timer = setInterval(() => { k++; render(); if (k >= steps.length) stop(); }, 750);
+        timer = every(() => { k++; render(); if (k >= steps.length) stop(); }, 750);
       }
       if (b.dataset.t === "step") { stop(); k = Math.min(steps.length, k + 1); render(); }
       if (b.dataset.t === "reset") { stop(); k = 0; render(); }
@@ -623,7 +655,7 @@
       ctx.fillStyle = css("--ink"); ctx.fillText("your kernel", X(ai) + 8, Y(att) - 8);
     }
     onInput(el, s, draw);
-    window.addEventListener("resize", draw);
+    onResize(draw);
     draw();
   };
 
@@ -759,7 +791,7 @@
       });
     }
     onInput(el, s, draw);
-    window.addEventListener("resize", draw);
+    onResize(draw);
     draw();
   };
 
@@ -843,10 +875,10 @@
       el.querySelector('[data-r="warps"]').textContent = cur ? new Set(cur.threads.map((t) => Math.floor(t / 8))).size : "–";
       el.querySelector(".sim-clock").textContent = `step ${k}/${steps.length}`;
     }
-    const stop = () => { clearInterval(timer); timer = 0; el.querySelector('[data-t="play"]').textContent = "▶ Play"; };
+    const stop = () => { cancelEvery(timer); timer = 0; el.querySelector('[data-t="play"]').textContent = "▶ Play"; };
     el.querySelector(".sim-transport").addEventListener("click", (e) => {
       const b = e.target.closest("[data-t]"); if (!b) return;
-      if (b.dataset.t === "play") { if (timer) return stop(); if (k >= steps.length) k = 0; b.textContent = "❚❚ Pause"; timer = setInterval(() => { k++; render(); if (k >= steps.length) stop(); }, 900); }
+      if (b.dataset.t === "play") { if (timer) return stop(); if (k >= steps.length) k = 0; b.textContent = "❚❚ Pause"; timer = every(() => { k++; render(); if (k >= steps.length) stop(); }, 900); }
       if (b.dataset.t === "step") { stop(); k = Math.min(steps.length, k + 1); render(); }
       if (b.dataset.t === "reset") { stop(); k = 0; render(); }
     });
@@ -924,11 +956,11 @@
       el.querySelector(".sim-clock").textContent = `cycle ${Math.max(0, t + 1)}/${total()}`;
     }
     const playBtn = el.querySelector('[data-t="play"]');
-    const stop = () => { clearInterval(timer); timer = 0; playBtn.textContent = "▶ Play"; };
+    const stop = () => { cancelEvery(timer); timer = 0; playBtn.textContent = "▶ Play"; };
     const play = () => {
       if (t >= total() - 1) t = -1;
       playBtn.textContent = "❚❚ Pause";
-      timer = setInterval(() => { if (t >= total() - 1) { stop(); return; } t++; draw(); }, reduced() ? 1200 : 650);
+      timer = every(() => { if (t >= total() - 1) { stop(); return; } t++; draw(); }, reduced() ? 1200 : 650);
     };
     el.querySelector(".sim-transport").addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return;
@@ -938,7 +970,7 @@
     });
     onInput(el, s, () => { stop(); t = -1; draw(); });
     whenVisible(el, () => {}, stop);
-    window.addEventListener("resize", draw);
+    onResize(draw);
     draw();
   };
 
@@ -1005,7 +1037,7 @@
       s.setReadout("blk", blocks < 16 ? `${blocks} (SMs idle)` : `${blocks}`);
     }
     onInput(el, s, draw);
-    window.addEventListener("resize", draw);
+    onResize(draw);
     draw();
   };
 
@@ -1054,7 +1086,7 @@
       s.setReadout("stall", `${Math.round((100 * r.stalls.dependency) / r.cycles)}%`);
     }
     onInput(el, s, draw);
-    window.addEventListener("resize", draw);
+    onResize(draw);
     draw();
   };
 
@@ -1103,19 +1135,28 @@
       s.setReadout("speed", `${(base.total / p.total).toFixed(2)}×`);
     }
     onInput(el, s, draw);
-    window.addEventListener("resize", draw);
+    onResize(draw);
     draw();
   };
 
+  function mountOne(el) {
+    const fn = C[el.dataset.gw];
+    if (fn && !el.dataset.mounted) {
+      el.dataset.mounted = "1";
+      try { fn(el); } catch (e) { el.textContent = `Component failed: ${e.message}`; }
+    }
+  }
+  // Mount lazily: a component is built (canvas sized, first frame drawn) only when it comes
+  // within a screen of the viewport, so opening a chapter with many figures stays fast.
   function mount(root) {
-    root.querySelectorAll("[data-gw]").forEach((el) => {
-      const fn = C[el.dataset.gw];
-      if (fn && !el.dataset.mounted) {
-        el.dataset.mounted = "1";
-        try { fn(el); } catch (e) { el.textContent = `Component failed: ${e.message}`; }
-      }
-    });
+    const els = [...root.querySelectorAll("[data-gw]")];
+    if (!("IntersectionObserver" in window)) { els.forEach(mountOne); return; }
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (e.isIntersecting) { io.unobserve(e.target); mountOne(e.target); }
+    }), { rootMargin: "100% 0px" });
+    els.forEach((el) => io.observe(el));
+    live.observers.add(io);
   }
 
-  window.GWComponents = { mount, registry: C };
+  window.GWComponents = { mount, unmountAll, registry: C };
 })();

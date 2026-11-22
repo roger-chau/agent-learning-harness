@@ -253,13 +253,19 @@
 
   async function renderItem(slug, itemId) {
     setNav("courses");
-    main.innerHTML = `<div class="container" style="padding:48px 16px"><div class="empty-card">Loading…</div></div>`;
+    // Keep the current page on screen while the next one loads (no blank flash); only show a
+    // loading card if the server is slow.
+    const navId = ++navSeq;
+    const slow = setTimeout(() => { if (navId === navSeq) main.innerHTML = `<div class="container" style="padding:48px 16px"><div class="empty-card">Loading…</div></div>`; }, 400);
     let it, c;
     try {
       [it, c] = await Promise.all([api(`/api/courses/${slug}/items/${itemId}`), api(`/api/courses/${slug}`)]);
     } catch (err) {
+      clearTimeout(slow);
       return showError(err, slug);
-    }
+    } finally { clearTimeout(slow); }
+    if (navId !== navSeq) return;  // the user already clicked elsewhere
+    window.scrollTo(0, 0);
     Object.assign(reader, { slug, item: it, course: c });
     const chNum = it.type === "chapter" ? it.id.replace("-", ".") : null;
     const kicker = it.type === "chapter" ? `Part ${it.part.n} · Chapter ${chNum}` : it.type === "milestone" ? `Part ${it.part.n} · Project milestone` : it.type === "paper" ? `Part ${it.part.n} · Paper` : it.type === "scenario" ? `Part ${it.part.n} · Real-world scenario` : it.type === "lab" ? `Part ${it.part.n} · Real-GPU lab` : `Part ${it.part.n} · Checkpoint`;
@@ -354,30 +360,47 @@ make submit     # record the results here (Groundwork must be running)</code></p
   }
 
   // Reading progress: a bar under the site header that fills as you scroll through the chapter.
-  let readBarHandler = null;
+  // Cheap on purpose: the chapter's extent is measured only on load and resize, scroll events
+  // are coalesced to one update per frame, and the bar moves with a transform (no layout, no
+  // repaint of the header).
+  let readBar = null;
   function setupReadBar() {
+    hideReadBar();
     const bar = document.getElementById("read-bar"), fill = bar && bar.firstElementChild;
-    if (!bar) return;
-    if (readBarHandler) { window.removeEventListener("scroll", readBarHandler); window.removeEventListener("resize", readBarHandler); }
+    const art = document.querySelector("article.chapter, #ch-body");
+    if (!bar || !art) return;
     bar.hidden = false;
-    readBarHandler = () => {
-      const art = document.querySelector("article.chapter, #ch-body");
-      if (!art || !document.body.contains(art)) { bar.hidden = true; return; }
+    let start = 0, span = 1, queued = false;
+    const measure = () => {
       const startEl = document.querySelector(".ch-head") || art, endEl = document.getElementById("gate") || art;
-      const start = startEl.getBoundingClientRect().top + window.scrollY;
+      start = startEl.getBoundingClientRect().top + window.scrollY;
       const end = endEl.getBoundingClientRect().bottom + window.scrollY;
-      const span = Math.max(1, end - start - window.innerHeight);
-      const p = Math.min(1, Math.max(0, (window.scrollY - start + 64) / span));
-      fill.style.width = `${(p * 100).toFixed(2)}%`;
+      span = Math.max(1, end - start - window.innerHeight);
     };
-    window.addEventListener("scroll", readBarHandler, { passive: true });
-    window.addEventListener("resize", readBarHandler);
-    readBarHandler();
+    const paint = () => {
+      queued = false;
+      const p = Math.min(1, Math.max(0, (window.scrollY - start + 64) / span));
+      fill.style.transform = `scaleX(${p.toFixed(4)})`;
+    };
+    const onScroll = () => { if (!queued) { queued = true; requestAnimationFrame(paint); } };
+    const onResize = () => { measure(); onScroll(); };
+    // The chapter grows as figures mount and math renders: re-measure when its size changes.
+    const ro = "ResizeObserver" in window ? new ResizeObserver(onResize) : null;
+    if (ro) ro.observe(art);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    readBar = { onScroll, onResize, ro };
+    onResize();
   }
   function hideReadBar() {
     const bar = document.getElementById("read-bar");
     if (bar) bar.hidden = true;
-    if (readBarHandler) { window.removeEventListener("scroll", readBarHandler); window.removeEventListener("resize", readBarHandler); readBarHandler = null; }
+    if (readBar) {
+      window.removeEventListener("scroll", readBar.onScroll);
+      window.removeEventListener("resize", readBar.onResize);
+      if (readBar.ro) readBar.ro.disconnect();
+      readBar = null;
+    }
   }
   const fmtMins = (m) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ""}`);
 
@@ -720,14 +743,19 @@ make submit     # record the results here (Groundwork must be running)</code></p
   }
 
   // ---------- Router ----------
+  let navSeq = 0;
   function route() {
     hideReadBar();
+    // Stop everything the previous page started: figure timers and animation loops, and any
+    // exercise still running in a worker.
+    if (window.GWComponents && window.GWComponents.unmountAll) window.GWComponents.unmountAll();
+    if (window.GWTerminal && window.GWTerminal.stopAll) window.GWTerminal.stopAll();
     const h = location.hash.replace(/^#/, "") || "/";
     const parts = h.split("/").filter(Boolean);
-    if (parts[0] === "c" && parts[1] && parts[2] && !parts[2].startsWith("b")) { window.scrollTo(0, 0); return renderItem(parts[1], parts[2]); }
-    if (parts[0] === "c" && parts[1]) { window.scrollTo(0, 0); return renderCourse(parts[1]); }
-    if (parts[0] === "about") { window.scrollTo(0, 0); return renderAbout(); }
-    if (parts.length === 0) { window.scrollTo(0, 0); return renderHome(); }
+    if (parts[0] === "c" && parts[1] && parts[2] && !parts[2].startsWith("b")) return renderItem(parts[1], parts[2]);
+    if (parts[0] === "c" && parts[1]) { navSeq++; window.scrollTo(0, 0); return renderCourse(parts[1]); }
+    if (parts[0] === "about") { navSeq++; window.scrollTo(0, 0); return renderAbout(); }
+    if (parts.length === 0) { navSeq++; window.scrollTo(0, 0); return renderHome(); }
   }
   window.addEventListener("hashchange", route);
   route();

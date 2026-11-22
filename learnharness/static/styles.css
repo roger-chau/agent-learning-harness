@@ -131,9 +131,9 @@ button { font: inherit; color: inherit; }
 /* ---------- Header ---------- */
 .site-header {
   position: sticky; top: 0; z-index: 50;
-  background: var(--header-bg);
-  backdrop-filter: saturate(1.4) blur(12px);
-  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  /* Opaque, no backdrop blur: a blurred sticky header must be re-blurred on every scroll and every
+     animation frame beneath it, which made scrolling and animations janky on many machines. */
+  background: var(--bg);
   border-bottom: 1px solid var(--rule);
 }
 .header-inner { display: flex; align-items: center; gap: 16px; height: 64px; }
@@ -616,7 +616,7 @@ svg .d-arrowhead { fill: var(--muted); }
 /* ---- Reading progress and time estimates ---- */
 .site-header { position: sticky; }
 .read-bar { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: transparent; pointer-events: none; }
-.read-bar span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--indigo), var(--mint-ink)); border-radius: 0 3px 3px 0; transition: width .12s linear; }
+.read-bar span { display: block; height: 100%; width: 100%; transform: scaleX(0); transform-origin: 0 50%; will-change: transform; background: linear-gradient(90deg, var(--indigo), var(--mint-ink)); }
 .ch-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: .9rem; margin: 4px 0 0; }
 .ch-meta span { display: inline-flex; align-items: center; gap: 6px; }
 .ch-meta svg { opacity: .8; }
