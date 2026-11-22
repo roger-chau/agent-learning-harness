@@ -2558,6 +2558,71 @@
      }
     },
     {
+     "type": "lab",
+     "id": "L7",
+     "title": "Lab 7: Fused softmax, LayerNorm and a copy pipeline",
+     "summary": "The memory-bound operators between a transformer's matmuls, fused to one pass each, and a pinned-memory stream pipeline that overlaps PCIe with compute.",
+     "dir": "labs/L7-workloads",
+     "hours": 5,
+     "blocks": [
+      [
+       "Why this lab",
+       "the operators between the matmuls"
+      ],
+      [
+       "What to do",
+       "softmax, LayerNorm, pipeline"
+      ],
+      [
+       "Predict, then measure",
+       "passes, registers, copy engines"
+      ],
+      [
+       "Going further",
+       "online softmax, Welford, fusion"
+      ],
+      [
+       "Passing",
+       "targets and the timeline"
+      ]
+     ],
+     "targets": [
+      {
+       "metric": "softmax_pct",
+       "op": ">=",
+       "value": 70,
+       "label": "Fused softmax, % of peak bandwidth"
+      },
+      {
+       "metric": "softmax_speedup",
+       "op": ">=",
+       "value": 2,
+       "label": "Fused / unfused softmax"
+      },
+      {
+       "metric": "layernorm_pct",
+       "op": ">=",
+       "value": 70,
+       "label": "Fused LayerNorm, % of peak bandwidth"
+      },
+      {
+       "metric": "overlap_speedup",
+       "op": ">=",
+       "value": 1.4,
+       "label": "Pipelined / serial"
+      }
+     ],
+     "writeup": {
+      "min_words": 300,
+      "prompts": [
+       "Softmax: passes over memory for each version, predicted and measured speedup, and the reason for any gap.",
+       "Registers per thread and occupancy of your fused kernels, and the Little's-law check that it's enough.",
+       "The pipeline: copy engines on your card, the timeline you predicted, and the nsys timeline you got.",
+       "Where in a real transformer layer would you fuse next, and what would it save?"
+      ]
+     }
+    },
+    {
      "type": "checkpoint",
      "id": "p7-checkpoint",
      "title": "Part 7 checkpoint",

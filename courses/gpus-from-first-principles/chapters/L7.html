@@ -1,0 +1,38 @@
+<section class="blk" data-n="01">
+<h2>Why this lab</h2>
+<p>In a transformer, the matmuls get the headlines, but the operators between them decide a surprising share of the time: softmax, LayerNorm, activations and residual adds. All of them are memory-bound, so the only questions are how many times you touch the data and how close to peak bandwidth each touch runs. Around the whole model sits the host: inputs come in over PCIe and results go back, and a serving system that doesn't overlap those copies with compute leaves the GPU idle. Writing fused kernels for these operators is a large part of what ML-systems kernel teams do.</p>
+</section>
+
+<section class="blk" data-n="02">
+<h2>What to do</h2>
+<p>Open <code>labs/L7-workloads/l7.cu</code>. The matrices are 32,768 rows × 1,024 columns.</p>
+<ul>
+<li><strong>A. Softmax.</strong> The given version is three reasonable kernels, each with a block per row. Count its passes over the matrix and predict the time. Then write <code>softmax_fused</code>, with one warp per row. Each lane holds its 32 values in registers, loaded as <code>float4</code>s strided by the warp so the loads coalesce. The kernel computes the max, then the sum of exponentials, then writes once. Subtracting the max isn't optional: work out what <code>expf(80)</code> is in FP32.</li>
+<li><strong>B. LayerNorm.</strong> Same structure, with mean and variance. Use the two-pass formula on the values already in registers. That costs no extra memory traffic, and it avoids the cancellation in E[x²] − E[x]² (Chapter 9.1).</li>
+<li><strong>C. The pipeline.</strong> The given <code>run_serial</code> copies 128 MiB up from ordinary host memory, runs a kernel, and copies it back. The program calibrates the kernel to take about as long as the upload. Write <code>run_pipelined</code>: pinned buffers (already allocated), 16 chunks issued round-robin on 4 streams, each chunk's copy up, kernel and copy down on its own stream. Predict the speedup from the number of copy engines your card reports. Then look at the timeline with <code>make nsys</code>.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="03">
+<h2>Predict, then measure</h2>
+<ul>
+<li>A: the unfused softmax moves 5 matrices' worth of bytes and yours moves 2. What speedup does that predict, and why might you measure less?</li>
+<li>A and B: 32 values per lane means 64 or more registers per thread. What occupancy is left (<code>make regs</code>), and is it enough to saturate memory? Use Little's law with your card's latency from Lab 0.</li>
+<li>C: with one copy engine, uploads and downloads take turns. With two, they overlap too. Draw the timeline you expect for each case before running <code>nsys</code>.</li>
+</ul>
+</section>
+
+<section class="blk" data-n="04">
+<h2>Going further</h2>
+<ul>
+<li><strong>Online softmax</strong>: one pass that keeps a running max and rescales the running sum (Milakov &amp; Gimelshein, 2018). You'll need it for Lab 8. Implement it for rows too long to fit in registers, say 65,536 columns with a block per row.</li>
+<li>LayerNorm with Welford's algorithm, merging the statistics across lanes with shuffles. Compare its accuracy with the two-pass version on rows with mean 10⁴ and standard deviation 1.</li>
+<li>Fuse a residual add and a bias into the LayerNorm, as real transformer kernels do: what does it save?</li>
+<li>C: vary the number of chunks from 2 to 64. Why does it get worse at both ends?</li>
+</ul>
+</section>
+
+<section class="blk" data-n="05">
+<h2>Passing</h2>
+<p>All results correct. Your softmax and LayerNorm each reach at least 70% of peak bandwidth, and the fused softmax is at least 2× faster than the unfused one. The pipeline is at least 1.4× faster than the serial version. The report includes the <code>nsys</code> timeline of the pipeline, with the overlap marked.</p>
+</section>
