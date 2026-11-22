@@ -64,3 +64,20 @@ for i in range(1, n + 1):
 <li><strong>Maximum subarray (Kadane):</strong> dp[i] = max(a[i], dp[i−1] + a[i]). It's a one-dimensional DP that looks like a greedy.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/climbing-stairs/" target="_blank" rel="noopener">70. Climbing Stairs</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">Fibonacci; write the five questions anyway.</span></li>
+<li><a href="https://leetcode.com/problems/house-robber/" target="_blank" rel="noopener">198. House Robber</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Take or skip.</span></li>
+<li><a href="https://leetcode.com/problems/house-robber-ii/" target="_blank" rel="noopener">213. House Robber II</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Circular: two linear runs.</span></li>
+<li><a href="https://leetcode.com/problems/maximum-subarray/" target="_blank" rel="noopener">53. Maximum Subarray</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Kadane as a DP ending at i.</span></li>
+<li><a href="https://leetcode.com/problems/maximum-product-subarray/" target="_blank" rel="noopener">152. Maximum Product Subarray</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Track both max and min ending at i.</span></li>
+<li><a href="https://leetcode.com/problems/decode-ways/" target="_blank" rel="noopener">91. Decode Ways</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">The zeros are the problem.</span></li>
+<li><a href="https://leetcode.com/problems/coin-change/" target="_blank" rel="noopener">322. Coin Change</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Unbounded min DP; greedy fails.</span></li>
+<li><a href="https://leetcode.com/problems/word-break/" target="_blank" rel="noopener">139. Word Break</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Prefix reachability, bounded by the longest word.</span></li>
+<li><a href="https://leetcode.com/problems/longest-increasing-subsequence/" target="_blank" rel="noopener">300. Longest Increasing Subsequence</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">O(n²) first, then tails + bisect.</span></li>
+<li><a href="https://leetcode.com/problems/russian-doll-envelopes/" target="_blank" rel="noopener">354. Russian Doll Envelopes</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Sort (w asc, h desc), then LIS on h.</span></li>
+</ol>
+</section>

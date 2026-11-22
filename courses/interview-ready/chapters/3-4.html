@@ -57,3 +57,17 @@
 <li><strong>Suffix structures</strong> (suffix tries, arrays and automata) answer substring questions. They are beyond most interviews, but knowing they exist helps in quant and systems rounds.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/longest-common-prefix/" target="_blank" rel="noopener">14. Longest Common Prefix</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">Vertical scan; a trie is overkill but good practice.</span></li>
+<li><a href="https://leetcode.com/problems/implement-trie-prefix-tree/" target="_blank" rel="noopener">208. Implement Trie (Prefix Tree)</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Children map plus an end flag.</span></li>
+<li><a href="https://leetcode.com/problems/design-add-and-search-words-data-structure/" target="_blank" rel="noopener">211. Design Add and Search Words Data Structure</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Wildcard → DFS over children.</span></li>
+<li><a href="https://leetcode.com/problems/replace-words/" target="_blank" rel="noopener">648. Replace Words</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Walk the trie, stop at the first root.</span></li>
+<li><a href="https://leetcode.com/problems/search-suggestions-system/" target="_blank" rel="noopener">1268. Search Suggestions System</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">A trie, or sort + binary search per prefix.</span></li>
+<li><a href="https://leetcode.com/problems/maximum-xor-of-two-numbers-in-an-array/" target="_blank" rel="noopener">421. Maximum XOR of Two Numbers in an Array</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Binary trie; prefer the opposite bit.</span></li>
+<li><a href="https://leetcode.com/problems/word-search-ii/" target="_blank" rel="noopener">212. Word Search II</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Trie-guided DFS with pruning.</span></li>
+</ol>
+</section>

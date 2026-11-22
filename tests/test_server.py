@@ -261,3 +261,18 @@ def test_coding_flow(client, monkeypatch):
     r = client.post(base + "/coding/two-sum", json={"lang": "python", "code": right, "mode": "submit"}).json()
     assert r["passed"] == r["total"] and r["record"]["solved"] and r["solution"]["python"]
     assert client.post(base + "/coding/nope", json={"lang": "python", "code": "", "mode": "run"}).status_code == 404
+
+
+def test_course_coding_ids_unique_and_present():
+    import collections, json, pathlib
+    root = pathlib.Path(__file__).resolve().parent.parent / "courses"
+    for course in root.iterdir():
+        cj = course / "course.json"
+        if not cj.exists():
+            continue
+        c = json.loads(cj.read_text())
+        ids = [x for part in c["parts"] for it in part["items"] for x in it.get("coding", [])]
+        dups = [k for k, v in collections.Counter(ids).items() if v > 1]
+        assert not dups, f"{course.name}: coding ids used twice: {dups}"
+        missing = [x for x in ids if not (course / "coding" / f"{x}.json").exists()]
+        assert not missing, f"{course.name}: missing coding files: {missing}"

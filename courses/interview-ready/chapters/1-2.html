@@ -47,3 +47,18 @@ for x in nums:
 <li><strong>Variations:</strong> longest subarray with sum k (store the <em>first</em> index of each prefix), equal numbers of 0s and 1s (map 0 → −1, then sum zero), subarray sums divisible by k (prefixes mod k).</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/range-sum-query-immutable/" target="_blank" rel="noopener">303. Range Sum Query – Immutable</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">The prefix-sum identity, with the off-by-one written down first.</span></li>
+<li><a href="https://leetcode.com/problems/product-of-array-except-self/" target="_blank" rel="noopener">238. Product of Array Except Self</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Prefix and suffix products; no division.</span></li>
+<li><a href="https://leetcode.com/problems/subarray-sum-equals-k/" target="_blank" rel="noopener">560. Subarray Sum Equals K</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Count earlier prefixes equal to prefix − k; seed the map with {0: 1}.</span></li>
+<li><a href="https://leetcode.com/problems/contiguous-array/" target="_blank" rel="noopener">525. Contiguous Array</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Map 0 → −1 so "equal counts" becomes "sum zero"; store first occurrences.</span></li>
+<li><a href="https://leetcode.com/problems/subarray-sums-divisible-by-k/" target="_blank" rel="noopener">974. Subarray Sums Divisible by K</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Prefix sums modulo k; normalise negative remainders.</span></li>
+<li><a href="https://leetcode.com/problems/continuous-subarray-sum/" target="_blank" rel="noopener">523. Continuous Subarray Sum</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Same remainder twice, at least two apart.</span></li>
+<li><a href="https://leetcode.com/problems/range-sum-query-2d-immutable/" target="_blank" rel="noopener">304. Range Sum Query 2D – Immutable</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">2-D prefix sums with inclusion–exclusion.</span></li>
+<li><a href="https://leetcode.com/problems/car-pooling/" target="_blank" rel="noopener">1094. Car Pooling</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Difference array: +n at pickup, −n at drop-off.</span></li>
+</ol>
+</section>

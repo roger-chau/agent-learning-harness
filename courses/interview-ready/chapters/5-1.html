@@ -59,3 +59,18 @@ while h:
 <li><strong>Find the k pairs with the smallest sums:</strong> a frontier heap over the implicit matrix a[i] + b[j], pushing (i, j + 1), plus (i + 1, j) only when j = 0, so no pair is pushed twice.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/kth-largest-element-in-a-stream/" target="_blank" rel="noopener">703. Kth Largest Element in a Stream</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">A size-k min-heap, kept across calls.</span></li>
+<li><a href="https://leetcode.com/problems/kth-largest-element-in-an-array/" target="_blank" rel="noopener">215. Kth Largest Element in an Array</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Size-k heap or quickselect.</span></li>
+<li><a href="https://leetcode.com/problems/top-k-frequent-elements/" target="_blank" rel="noopener">347. Top K Frequent Elements</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Count, then bucket by frequency for O(n).</span></li>
+<li><a href="https://leetcode.com/problems/top-k-frequent-words/" target="_blank" rel="noopener">692. Top K Frequent Words</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Invert a compound key correctly.</span></li>
+<li><a href="https://leetcode.com/problems/k-closest-points-to-origin/" target="_blank" rel="noopener">973. K Closest Points to Origin</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Squared distances; size-k max-heap.</span></li>
+<li><a href="https://leetcode.com/problems/kth-smallest-element-in-a-sorted-matrix/" target="_blank" rel="noopener">378. Kth Smallest Element in a Sorted Matrix</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Merge by position or search by value.</span></li>
+<li><a href="https://leetcode.com/problems/find-k-pairs-with-smallest-sums/" target="_blank" rel="noopener">373. Find K Pairs with Smallest Sums</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Frontier over an implicit matrix without duplicates.</span></li>
+<li><a href="https://leetcode.com/problems/merge-k-sorted-lists/" target="_blank" rel="noopener">23. Merge k Sorted Lists</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Frontier heap, or pairwise merging.</span></li>
+</ol>
+</section>

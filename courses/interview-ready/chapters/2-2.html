@@ -41,3 +41,18 @@ for i, x in enumerate(a):
 <li><strong>Monotonic deque</strong> (Chapter 1.4) is the same idea when elements also expire from the front.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/daily-temperatures/" target="_blank" rel="noopener">739. Daily Temperatures</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Next greater: the stack holds days still waiting.</span></li>
+<li><a href="https://leetcode.com/problems/next-greater-element-ii/" target="_blank" rel="noopener">503. Next Greater Element II</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Circular: walk the array twice.</span></li>
+<li><a href="https://leetcode.com/problems/online-stock-span/" target="_blank" rel="noopener">901. Online Stock Span</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Previous greater, online; store accumulated spans.</span></li>
+<li><a href="https://leetcode.com/problems/remove-k-digits/" target="_blank" rel="noopener">402. Remove K Digits</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Monotonic increasing stack; pop while it helps and k remains.</span></li>
+<li><a href="https://leetcode.com/problems/remove-duplicate-letters/" target="_blank" rel="noopener">316. Remove Duplicate Letters</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Pop a larger letter only if it appears again later.</span></li>
+<li><a href="https://leetcode.com/problems/sum-of-subarray-minimums/" target="_blank" rel="noopener">907. Sum of Subarray Minimums</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Contribution technique with asymmetric ties.</span></li>
+<li><a href="https://leetcode.com/problems/largest-rectangle-in-histogram/" target="_blank" rel="noopener">84. Largest Rectangle in Histogram</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Each popped bar's rectangle spans between its smaller neighbours.</span></li>
+<li><a href="https://leetcode.com/problems/maximal-rectangle/" target="_blank" rel="noopener">85. Maximal Rectangle</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Row-by-row histograms, then problem 84.</span></li>
+</ol>
+</section>

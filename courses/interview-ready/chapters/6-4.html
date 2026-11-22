@@ -60,3 +60,20 @@ for i in range(1, n + 1):
 <li><strong>Large inputs:</strong> LCS of two 10⁵-length strings is 10¹⁰ cells, which is too many. Special structure (such as permutations, which reduce to LIS in O(n log n)) is the way out.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/longest-common-subsequence/" target="_blank" rel="noopener">1143. Longest Common Subsequence</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">The template.</span></li>
+<li><a href="https://leetcode.com/problems/edit-distance/" target="_blank" rel="noopener">72. Edit Distance</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Three moves; base row and column.</span></li>
+<li><a href="https://leetcode.com/problems/longest-palindromic-subsequence/" target="_blank" rel="noopener">516. Longest Palindromic Subsequence</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">LCS with the reverse, or interval DP.</span></li>
+<li><a href="https://leetcode.com/problems/longest-palindromic-substring/" target="_blank" rel="noopener">5. Longest Palindromic Substring</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Expand around centres; DP is O(n²) memory.</span></li>
+<li><a href="https://leetcode.com/problems/maximum-length-of-repeated-subarray/" target="_blank" rel="noopener">718. Maximum Length of Repeated Subarray</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Substring: reset to 0 on a mismatch.</span></li>
+<li><a href="https://leetcode.com/problems/interleaving-string/" target="_blank" rel="noopener">97. Interleaving String</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Boolean two-sequence DP.</span></li>
+<li><a href="https://leetcode.com/problems/distinct-subsequences/" target="_blank" rel="noopener">115. Distinct Subsequences</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Use it or skip it; disjoint cases.</span></li>
+<li><a href="https://leetcode.com/problems/shortest-common-supersequence/" target="_blank" rel="noopener">1092. Shortest Common Supersequence</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">LCS table, then reconstruct.</span></li>
+<li><a href="https://leetcode.com/problems/wildcard-matching/" target="_blank" rel="noopener">44. Wildcard Matching</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">'*' matches empty (←) or one more (↑).</span></li>
+<li><a href="https://leetcode.com/problems/regular-expression-matching/" target="_blank" rel="noopener">10. Regular Expression Matching</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">'x*' as zero copies or one more copy.</span></li>
+</ol>
+</section>

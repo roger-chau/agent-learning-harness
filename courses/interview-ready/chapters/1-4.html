@@ -42,3 +42,18 @@ for right, x in enumerate(s):
 <li><strong>Stale state is sometimes fine:</strong> in longest repeating replacement, the max frequency never needs to decrease, because the answer only improves when it grows.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/" target="_blank" rel="noopener">3. Longest Substring Without Repeating Characters</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Variable window; jump left past the last occurrence.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-size-subarray-sum/" target="_blank" rel="noopener">209. Minimum Size Subarray Sum</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Shrink while valid; positive numbers make the window monotone.</span></li>
+<li><a href="https://leetcode.com/problems/longest-repeating-character-replacement/" target="_blank" rel="noopener">424. Longest Repeating Character Replacement</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Window valid iff length − maxcount ≤ k; maxcount never needs decreasing.</span></li>
+<li><a href="https://leetcode.com/problems/permutation-in-string/" target="_blank" rel="noopener">567. Permutation in String</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Fixed-size window with a matches counter.</span></li>
+<li><a href="https://leetcode.com/problems/find-all-anagrams-in-a-string/" target="_blank" rel="noopener">438. Find All Anagrams in a String</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">The same window, reporting every match.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-window-substring/" target="_blank" rel="noopener">76. Minimum Window Substring</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Expand until valid, shrink while valid; track how many needs are met.</span></li>
+<li><a href="https://leetcode.com/problems/sliding-window-maximum/" target="_blank" rel="noopener">239. Sliding Window Maximum</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Monotonic deque of indices.</span></li>
+<li><a href="https://leetcode.com/problems/subarrays-with-k-different-integers/" target="_blank" rel="noopener">992. Subarrays with K Different Integers</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">exactly(k) = atMost(k) − atMost(k − 1).</span></li>
+</ol>
+</section>

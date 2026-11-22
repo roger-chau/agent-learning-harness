@@ -65,3 +65,20 @@ while st or n:
 <li><strong>Morris traversal:</strong> O(1)-space in-order that temporarily threads right pointers. Know that it exists; rarely required.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/binary-tree-level-order-traversal/" target="_blank" rel="noopener">102. Binary Tree Level Order Traversal</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">len(queue) per round.</span></li>
+<li><a href="https://leetcode.com/problems/binary-tree-right-side-view/" target="_blank" rel="noopener">199. Binary Tree Right Side View</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">The last of each level.</span></li>
+<li><a href="https://leetcode.com/problems/binary-tree-zigzag-level-order-traversal/" target="_blank" rel="noopener">103. Binary Tree Zigzag Level Order Traversal</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Reverse alternate levels.</span></li>
+<li><a href="https://leetcode.com/problems/validate-binary-search-tree/" target="_blank" rel="noopener">98. Validate Binary Search Tree</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Pass (low, high) down.</span></li>
+<li><a href="https://leetcode.com/problems/kth-smallest-element-in-a-bst/" target="_blank" rel="noopener">230. Kth Smallest Element in a BST</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Iterative in-order, stop at k.</span></li>
+<li><a href="https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/" target="_blank" rel="noopener">235. Lowest Common Ancestor of a Binary Search Tree</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Walk down until p and q split: O(h).</span></li>
+<li><a href="https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/" target="_blank" rel="noopener">236. Lowest Common Ancestor of a Binary Tree</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Post-order: both sides found means this node.</span></li>
+<li><a href="https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/" target="_blank" rel="noopener">105. Construct Binary Tree from Preorder and Inorder Traversal</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">A value → index map keeps it O(n).</span></li>
+<li><a href="https://leetcode.com/problems/serialize-and-deserialize-binary-tree/" target="_blank" rel="noopener">297. Serialize and Deserialize Binary Tree</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Pre-order with null markers and one recursive reader.</span></li>
+<li><a href="https://leetcode.com/problems/vertical-order-traversal-of-a-binary-tree/" target="_blank" rel="noopener">987. Vertical Order Traversal of a Binary Tree</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Collect (col, row, val), then sort.</span></li>
+</ol>
+</section>

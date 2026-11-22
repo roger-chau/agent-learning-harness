@@ -66,3 +66,22 @@
 <li><strong>Path sum III</strong> (paths downward from anywhere summing to k): prefix sums along the root-to-node path, with a hash map you add to on entry and remove from on exit. This is Part 1's prefix-sum trick on a tree.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/maximum-depth-of-binary-tree/" target="_blank" rel="noopener">104. Maximum Depth of Binary Tree</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">The recursive contract.</span></li>
+<li><a href="https://leetcode.com/problems/invert-binary-tree/" target="_blank" rel="noopener">226. Invert Binary Tree</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Post-order swap.</span></li>
+<li><a href="https://leetcode.com/problems/same-tree/" target="_blank" rel="noopener">100. Same Tree</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">Recursion on pairs.</span></li>
+<li><a href="https://leetcode.com/problems/symmetric-tree/" target="_blank" rel="noopener">101. Symmetric Tree</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">Pairs (left.left, right.right) and (left.right, right.left).</span></li>
+<li><a href="https://leetcode.com/problems/balanced-binary-tree/" target="_blank" rel="noopener">110. Balanced Binary Tree</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">Return height or −1; avoid O(n²).</span></li>
+<li><a href="https://leetcode.com/problems/diameter-of-binary-tree/" target="_blank" rel="noopener">543. Diameter of Binary Tree</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Return height, record left + right.</span></li>
+<li><a href="https://leetcode.com/problems/subtree-of-another-tree/" target="_blank" rel="noopener">572. Subtree of Another Tree</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">Same-tree at every node; mention hashing for O(n + m).</span></li>
+<li><a href="https://leetcode.com/problems/count-good-nodes-in-binary-tree/" target="_blank" rel="noopener">1448. Count Good Nodes in Binary Tree</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Top-down: pass the max so far.</span></li>
+<li><a href="https://leetcode.com/problems/path-sum-iii/" target="_blank" rel="noopener">437. Path Sum III</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Prefix sums along the path; undo on exit.</span></li>
+<li><a href="https://leetcode.com/problems/house-robber-iii/" target="_blank" rel="noopener">337. House Robber III</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Return (take, skip).</span></li>
+<li><a href="https://leetcode.com/problems/binary-tree-maximum-path-sum/" target="_blank" rel="noopener">124. Binary Tree Maximum Path Sum</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Clamp negative gains; record the bend.</span></li>
+<li><a href="https://leetcode.com/problems/binary-tree-cameras/" target="_blank" rel="noopener">968. Binary Tree Cameras</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Three states per node, decided greedily from the leaves.</span></li>
+</ol>
+</section>

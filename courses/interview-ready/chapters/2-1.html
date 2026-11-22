@@ -41,3 +41,18 @@ return result if not stack else invalid</code></pre>
 <li><strong>Stacks with extra queries</strong> (min-stack): store per-element auxiliary data that summarises everything below it, so pops never need recomputation.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/valid-parentheses/" target="_blank" rel="noopener">20. Valid Parentheses</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Push openers, pop on closers, check both failure modes.</span></li>
+<li><a href="https://leetcode.com/problems/min-stack/" target="_blank" rel="noopener">155. Min Stack</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Store the running minimum with each entry.</span></li>
+<li><a href="https://leetcode.com/problems/evaluate-reverse-polish-notation/" target="_blank" rel="noopener">150. Evaluate Reverse Polish Notation</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Operand order and truncation toward zero.</span></li>
+<li><a href="https://leetcode.com/problems/simplify-path/" target="_blank" rel="noopener">71. Simplify Path</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Split on '/', stack of names, '..' pops.</span></li>
+<li><a href="https://leetcode.com/problems/decode-string/" target="_blank" rel="noopener">394. Decode String</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Push a frame (count, partial string) on '['.</span></li>
+<li><a href="https://leetcode.com/problems/asteroid-collision/" target="_blank" rel="noopener">735. Asteroid Collision</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">The stack holds survivors; resolve collisions while the top moves right.</span></li>
+<li><a href="https://leetcode.com/problems/basic-calculator-ii/" target="_blank" rel="noopener">227. Basic Calculator II</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Apply * and / immediately, defer + and − to a final sum.</span></li>
+<li><a href="https://leetcode.com/problems/basic-calculator/" target="_blank" rel="noopener">224. Basic Calculator</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Parentheses push (result, sign) frames.</span></li>
+</ol>
+</section>

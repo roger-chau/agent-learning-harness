@@ -53,3 +53,18 @@
 <li><strong>Compiler connection:</strong> list scheduling of instructions is Kahn's algorithm with a priority (critical-path length) on the frontier. You'll meet it again in the GPU course's compiler part.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/course-schedule/" target="_blank" rel="noopener">207. Course Schedule</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Kahn: did every node get placed?</span></li>
+<li><a href="https://leetcode.com/problems/course-schedule-ii/" target="_blank" rel="noopener">210. Course Schedule II</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Return Kahn's order (any valid one).</span></li>
+<li><a href="https://leetcode.com/problems/find-eventual-safe-states/" target="_blank" rel="noopener">802. Find Eventual Safe States</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Reverse the graph and run Kahn, or 3-colour DFS.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-height-trees/" target="_blank" rel="noopener">310. Minimum Height Trees</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Peel leaves layer by layer (Kahn on an undirected tree).</span></li>
+<li><a href="https://leetcode.com/problems/longest-increasing-path-in-a-matrix/" target="_blank" rel="noopener">329. Longest Increasing Path in a Matrix</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">DP on an implicit DAG (memoised DFS).</span></li>
+<li><a href="https://leetcode.com/problems/parallel-courses-iii/" target="_blank" rel="noopener">2050. Parallel Courses III</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Longest weighted path in a DAG: the critical path.</span></li>
+<li><a href="https://leetcode.com/problems/parallel-courses/" target="_blank" rel="noopener">1136. Parallel Courses</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">Premium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Layers of Kahn.</span></li>
+<li><a href="https://leetcode.com/problems/alien-dictionary/" target="_blank" rel="noopener">269. Alien Dictionary</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">Premium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Edges from first mismatches; the prefix rule.</span></li>
+</ol>
+</section>

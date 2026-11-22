@@ -661,3 +661,14 @@ svg .d-arrowhead { fill: var(--muted); }
 .code-ed, .code-sol, .code-sol code, .code-out, .code-err, .sample code, pre, code { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
 .code-sol { background: var(--surface-2, var(--surface)); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; overflow-x: auto; }
 .code-sol code { background: none !important; padding: 0 !important; border: 0 !important; white-space: pre; display: block; }
+
+/* LeetCode practice lists */
+.lc-list { padding-left: 2.4em; }
+.lc-list li { margin: 0 0 .7em; }
+.lc-list a { font-weight: 600; }
+.lc-diff, .lc-tag { display: inline-block; font-size: .72rem; font-weight: 600; letter-spacing: .02em; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; }
+.lc-tag { color: var(--muted); border: 1px solid currentColor; }
+.lc-easy { color: #2e9e6a; background: #2e9e6a1f; }
+.lc-medium { color: #c08a12; background: #c08a121f; }
+.lc-hard { color: #d2525b; background: #d2525b1f; }
+.lc-note { color: var(--muted); font-size: .92rem; }

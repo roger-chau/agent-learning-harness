@@ -63,3 +63,17 @@ def dijkstra(g, s):                   # g[u] = [(v, w), ...], w >= 0
 <li><strong>Swim in rising water, minimum effort path:</strong> minimax paths, solvable three ways (Dijkstra with max, binary search plus BFS, or Kruskal with union-find). Say all three.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/network-delay-time/" target="_blank" rel="noopener">743. Network Delay Time</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Dijkstra with lazy deletion.</span></li>
+<li><a href="https://leetcode.com/problems/cheapest-flights-within-k-stops/" target="_blank" rel="noopener">787. Cheapest Flights Within K Stops</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Bellman–Ford rounds from a copy.</span></li>
+<li><a href="https://leetcode.com/problems/path-with-minimum-effort/" target="_blank" rel="noopener">1631. Path With Minimum Effort</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Minimax: say all three solutions.</span></li>
+<li><a href="https://leetcode.com/problems/path-with-maximum-probability/" target="_blank" rel="noopener">1514. Path with Maximum Probability</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Dijkstra on products ≤ 1 (or −log).</span></li>
+<li><a href="https://leetcode.com/problems/minimum-obstacle-removal-to-reach-corner/" target="_blank" rel="noopener">2290. Minimum Obstacle Removal to Reach Corner</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">0-1 BFS.</span></li>
+<li><a href="https://leetcode.com/problems/swim-in-rising-water/" target="_blank" rel="noopener">778. Swim in Rising Water</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Minimax again: Dijkstra, binary search, or DSU.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-cost-to-make-at-least-one-valid-path-in-a-grid/" target="_blank" rel="noopener">1368. Minimum Cost to Make at Least One Valid Path in a Grid</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Follow the arrow for 0, change it for 1: 0-1 BFS.</span></li>
+</ol>
+</section>

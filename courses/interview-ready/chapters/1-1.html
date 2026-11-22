@@ -48,3 +48,18 @@ for i, x in enumerate(nums):
 <li><strong>Variations:</strong> two-sum on a sorted array (two pointers, O(1) space), k-sum (sort + recursion to two-sum), subarray problems (prefix sums + map).</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/contains-duplicate/" target="_blank" rel="noopener">217. Contains Duplicate</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">The set-membership warm-up; state the O(n log n) sort alternative and its memory trade-off.</span></li>
+<li><a href="https://leetcode.com/problems/two-sum/" target="_blank" rel="noopener">1. Two Sum</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Store what you've seen, look up the complement.</span></li>
+<li><a href="https://leetcode.com/problems/valid-anagram/" target="_blank" rel="noopener">242. Valid Anagram</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">Counting array of 26 versus a hash map: say when each is right.</span></li>
+<li><a href="https://leetcode.com/problems/group-anagrams/" target="_blank" rel="noopener">49. Group Anagrams</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Choose the canonical key: the sorted string or a count tuple.</span></li>
+<li><a href="https://leetcode.com/problems/longest-consecutive-sequence/" target="_blank" rel="noopener">128. Longest Consecutive Sequence</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Only start counting from x when x − 1 is absent: that makes it O(n).</span></li>
+<li><a href="https://leetcode.com/problems/valid-sudoku/" target="_blank" rel="noopener">36. Valid Sudoku</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Key design: (row, value), (col, value), (box, value).</span></li>
+<li><a href="https://leetcode.com/problems/insert-delete-getrandom-o1/" target="_blank" rel="noopener">380. Insert Delete GetRandom O(1)</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Hash map to index plus an array; delete by swapping with the last element.</span></li>
+<li><a href="https://leetcode.com/problems/4sum-ii/" target="_blank" rel="noopener">454. 4Sum II</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Meet in the middle: hash all a + b sums, look up −(c + d). O(n²) instead of O(n⁴).</span></li>
+</ol>
+</section>

@@ -140,6 +140,10 @@
       [
        "Traps and variations",
        "keys, collisions, counters"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -174,6 +178,10 @@
       [
        "Traps and variations",
        "overflow, 2-D, variants"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -208,6 +216,10 @@
       [
        "Traps and variations",
        "duplicates, fast/slow, flags"
+      ],
+      [
+       "Practice on LeetCode",
+       "7 problems"
       ]
      ]
     },
@@ -242,6 +254,10 @@
       [
        "Traps and variations",
        "fixed windows, deques, exactly-k"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -290,6 +306,10 @@
       [
        "Traps and variations",
        "order, truncation, calculators"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -324,6 +344,10 @@
       [
        "Traps and variations",
        "indices, sentinels, ties"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -358,6 +382,10 @@
       [
        "Traps and variations",
        "overflow, loops, duplicates"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -392,6 +420,10 @@
       [
        "Traps and variations",
        "floats, max-min, partitions"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -441,6 +473,10 @@
       [
        "Traps and variations",
        "LRU, k-groups, random pointers"
+      ],
+      [
+       "Practice on LeetCode",
+       "11 problems"
       ]
      ]
     },
@@ -475,6 +511,10 @@
       [
        "Traps and variations",
        "leaves, depth limits, pairs"
+      ],
+      [
+       "Practice on LeetCode",
+       "12 problems"
       ]
      ]
     },
@@ -510,6 +550,10 @@
       [
        "Traps and variations",
        "balance, construction, successors"
+      ],
+      [
+       "Practice on LeetCode",
+       "10 problems"
       ]
      ]
     },
@@ -542,6 +586,10 @@
       [
        "Traps and variations",
        "memory, wildcards, when not to"
+      ],
+      [
+       "Practice on LeetCode",
+       "7 problems"
       ]
      ]
     },
@@ -590,6 +638,10 @@
       [
        "Traps and variations",
        "state design, border inward"
+      ],
+      [
+       "Practice on LeetCode",
+       "11 problems"
       ]
      ]
     },
@@ -624,6 +676,10 @@
       [
        "Traps and variations",
        "DAG DP, scheduling"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -658,6 +714,10 @@
       [
        "Traps and variations",
        "copies, overflow, density"
+      ],
+      [
+       "Practice on LeetCode",
+       "7 problems"
       ]
      ]
     },
@@ -692,6 +752,10 @@
       [
        "Traps and variations",
        "reverse time, weighted DSU"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -716,7 +780,7 @@
      "summary": "Keep the best k by evicting the worst; k-way merge; selection by position or by value.",
      "coding": [
       "kth-largest",
-      "top-k-frequent",
+      "top-k-frequent-words",
       "k-closest-points",
       "kth-smallest-matrix"
      ],
@@ -740,6 +804,10 @@
       [
        "Traps and variations",
        "ties, heapify, quickselect"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -774,6 +842,10 @@
       [
        "Traps and variations",
        "lazy deletion, deadlines"
+      ],
+      [
+       "Practice on LeetCode",
+       "9 problems"
       ]
      ]
     },
@@ -786,7 +858,7 @@
       "merge-intervals",
       "insert-interval",
       "non-overlapping-intervals",
-      "car-pooling"
+      "interval-intersections"
      ],
      "blocks": [
       [
@@ -808,6 +880,10 @@
       [
        "Traps and variations",
        "endpoints, arrows, weights"
+      ],
+      [
+       "Practice on LeetCode",
+       "7 problems"
       ]
      ]
     },
@@ -842,6 +918,10 @@
       [
        "Traps and variations",
        "known failures, stress tests"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -890,6 +970,10 @@
       [
        "Traps and variations",
        "sentinels, depth, decode ways"
+      ],
+      [
+       "Practice on LeetCode",
+       "10 problems"
       ]
      ]
     },
@@ -924,6 +1008,10 @@
       [
        "Traps and variations",
        "overflow, two walkers"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -958,6 +1046,10 @@
       [
        "Traps and variations",
        "bases, pseudo-polynomial"
+      ],
+      [
+       "Practice on LeetCode",
+       "8 problems"
       ]
      ]
     },
@@ -992,6 +1084,10 @@
       [
        "Traps and variations",
        "indices, substrings, regex"
+      ],
+      [
+       "Practice on LeetCode",
+       "10 problems"
       ]
      ]
     },

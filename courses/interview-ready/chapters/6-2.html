@@ -50,3 +50,18 @@ side[i][j] = 1 + min(side[i-1][j], side[i][j-1], side[i-1][j-1])  if grid[i][j] 
 <li><strong>Four-directional movement</strong> means it isn't a DAG and DP is invalid (it would be cyclic). Use Dijkstra.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/unique-paths/" target="_blank" rel="noopener">62. Unique Paths</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">DP, then the closed form C(m + n − 2, m − 1).</span></li>
+<li><a href="https://leetcode.com/problems/unique-paths-ii/" target="_blank" rel="noopener">63. Unique Paths II</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Rolling row with obstacles.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-path-sum/" target="_blank" rel="noopener">64. Minimum Path Sum</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Min of above and left.</span></li>
+<li><a href="https://leetcode.com/problems/triangle/" target="_blank" rel="noopener">120. Triangle</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Bottom-up, one row.</span></li>
+<li><a href="https://leetcode.com/problems/minimum-falling-path-sum/" target="_blank" rel="noopener">931. Minimum Falling Path Sum</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Three parents per cell.</span></li>
+<li><a href="https://leetcode.com/problems/maximal-square/" target="_blank" rel="noopener">221. Maximal Square</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">1 + min of three neighbours.</span></li>
+<li><a href="https://leetcode.com/problems/dungeon-game/" target="_blank" rel="noopener">174. Dungeon Game</a> <span class="lc-diff lc-hard">Hard</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Solve backwards.</span></li>
+<li><a href="https://leetcode.com/problems/cherry-pickup/" target="_blank" rel="noopener">741. Cherry Pickup</a> <span class="lc-diff lc-hard">Hard</span><br><span class="lc-note">Two walkers in lockstep: (step, r₁, r₂).</span></li>
+</ol>
+</section>

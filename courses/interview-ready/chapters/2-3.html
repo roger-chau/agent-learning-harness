@@ -45,3 +45,18 @@ return lo                     # n if the predicate is never true</code></pre>
 <li>Python's <code>bisect_left</code> and <code>bisect_right</code> and C++'s <code>lower_bound</code> / <code>upper_bound</code> are this template; use them when allowed, but be able to write it.</li>
 </ul>
 </section>
+
+<section class="blk" data-n="06">
+<h2>Practice on LeetCode</h2>
+<p>Solve the judged problems on this page first, then these, roughly in order. Before typing, say the signal you noticed and the pattern you'll use; afterwards, write one line on what the trick was. Problems marked <em>judged here</em> are the same problem or a close variant (ours sometimes fix a tie rule so the answer is unique); use LeetCode for extra test cases and to compare your runtime.</p>
+<ol class="lc-list">
+<li><a href="https://leetcode.com/problems/search-insert-position/" target="_blank" rel="noopener">35. Search Insert Position</a> <span class="lc-diff lc-easy">Easy</span> <span class="lc-tag">judged here</span><br><span class="lc-note">The first index with a[i] ≥ x.</span></li>
+<li><a href="https://leetcode.com/problems/first-bad-version/" target="_blank" rel="noopener">278. First Bad Version</a> <span class="lc-diff lc-easy">Easy</span><br><span class="lc-note">The template with an API predicate.</span></li>
+<li><a href="https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/" target="_blank" rel="noopener">34. Find First and Last Position of Element in Sorted Array</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">lower_bound(x) and lower_bound(x + 1) − 1.</span></li>
+<li><a href="https://leetcode.com/problems/search-in-rotated-sorted-array/" target="_blank" rel="noopener">33. Search in Rotated Sorted Array</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">One half is always sorted; decide which side x is on.</span></li>
+<li><a href="https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/" target="_blank" rel="noopener">153. Find Minimum in Rotated Sorted Array</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Predicate a[i] ≤ a[last].</span></li>
+<li><a href="https://leetcode.com/problems/search-a-2d-matrix/" target="_blank" rel="noopener">74. Search a 2D Matrix</a> <span class="lc-diff lc-medium">Medium</span> <span class="lc-tag">judged here</span><br><span class="lc-note">Treat it as one sorted array of length R·C.</span></li>
+<li><a href="https://leetcode.com/problems/find-peak-element/" target="_blank" rel="noopener">162. Find Peak Element</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Binary search without sortedness: follow the rising side.</span></li>
+<li><a href="https://leetcode.com/problems/time-based-key-value-store/" target="_blank" rel="noopener">981. Time Based Key-Value Store</a> <span class="lc-diff lc-medium">Medium</span><br><span class="lc-note">Per key, the last timestamp ≤ t: upper_bound − 1.</span></li>
+</ol>
+</section>
