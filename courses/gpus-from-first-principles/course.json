@@ -274,8 +274,8 @@
      "summary": "Cumulative quiz across the Part."
     }
    ],
-   "hp": "Ch 1 · Ch 2 · App B",
-   "pmpp": "Ch 1, 4"
+   "hp": "Ch 1 · Ch 2 · Ch 3 · App B",
+   "pmpp": "Ch 1, 2, 3, 4"
   },
   {
    "id": "p1",
@@ -646,7 +646,7 @@
      "summary": "Cumulative quiz across the Part."
     }
    ],
-   "hp": "Ch 4 · App G",
+   "hp": "Ch 4 · App G · App H",
    "pmpp": "Ch 2, 3, 4"
   },
   {
@@ -3279,7 +3279,7 @@
      "summary": "Cumulative quiz across the whole course."
     }
    ],
-   "hp": "App J",
+   "hp": "Ch 1 · App J",
    "pmpp": "Ch 22, 23, App. A"
   },
   {

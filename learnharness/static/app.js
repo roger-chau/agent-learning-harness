@@ -233,7 +233,7 @@
           <div class="parts">
             ${c.parts.map((part) => `
               <div class="part">
-                <div class="part-head"><span class="part-n">Part ${part.n}${part.hours ? ` · about ${Math.round(part.hours)} h` : ""}</span><h3>${esc(part.title)}</h3><p>${esc(part.summary)}</p>${part.hp ? `<p class="hp"><span>H&amp;P 7e</span> ${esc(part.hp)}</p>` : ""}${part.pmpp ? `<p class="hp"><span>PMPP 4e</span> ${esc(part.pmpp)}</p>` : ""}</div>
+                <div class="part-head"><span class="part-n">Part ${part.n}${part.hours ? ` · about ${Math.round(part.hours)} h` : ""}</span><h3>${esc(part.title)}</h3><p>${esc(part.summary)}</p>${part.hp || part.pmpp ? `<p class="hp" title="Book chapters that cover the same ground as this Part, for wider reading. Each chapter lists its own required readings at the end.">Part companion: ${part.hp ? `<span>H&amp;P 7e</span> ${esc(part.hp)}` : ""}${part.pmpp ? ` &nbsp;<span>PMPP 4e</span> ${esc(part.pmpp)}` : ""}</p>` : ""}</div>
                 <div class="stack">
                   ${part.items.map((it) => {
                     const n = it.type === "chapter" ? ++chapterNo : null;
@@ -303,7 +303,8 @@
             <h1 class="ch-title">${esc(it.title)}</h1>
             ${it.summary ? `<p class="ch-sub">${esc(it.summary)}</p>` : ""}
             ${it.estimate ? `<p class="ch-meta"><span title="Reading time">${CLOCK} ${it.estimate.reading} min read</span>${it.estimate.assigned ? `<span title="Required textbook sections and papers listed under Readings">${CLOCK} about ${fmtMins(it.estimate.assigned)} of assigned reading</span>` : ""}${it.estimate.practice ? `<span title="Exercises, problems and quiz">${PENCIL} about ${fmtMins(it.estimate.practice)} of practice</span>` : ""}${it.problems ? `<span>${it.problems.problems.length} problems</span>` : ""}${it.exercises.length ? `<span>${it.exercises.length} coding ${it.exercises.length > 1 ? "exercises" : "exercise"}</span>` : ""}</p>` : ""}
-            ${it.type === "chapter" && (it.part.hp || it.part.pmpp) ? `<p class="hp">${it.part.hp ? `<span>H&amp;P 7e</span> ${esc(it.part.hp)}` : ""}${it.part.pmpp ? ` &nbsp;<span>PMPP 4e</span> ${esc(it.part.pmpp)}` : ""}</p>` : ""}
+            ${it.type === "chapter" && /data-n="07">\s*<h2>Readings/.test(it.html || "") ? `<p class="hp"><button type="button" class="linkish" id="to-readings">This chapter's readings ↓</button></p>` : ""}
+            ${it.type === "chapter" && (it.part.hp || it.part.pmpp) ? `<p class="hp muted small" title="Book chapters that cover the same ground as the whole Part, for wider reading. Not this chapter's assignment.">Part companion (whole Part, optional background): ${it.part.hp ? `<span>H&amp;P 7e</span> ${esc(it.part.hp)}` : ""}${it.part.pmpp ? ` &nbsp;<span>PMPP 4e</span> ${esc(it.part.pmpp)}` : ""}</p>` : ""}
             ${it.blocks.length ? `<div class="stack ch-chain">${it.blocks.map(([name, tag], i) =>
               `<a class="block ${i === 0 ? "" : i === 4 ? "t-saffron" : "t-indigo"} link" href="#b${i + 1}" data-jump="b${i + 1}">
                 <span class="n">${pad(i + 1)}</span><span class="name">${esc(name)}</span><span class="tag">${esc(tag)}</span></a>`).join("")}</div>` : ""}
@@ -351,6 +352,8 @@ make submit     # record the results here (Groundwork must be running)</code></p
       </aside>`}`;
 
     const body = $("#ch-body");
+    const toR = $("#to-readings");
+    if (toR) toR.addEventListener("click", () => { const s = body.querySelector('section.blk[data-n="07"]'); if (!s) return; const go = () => window.scrollTo(0, s.getBoundingClientRect().top + window.scrollY - 72); go(); setTimeout(go, 250); setTimeout(go, 700); });
     setupReadBar();
     window.GWComponents.mount(body);
     typeset(body);
